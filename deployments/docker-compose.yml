@@ -1,0 +1,39 @@
+version: "3.8"
+
+name: "BE-modular-golang"
+services:
+  postgres_db_BE-modular-golang:
+   image: postgres:15
+   restart: always
+   container_name: postgres_db_BE-modular-golang
+   environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: 123
+      POSTGRES_DB: be_modular_golang
+   ports:
+    - "5432:5432"
+   volumes:
+    - pgdata:/var/lib/postgresql/data
+   networks:
+    - be_modular_golang_network
+
+  pgadmin_BE-modular-golang:
+   image: dpage/pgadmin4 
+   container_name : pgadmin_BE-modular-golang
+   restart: always
+   environment:
+      PGADMIN_DEFAULT_EMAIL: user@example.com
+      PGADMIN_DEFAULT_PASSWORD: adminpassword
+   ports:
+   - "8080:80"
+   networks:
+   - be_modular_golang_network
+   depends_on:
+     - postgres_db_BE-modular-golang
+  
+networks:
+  be_modular_golang_network:
+    driver: bridge
+
+volumes:
+  pgdata:
