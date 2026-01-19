@@ -1,0 +1,103 @@
+# Binaries for programs and plugins
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Test binary, built with `go test -c`
+*.test
+
+# Output of the go coverage tool
+*.out
+coverage.txt
+coverage.html
+
+# Dependency directories
+vendor/
+
+# Go workspace file
+go.work
+
+# Build output
+/bin/
+/build/
+/dist/
+cmd/api/api
+cmd/api/main
+
+# Temporary files
+tmp/
+*.tmp
+*.swp
+*.swo
+*~
+
+# Air live reload tool
+.air.toml.local
+tmp/
+
+# Environment files
+*.env
+.env
+.env.local
+.env.*.local
+configs/*.env
+!configs/.env.example
+
+# IDE and Editor files
+.vscode/
+.idea/
+*.iml
+.DS_Store
+Thumbs.db
+*.sublime-project
+*.sublime-workspace
+
+# Log files
+*.log
+logs/
+log/
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+
+# Wire generated files (optional - uncomment if you want to regenerate on each machine)
+# wire_gen.go
+
+# Migration logs (if any)
+*.migration.log
+
+# OS specific files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Debugging
+debug
+__debug_bin
+
+# Documentation build artifacts
+docs/.build/
+
+# Private or sensitive files
+*.pem
+*.key
+*.cert
+*.crt
+secrets/
+.secrets/
+
+# Docker volumes
+.docker/
+docker-compose.override.yml
+
+# Test cache
+.cache/
+*.cache
