@@ -11,7 +11,12 @@ import (
 
 func InitializeApp(config *configs.Config) (*App, error) {
 	wire.Build(
-		database.ConnectPostgres,
+		database.NewCassandraConnection,
+		database.NewElasticConnection,
+		database.NewNeo4jConnection,
+		database.NewMongodbConnection,
+		database.NewRedisConnection,
+		database.NewPostgresConnection,
 		NewGinServer,
 		NewApp,
 	)
