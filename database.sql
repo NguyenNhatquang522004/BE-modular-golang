@@ -1199,6 +1199,20 @@ CREATE TABLE message_reactions (
     
     PRIMARY KEY ((conversation_id, message_id), user_id)
 );
+3. Redis: Real-time & Presence (Trạng th-- [MỚI] Cassandra: Message Reactions
+-- Partition Key: message_id (Để load tất cả reaction của 1 tin nhắn)
+-- Clustering Key: user_id (Để biết ai thả)
+
+CREATE TABLE message_reactions (
+    conversation_id TEXT, -- Partition Key phụ (Optional - để dễ dọn dẹp)
+    message_id TIMEUUID,
+    user_id UUID,
+    
+    reaction_code TEXT, -- '❤️', '😆', '😢'
+    created_at TIMESTAMP,
+    
+    PRIMARY KEY ((conversation_id, message_id), user_id)
+);
 3. Redis: Real-time & Presence (Trạng thái)
 Sử dụng Redis để xử lý các tính năng tức thời.
 
