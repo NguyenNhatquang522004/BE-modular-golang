@@ -265,6 +265,7 @@ services:
   cassandra-init:
     image: cassandra:4.1.3
     container_name: cassandra_init_job
+    restart: always
     depends_on:
       Cassandra_BE-modular-golang:  
         condition: service_healthy

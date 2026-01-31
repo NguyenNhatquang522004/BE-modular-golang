@@ -5,16 +5,14 @@ import (
 
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/identity/domain"
 
-	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/social/enum"
 	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
 
 type Followers struct {
-	Follower_ID     uuid.UUID     `gorm:"type:uuid;primaryKey;"`
-	Follower_UserID uuid.UUID     `gorm:"type:uuid;primaryKey" json:"follower_user_id"`
-	Followed_UserID uuid.UUID     `gorm:"type:uuid;primaryKey" json:"followed_user_id"`
-	Is_Muted        enum.Is_Muted `gorm:"type:varchar(10);default:'no';"` // 'yes', 'no'
+	Follower_UserID uuid.UUID `gorm:"type:uuid;primaryKey" json:"follower_user_id"`
+	Followed_UserID uuid.UUID `gorm:"type:uuid;primaryKey" json:"followed_user_id"`
+	IsMuted         bool      `gorm:"default:false" json:"is_muted"`
 	CreatedAt       time.Time
 	UpdatedAt       time.Time
 	DeletedAt       gorm.DeletedAt `gorm:"index"`

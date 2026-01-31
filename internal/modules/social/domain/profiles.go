@@ -6,6 +6,7 @@ import (
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/social/enum"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
+
 type Gender int
 
 const (
@@ -16,21 +17,21 @@ const (
 )
 
 type Profiles struct {
-// 1. ĐỊNH DANH
-	ID     primitive.ObjectID `bson:"_id,omitempty" json:"id"`
-	
+	// 1. ĐỊNH DANH
+	ID primitive.ObjectID `bson:"_id,omitempty" json:"id"`
+
 	// UserID từ Postgres (UUID). Lưu String để query dễ dàng và tương thích JSON.
 	// Index: Unique
-	UserID string             `bson:"user_id" json:"user_id"` 
+	UserID string `bson:"user_id" json:"user_id"`
 
 	FirstName string `bson:"first_name" json:"first_name"`
 	LastName  string `bson:"last_name" json:"last_name"`
-	
+
 	// Denormalization: Nên gộp FirstName + LastName khi save để search text nhanh
-	FullName  string `bson:"full_name" json:"full_name"` 
-	
+	FullName string `bson:"full_name" json:"full_name"`
+
 	// Index: Unique. Dùng để tạo URL đẹp: facebook.com/nguyen-van-a
-	Slug      string `bson:"slug" json:"slug"`
+	Slug string `bson:"slug" json:"slug"`
 
 	Bio         string      `bson:"bio" json:"bio"`
 	DateOfBirth time.Time   `bson:"date_of_birth" json:"date_of_birth"`
@@ -38,10 +39,10 @@ type Profiles struct {
 
 	// 2. MEDIA & LIÊN HỆ
 	// Dùng pointer (*) cho các object con.
-	// Lợi ích: Nếu user chưa set avatar, DB sẽ không lưu field này (tiết kiệm), 
+	// Lợi ích: Nếu user chưa set avatar, DB sẽ không lưu field này (tiết kiệm),
 	// và JSON trả về null giúp Frontend biết là chưa có.
-	Avatar      *ProfileAvatar `bson:"avatar,omitempty" json:"avatar,omitempty"`
-	CoverPhoto  *ProfileCover  `bson:"cover_photo,omitempty" json:"cover_photo,omitempty"`
+	Avatar      *ProfileAvatar  `bson:"avatar,omitempty" json:"avatar,omitempty"`
+	CoverPhoto  *ProfileCover   `bson:"cover_photo,omitempty" json:"cover_photo,omitempty"`
 	Address     *ProfileAddress `bson:"address,omitempty" json:"address,omitempty"`
 	PhoneNumber string          `bson:"phone_number,omitempty" json:"phone_number,omitempty"`
 	SocialLinks *SocialLinks    `bson:"social_links,omitempty" json:"social_links,omitempty"`
@@ -74,12 +75,12 @@ type ProfileCover struct {
 // --- LOCATION ---
 
 type ProfileAddress struct {
-	Street      string    `bson:"street" json:"street"`
-	City        string    `bson:"city" json:"city"`
-	Country     string    `bson:"country" json:"country"`
+	Street  string `bson:"street" json:"street"`
+	City    string `bson:"city" json:"city"`
+	Country string `bson:"country" json:"country"`
 	// Lưu tọa độ dạng mảng: [Longitude, Latitude]
 	//omitempty vì user có thể chưa set tọa độ
-	Coordinates []float64 `bson:"coordinates,omitempty" json:"coordinates,omitempty"` 
+	Coordinates []float64 `bson:"coordinates,omitempty" json:"coordinates,omitempty"`
 }
 
 // --- SOCIAL LINKS ---
@@ -103,7 +104,7 @@ type CVDocument struct {
 
 type WorkExperience struct {
 	// Tự tạo ID cho sub-document để dễ xóa/sửa chính xác item này trong mảng
-	ID          primitive.ObjectID `bson:"_id" json:"id"` 
+	ID          primitive.ObjectID `bson:"_id" json:"id"`
 	Company     string             `bson:"company" json:"company"`
 	Position    string             `bson:"position" json:"position"`
 	StartDate   time.Time          `bson:"start_date" json:"start_date"`
