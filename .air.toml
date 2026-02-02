@@ -13,7 +13,7 @@ poll_interval = 1000
   cmd = "go build -o ./tmp/main.exe ./cmd/api"
 
   # 3. Chạy wire gen trước khi build
-  pre_cmd = ["go generate ./...","wire gen ./cmd/api"]
+  pre_cmd = ["wire gen ./cmd/api"]
 
   # 4. Các cấu hình phụ trợ
   args_bin = []

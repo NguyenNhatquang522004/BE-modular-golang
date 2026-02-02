@@ -13,6 +13,7 @@ import (
 type PostgresConnection struct {
 	Postgres *gorm.DB
 }
+
 func NewPostgresConnection(cfg *configs.Config) (*PostgresConnection, error) {
 	db := &PostgresConnection{}
 	err := db.ConnectPostgres(cfg)
@@ -40,6 +41,7 @@ func (p *PostgresConnection) ConnectPostgres(config *configs.Config) error {
 
 	// Mở kết nối
 	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
+
 	if err != nil {
 		return fmt.Errorf("failed to connect to Postgres: %w", err)
 	}

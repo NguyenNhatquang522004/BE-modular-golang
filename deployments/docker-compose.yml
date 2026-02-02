@@ -14,6 +14,7 @@ services:
     - "5432:5432"
    volumes:
     - pgdata_BE-modular-golang:/var/lib/postgresql/data
+    - ./init/initpostgres.sql:/docker-entrypoint-initdb.d/init-db.sql # Thêm dòng này
    networks:
     - be_modular_golang_network
    healthcheck:
@@ -267,14 +268,33 @@ services:
     container_name: cassandra_init_job
     restart: always
     depends_on:
-      Cassandra_BE-modular-golang:  
-        condition: service_healthy
+      - Cassandra_BE-modular-golang
     volumes:
       - ./init/initCassandra.cql:/init.cql # Mount file script vào trong container
     networks:
       - be_modular_golang_network
     # Lệnh thực thi: Dùng cqlsh kết nối vào host 'cassandra' và chạy file init.cql
     command: /bin/bash -c "echo 'Starting init script...' && cqlsh Cassandra_BE-modular-golang -f /init.cql && echo 'Init completed!'"
+
+  keycloak_BE-modular-golang:
+    image: quay.io/keycloak/keycloak:22.0.1
+    container_name: keycloak_BE-modular-golang
+    restart: unless-stopped
+    environment:
+      - KEYCLOAK_ADMIN=admin
+      - KEYCLOAK_ADMIN_PASSWORD=admin
+      - KC_DB=postgres
+      - KC_DB_URL=jdbc:postgresql://postgres_db_BE-modular-golang:5432/keycloak
+      - KC_DB_USERNAME=user     # Dùng user của service postgres ở trên
+      - KC_DB_PASSWORD=123      # Dùng pass của service postgres ở trên
+      - KC_HOSTNAME=localhost   # Quan trọng để redirect SSO chạy đúng trên local
+    ports:
+      - "8085:8080"
+    command: start-dev
+    depends_on:
+      - postgres_db_BE-modular-golang
+    networks:
+      - be_modular_golang_network
   
 networks:
   be_modular_golang_network:
