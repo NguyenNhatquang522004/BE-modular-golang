@@ -1,4 +1,4 @@
-package repository_postgres
+package IRepositoryPostgres
 
 import (
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/identity/domain/entity"
@@ -11,4 +11,5 @@ type IUserRepository interface {
 	GetUserByID(userID uuid.UUID) (*entity.User, error)
 	UpdateUser(user *entity.User) error
 	DeleteUser(userID uuid.UUID) error
+	FindByKeycloakID(keycloakID string) (*entity.User, error)
 }

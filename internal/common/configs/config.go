@@ -7,6 +7,7 @@ import (
 )
 
 type Config struct {
+	KeyCloak    KeyCloakConfig
 	EmailSMTP   EmailSMTPConfig
 	GoogleAuth  GoogleAuthConfig
 	JWT         JWTConfig
@@ -18,6 +19,12 @@ type Config struct {
 	RedisDB     RedisConfig
 	PostgresDB  PostgresConfig
 	Server      ServerConfig
+}
+type KeyCloakConfig struct {
+	KEYCLOAK_SERVER_URL    string
+	KEYCLOAK_REALM         string
+	KEYCLOAK_CLIENT_ID     string
+	KEYCLOAK_CLIENT_SECRET string
 }
 type EmailSMTPConfig struct {
 	SMTP_HOST        string
@@ -96,6 +103,13 @@ func LoadConfig() (*Config, error) {
 	// Vì file .env của bạn đặt tên biến lộn xộn (Host, POSTGRES_USER...)
 	// nên ta phải lấy từng cái bỏ vào đúng chỗ trong Struct.
 	cfg := &Config{
+		// --- KeyCloak ---
+		KeyCloak: KeyCloakConfig{
+			KEYCLOAK_SERVER_URL:    viper.GetString("KEYCLOAK_SERVER_URL"),
+			KEYCLOAK_REALM:         viper.GetString("KEYCLOAK_REALM"),
+			KEYCLOAK_CLIENT_ID:     viper.GetString("KEYCLOAK_CLIENT_ID"),
+			KEYCLOAK_CLIENT_SECRET: viper.GetString("KEYCLOAK_CLIENT_SECRET"),
+		},
 		// --- Email SMTP ---
 		EmailSMTP: EmailSMTPConfig{
 			SMTP_HOST:        viper.GetString("SMTP_HOST"),

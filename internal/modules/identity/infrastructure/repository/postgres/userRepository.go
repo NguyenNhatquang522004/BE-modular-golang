@@ -24,8 +24,7 @@ func (r *UserRepository) CreateUser(user *entity.User) (*entity.User, error) {
 		return nil, err
 	}
 	return user, nil
-}	
-	
+}
 
 func (r *UserRepository) GetUserByEmail(email string) (*entity.User, error) {
 	var user entity.User
@@ -49,4 +48,13 @@ func (r *UserRepository) UpdateUser(user *entity.User) error {
 
 func (r *UserRepository) DeleteUser(userID uuid.UUID) error {
 	return r.DB.Where("id = ?", userID).Delete(&entity.User{}).Error
+}
+
+func (r *UserRepository) FindByKeycloakID(keycloakID string) (*entity.User, error) {
+	var user entity.User
+	err := r.DB.Where(&entity.User{KeycloakID: keycloakID}).First(&user).Error
+	if err != nil {
+		return nil, err
+	}
+	return &user, nil
 }
