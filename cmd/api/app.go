@@ -1,19 +1,35 @@
 package main
 
 import (
+	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/database"
 	"github.com/gin-gonic/gin"
-	"gorm.io/gorm"
 )
 
 type App struct {
-	Server *gin.Engine
-	DB     *gorm.DB
+	Server    *gin.Engine
+	Mongo     *database.MongodbConnection
+	Redis     *database.RedisConnection
+	Postgres  *database.PostgresConnection
+	Elastic   *database.ElasticConnection
+	Cassandra *database.CassandraConnection
+	Neo4j     *database.Neo4jConnection
 }
 
-func NewApp(server *gin.Engine, DB *gorm.DB) *App {
-	return &App{Server: server, DB: DB}
+func NewApp(		
+	server *gin.Engine,
+	// Wire sẽ tự động bơm các biến này vào đây
+	mongo *database.MongodbConnection,
+	redis *database.RedisConnection,
+	postgres *database.PostgresConnection,
+	elastic *database.ElasticConnection,
+	cassandra *database.CassandraConnection,
+	neo4j *database.Neo4jConnection,
+) *App {
+	return &App{Server: server, Mongo: mongo, Redis: redis, Postgres: postgres, Elastic: elastic, Cassandra: cassandra, Neo4j: neo4j}
 }
 
 func NewGinServer() *gin.Engine {
-	return gin.Default()
+	r := gin.Default()
+	r.SetTrustedProxies(nil)
+	return r
 }

@@ -15,10 +15,30 @@ import (
 
 func InitializeApp(config *configs.Config) (*App, error) {
 	engine := NewGinServer()
-	db, err := database.ConnectPostgres(config)
+	mongodbConnection, err := database.NewMongodbConnection(config)
 	if err != nil {
 		return nil, err
 	}
-	app := NewApp(engine, db)
+	redisConnection, err := database.NewRedisConnection(config)
+	if err != nil {
+		return nil, err
+	}
+	postgresConnection, err := database.NewPostgresConnection(config)
+	if err != nil {
+		return nil, err
+	}
+	elasticConnection, err := database.NewElasticConnection(config)
+	if err != nil {
+		return nil, err
+	}
+	cassandraConnection, err := database.NewCassandraConnection(config)
+	if err != nil {
+		return nil, err
+	}
+	neo4jConnection, err := database.NewNeo4jConnection(config)
+	if err != nil {
+		return nil, err
+	}
+	app := NewApp(engine, mongodbConnection, redisConnection, postgresConnection, elasticConnection, cassandraConnection, neo4jConnection)
 	return app, nil
 }
