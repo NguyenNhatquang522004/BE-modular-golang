@@ -37,7 +37,7 @@ func ErrorResponse(message string) Response {
 		Message: message,
 	}
 }
-func NewResponse(opts ...OptionalResponse) Response {
+func NewResponse(opts ...OptionalResponse) *Response {
 	res := Response{
 		Status:  "success",
 		Message: "",
@@ -46,5 +46,5 @@ func NewResponse(opts ...OptionalResponse) Response {
 	for _, opt := range opts {
 		opt(&res)
 	}
-	return res
+	return &res
 }

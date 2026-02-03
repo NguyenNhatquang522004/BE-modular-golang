@@ -7,6 +7,9 @@ import (
 )
 
 type Config struct {
+	EmailSMTP   EmailSMTPConfig
+	GoogleAuth  GoogleAuthConfig
+	JWT         JWTConfig
 	SEAWEEDFS   SEAWEEDFSConfig
 	Neo4jDB     Neo4jConfig
 	MongoDB     MongodbConfig
@@ -15,6 +18,22 @@ type Config struct {
 	RedisDB     RedisConfig
 	PostgresDB  PostgresConfig
 	Server      ServerConfig
+}
+type EmailSMTPConfig struct {
+	SMTP_HOST        string
+	SMTP_PORT        int
+	SMTP_EMAIL       string
+	SMTP_PASSWORD    string
+	SMTP_SENDER_NAME string
+}
+type GoogleAuthConfig struct {
+	GOOGLE_CLIENT_ID     string
+	GOOGLE_CLIENT_SECRET string
+	GOOGLE_REDIRECT_URL  string
+}
+type JWTConfig struct {
+	JWT_SECRET_KEY       string
+	JWT_EXPIRES_IN_HOURS int64
 }
 type SEAWEEDFSConfig struct {
 	SEAWEEDFS_FILER_URL string
@@ -77,6 +96,25 @@ func LoadConfig() (*Config, error) {
 	// Vì file .env của bạn đặt tên biến lộn xộn (Host, POSTGRES_USER...)
 	// nên ta phải lấy từng cái bỏ vào đúng chỗ trong Struct.
 	cfg := &Config{
+		// --- Email SMTP ---
+		EmailSMTP: EmailSMTPConfig{
+			SMTP_HOST:        viper.GetString("SMTP_HOST"),
+			SMTP_PORT:        viper.GetInt("SMTP_PORT"),
+			SMTP_EMAIL:       viper.GetString("SMTP_EMAIL"),
+			SMTP_PASSWORD:    viper.GetString("SMTP_PASSWORD"),
+			SMTP_SENDER_NAME: viper.GetString("SMTP_SENDER_NAME"),
+		},
+		// --- Google Auth ---
+		GoogleAuth: GoogleAuthConfig{
+			GOOGLE_CLIENT_ID:     viper.GetString("GOOGLE_CLIENT_ID"),
+			GOOGLE_CLIENT_SECRET: viper.GetString("GOOGLE_CLIENT_SECRET"),
+			GOOGLE_REDIRECT_URL:  viper.GetString("GOOGLE_REDIRECT_URL"),
+		},
+		// --- JWT ---
+		JWT: JWTConfig{
+			JWT_SECRET_KEY:       viper.GetString("JWT_SECRET_KEY"),
+			JWT_EXPIRES_IN_HOURS: viper.GetInt64("JWT_EXPIRES_IN_HOURS"),
+		},
 		// --- Postgres ---
 		PostgresDB: PostgresConfig{
 			Host:        viper.GetString("Host"), // Chú ý: trong file env bạn đang để key là "Host"

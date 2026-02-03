@@ -15,12 +15,15 @@ type User struct {
 	Password    string    `gorm:"type:varchar(255);not null"`
 	Username    string    `gorm:"type:varchar(50);uniqueIndex;"`
 
+	StepRegister int `gorm:"default:0;"`
+
 	TypeLogin enum.LoginType `gorm:"type:varchar(20);"`
 
-	OTPVerified string    `gorm:"type:varchar(20);"`
-	OTPCode     string    `gorm:"type:varchar(10);"`
-	OTPExpiry   time.Time `gorm:""`
-	OTPAttempts int       `gorm:"default:0;"`
+	OTPVerified    string    `gorm:"type:varchar(20);"`
+	OTPCode        string    `gorm:"type:varchar(10);"`
+	OTPExpiry      time.Time `gorm:""`
+	OTPAttempts    int       `gorm:"default:0;"`
+	OTPTimeWaitOTP time.Time `gorm:""`
 
 	IsActive             bool `gorm:"default:true;"`
 	SettingsActiveStatus bool `gorm:"default:true;"`
