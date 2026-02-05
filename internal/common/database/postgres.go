@@ -70,6 +70,6 @@ func (p *PostgresConnection) ConnectPostgres(config *configs.Config) error {
 func (p *PostgresConnection) GetDB() *gorm.DB {
 	return p.Postgres
 }
-func ProvideGormDB(conn *PostgresConnection) *gorm.DB {
+func  ProvideGormDB(conn *PostgresConnection) *gorm.DB {
 	return conn.GetDB()
 }

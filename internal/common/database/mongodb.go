@@ -39,3 +39,7 @@ func (ctx *MongodbConnection) ConnectMongodb(configMongodb *configs.MongodbConfi
 func (ctx *MongodbConnection) GetDatabase() *mongo.Client {
 	return ctx.mongodbDB
 }
+
+func (ctx *MongodbConnection) GetMongoDatabase(dbName string) *mongo.Database {
+	return ctx.mongodbDB.Database(dbName)
+}

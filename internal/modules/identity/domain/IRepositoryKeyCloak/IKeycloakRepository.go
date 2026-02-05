@@ -77,4 +77,6 @@ type IKeycloakRepository interface {
 
 	// Kiểm tra xem User đang có những quyền gì
 	GetRealmRolesByUserID(ctx context.Context, userID string) ([]*gocloak.Role, error)
+	// google
+	ExchangeExternalToken(ctx context.Context, issuer string, externalToken string) (*gocloak.JWT, error)
 }

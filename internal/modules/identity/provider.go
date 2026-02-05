@@ -1,6 +1,7 @@
 package identity
 
 import (
+	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/identity/domain/IRepositoryKeyCloak"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/identity/domain/IRepositoryPostgres"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/identity/infrastructure/repository/keycloak"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/identity/infrastructure/repository/postgres"
@@ -11,7 +12,7 @@ var RepositorySet = wire.NewSet(
 	postgres.NewUserRepository,
 	keycloak.NewKeycloakRepository,
 	wire.Bind(new(IRepositoryPostgres.IUserRepository), new(*postgres.UserRepository)),
-	wire.Bind(new(keycloak.IKeycloakRepository), new(*keycloak.KeycloakRepository)),
+	wire.Bind(new(IRepositoryKeyCloak.IKeycloakRepository), new(*keycloak.KeycloakRepository)),
 )
 
 var UseCaseSet = wire.NewSet(

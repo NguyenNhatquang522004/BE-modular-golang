@@ -17,7 +17,12 @@ func InitializeApp(config *configs.Config) (*App, error) {
 		database.NewMongodbConnection,
 		database.NewRedisConnection,
 		database.NewPostgresConnection,
-		ProvideGormDB,
+		ProvideMongoDatabase,
+		ProvidePostgresGormDB,
+		ProvideNeo4jDriver,
+		ProvideElasticClient,
+		ProvideRedisClient,
+		ProvideCassandraSession,
 		NewGinServer,
 		NewApp,
 	)
