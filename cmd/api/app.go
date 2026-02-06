@@ -15,7 +15,7 @@ type App struct {
 	Neo4j     *database.Neo4jConnection
 }
 
-func NewApp(		
+func NewApp(
 	server *gin.Engine,
 	// Wire sẽ tự động bơm các biến này vào đây
 	mongo *database.MongodbConnection,
@@ -24,8 +24,10 @@ func NewApp(
 	elastic *database.ElasticConnection,
 	cassandra *database.CassandraConnection,
 	neo4j *database.Neo4jConnection,
+
 ) *App {
-	return &App{Server: server, Mongo: mongo, Redis: redis, Postgres: postgres, Elastic: elastic, Cassandra: cassandra, Neo4j: neo4j}
+	return &App{Server: server, Mongo: mongo, Redis: redis, Postgres: postgres, Elastic: elastic, Cassandra: cassandra,
+		Neo4j: neo4j}
 }
 
 func NewGinServer() *gin.Engine {

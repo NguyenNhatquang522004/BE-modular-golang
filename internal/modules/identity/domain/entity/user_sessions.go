@@ -21,14 +21,11 @@ type UserSession struct {
 	IpAddress       string `gorm:"type:varchar(45);"`
 	LocationCity    string `gorm:"type:varchar(100);"`
 	LocationCountry string `gorm:"type:varchar(100);"`
-	RefreshToken    string `gorm:"type:text;"`
-
-	IsActive     bool `gorm:"default:true;"`
-	LastActiveAt time.Time
-
-	CreatedAt time.Time
-	UpdatedAt time.Time
-	DeletedAt gorm.DeletedAt `gorm:"index"` // Dùng gorm.DeletedAt chuẩn hơn *time.Time
+	IsActive        bool   `gorm:"default:true;"`
+	LastActiveAt    time.Time
+	CreatedAt       time.Time
+	UpdatedAt       time.Time
+	DeletedAt       gorm.DeletedAt `gorm:"index"` // Dùng gorm.DeletedAt chuẩn hơn *time.Time
 
 	// 4. Quan hệ Belongs To
 	// - Dùng con trỏ *User

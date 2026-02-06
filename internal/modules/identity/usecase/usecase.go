@@ -2,6 +2,7 @@ package usecase
 
 import (
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/http/response"
+	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/identity/domain/entity"
 	"github.com/golang-jwt/jwt/v5"
 	"golang.org/x/oauth2"
 )
@@ -28,15 +29,12 @@ type IUserAuthService interface {
 	LoginWithGoogle(provider string, token string) (*response.Response, error)
 }
 type IUserSettingService interface {
-	CreateDefaultSettings(userID string) (*response.Response, error)
-	GetUserSettings(userID string) (*response.Response, error)
+	CreateUserSetting(userID string) (*response.Response, error)
 	UpdateUserSettings(userID string, settings map[string]interface{}) (*response.Response, error)
 }
 
 type IUserSessionService interface {
-	CreateSession(userID string, deviceInfo string) (*response.Response, error)
-	ValidateSession(sessionToken string) (*response.Response, error)
-	RevokeSession(sessionToken string) (*response.Response, error)
+	CreateSessionLogin(session *entity.UserSession) (*response.Response, error)
 }
 
 type Usecase struct {
