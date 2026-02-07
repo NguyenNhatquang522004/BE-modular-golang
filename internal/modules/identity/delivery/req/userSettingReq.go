@@ -3,6 +3,8 @@ package req
 import (
 	"time"
 
+	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/identity/domain/entity"
+	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/identity/enum"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 

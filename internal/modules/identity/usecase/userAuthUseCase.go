@@ -353,7 +353,7 @@ func (u *UserAuthUseCase) ResetPassword(email string, newPassword string) (*resp
 }
 
 func (u *UserAuthUseCase) LogOut(userID string, accessToken string) (*response.Response, error) {
-	user, err := u.userRepo.GetUserByID(uuid.MustParse(userID))
+	user, err := u.userRepo.GetUserByID(userID)
 	if err != nil {
 		return response.NewResponse(
 			response.WithMessage("Error retrieving user"),

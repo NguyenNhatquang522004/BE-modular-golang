@@ -16,10 +16,12 @@ var RepositorySet = wire.NewSet(
 	keycloak.NewKeycloakRepository,
 	mongodb.NewUserSettingRepository,
 	postgres.NewUserSessionRepository,
+	postgres.NewUserRoleRepository,
 	wire.Bind(new(IRepositoryPostgres.IUserRepository), new(*postgres.UserRepository)),
 	wire.Bind(new(IRepositoryKeyCloak.IKeycloakRepository), new(*keycloak.KeycloakRepository)),
 	wire.Bind(new(IRepositoryMongodb.IUserSettingRepository), new(*mongodb.UserSettingRepository)),
 	wire.Bind(new(IRepositoryPostgres.IUserSessionRepository), new(*postgres.UserSessionRepository)),
+	wire.Bind(new(IRepositoryPostgres.IUserRoleRepository), new(*postgres.UserRoleRepository)),
 )
 
 var UseCaseSet = wire.NewSet(

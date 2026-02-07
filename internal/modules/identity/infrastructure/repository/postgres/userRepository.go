@@ -34,9 +34,9 @@ func (r *UserRepository) GetUserByEmail(email string) (*entity.User, error) {
 	}
 	return &user, nil
 }
-func (r *UserRepository) GetUserByID(id uuid.UUID) (*entity.User, error) {
+func (r *UserRepository) GetUserByID(userID string) (*entity.User, error) {
 	var user entity.User
-	err := r.DB.First(&user, id).Error
+	err := r.DB.Where(&entity.User{ID: uuid.MustParse(userID)}).First(&user).Error
 	if err != nil {
 		return nil, err
 	}
@@ -46,7 +46,7 @@ func (r *UserRepository) UpdateUser(user *entity.User) error {
 	return r.DB.Save(user).Error
 }
 
-func (r *UserRepository) DeleteUser(userID uuid.UUID) error {
+func (r *UserRepository) DeleteUser(userID string) error {
 	return r.DB.Where("id = ?", userID).Delete(&entity.User{}).Error
 }
 

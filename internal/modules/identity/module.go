@@ -31,6 +31,7 @@ func (m *ModuleIdentity) RegisterRoute(r *gin.RouterGroup) {
 func (m *ModuleIdentity) InitPostgres() error {
 	return m.db.AutoMigrate(&entity.User{},
 		&entity.UserSession{},
+		&entity.UserRole{},
 	)
 }
 

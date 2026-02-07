@@ -183,7 +183,7 @@ func (k *KeycloakRepository) GetUserByUsername(ctx context.Context, username str
 	params := gocloak.GetUsersParams{
 		Username: &username,
 		Exact:    gocloak.BoolP(true),
-	}
+	}	
 
 	users, err := k.Client.GetUsers(ctx, token.AccessToken, k.Realm, params)
 	if err != nil {

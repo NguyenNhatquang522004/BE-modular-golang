@@ -32,6 +32,6 @@ type User struct {
 	CreatedAt time.Time
 	UpdatedAt time.Time
 	DeletedAt gorm.DeletedAt `gorm:"index"`
-	Roles     []UserRole     `gorm:"foreignKey:UserID"`
+	Roles     []*UserRole    `gorm:"many2many:user_roles;"`
 	Sessions  []*UserSession `gorm:"foreignKey:UserID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
 }

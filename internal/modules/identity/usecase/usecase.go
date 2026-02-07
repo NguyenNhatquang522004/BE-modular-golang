@@ -3,10 +3,21 @@ package usecase
 import (
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/http/response"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/identity/domain/entity"
+	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/identity/enum"
 	"github.com/golang-jwt/jwt/v5"
 	"golang.org/x/oauth2"
 )
 
+type IUserRoleUseCase interface {
+	AssignRoleToUser(userID string, RoleName string) (*response.Response, error)
+	RemoveRoleFromUser(userID string, role string) (*response.Response, error)
+	GetUserRoles(userID string) (*response.Response, error)
+	UpdateRoleDescription(roleID string, description string) (*response.Response, error)
+	CreateRole(role enum.RoleType, description string) (*response.Response, error)
+	DeleteRole(roleID string) (*response.Response, error)
+	GetAllUserRoles(RoleID string) (*response.Response, error)
+	GetAllRoles() (*response.Response, error)
+}
 type IGoogleAuthUseCase interface {
 	//Token Exchange
 	Login(provider string, token string) (*response.Response, error)
