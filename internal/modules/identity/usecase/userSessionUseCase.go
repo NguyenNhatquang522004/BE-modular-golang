@@ -18,3 +18,9 @@ func NewUserSessionUseCase(userSessionRepo IRepositoryPostgres.IUserSessionRepos
 func (u *UserSessionUseCase) CreateSessionLogin(session *entity.UserSession) (*response.Response, error) {
 	return u.userSessionRepo.CreateSession(session)
 }
+func (u *UserSessionUseCase) GetAllUserSessions(userID string) (*response.Response, error) {
+	return u.userSessionRepo.GetAllUserSessions(userID)
+}
+func (u *UserSessionUseCase) GetUserSessionPast(userID string) (*response.Response, error) {
+	return u.userSessionRepo.GetUserSessionPast(userID)
+}

@@ -47,6 +47,8 @@ type IUserSettingService interface {
 
 type IUserSessionService interface {
 	CreateSessionLogin(session *entity.UserSession) (*response.Response, error)
+	GetAllUserSessions(userID string) (*response.Response, error)
+	GetUserSessionPast(userID string) (*response.Response, error)
 }
 
 type Usecase struct {

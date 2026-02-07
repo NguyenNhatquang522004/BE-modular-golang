@@ -7,4 +7,6 @@ import (
 
 type IUserSessionRepository interface {
 	CreateSession(session *entity.UserSession) (*response.Response, error)
+	GetAllUserSessions(userID string) (*response.Response, error)
+	GetUserSessionPast(userID string) (*response.Response, error)
 }

@@ -31,7 +31,7 @@ type UserSessionReq struct {
 	DeletedAt gorm.DeletedAt `gorm:"index"` // Dùng gorm.DeletedAt chuẩn hơn *time.Time
 }
 
-func (u *UserSessionReq) ToUserSessionResp(e *entity.UserSession) *UserSessionReq {
+func ToUserSessionResp(e *entity.UserSession) *UserSessionReq {
 	if e == nil {
 		return nil
 	}
@@ -50,24 +50,24 @@ func (u *UserSessionReq) ToUserSessionResp(e *entity.UserSession) *UserSessionRe
 }
 
 // Helper để map một danh sách (List)
-func (u *UserSessionReq) ToUserSessionRespList(sessions []entity.UserSession) []UserSessionReq {
+func ToUserSessionRespList(sessions []entity.UserSession) []UserSessionReq {
 	result := make([]UserSessionReq, len(sessions))
 	for i, s := range sessions {
-		result[i] = *u.ToUserSessionResp(&s)
+		result[i] = *ToUserSessionResp(&s)
 	}
 	return result
 }
 func (req *UserSessionReq) ToEntity(userID uuid.UUID, refreshToken string, ip string, city string, country string) *entity.UserSession {
 	return &entity.UserSession{
 		// ID: Postgres tự sinh (gen_random_uuid)
-		UserID:       userID,
-		DeviceName: req.DeviceName,
-		OsVersion:  req.OsVersion,
-		Browser:    req.Browser,
+		UserID:          userID,
+		DeviceName:      req.DeviceName,
+		OsVersion:       req.OsVersion,
+		Browser:         req.Browser,
 		IpAddress:       ip,      // Lấy từ Context request
 		LocationCity:    city,    // Lấy từ GeoIP service
 		LocationCountry: country, // Lấy từ GeoIP service
-		IsActive:     true,
-		LastActiveAt: time.Now(),
+		IsActive:        true,
+		LastActiveAt:    time.Now(),
 	}
 }

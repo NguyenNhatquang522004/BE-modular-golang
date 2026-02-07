@@ -97,5 +97,3 @@ func (u *UserRoleUseCase) GetAllRoles() (*response.Response, error) {
 	}
 	return resp, nil
 }
-
-
