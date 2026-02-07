@@ -20,25 +20,40 @@ func NewUserRoleUseCase(userRoleRepo IRepositoryPostgres.IUserRoleRepository, us
 		userRepo:     userRepo,
 	}
 }
-
-func (u *UserRoleUseCase) AssignRoleToUser(userID string, RoleName string) (*response.Response, error) {
-	user, err := u.userRepo.GetUserByID(userID)
-	if err != nil {
-		return response.NewResponse(response.WithData(""),
-			response.WithMessage("user not found"), response.WithStatus("404")), err
-	}
-	normalizedRole := strings.ToLower(strings.TrimSpace(RoleName))
+func (u *UserRoleUseCase) convertEnum(roleName string) (*response.Response, error) {
+	normalizedRole := strings.ToLower(strings.TrimSpace(roleName))
 	convert, err := enum.RoleTypeString(normalizedRole)
 	if err != nil {
 		return response.NewResponse(response.WithData(""),
 			response.WithMessage("invalid role name"), response.WithStatus("400")), err
 	}
-	Role, err := u.userRoleRepo.FindRoleWithName(convert)
+	return response.NewResponse(response.WithData(convert), response.WithMessage(""), response.WithStatus("200")), nil
+}
+
+func (u *UserRoleUseCase) AssignRoleToUserWithName(userID string, roleName string) (*response.Response, error) {
+	convertResp, err := u.convertEnum(roleName)
+	if err != nil {
+		return convertResp, err
+	}
+	if err != nil {
+		return response.NewResponse(response.WithData(""),
+			response.WithMessage("invalid role name"), response.WithStatus("400")), err
+	}
+	Role, err := u.userRoleRepo.FindRoleWithName(convertResp.Data.(enum.RoleType))
 	if err != nil {
 		return response.NewResponse(response.WithData(""),
 			response.WithMessage("role not found"), response.WithStatus("404")), err
 	}
-	_, err = u.userRoleRepo.CreateRoleUser(user, Role.Data.(*entity.UserRole))
+	_, err = u.userRoleRepo.CreateRoleUser(userID, Role.Data.(*entity.UserRole).ID.String())
+
+	if err != nil {
+		return response.NewResponse(response.WithData(""),
+			response.WithMessage("assign fail "), response.WithStatus("500")), err
+	}
+	return response.NewResponse(response.WithData(nil), response.WithMessage("Role assigned to user successfully"), response.WithStatus("200")), nil
+}
+func (u *UserRoleUseCase) AssignRoleToUserWithID(userID string, roleID string) (*response.Response, error) {
+	_, err := u.userRoleRepo.CreateRoleUser(userID, roleID)
 
 	if err != nil {
 		return response.NewResponse(response.WithData(""),
@@ -47,12 +62,40 @@ func (u *UserRoleUseCase) AssignRoleToUser(userID string, RoleName string) (*res
 	return response.NewResponse(response.WithData(nil), response.WithMessage("Role assigned to user successfully"), response.WithStatus("200")), nil
 }
 
-func (u *UserRoleUseCase) RemoveRoleFromUser(userID string, role string) (*response.Response, error) {
-	// Implementation here
-	return nil, nil
+func (u *UserRoleUseCase) UpdateRoleOfUser(userID string, roleIDs []string) (*response.Response, error) {
+	return u.userRoleRepo.UpdateRoleOfUser(userID, roleIDs)
 }
 
-func (u *UserRoleUseCase) GetUserRoles(userID string) (*response.Response, error) {
-	
-	return nil, nil
+func (u *UserRoleUseCase) GetUserRoles(userID string, roleName string) (*response.Response, error) {
+	convertResp, err := u.convertEnum(roleName)
+	if err != nil {
+		return convertResp, err
+	}
+	return u.userRoleRepo.FindUserwithRole(userID, convertResp.Data.(enum.RoleType))
 }
+
+func (u *UserRoleUseCase) UpdateRoleDescription(roleID string, description string) (*response.Response, error) {
+	return u.userRoleRepo.UpdateRoleDescription(roleID, description)
+}
+
+func (u *UserRoleUseCase) CreateRole(role enum.RoleType, description string) (*response.Response, error) {
+	return u.userRoleRepo.CreateRole(role, description)
+}
+
+func (u *UserRoleUseCase) DeleteRole(roleID string) (*response.Response, error) {
+	return u.userRoleRepo.DeleteRole(roleID)
+}
+
+func (u *UserRoleUseCase) GetAllUserRoles(RoleID string) (*response.Response, error) {
+	return u.userRoleRepo.GetAllUserRoles(RoleID)
+}
+
+func (u *UserRoleUseCase) GetAllRoles() (*response.Response, error) {
+	resp, err := u.userRoleRepo.GetAllRoles()
+	if err != nil {
+		return nil, err
+	}
+	return resp, nil
+}
+
+

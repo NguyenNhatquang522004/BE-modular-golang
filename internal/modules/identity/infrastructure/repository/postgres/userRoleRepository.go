@@ -2,8 +2,10 @@ package postgres
 
 import (
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/http/response"
+	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/identity/delivery/res"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/identity/domain/entity"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/identity/enum"
+	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
 
@@ -61,7 +63,8 @@ func (u *UserRoleRepository) FindUserwithRole(userID string, role enum.RoleType)
 		Where("users.id = ? AND roles.role = ?", userID, role).
 		First(&user).Error
 	if err != nil {
-		return nil, err
+		return response.NewResponse(response.WithData(""),
+			response.WithMessage(err.Error()), response.WithStatus("")), err
 	}
 	return response.NewResponse(response.WithData(&user), response.WithMessage(""), response.WithStatus("200")), nil
 }
@@ -97,8 +100,8 @@ func (u *UserRoleRepository) UpdateRoleDescription(roleID string, description st
 	return response.NewResponse(response.WithData(&userRole), response.WithMessage(""), response.WithStatus("200")), nil
 
 }
-func (u *UserRoleRepository) CreateRoleUser(user *entity.User, role *entity.UserRole) (*response.Response, error) {
-	err := u.db.Model(user).Association("Roles").Append(role)
+func (u *UserRoleRepository) CreateRoleUser(userID string, roleID string) (*response.Response, error) {
+	err := u.db.Model(&entity.User{ID: uuid.MustParse(userID)}).Association("Roles").Append(&entity.UserRole{ID: uuid.MustParse(roleID)})
 	if err != nil {
 		return nil, err
 	}
@@ -106,10 +109,31 @@ func (u *UserRoleRepository) CreateRoleUser(user *entity.User, role *entity.User
 }
 
 func (u *UserRoleRepository) GetAllRoles() (*response.Response, error) {
-	var roles []entity.UserRole
-	err := u.db.Find(&roles).Error
+	var roles []res.UserRoleRes
+	err := u.db.Raw("SELECT ID , role, description FROM user_roles").Scan(&roles).Error
 	if err != nil {
 		return nil, err
 	}
 	return response.NewResponse(response.WithData(roles), response.WithMessage(""), response.WithStatus("200")), nil
+}
+
+func (u *UserRoleRepository) DeleteRoleFromUser(userID string, roleID string) (*response.Response, error) {
+	err := u.db.Model(&entity.User{ID: uuid.MustParse(userID)}).Association("Roles").Delete(&entity.UserRole{ID: uuid.MustParse(roleID)})
+	if err != nil {
+		return nil, err
+	}
+
+	return response.NewResponse(response.WithData(nil), response.WithMessage("Role removed from user successfully"), response.WithStatus("200")), nil
+}
+
+func (u *UserRoleRepository) UpdateRoleOfUser(userID string, roleIDs []string) (*response.Response, error) {
+	var roles []entity.UserRole
+	for _, id := range roleIDs {
+		roles = append(roles, entity.UserRole{ID: uuid.MustParse(id)})
+	}
+	err := u.db.Model(&entity.User{ID: uuid.MustParse(userID)}).Association("Roles").Replace(&roles)
+	if err != nil {
+		return nil, err
+	}
+	return response.NewResponse(response.WithData(nil), response.WithMessage("User roles updated successfully"), response.WithStatus("200")), nil
 }

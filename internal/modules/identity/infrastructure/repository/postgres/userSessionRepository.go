@@ -11,11 +11,11 @@ type UserSessionRepository struct {
 }
 
 func NewUserSessionRepository(db *gorm.DB) *UserSessionRepository {
-	return &UserSessionRepository{
+	return &UserSessionRepository{  
 		db: db,
 	}
 }
-func (r *UserSessionRepository) CreateSession( session *entity.UserSession) (*response.Response, error) {
+func (r *UserSessionRepository) CreateSession(session *entity.UserSession) (*response.Response, error) {
 	err := r.db.Create(session).Error
 	if err != nil {
 		return nil, err

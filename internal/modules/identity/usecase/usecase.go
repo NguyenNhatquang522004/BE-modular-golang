@@ -9,9 +9,10 @@ import (
 )
 
 type IUserRoleUseCase interface {
-	AssignRoleToUser(userID string, RoleName string) (*response.Response, error)
-	RemoveRoleFromUser(userID string, role string) (*response.Response, error)
-	GetUserRoles(userID string) (*response.Response, error)
+	AssignRoleToUserWithName(userID string, RoleName string) (*response.Response, error)
+	AssignRoleToUserWithID(userID string, roleID string) (*response.Response, error)
+	UpdateRoleOfUser(userID string, roleIDs []string) (*response.Response, error)
+	GetUserRoles(userID string, roleName string) (*response.Response, error)
 	UpdateRoleDescription(roleID string, description string) (*response.Response, error)
 	CreateRole(role enum.RoleType, description string) (*response.Response, error)
 	DeleteRole(roleID string) (*response.Response, error)
