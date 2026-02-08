@@ -7,6 +7,7 @@ import (
 )
 
 type Config struct {
+	Kafka       KafkaConfig
 	KeyCloak    KeyCloakConfig
 	EmailSMTP   EmailSMTPConfig
 	GoogleAuth  GoogleAuthConfig
@@ -19,6 +20,10 @@ type Config struct {
 	RedisDB     RedisConfig
 	PostgresDB  PostgresConfig
 	Server      ServerConfig
+}
+type KafkaConfig struct {
+	BROKERS        []string
+	CONSUMER_GROUP string
 }
 type KeyCloakConfig struct {
 	KEYCLOAK_SERVER_URL    string
@@ -103,6 +108,11 @@ func LoadConfig() (*Config, error) {
 	// Vì file .env của bạn đặt tên biến lộn xộn (Host, POSTGRES_USER...)
 	// nên ta phải lấy từng cái bỏ vào đúng chỗ trong Struct.
 	cfg := &Config{
+		// --- Kafka ---
+		Kafka: KafkaConfig{
+			BROKERS:        viper.GetStringSlice("KAFKA_BROKERS"),
+			CONSUMER_GROUP: viper.GetString("KAFKA_CONSUMER_GROUP"),
+		},
 		// --- KeyCloak ---
 		KeyCloak: KeyCloakConfig{
 			KEYCLOAK_SERVER_URL:    viper.GetString("KEYCLOAK_SERVER_URL"),

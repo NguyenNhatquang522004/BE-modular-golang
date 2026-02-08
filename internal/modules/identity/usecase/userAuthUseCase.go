@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/Nerzal/gocloak/v13"
+	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/events"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/http/response"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/identity/delivery/res"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/identity/domain/IRepositoryPostgres"
@@ -17,6 +18,7 @@ import (
 )
 
 type UserAuthUseCase struct {
+	eventBus       events.EventBus
 	userRepo       IRepositoryPostgres.IUserRepository
 	keycloakClient *keycloak.KeycloakRepository
 }
@@ -29,6 +31,13 @@ func NewUserAuthUseCase(userRepo IRepositoryPostgres.IUserRepository, keycloakCl
 }
 
 func (u *UserAuthUseCase) Login(email string, password string, code string, redirectURI string) (*response.Response, error) {
+	// err = u.eventBus.Publish(ctx, "user.registered", map[string]string{
+	// 	"user_id": email,
+	// 	"email":   email,
+	// }).Error()
+	// if err != nil {
+	// 	return nil, err
+	// }
 	if email == "" || password == "" {
 		return response.NewResponse(
 			response.WithMessage("Email and password must not be empty"),
