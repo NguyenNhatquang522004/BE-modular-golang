@@ -13,24 +13,34 @@ import (
 )
 
 type ModuleIdentity struct {
+	client *mongo.Database
+	db     *gorm.DB
+}
+
+func NewModuleIdentity(client *mongo.Database, db *gorm.DB) *ModuleIdentity {
+	return &ModuleIdentity{
+		client: client,
+		db:     db,
+	}
 }
 
 func (m *ModuleIdentity) RegisterRoute(r *gin.RouterGroup) {
 
 }
 
-func (m *ModuleIdentity) InitPostgres(db *gorm.DB) error {
-	return db.AutoMigrate(&entity.User{},
+func (m *ModuleIdentity) InitPostgres() error {
+	return m.db.AutoMigrate(&entity.User{},
 		&entity.UserSession{},
+		&entity.UserRole{},
 	)
 }
 
-func (m *ModuleIdentity) InitMongo(db *mongo.Database) error {
+func (m *ModuleIdentity) InitMongo() error {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
 	// Lấy collection từ domain thông qua helper method
-	collection := db.Collection(entity.UserSetting{}.CollectionName())
+	collection := m.client.Collection(entity.UserSetting{}.CollectionName())
 	// Đánh Index cho UserSetting
 	_, err := collection.Indexes().CreateOne(ctx, mongo.IndexModel{
 		// 1. Unique Index: { user_id: 1 }

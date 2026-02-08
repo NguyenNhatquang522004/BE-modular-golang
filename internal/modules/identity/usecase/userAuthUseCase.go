@@ -1,49 +1,94 @@
 package usecase
 
 import (
+	"context"
+	"errors"
 	"time"
 
+	"github.com/Nerzal/gocloak/v13"
+	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/events"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/http/response"
+	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/identity/delivery/res"
+	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/identity/domain/IRepositoryPostgres"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/identity/domain/entity"
-	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/identity/domain/repository_postgres"
+	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/identity/infrastructure/repository/keycloak"
+
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/identity/utils"
 	"github.com/google/uuid"
 )
 
-type IUserAuthService interface {
-	Login(email string, password string) (*response.Response, error)
-	RegisterOne(email string) (*response.Response, error)
-	RegisterTwo(email string, otp string) (*response.Response, error)
-	RegisterThree(email string, username string, password string) (*response.Response, error)
-	ReSendOTP(email string) (*response.Response, error)
-	ResetPassword(email string, newPassword string) (*response.Response, error)
-}
-
 type UserAuthUseCase struct {
-	userRepo repository_postgres.IUserRepository
+	eventBus       events.EventBus
+	userRepo       IRepositoryPostgres.IUserRepository
+	keycloakClient *keycloak.KeycloakRepository
 }
 
-func NewUserAuthUseCase(userRepo repository_postgres.IUserRepository) *UserAuthUseCase {
+func NewUserAuthUseCase(userRepo IRepositoryPostgres.IUserRepository, keycloakClient *keycloak.KeycloakRepository) *UserAuthUseCase {
 	return &UserAuthUseCase{
-		userRepo: userRepo,
+		userRepo:       userRepo,
+		keycloakClient: keycloakClient,
 	}
 }
 
-func (u *UserAuthUseCase) Login(email string, password string) (*response.Response, error) {
+func (u *UserAuthUseCase) Login(email string, password string, code string, redirectURI string) (*response.Response, error) {
+	// err = u.eventBus.Publish(ctx, "user.registered", map[string]string{
+	// 	"user_id": email,
+	// 	"email":   email,
+	// }).Error()
+	// if err != nil {
+	// 	return nil, err
+	// }
 	if email == "" || password == "" {
 		return response.NewResponse(
 			response.WithMessage("Email and password must not be empty"),
 			response.WithStatus("400"),
-		), nil
+		), errors.New("email and password must not be empty")
 	}
-	if email, err := u.userRepo.GetUserByEmail(email); err != nil || !utils.CheckPasswordHash(password, email.Password) {
+	checkemail, err := u.userRepo.GetUserByEmail(email)
+	if err != nil {
 		return response.NewResponse(
-			response.WithMessage("Invalid email or password"),
+			response.WithMessage("Invalid email "),
 			response.WithStatus("401"),
-		), nil
+		), errors.New("invalid email ")
+	}
+
+	checkpassword := utils.CheckPasswordHash(password, checkemail.Password)
+	if !checkpassword {
+		return response.NewResponse(
+			response.WithMessage("Invalid password"),
+			response.WithStatus("401"),
+		), errors.New("invalid password")
+	}
+
+	// 2. Gọi Keycloak để lấy Token
+	tokenResult, err := u.keycloakClient.LoginWithPassword(email, checkemail.Password)
+	if err != nil {
+		return response.NewResponse(
+			response.WithMessage("Error logging in to Keycloak"),
+			response.WithStatus("500"),
+		), errors.New("error logging in to Keycloak")
+	}
+
+	// Giải mã token để lấy thông tin user
+	claims, err := u.keycloakClient.DecodeAccessToken(tokenResult.AccessToken)
+	if err != nil {
+		return nil, err
+	}
+	mapClaims := *claims
+	sub, _ := mapClaims["sub"].(string)
+
+	// 3. Kiểm tra User trong DB
+	if checkemail.KeycloakID != sub {
+		return response.NewResponse(response.WithData(""),
+			response.WithMessage("user keycloak ID does not match."),
+			response.WithStatus("404")), errors.New("user keycloak ID does not match.")
 	}
 	return response.NewResponse(
-		response.WithData("Login successful"),
+		response.WithData(&res.TokenResponse{
+			AccessToken:  tokenResult.AccessToken,
+			RefreshToken: tokenResult.RefreshToken,
+			ExpiresIn:    tokenResult.ExpiresIn,
+		}),
 		response.WithMessage("User logged in successfully"),
 		response.WithStatus("200"),
 	), nil
@@ -54,13 +99,13 @@ func (u *UserAuthUseCase) RegisterOne(email string) (*response.Response, error) 
 		return response.NewResponse(
 			response.WithMessage("Error checking email"),
 			response.WithStatus("500"),
-		), nil
+		), errors.New("error checking email")
 	}
 	if checkEmail != nil {
 		return response.NewResponse(
 			response.WithMessage("Email already exists"),
 			response.WithStatus("400"),
-		), nil
+		), errors.New("email already exists")
 	}
 	user := &entity.User{
 		Email:        email,
@@ -73,10 +118,10 @@ func (u *UserAuthUseCase) RegisterOne(email string) (*response.Response, error) 
 		return response.NewResponse(
 			response.WithMessage("Error creating user"),
 			response.WithStatus("500"),
-		), nil
+		), errors.New("error creating user")
 	}
 	return response.NewResponse(
-		response.WithMessage("Email is available"),
+		response.WithMessage("Email is available for registration"),
 		response.WithStatus("200"),
 		response.WithData("Available"),
 	), nil
@@ -132,38 +177,54 @@ func (u *UserAuthUseCase) RegisterThree(email string, username string, password 
 		return response.NewResponse(
 			response.WithMessage("Error checking email"),
 			response.WithStatus("500"),
-		), nil
+		), errors.New("error checking email")
 	}
 	if checkEmail == nil {
 		return response.NewResponse(
 			response.WithMessage("Email does not exist"),
 			response.WithStatus("400"),
-		), nil
+		), errors.New("email does not exist")
 	}
 	if checkEmail.StepRegister != 2 {
 		return response.NewResponse(
 			response.WithMessage("Previous registration steps not completed"),
 			response.WithStatus("400"),
-		), nil
+		), errors.New("previous registration steps not completed")
 	}
 	passwordhash, checkPasswordErr := utils.HashPassword(password)
 	if checkPasswordErr != nil {
 		return response.NewResponse(
 			response.WithMessage("Error hashing password"),
 			response.WithStatus("500"),
-		), nil
+		), errors.New("error hashing password")
 
 	}
+
 	checkEmail.Username = username
 	checkEmail.Password = passwordhash
 	checkEmail.IsActive = true
 	checkEmail.StepRegister = 3
+	enabled := true
+	userKC := gocloak.User{
+		Username:      &checkEmail.Username,
+		Email:         &checkEmail.Email,
+		Enabled:       &enabled,
+		EmailVerified: &enabled,
+	}
+	keycloakID, err := u.keycloakClient.CreateUser(&userKC, passwordhash)
+	if err != nil {
+		return response.NewResponse(
+			response.WithMessage("Error creating user in Keycloak"),
+			response.WithStatus("500"),
+		), errors.New("error creating user in Keycloak")
+	}
+	checkEmail.KeycloakID = keycloakID
 	updateUserErr := u.userRepo.UpdateUser(checkEmail)
 	if updateUserErr != nil {
 		return response.NewResponse(
 			response.WithMessage("Error updating user"),
 			response.WithStatus("500"),
-		), nil
+		), errors.New("error updating user")
 	}
 	return response.NewResponse(
 		response.WithMessage("Registration step three not implemented yet"),
@@ -176,7 +237,7 @@ func (u *UserAuthUseCase) CheckResendOTP(user *entity.User) (*response.Response,
 		return response.NewResponse(
 			response.WithMessage("Please wait before requesting a new OTP"),
 			response.WithStatus("429"),
-		), nil
+		), errors.New("please wait before requesting a new OTP")
 	}
 	return response.NewResponse(
 		response.WithMessage("OTP can be resent"),
@@ -189,19 +250,19 @@ func (u *UserAuthUseCase) ReSendOTP(email string) (*response.Response, error) {
 		return response.NewResponse(
 			response.WithMessage("Error checking email"),
 			response.WithStatus("500"),
-		), nil
+		), errors.New("error checking email")
 	}
 	if checkEmail == nil {
 		return response.NewResponse(
 			response.WithMessage("Email does not exist"),
 			response.WithStatus("400"),
-		), nil
+		), errors.New("email does not exist")
 	}
 	if checkEmail.StepRegister != 1 {
 		return response.NewResponse(
 			response.WithMessage("User is not in step 1 of registration"),
 			response.WithStatus("400"),
-		), nil
+		), errors.New("user is not in step 1 of registration")
 	}
 	checkresend, waitOTPRespErr := u.CheckResendOTP(checkEmail)
 	if waitOTPRespErr != nil {
@@ -219,7 +280,7 @@ func (u *UserAuthUseCase) ReSendOTP(email string) (*response.Response, error) {
 		return response.NewResponse(
 			response.WithMessage("Error updating user with new OTP"),
 			response.WithStatus("500"),
-		), nil
+		), errors.New("error updating user with new OTP")
 	}
 	// call API to send OTP here notification  module
 	return response.NewResponse(
@@ -233,13 +294,13 @@ func (u *UserAuthUseCase) SendLinkResetPassword(email string) (*response.Respons
 		return response.NewResponse(
 			response.WithMessage("Error checking email"),
 			response.WithStatus("500"),
-		), nil
+		), errors.New("error checking email")
 	}
 	if checkEmail == nil {
 		return response.NewResponse(
 			response.WithMessage("Email does not exist"),
 			response.WithStatus("400"),
-		), nil
+		), errors.New("email does not exist")
 	}
 	checkresend, waitOTPRespErr := u.CheckResendOTP(checkEmail)
 	if waitOTPRespErr != nil {
@@ -257,7 +318,7 @@ func (u *UserAuthUseCase) SendLinkResetPassword(email string) (*response.Respons
 		return response.NewResponse(
 			response.WithMessage("Error updating user with new OTP"),
 			response.WithStatus("500"),
-		), nil
+		), errors.New("error updating user with new OTP")
 	}
 	// call API to send OTP here notification  module
 	return response.NewResponse(
@@ -271,20 +332,20 @@ func (u *UserAuthUseCase) ResetPassword(email string, newPassword string) (*resp
 		return response.NewResponse(
 			response.WithMessage("Error checking email"),
 			response.WithStatus("500"),
-		), nil
+		), errors.New("error checking email")
 	}
 	if checkEmail == nil {
 		return response.NewResponse(
 			response.WithMessage("Email does not exist"),
 			response.WithStatus("400"),
-		), nil
+		), errors.New("email does not exist")
 	}
 	hashedPassword, hashErr := utils.HashPassword(newPassword)
 	if hashErr != nil {
 		return response.NewResponse(
 			response.WithMessage("Error hashing new password"),
 			response.WithStatus("500"),
-		), nil
+		), errors.New("error hashing new password")
 	}
 	checkEmail.Password = hashedPassword
 	updateUserErr := u.userRepo.UpdateUser(checkEmail)
@@ -292,10 +353,82 @@ func (u *UserAuthUseCase) ResetPassword(email string, newPassword string) (*resp
 		return response.NewResponse(
 			response.WithMessage("Error updating user password"),
 			response.WithStatus("500"),
-		), nil
+		), errors.New("error updating user password")
 	}
 	return response.NewResponse(
 		response.WithMessage("Password reset successfully"),
 		response.WithStatus("200"),
 	), nil
+}
+
+func (u *UserAuthUseCase) LogOut(userID string, accessToken string) (*response.Response, error) {
+	user, err := u.userRepo.GetUserByID(userID)
+	if err != nil {
+		return response.NewResponse(
+			response.WithMessage("Error retrieving user"),
+			response.WithStatus("500"),
+		), errors.New("error retrieving user")
+	}
+	if user == nil {
+		return response.NewResponse(
+			response.WithMessage("User not found"),
+			response.WithStatus("404"),
+		), errors.New("user not found")
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	err = u.keycloakClient.Logout(ctx, accessToken)
+	if err != nil {
+		return response.NewResponse(
+			response.WithMessage("Error logging out user from Keycloak"),
+			response.WithStatus("500"),
+		), errors.New("error logging out user from Keycloak")
+	}
+	return response.NewResponse(
+		response.WithMessage("User logged out successfully"),
+		response.WithStatus("200"),
+	), nil
+}
+func (u *UserAuthUseCase) LoginWithGoogle(provider string, token string) (*response.Response, error) {
+	// provider: "google", "facebook"... (Phải khớp với Alias trong Keycloak)
+	// token: Chuỗi ID Token mà Frontend gửi lên
+
+	// 1. Gọi Keycloak để đổi Token
+	tokenResult, err := u.keycloakClient.ExchangeExternalToken(context.Background(), provider, token)
+	if err != nil {
+		return nil, errors.New("failed to exchange token with keycloak: " + err.Error())
+	}
+
+	// 2. Decode token để lấy User ID (sub)
+	claims, err := u.keycloakClient.DecodeAccessToken(tokenResult.AccessToken)
+	if err != nil {
+		return nil, err
+	}
+	mapClaims := *claims
+	sub, _ := mapClaims["sub"].(string)
+	email, _ := mapClaims["email"].(string)
+
+	// 3. Đồng bộ User vào DB Postgres (Giống hệt luồng Login thường)
+	// Tìm xem user này có trong DB chưa
+	user, err := u.userRepo.FindByKeycloakID(sub)
+	if err != nil || user == nil {
+		// Nếu chưa có -> Tạo mới user trong DB nội bộ (Auto Register)
+		// Lưu ý: Lúc này password để trống, vì user này login bằng Google
+		newUser := &entity.User{
+			KeycloakID: sub,
+			Email:      email,
+			IsActive:   true,
+		}
+		_, err = u.userRepo.CreateUser(newUser)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	// 4. Trả về Token cho Frontend
+	return response.NewResponse(response.WithData(&res.TokenResponse{
+		AccessToken:  tokenResult.AccessToken,
+		RefreshToken: tokenResult.RefreshToken,
+		ExpiresIn:    tokenResult.ExpiresIn,
+	}), response.WithMessage("Login with Google successful"), response.WithStatus("200")), nil
 }

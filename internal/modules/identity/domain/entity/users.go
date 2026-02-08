@@ -14,6 +14,7 @@ type User struct {
 	PhoneNumber string    `gorm:"type:varchar(20);uniqueIndex;"`
 	Password    string    `gorm:"type:varchar(255);not null"`
 	Username    string    `gorm:"type:varchar(50);uniqueIndex;"`
+	KeycloakID  string    `gorm:"type:varchar(100);uniqueIndex;"`
 
 	StepRegister int `gorm:"default:0;"`
 
@@ -31,6 +32,6 @@ type User struct {
 	CreatedAt time.Time
 	UpdatedAt time.Time
 	DeletedAt gorm.DeletedAt `gorm:"index"`
-
-	Sessions []*UserSession `gorm:"foreignKey:UserID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
+	Roles     []*UserRole    `gorm:"many2many:user_roles;"`
+	Sessions  []*UserSession `gorm:"foreignKey:UserID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
 }

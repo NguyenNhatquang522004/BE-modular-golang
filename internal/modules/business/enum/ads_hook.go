@@ -7,7 +7,6 @@ import (
 	"go.mongodb.org/mongo-driver/bson/bsontype"
 )
 
-
 // =============================================================================
 // AD STATUS HOOKS
 // =============================================================================
@@ -45,7 +44,7 @@ func (e *AdStatus) Scan(value interface{}) error {
 
 // 3. BSON: Marshal (Go -> Mongo)
 func (e AdStatus) MarshalBSONValue() (bsontype.Type, []byte, error) {
-return bsontype.String, []byte(e.String()), nil 
+	return bsontype.String, []byte(e.String()), nil
 }
 
 // 4. BSON: Unmarshal (Mongo -> Go)
