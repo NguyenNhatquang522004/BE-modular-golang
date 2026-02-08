@@ -1,3 +1,5 @@
+# Ignore database file
+database.sql
 # Binaries for programs and plugins
 *.exe
 *.exe~
