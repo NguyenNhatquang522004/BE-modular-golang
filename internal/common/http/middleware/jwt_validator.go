@@ -1,8 +1,9 @@
-package auth
+package middleware
 
 import (
 	"context"
 	"fmt"
+
 	"github.com/coreos/go-oidc/v3/oidc"
 )
 
@@ -20,7 +21,7 @@ func NewTokenValidator(ctx context.Context, keycloakUrl, realm, clientID string)
 	config := &oidc.Config{
 		ClientID: clientID,
 	}
-	
+
 	return &TokenValidator{
 		verifier: provider.Verifier(config),
 	}, nil

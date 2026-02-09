@@ -1,8 +1,8 @@
-version: v1
+version: v2
 plugins:
-  - plugin: go
+  - local: protoc-gen-go   # Chỉ ghi tên, không ghi đường dẫn
     out: pkg/pb
     opt: paths=source_relative
-  - plugin: go-grpc
+  - local: protoc-gen-go-grpc
     out: pkg/pb
     opt: paths=source_relative

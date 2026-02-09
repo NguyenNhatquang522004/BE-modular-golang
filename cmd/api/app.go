@@ -2,17 +2,19 @@ package main
 
 import (
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/database"
+	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/server/grpc"
 	"github.com/gin-gonic/gin"
 )
 
 type App struct {
-	Server    *gin.Engine
-	Mongo     *database.MongodbConnection
-	Redis     *database.RedisConnection
-	Postgres  *database.PostgresConnection
-	Elastic   *database.ElasticConnection
-	Cassandra *database.CassandraConnection
-	Neo4j     *database.Neo4jConnection
+	Server     *gin.Engine
+	Mongo      *database.MongodbConnection
+	Redis      *database.RedisConnection
+	Postgres   *database.PostgresConnection
+	Elastic    *database.ElasticConnection
+	Cassandra  *database.CassandraConnection
+	Neo4j      *database.Neo4jConnection
+	GRPCServer *grpc.GRPCServer
 }
 
 func NewApp(
@@ -24,10 +26,11 @@ func NewApp(
 	elastic *database.ElasticConnection,
 	cassandra *database.CassandraConnection,
 	neo4j *database.Neo4jConnection,
+	GRPCServer *grpc.GRPCServer,
 
 ) *App {
 	return &App{Server: server, Mongo: mongo, Redis: redis, Postgres: postgres, Elastic: elastic, Cassandra: cassandra,
-		Neo4j: neo4j}
+		Neo4j: neo4j, GRPCServer: GRPCServer}
 }
 
 func NewGinServer() *gin.Engine {

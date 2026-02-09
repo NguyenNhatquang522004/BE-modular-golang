@@ -7,6 +7,7 @@ import (
 )
 
 type Config struct {
+	GRPCServer  GRPCServerConfig
 	Kafka       KafkaConfig
 	KeyCloak    KeyCloakConfig
 	EmailSMTP   EmailSMTPConfig
@@ -20,6 +21,10 @@ type Config struct {
 	RedisDB     RedisConfig
 	PostgresDB  PostgresConfig
 	Server      ServerConfig
+}
+type GRPCServerConfig struct {
+	GRPC_SERVER_HOST string
+	GRPC_SERVER_PORT string
 }
 type KafkaConfig struct {
 	BROKERS        []string
@@ -108,6 +113,11 @@ func LoadConfig() (*Config, error) {
 	// Vì file .env của bạn đặt tên biến lộn xộn (Host, POSTGRES_USER...)
 	// nên ta phải lấy từng cái bỏ vào đúng chỗ trong Struct.
 	cfg := &Config{
+		// --- GRPC SERVER ---
+		GRPCServer: GRPCServerConfig{
+			GRPC_SERVER_HOST: viper.GetString("GRPC_SERVER_HOST"),
+			GRPC_SERVER_PORT: viper.GetString("GRPC_SERVER_PORT"),
+		},
 		// --- Kafka ---
 		Kafka: KafkaConfig{
 			BROKERS:        viper.GetStringSlice("KAFKA_BROKERS"),
