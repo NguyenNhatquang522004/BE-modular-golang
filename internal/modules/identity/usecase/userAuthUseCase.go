@@ -30,7 +30,7 @@ func NewUserAuthUseCase(userRepo IRepositoryPostgres.IUserRepository, keycloakCl
 	}
 }
 
-func (u *UserAuthUseCase) Login(email string, password string, code string, redirectURI string) (*response.Response, error) {
+func (u *UserAuthUseCase) Login(email string, password string) (*response.Response, error) {
 	// err = u.eventBus.Publish(ctx, "user.registered", map[string]string{
 	// 	"user_id": email,
 	// 	"email":   email,
@@ -59,9 +59,9 @@ func (u *UserAuthUseCase) Login(email string, password string, code string, redi
 			response.WithStatus("401"),
 		), errors.New("invalid password")
 	}
-
+	ctx := context.Background()
 	// 2. Gọi Keycloak để lấy Token
-	tokenResult, err := u.keycloakClient.LoginWithPassword(email, checkemail.Password)
+	tokenResult, err := u.keycloakClient.LoginWithPassword(ctx, email, checkemail.Password)
 	if err != nil {
 		return response.NewResponse(
 			response.WithMessage("Error logging in to Keycloak"),
@@ -70,7 +70,7 @@ func (u *UserAuthUseCase) Login(email string, password string, code string, redi
 	}
 
 	// Giải mã token để lấy thông tin user
-	claims, err := u.keycloakClient.DecodeAccessToken(tokenResult.AccessToken)
+	claims, err := u.keycloakClient.DecodeAccessToken(ctx,tokenResult.AccessToken)
 	if err != nil {
 		return nil, err
 	}
@@ -211,7 +211,8 @@ func (u *UserAuthUseCase) RegisterThree(email string, username string, password 
 		Enabled:       &enabled,
 		EmailVerified: &enabled,
 	}
-	keycloakID, err := u.keycloakClient.CreateUser(&userKC, passwordhash)
+	ctx := context.Background()
+	keycloakID, err := u.keycloakClient.CreateUser(ctx, &userKC, passwordhash)
 	if err != nil {
 		return response.NewResponse(
 			response.WithMessage("Error creating user in Keycloak"),
@@ -398,9 +399,9 @@ func (u *UserAuthUseCase) LoginWithGoogle(provider string, token string) (*respo
 	if err != nil {
 		return nil, errors.New("failed to exchange token with keycloak: " + err.Error())
 	}
-
+ctx := context.Background()
 	// 2. Decode token để lấy User ID (sub)
-	claims, err := u.keycloakClient.DecodeAccessToken(tokenResult.AccessToken)
+	claims, err := u.keycloakClient.DecodeAccessToken(ctx, tokenResult.AccessToken)
 	if err != nil {
 		return nil, err
 	}

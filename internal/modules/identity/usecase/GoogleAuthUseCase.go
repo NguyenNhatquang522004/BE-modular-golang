@@ -10,6 +10,7 @@ import (
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/identity/domain/entity"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/identity/infrastructure/repository/keycloak"
 	"github.com/golang-jwt/jwt/v5"
+	"golang.org/x/oauth2"
 )
 
 type GoogleAuthUseCase struct {
@@ -50,9 +51,9 @@ func (u *GoogleAuthUseCase) Login(provider string, token string) (*response.Resp
 	if err != nil {
 		return nil, errors.New("failed to exchange token with keycloak: " + err.Error())
 	}
-
+	ctx := context.Background()
 	// 2. Decode token để lấy User ID (sub)
-	claims, err := u.keycloakClient.DecodeAccessToken(tokenResult.AccessToken)
+	claims, err := u.keycloakClient.DecodeAccessToken(ctx, tokenResult.AccessToken)
 	if err != nil {
 		return nil, err
 	}
@@ -88,4 +89,19 @@ func (u *GoogleAuthUseCase) Login(provider string, token string) (*response.Resp
 		RefreshToken: tokenResult.RefreshToken,
 		ExpiresIn:    tokenResult.ExpiresIn,
 	}), response.WithMessage("Login with Google successful"), response.WithStatus("200")), nil
+}
+func (u *GoogleAuthUseCase) LoginStandard(code string) (*response.Response, error) {
+	return nil, nil // TODO: Implement logic later
+}
+
+func (u *GoogleAuthUseCase) GetLoginURL(redirectURI string) (*response.Response, error) {
+	return nil, nil // TODO: Implement logic later
+}
+
+func (u *GoogleAuthUseCase) ExchangeCodeForToken(code string) (*response.Response, error) {
+	return nil, nil // TODO: Implement logic later
+}
+
+func (u *GoogleAuthUseCase) GetUserInfo(token *oauth2.Token) (*response.Response, error) {
+	return nil, nil // TODO: Implement logic later
 }

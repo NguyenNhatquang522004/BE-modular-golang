@@ -36,13 +36,13 @@ type IUserAuthService interface {
 	RegisterThree(email string, username string, password string) (*response.Response, error)
 	ReSendOTP(email string) (*response.Response, error)
 	SendLinkResetPassword(email string) (*response.Response, error)
-	LogOut(userID string) (*response.Response, error)
+	LogOut(userID string, accessToken string) (*response.Response, error)
 	ResetPassword(email string, newPassword string) (*response.Response, error)
 	LoginWithGoogle(provider string, token string) (*response.Response, error)
 }
 type IUserSettingService interface {
 	CreateUserSetting(userID string) (*response.Response, error)
-	UpdateUserSettings(userID string, settings map[string]interface{}) (*response.Response, error)
+	UpdateUserSettings(userID string, settings *entity.UserSetting) (*response.Response, error)
 }
 
 type IUserSessionService interface {
@@ -52,4 +52,25 @@ type IUserSessionService interface {
 }
 
 type Usecase struct {
+	Auth        IUserAuthService
+	Google      IGoogleAuthUseCase
+	UserSetting IUserSettingService
+	Session     IUserSessionService
+	Role        IUserRoleUseCase
+}
+
+func NewUsecase(
+	auth IUserAuthService,
+	google IGoogleAuthUseCase,
+	userSetting IUserSettingService,
+	session IUserSessionService,
+	role IUserRoleUseCase,
+) *Usecase {
+	return &Usecase{
+		Auth:        auth,
+		Google:      google,
+		UserSetting: userSetting,
+		Session:     session,
+		Role:        role,
+	}
 }

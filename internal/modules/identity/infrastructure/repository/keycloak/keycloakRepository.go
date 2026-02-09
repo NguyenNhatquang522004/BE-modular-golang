@@ -13,7 +13,6 @@ import (
 
 type KeycloakRepository struct {
 	Client       *gocloak.GoCloak
-	Ctx          context.Context
 	ClientId     string
 	ClientSecret string
 	Realm        string
@@ -24,7 +23,6 @@ type KeycloakRepository struct {
 func NewKeycloakRepository(cfg *configs.KeyCloakConfig) *KeycloakRepository {
 	return &KeycloakRepository{
 		Client:       gocloak.NewClient(cfg.KEYCLOAK_SERVER_URL),
-		Ctx:          context.Background(),
 		ClientId:     cfg.KEYCLOAK_CLIENT_ID,
 		ClientSecret: cfg.KEYCLOAK_CLIENT_SECRET,
 		Realm:        cfg.KEYCLOAK_REALM,
@@ -32,20 +30,20 @@ func NewKeycloakRepository(cfg *configs.KeyCloakConfig) *KeycloakRepository {
 	}
 
 }
-func (k *KeycloakRepository) LoginWithPassword(username string, password string) (*gocloak.JWT, error) {
-	token, err := k.Client.Login(k.Ctx, k.ClientId, k.ClientSecret, k.Realm, username, password)
+func (k *KeycloakRepository) LoginWithPassword(ctx context.Context, username string, password string) (*gocloak.JWT, error) {
+	token, err := k.Client.Login(ctx, k.ClientId, k.ClientSecret, k.Realm, username, password)
 	if err != nil {
 		return nil, err
 	}
 	return token, nil
 }
-func (k *KeycloakRepository) ExchangeCodeForToken(code string, redirectURI string) (*gocloak.JWT, error) {
+func (k *KeycloakRepository) ExchangeCodeForToken(ctx context.Context, code string, redirectURI string) (*gocloak.JWT, error) {
 	// 1. Định nghĩa loại Grant Type là "authorization_code"
 	grantType := "authorization_code"
 
 	// 2. Gọi hàm GetToken của thư viện gocloak
 	// Lưu ý: Phải truyền đúng RedirectURI khớp với cái Frontend đã dùng
-	token, err := k.Client.GetToken(k.Ctx, k.Realm, gocloak.TokenOptions{
+	token, err := k.Client.GetToken(ctx, k.Realm, gocloak.TokenOptions{
 		ClientID:     &k.ClientId,
 		ClientSecret: &k.ClientSecret,
 		GrantType:    &grantType,
@@ -75,10 +73,10 @@ func (k *KeycloakRepository) IntrospectToken(ctx context.Context, accessToken st
 
 	return k.Client.RetrospectToken(ctx, accessToken, k.ClientId, k.ClientSecret, k.Realm)
 }
-func (k *KeycloakRepository) DecodeAccessToken(accessToken string) (*jwt.MapClaims, error) {
+func (k *KeycloakRepository) DecodeAccessToken(ctx context.Context, accessToken string) (*jwt.MapClaims, error) {
 	// Gọi hàm có sẵn của thư viện gocloak
 	// Hàm này sẽ parse token và verify signature (nếu cấu hình), ở đây ta chủ yếu cần parse data
-	_, claims, err := k.Client.DecodeAccessToken(k.Ctx, accessToken, k.Realm)
+	_, claims, err := k.Client.DecodeAccessToken(ctx, accessToken, k.Realm)
 	if err != nil {
 		return nil, err
 	}
@@ -86,9 +84,9 @@ func (k *KeycloakRepository) DecodeAccessToken(accessToken string) (*jwt.MapClai
 	return claims, nil
 }
 
-func (k *KeycloakRepository) GetAdminToken() (*gocloak.JWT, error) {
+func (k *KeycloakRepository) GetAdminToken(ctx context.Context) (*gocloak.JWT, error) {
 	grantType := "client_credentials"
-	return k.Client.GetToken(k.Ctx, k.Realm, gocloak.TokenOptions{
+	return k.Client.GetToken(ctx, k.Realm, gocloak.TokenOptions{
 		ClientID:     &k.ClientId,
 		ClientSecret: &k.ClientSecret,
 		GrantType:    &grantType,
@@ -96,22 +94,22 @@ func (k *KeycloakRepository) GetAdminToken() (*gocloak.JWT, error) {
 }
 
 // Hàm tạo User mới trên Keycloak
-func (k *KeycloakRepository) CreateUser(user *gocloak.User, password string) (string, error) {
+func (k *KeycloakRepository) CreateUser(ctx context.Context, user *gocloak.User, password string) (string, error) {
 	// 1. Lấy Admin Token trước
-	token, err := k.GetAdminToken()
+	token, err := k.GetAdminToken(ctx)
 	if err != nil {
 		return "", err
 	}
 
 	// 2. Tạo User
 	// User này được enable luôn
-	userId, err := k.Client.CreateUser(k.Ctx, token.AccessToken, k.Realm, *user)
+	userId, err := k.Client.CreateUser(ctx, token.AccessToken, k.Realm, *user)
 	if err != nil {
 		return "", err
 	}
 
 	// 3. Set mật khẩu cho User vừa tạo
-	err = k.Client.SetPassword(k.Ctx, token.AccessToken, userId, k.Realm, password, false)
+	err = k.Client.SetPassword(ctx, token.AccessToken, userId, k.Realm, password, false)
 	if err != nil {
 		// Nếu set pass lỗi thì nên xóa user vừa tạo để tránh rác (Optional)
 		return "", err
@@ -123,7 +121,7 @@ func (k *KeycloakRepository) CreateUser(user *gocloak.User, password string) (st
 // Cập nhật thông tin user (Tên, Email, Attributes...)
 func (k *KeycloakRepository) UpdateUser(ctx context.Context, userID string, user *gocloak.User) error {
 	// 1. Lấy Admin Token trước
-	token, err := k.GetAdminToken()
+	token, err := k.GetAdminToken(ctx)
 	if err != nil {
 		return err
 	}
@@ -137,7 +135,7 @@ func (k *KeycloakRepository) UpdateUser(ctx context.Context, userID string, user
 
 // Xóa user (Khi cần dọn dẹp hoặc ban vĩnh viễn)
 func (k *KeycloakRepository) DeleteUser(ctx context.Context, userID string) error {
-	token, err := k.GetAdminToken()
+	token, err := k.GetAdminToken(ctx)
 	if err != nil {
 		return err
 	}
@@ -146,7 +144,7 @@ func (k *KeycloakRepository) DeleteUser(ctx context.Context, userID string) erro
 
 // Lấy thông tin chi tiết 1 user bằng ID (UUID)
 func (k *KeycloakRepository) GetUserByID(ctx context.Context, userID string) (*gocloak.User, error) {
-	token, err := k.GetAdminToken()
+	token, err := k.GetAdminToken(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -155,7 +153,7 @@ func (k *KeycloakRepository) GetUserByID(ctx context.Context, userID string) (*g
 
 // Tìm user bằng Email (Dùng để check duplicate hoặc sync)
 func (k *KeycloakRepository) GetUserByEmail(ctx context.Context, email string) (*gocloak.User, error) {
-	token, err := k.GetAdminToken()
+	token, err := k.GetAdminToken(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -176,14 +174,14 @@ func (k *KeycloakRepository) GetUserByEmail(ctx context.Context, email string) (
 
 // Tìm user bằng Username
 func (k *KeycloakRepository) GetUserByUsername(ctx context.Context, username string) (*gocloak.User, error) {
-	token, err := k.GetAdminToken()
+	token, err := k.GetAdminToken(ctx)
 	if err != nil {
 		return nil, err
 	}
 	params := gocloak.GetUsersParams{
 		Username: &username,
 		Exact:    gocloak.BoolP(true),
-	}	
+	}
 
 	users, err := k.Client.GetUsers(ctx, token.AccessToken, k.Realm, params)
 	if err != nil {
@@ -197,7 +195,7 @@ func (k *KeycloakRepository) GetUserByUsername(ctx context.Context, username str
 
 // Admin set cứng mật khẩu mới cho user (Reset Password thủ công)
 func (k *KeycloakRepository) SetPassword(ctx context.Context, userID string, password string, temporary bool) error {
-	token, err := k.GetAdminToken()
+	token, err := k.GetAdminToken(ctx)
 	if err != nil {
 		return err
 	}
@@ -206,7 +204,7 @@ func (k *KeycloakRepository) SetPassword(ctx context.Context, userID string, pas
 
 // Gửi email yêu cầu user tự đổi mật khẩu (Forgot Password / Required Actions)
 func (k *KeycloakRepository) SendUpdatePasswordEmail(ctx context.Context, userID string) error {
-	token, err := k.GetAdminToken()
+	token, err := k.GetAdminToken(ctx	)
 	if err != nil {
 		return err
 	}
@@ -227,7 +225,7 @@ func (k *KeycloakRepository) SendUpdatePasswordEmail(ctx context.Context, userID
 
 // Lấy danh sách tất cả Role có trong Realm
 func (k *KeycloakRepository) GetRealmRoles(ctx context.Context) ([]*gocloak.Role, error) {
-	token, err := k.GetAdminToken()
+	token, err := k.GetAdminToken(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -237,7 +235,7 @@ func (k *KeycloakRepository) GetRealmRoles(ctx context.Context) ([]*gocloak.Role
 
 // 16. Add Role To User (SỬA LỖI: Phải tìm Role Object trước)
 func (k *KeycloakRepository) AddRealmRoleToUser(ctx context.Context, userID string, roleName string) error {
-	token, err := k.GetAdminToken()
+	token, err := k.GetAdminToken(ctx)
 	if err != nil {
 		return err
 	}
@@ -254,7 +252,7 @@ func (k *KeycloakRepository) AddRealmRoleToUser(ctx context.Context, userID stri
 
 // 17. Delete Role From User (SỬA LỖI: Tương tự như Add)
 func (k *KeycloakRepository) DeleteRealmRoleFromUser(ctx context.Context, userID string, roleName string) error {
-	token, err := k.GetAdminToken()
+	token, err := k.GetAdminToken(ctx)
 	if err != nil {
 		return err
 	}
@@ -271,7 +269,7 @@ func (k *KeycloakRepository) DeleteRealmRoleFromUser(ctx context.Context, userID
 
 // Kiểm tra xem User đang có những quyền gì
 func (k *KeycloakRepository) GetRealmRolesByUserID(ctx context.Context, userID string) ([]*gocloak.Role, error) {
-	token, err := k.GetAdminToken()
+	token, err := k.GetAdminToken(ctx)
 	if err != nil {
 		return nil, err
 	}

@@ -29,10 +29,13 @@ var UseCaseSet = wire.NewSet(
 	usecase.NewUserSettingUseCase,
 	usecase.NewUserAuthUseCase,
 	usecase.NewGoogleAuthUseCase,
+	usecase.NewUserRoleUseCase,
 	wire.Bind(new(usecase.IUserSessionService), new(*usecase.UserSessionUseCase)),
-	wire.Bind(new(usecase.IUserSettingService), new(*usecase.UseSettingUseCase)),
+	wire.Bind(new(usecase.IUserSettingService), new(*usecase.UserSettingUseCase)),
 	wire.Bind(new(usecase.IUserAuthService), new(*usecase.UserAuthUseCase)),
 	wire.Bind(new(usecase.IGoogleAuthUseCase), new(*usecase.GoogleAuthUseCase)),
+	wire.Bind(new(usecase.IUserRoleUseCase), new(*usecase.UserRoleUseCase)),
+	usecase.NewUsecase,
 )
 
 var HandlerSet = wire.NewSet(
@@ -40,6 +43,7 @@ var HandlerSet = wire.NewSet(
 )
 
 var ModuleIndentitySet = wire.NewSet(
+	NewModuleIdentity,
 	RepositorySet,
 	UseCaseSet,
 	HandlerSet,

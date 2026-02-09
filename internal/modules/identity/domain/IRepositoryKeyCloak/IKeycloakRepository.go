@@ -28,7 +28,7 @@ type IKeycloakRepository interface {
 	IntrospectToken(ctx context.Context, accessToken string) (*gocloak.IntroSpectTokenResult, error)
 
 	// Giải mã Token offline để lấy claims (Sub, Email, Roles...)
-	DecodeAccessToken(accessToken string) (*jwt.MapClaims, error)
+	DecodeAccessToken(ctx context.Context, accessToken string) (*jwt.MapClaims, error)
 
 	// ==========================================
 	// 2. NHÓM USER MANAGEMENT (CRUD User)
