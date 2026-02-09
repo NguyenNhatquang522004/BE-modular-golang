@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"log"
 
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/configs"
 )
@@ -27,7 +28,12 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
+	log.Println("Starting gRPC server on :50051")
+	if err := app.GRPCServer.Run(":50051"); err != nil {
+		log.Fatalf("server failed: %v", err)
+	}
 
 	port := fmt.Sprintf(":%v", loadconfig.Server.Port)
 	app.Server.Run(port)
+
 }

@@ -7,20 +7,29 @@ import (
 )
 
 type Config struct {
-	GRPCServer  GRPCServerConfig
-	Kafka       KafkaConfig
-	KeyCloak    KeyCloakConfig
-	EmailSMTP   EmailSMTPConfig
-	GoogleAuth  GoogleAuthConfig
-	JWT         JWTConfig
-	SEAWEEDFS   SEAWEEDFSConfig
-	Neo4jDB     Neo4jConfig
-	MongoDB     MongodbConfig
-	ElasticDB   ElasticsearchConfig
-	CassandraDB CassandraConfig
-	RedisDB     RedisConfig
-	PostgresDB  PostgresConfig
-	Server      ServerConfig
+	CircuitBreaker CircuitBreakerConfig
+	GRPCServer     GRPCServerConfig
+	Kafka          KafkaConfig
+	KeyCloak       KeyCloakConfig
+	EmailSMTP      EmailSMTPConfig
+	GoogleAuth     GoogleAuthConfig
+	JWT            JWTConfig
+	SEAWEEDFS      SEAWEEDFSConfig
+	Neo4jDB        Neo4jConfig
+	MongoDB        MongodbConfig
+	ElasticDB      ElasticsearchConfig
+	CassandraDB    CassandraConfig
+	RedisDB        RedisConfig
+	PostgresDB     PostgresConfig
+	Server         ServerConfig
+}
+type CircuitBreakerConfig struct {
+	Name                   string
+	MaxRequests            uint32
+	Interval               int64
+	FailureThreshold       float64
+	RecoveryTimeoutSeconds int
+	ExpectedResponseTimeMS int
 }
 type GRPCServerConfig struct {
 	GRPC_SERVER_HOST string
@@ -113,6 +122,14 @@ func LoadConfig() (*Config, error) {
 	// Vì file .env của bạn đặt tên biến lộn xộn (Host, POSTGRES_USER...)
 	// nên ta phải lấy từng cái bỏ vào đúng chỗ trong Struct.
 	cfg := &Config{
+		CircuitBreaker: CircuitBreakerConfig{
+			FailureThreshold:       viper.GetFloat64("CIRCUIT_BREAKER_FAILURE_THRESHOLD"),
+			RecoveryTimeoutSeconds: int(viper.GetDuration("CIRCUIT_BREAKER_RECOVERY_TIMEOUT_SECONDS").Seconds()),
+			ExpectedResponseTimeMS: viper.GetInt("CIRCUIT_BREAKER_EXPECTED_RESPONSE_TIME_MS"),
+			Name:                   viper.GetString("CIRCUIT_BREAKER_NAME"),
+			MaxRequests:            viper.GetUint32("CIRCUIT_BREAKER_MAX_REQUESTS"),
+			Interval:               int64(viper.GetDuration("CIRCUIT_BREAKER_INTERVAL_MS").Milliseconds()),
+		},
 		// --- GRPC SERVER ---
 		GRPCServer: GRPCServerConfig{
 			GRPC_SERVER_HOST: viper.GetString("GRPC_SERVER_HOST"),

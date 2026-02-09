@@ -21,6 +21,7 @@ func InitializeApp(config *configs.Config) (*App, error) {
 		database.NewRedisConnection,
 		database.NewPostgresConnection,
 		grpc.NewGRPCServer,
+		client.ProvideGRPCConnection
 		client.ProvideMongoDatabase,
 		// client.ProvideRedisClient,
 		// client.ProvideCassandraSession,
