@@ -9,56 +9,40 @@ import (
 )
 
 // 1. Tạo Wrapper Struct
-type ElasticConnection struct {
-	elastic *elasticsearch.Client
-}
-
-func NewElasticConnection(cfg *configs.Config) (*ElasticConnection, error) {
-	db := &ElasticConnection{}
-	err := db.ConnectElastic(&cfg.ElasticDB)
-	if err != nil {
-		return nil, err
-	}
-	return db, nil
-}
-// 2. Hàm khởi tạo kết nối
-// Receiver đặt là 'el' (viết tắt của Elastic)
-func (el *ElasticConnection) ConnectElastic(cfg *configs.ElasticsearchConfig) error {
-	// Cấu hình Client
-	// Thư viện này yêu cầu Addresses là một mảng []string
+func NewElasticClient(cfg *configs.Config) (*elasticsearch.Client, func(), error) {
+	// 1. Config
 	esCfg := elasticsearch.Config{
-		Addresses: []string{cfg.ES_ADDRESS},
-		// Vì trong Docker bạn tắt security (xpack=false), nên không cần username/password/cert
-		// Nếu sau này bật security, bạn thêm Username: "elastic", Password: "..." vào đây.
+		Addresses: []string{cfg.ElasticDB.ES_ADDRESS},
+		// Username: cfg.ElasticDB.User,
+		// Password: cfg.ElasticDB.Password,
 	}
 
-	// Tạo Client
+	// 2. Create Client
 	client, err := elasticsearch.NewClient(esCfg)
 	if err != nil {
-		return fmt.Errorf("error creating elastic client: %w", err)
+		return nil, nil, fmt.Errorf("error creating elastic client: %w", err)
 	}
 
-	// 3. Ping thử server (Quan trọng)
-	// Elasticsearch client mặc định không kết nối ngay, nên ta gọi hàm Info() để test xem server có sống không
+	// 3. Ping / Info Check
 	res, err := client.Info()
 	if err != nil {
-		return fmt.Errorf("error getting response from elastic: %w", err)
+		return nil, nil, fmt.Errorf("error connecting to elastic: %w", err)
 	}
 	defer res.Body.Close()
 
 	if res.IsError() {
-		return fmt.Errorf("error pinging elastic: %s", res.String())
+		return nil, nil, fmt.Errorf("elastic returned error: %s", res.String())
 	}
 
-	log.Println("Connected to Elasticsearch successfully!")
+	log.Println("✅ Connected to Elasticsearch successfully!")
 
-	// 4. Gán client vào struct (Để dùng lại)
-	el.elastic = client
+	// 4. Cleanup Function
+	// Elastic client quản lý connection pool qua HTTP, không có hàm Close() cứng.
+	// Nhưng vẫn trả về func rỗng để Wire dễ xử lý đồng bộ.
+	cleanup := func() {
+		// Log để biết app đang tắt
+		log.Println("⚠️ Closing Elasticsearch client (handled by http transport)")
+	}
 
-	return nil
-}
-
-// 3. Hàm Getter
-func (el *ElasticConnection) GetClient() *elasticsearch.Client {
-	return el.elastic
+	return client, cleanup, nil
 }

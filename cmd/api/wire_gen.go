@@ -10,42 +10,27 @@ import (
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/configs"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/database"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/server/grpc"
-	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/client"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/identity"
 )
 
 // Injectors from wire.go:
 
-func InitializeApp(config *configs.Config) (*App, error) {
-	engine := NewGinServer()
-	mongodbConnection, err := database.NewMongodbConnection(config)
+func InitializeApp(config *configs.Config) (*App, func(), error) {
+	mongoDatabase, cleanup, err := database.NewMongoDatabase(config)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
-	redisConnection, err := database.NewRedisConnection(config)
+	db, cleanup2, err := database.NewPostgresDB(config)
 	if err != nil {
-		return nil, err
+		cleanup()
+		return nil, nil, err
 	}
-	postgresConnection, err := database.NewPostgresConnection(config)
-	if err != nil {
-		return nil, err
-	}
-	elasticConnection, err := database.NewElasticConnection(config)
-	if err != nil {
-		return nil, err
-	}
-	cassandraConnection, err := database.NewCassandraConnection(config)
-	if err != nil {
-		return nil, err
-	}
-	neo4jConnection, err := database.NewNeo4jConnection(config)
-	if err != nil {
-		return nil, err
-	}
-	grpcServer := grpc.NewGRPCServer()
-	mongoDatabase := client.ProvideMongoDatabase(mongodbConnection, config)
-	db := client.ProvidePostgresGormDB(postgresConnection)
 	moduleIdentity := identity.NewModuleIdentity(mongoDatabase, db)
-	app := NewApp(engine, mongodbConnection, redisConnection, postgresConnection, elasticConnection, cassandraConnection, neo4jConnection, grpcServer, moduleIdentity)
-	return app, nil
+	engine := NewGinServer(moduleIdentity)
+	grpcServer := grpc.NewGRPCServer()
+	app := NewApp(engine, grpcServer)
+	return app, func() {
+		cleanup2()
+		cleanup()
+	}, nil
 }

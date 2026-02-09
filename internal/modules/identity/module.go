@@ -18,10 +18,18 @@ type ModuleIdentity struct {
 }
 
 func NewModuleIdentity(client *mongo.Database, db *gorm.DB) *ModuleIdentity {
-	return &ModuleIdentity{
+	m := &ModuleIdentity{
 		client: client,
 		db:     db,
 	}
+	if err := m.InitPostgres(); err != nil {
+		panic("Failed to migrate Postgres for Identity: " + err.Error())
+	}
+
+	if err := m.InitMongo(); err != nil {
+		panic("Failed to init Mongo indexes for Identity: " + err.Error())
+	}
+	return m
 }
 
 func (m *ModuleIdentity) RegisterRoute(r *gin.RouterGroup) {

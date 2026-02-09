@@ -10,47 +10,25 @@ import (
 	"gorm.io/gorm"
 )
 
-type PostgresConnection struct {
-	Postgres *gorm.DB
-}
+func NewPostgresDB(cfg *configs.Config) (*gorm.DB, func(), error) {
+	conf := cfg.PostgresDB
 
-func NewPostgresConnection(cfg *configs.Config) (*PostgresConnection, error) {
-	db := &PostgresConnection{}
-	err := db.ConnectPostgres(cfg)
-	if err != nil {
-		return nil, err
-	}
-	return db, nil
-}
-func (p *PostgresConnection) ConnectPostgres(config *configs.Config) error {
-	log.Printf("Connecting to Postgres at %s:%s with user %s to database %s",
-		config.PostgresDB.Host,
-		config.PostgresDB.Port,
-		config.PostgresDB.User,
-		config.PostgresDB.DBName,
-	)
+	log.Printf("Connecting to Postgres at %s:%s...", conf.Host, conf.Port)
 
+	// 1. DSN String
 	dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s sslmode=%s TimeZone=%s",
-		config.PostgresDB.Host,
-		config.PostgresDB.User,
-		config.PostgresDB.Password,
-		config.PostgresDB.DBName,
-		config.PostgresDB.Port,
-		config.PostgresDB.DB_SSLMODE,
-		config.PostgresDB.DB_TimeZone)
+		conf.Host, conf.User, conf.Password, conf.DBName, conf.Port, conf.DB_SSLMODE, conf.DB_TimeZone)
 
-	// Mở kết nối
+	// 2. Open Connection
 	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
-
 	if err != nil {
-		return fmt.Errorf("failed to connect to Postgres: %w", err)
+		return nil, nil, fmt.Errorf("failed to connect to Postgres: %w", err)
 	}
 
-	// Cấu hình Connection Pool
+	// 3. Config Connection Pool
 	sqlDB, err := db.DB()
 	if err != nil {
-		// Lưu ý: Đừng dùng log.Fatal ở đây, hãy return error để main xử lý
-		return fmt.Errorf("failed to get generic database object: %w", err)
+		return nil, nil, fmt.Errorf("failed to get sql.DB: %w", err)
 	}
 
 	sqlDB.SetMaxIdleConns(10)
@@ -58,18 +36,20 @@ func (p *PostgresConnection) ConnectPostgres(config *configs.Config) error {
 	sqlDB.SetConnMaxLifetime(10 * time.Minute)
 	sqlDB.SetConnMaxIdleTime(time.Minute)
 
-	log.Println("Connected to PostgreSQL successfully")
+	// Ping thử phát cho chắc
+	if err := sqlDB.Ping(); err != nil {
+		return nil, nil, fmt.Errorf("failed to ping Postgres: %w", err)
+	}
 
-	// 3. Gán vào struct receiver (Quan trọng)
-	p.Postgres = db
+	log.Println("✅ Connected to PostgreSQL successfully!")
 
-	return nil
-}
+	// 4. Cleanup Function
+	cleanup := func() {
+		log.Println("⚠️ Closing PostgreSQL connection...")
+		if err := sqlDB.Close(); err != nil {
+			log.Printf("Error closing postgres: %v", err)
+		}
+	}
 
-// Hàm lấy DB instance (Helper)
-func (p *PostgresConnection) GetDB() *gorm.DB {
-	return p.Postgres
-}
-func  ProvideGormDB(conn *PostgresConnection) *gorm.DB {
-	return conn.GetDB()
+	return db, cleanup, nil
 }

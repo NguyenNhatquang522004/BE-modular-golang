@@ -10,7 +10,7 @@ import (
 
 // BreakerProvider interface để inject
 type BreakerProvider interface {
-	New(cfg *configs.Config) *gobreaker.CircuitBreaker
+	New(name string, cfg *configs.Config) *gobreaker.CircuitBreaker
 }
 
 type breakerProviderImpl struct{}
@@ -19,9 +19,9 @@ func NewBreakerProvider() BreakerProvider {
 	return &breakerProviderImpl{}
 }
 
-func (p *breakerProviderImpl) New(cfg *configs.Config) *gobreaker.CircuitBreaker {
+func (p *breakerProviderImpl) New(name string, cfg *configs.Config) *gobreaker.CircuitBreaker {
 	settings := gobreaker.Settings{
-		Name:        cfg.CircuitBreaker.Name,
+		Name:        name,
 		MaxRequests: cfg.CircuitBreaker.MaxRequests,
 		Interval:    time.Duration(cfg.CircuitBreaker.Interval) * time.Millisecond,
 		Timeout:     time.Duration(cfg.CircuitBreaker.RecoveryTimeoutSeconds) * time.Second,

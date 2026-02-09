@@ -19,21 +19,34 @@ import (
 // @host localhost:8081 // Replace with your actual host
 // @BasePath /
 func main() {
-	loadconfig, locaconfigerr := configs.LoadConfig()
-	if locaconfigerr != nil {
-		panic(locaconfigerr)
-	}
-	app, err := InitializeApp(loadconfig)
-	// Initialize Gin router
+	// 1. Load Config
+	cfg, err := configs.LoadConfig()
 	if err != nil {
 		panic(err)
 	}
-	log.Println("Starting gRPC server on :50051")
-	if err := app.GRPCServer.Run(":50051"); err != nil {
-		log.Fatalf("server failed: %v", err)
+
+	// 2. Init App (Wire làm hết việc tạo object ở đây)
+	app, cleanup, err := InitializeApp(cfg)
+	if err != nil {
+		panic(err)
 	}
+	defer cleanup()
+	// 3. Chạy gRPC Server (Trong Goroutine riêng biệt)
+	// Lý do: Để nó không chặn luồng chính
+	go func() {
+		grpcPort := cfg.GRPCServer.GRPC_SERVER_PORT // Ví dụ: ":50051"
+		log.Printf("Starting gRPC server on %s", grpcPort)
+		if err := app.GRPCServer.Run(grpcPort); err != nil {
+			log.Fatalf("gRPC server failed: %v", err)
+		}
+	}()
 
-	port := fmt.Sprintf(":%v", loadconfig.Server.Port)
-	app.Server.Run(port)
+	// 4. Chạy HTTP Server (Gin) (Ở luồng chính)
+	httpPort := fmt.Sprintf(":%v", cfg.Server.Port)
+	log.Printf("Starting HTTP server on %s", httpPort)
 
+	// Hàm này sẽ chặn (block) tại đây để giữ app luôn chạy
+	if err := app.Server.Run(httpPort); err != nil {
+		log.Fatalf("HTTP server failed: %v", err)
+	}
 }
