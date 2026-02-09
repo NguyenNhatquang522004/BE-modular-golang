@@ -44,6 +44,10 @@ type KeyCloakConfig struct {
 	KEYCLOAK_REALM         string
 	KEYCLOAK_CLIENT_ID     string
 	KEYCLOAK_CLIENT_SECRET string
+	REDIRECT_URI           string
+	KEYCLOAK_AUTH_URL      string
+	KEYCLOAK_TOKEN_URL     string
+	KEYCLOAK_USERINFO_URL  string
 }
 type EmailSMTPConfig struct {
 	SMTP_HOST        string
@@ -146,6 +150,11 @@ func LoadConfig() (*Config, error) {
 			KEYCLOAK_REALM:         viper.GetString("KEYCLOAK_REALM"),
 			KEYCLOAK_CLIENT_ID:     viper.GetString("KEYCLOAK_CLIENT_ID"),
 			KEYCLOAK_CLIENT_SECRET: viper.GetString("KEYCLOAK_CLIENT_SECRET"),
+			REDIRECT_URI:           viper.GetString("KEYCLOAK_REDIRECT_URI"),
+			KEYCLOAK_AUTH_URL:      viper.GetString("KEYCLOAK_AuthURL"),
+			KEYCLOAK_TOKEN_URL:     viper.GetString("KEYCLOAK_TokenURL"),
+			KEYCLOAK_USERINFO_URL:  viper.GetString("KEYCLOAK_UserInfoURL"),
+
 		},
 		// --- Email SMTP ---
 		EmailSMTP: EmailSMTPConfig{

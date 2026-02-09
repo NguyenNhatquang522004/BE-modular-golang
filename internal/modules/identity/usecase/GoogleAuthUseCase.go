@@ -4,24 +4,27 @@ import (
 	"context"
 	"errors"
 
-	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/http/response"
+	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/configs"
+	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/server/http/response"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/identity/delivery/res"
+	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/identity/domain/IRepositoryKeyCloak"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/identity/domain/IRepositoryPostgres"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/identity/domain/entity"
-	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/identity/infrastructure/repository/keycloak"
+
 	"github.com/golang-jwt/jwt/v5"
-	"golang.org/x/oauth2"
 )
 
 type GoogleAuthUseCase struct {
 	userRepo       IRepositoryPostgres.IUserRepository
-	keycloakClient *keycloak.KeycloakRepository
+	keycloakClient IRepositoryKeyCloak.IKeycloakRepository
+	cfg            *configs.Config
 }
 
-func NewGoogleAuthUseCase(userRepo IRepositoryPostgres.IUserRepository, keycloakClient *keycloak.KeycloakRepository) *GoogleAuthUseCase {
+func NewGoogleAuthUseCase(userRepo IRepositoryPostgres.IUserRepository, keycloakClient IRepositoryKeyCloak.IKeycloakRepository , cfg *configs.Config) *GoogleAuthUseCase {
 	return &GoogleAuthUseCase{
 		userRepo:       userRepo,
 		keycloakClient: keycloakClient,
+		cfg:            cfg,
 	}
 }
 func (u *GoogleAuthUseCase) GetUserInfoByToken(claim *jwt.MapClaims) (*response.Response, error) {
@@ -91,17 +94,51 @@ func (u *GoogleAuthUseCase) Login(provider string, token string) (*response.Resp
 	}), response.WithMessage("Login with Google successful"), response.WithStatus("200")), nil
 }
 func (u *GoogleAuthUseCase) LoginStandard(code string) (*response.Response, error) {
-	return nil, nil // TODO: Implement logic later
+	// 1. Gọi Keycloak để đổi "Code" lấy "Token"
+	// Endpoint chuẩn: POST /realms/{realm}/protocol/openid-connect/token
+	tokenResult, err := u.keycloakClient.ExchangeAuthCode(context.Background(), code)
+	if err != nil {
+		return nil, errors.New("failed to exchange code with keycloak: " + err.Error())
+	}
+
+	ctx := context.Background()
+	claims, err := u.keycloakClient.DecodeAccessToken(ctx, tokenResult.AccessToken)
+	if err != nil {
+		return nil, err
+	}
+
+	mapClaims := *claims
+	sub, ok := mapClaims["sub"].(string) // ID của User trong Keycloak
+	email := mapClaims["email"].(string) // Email từ Google đã được Keycloak sync về
+	if !ok {
+
+		return nil, errors.New("invalid token: missing sub claim")
+	}
+	// 3. Đồng bộ User vào DB Postgres (Giống hệt luồng cũ)
+	user, err := u.userRepo.FindByKeycloakID(sub)
+	if err != nil || user == nil {
+		// Tạo user mới nếu chưa có
+		newUser := &entity.User{
+			KeycloakID: sub,
+			Email:      email,
+			IsActive:   true,
+		}
+		_, err = u.userRepo.CreateUser(newUser)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	// 4. Trả về Token cho Frontend
+	return response.NewResponse(response.WithData(&res.TokenResponse{
+		AccessToken:  tokenResult.AccessToken,
+		RefreshToken: tokenResult.RefreshToken,
+		ExpiresIn:    tokenResult.ExpiresIn,
+	}), response.WithMessage("Login with Google (SSO) successful"), response.WithStatus("200")), nil
 }
 
 func (u *GoogleAuthUseCase) GetLoginURL(redirectURI string) (*response.Response, error) {
-	return nil, nil // TODO: Implement logic later
-}
-
-func (u *GoogleAuthUseCase) ExchangeCodeForToken(code string) (*response.Response, error) {
-	return nil, nil // TODO: Implement logic later
-}
-
-func (u *GoogleAuthUseCase) GetUserInfo(token *oauth2.Token) (*response.Response, error) {
-	return nil, nil // TODO: Implement logic later
+	return response.NewResponse(response.WithData(map[string]any{
+		"login_url": u.cfg.KeyCloak.KEYCLOAK_AUTH_URL + "?client_id=" + u.cfg.KeyCloak.KEYCLOAK_CLIENT_ID + "&response_type=code&scope=openid email&redirect_uri=http://myapp.com/callback&kc_idp_hint=google",
+	}), response.WithMessage("Get Google login URL successful"), response.WithStatus("200")), nil
 }

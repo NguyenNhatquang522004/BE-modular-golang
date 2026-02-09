@@ -20,7 +20,6 @@ type IKeycloakRepository interface {
 
 	// Làm mới token khi AccessToken hết hạn
 	RefreshToken(ctx context.Context, refreshToken string) (*gocloak.JWT, error)
-
 	// Đăng xuất (Vô hiệu hóa Refresh Token)
 	Logout(ctx context.Context, refreshToken string) error
 
@@ -29,7 +28,7 @@ type IKeycloakRepository interface {
 
 	// Giải mã Token offline để lấy claims (Sub, Email, Roles...)
 	DecodeAccessToken(ctx context.Context, accessToken string) (*jwt.MapClaims, error)
-
+	ExchangeAuthCode(ctx context.Context, code string) (*gocloak.JWT, error)
 	// ==========================================
 	// 2. NHÓM USER MANAGEMENT (CRUD User)
 	// ==========================================

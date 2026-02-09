@@ -3,7 +3,7 @@ package usecase
 import (
 	"errors"
 
-	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/http/response"
+	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/server/http/response"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/identity/domain/IRepositoryMongodb"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/identity/domain/entity"
 )

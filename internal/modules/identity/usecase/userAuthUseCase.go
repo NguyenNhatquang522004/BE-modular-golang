@@ -7,7 +7,7 @@ import (
 
 	"github.com/Nerzal/gocloak/v13"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/events"
-	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/http/response"
+	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/server/http/response"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/identity/delivery/res"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/identity/domain/IRepositoryPostgres"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/identity/domain/entity"
@@ -70,7 +70,7 @@ func (u *UserAuthUseCase) Login(email string, password string) (*response.Respon
 	}
 
 	// Giải mã token để lấy thông tin user
-	claims, err := u.keycloakClient.DecodeAccessToken(ctx,tokenResult.AccessToken)
+	claims, err := u.keycloakClient.DecodeAccessToken(ctx, tokenResult.AccessToken)
 	if err != nil {
 		return nil, err
 	}
@@ -399,7 +399,7 @@ func (u *UserAuthUseCase) LoginWithGoogle(provider string, token string) (*respo
 	if err != nil {
 		return nil, errors.New("failed to exchange token with keycloak: " + err.Error())
 	}
-ctx := context.Background()
+	ctx := context.Background()
 	// 2. Decode token để lấy User ID (sub)
 	claims, err := u.keycloakClient.DecodeAccessToken(ctx, tokenResult.AccessToken)
 	if err != nil {

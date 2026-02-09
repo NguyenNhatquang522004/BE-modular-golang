@@ -204,7 +204,7 @@ func (k *KeycloakRepository) SetPassword(ctx context.Context, userID string, pas
 
 // Gửi email yêu cầu user tự đổi mật khẩu (Forgot Password / Required Actions)
 func (k *KeycloakRepository) SendUpdatePasswordEmail(ctx context.Context, userID string) error {
-	token, err := k.GetAdminToken(ctx	)
+	token, err := k.GetAdminToken(ctx)
 	if err != nil {
 		return err
 	}
@@ -299,6 +299,27 @@ func (k *KeycloakRepository) ExchangeExternalToken(ctx context.Context, issuer s
 		RequestedSubject:   &subjectTokenType,   // <--- QUAN TRỌNG: Phải truyền vào đây
 		RequestedTokenType: &requestedTokenType, // <--- Truyền vào đây
 		Scope:              &scope,              // <--- Truyền vào đây để lấy Refresh Token
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	return token, nil
+}
+
+func (k *KeycloakRepository) ExchangeAuthCode(ctx context.Context, code string) (*gocloak.JWT, error) {
+	// 1. Định nghĩa loại Grant Type là "authorization_code"
+	grantType := "authorization_code"
+
+	// 2. Gọi hàm GetToken của thư viện gocloak
+	// Lưu ý: Phải truyền đúng RedirectURI khớp với cái Frontend đã dùng
+	token, err := k.Client.GetToken(ctx, k.Realm, gocloak.TokenOptions{
+		ClientID:     &k.ClientId,
+		ClientSecret: &k.ClientSecret,
+		GrantType:    &grantType,
+		Code:         &code,
+		RedirectURI:  &k.cfg.REDIRECT_URI,
 	})
 
 	if err != nil {

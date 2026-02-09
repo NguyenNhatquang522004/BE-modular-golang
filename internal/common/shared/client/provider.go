@@ -2,6 +2,7 @@ package client
 
 import (
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/database"
+	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/infrastructure/redis"
 	"github.com/google/wire"
 )
 
@@ -18,13 +19,16 @@ var providerGRPC = wire.NewSet(
 
 	ProvideIdentityClient,
 	ProvideGRPCConnection,
-
 )
+
 // var providerResilience = wire.NewSet(
 //
 //	resilience.NewBreakerProvider,
 //
 // )
+var prodviderCache = wire.NewSet(
+	redis.NewRedisAdapter,
+)
 var ProviderSet = wire.NewSet(
 	providerDatabase,
 	providerGRPC,

@@ -1,11 +1,10 @@
 package usecase
 
 import (
-	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/http/response"
+	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/server/http/response"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/identity/domain/entity"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/identity/enum"
 	"github.com/golang-jwt/jwt/v5"
-	"golang.org/x/oauth2"
 )
 
 type IUserRoleUseCase interface {
@@ -26,8 +25,6 @@ type IGoogleAuthUseCase interface {
 	// Standard flow
 	LoginStandard(code string) (*response.Response, error)
 	GetLoginURL(redirectURI string) (*response.Response, error)
-	ExchangeCodeForToken(code string) (*response.Response, error)
-	GetUserInfo(token *oauth2.Token) (*response.Response, error)
 }
 type IUserAuthService interface {
 	Login(email string, password string) (*response.Response, error)

@@ -16,6 +16,7 @@ func InitializeApp(config *configs.Config) (*App, func(), error) {
 		client.ProviderSet,
 		identity.ModuleIndentitySet,
 		grpc.NewGRPCServer,
+		http.NewGinServer
 		NewGinServer,
 		NewApp,
 	)

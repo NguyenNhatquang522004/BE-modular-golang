@@ -10,6 +10,7 @@ import (
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/configs"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/database"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/server/grpc"
+	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/server/http"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/identity"
 )
 
@@ -26,7 +27,7 @@ func InitializeApp(config *configs.Config) (*App, func(), error) {
 		return nil, nil, err
 	}
 	moduleIdentity := identity.NewModuleIdentity(mongoDatabase, db)
-	engine := NewGinServer(moduleIdentity)
+	engine := http.NewGinServer(moduleIdentity)
 	grpcServer := grpc.NewGRPCServer()
 	app := NewApp(engine, grpcServer)
 	return app, func() {

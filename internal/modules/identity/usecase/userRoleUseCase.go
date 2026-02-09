@@ -3,7 +3,7 @@ package usecase
 import (
 	"strings"
 
-	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/http/response"
+	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/server/http/response"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/identity/domain/IRepositoryPostgres"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/identity/domain/entity"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/identity/enum"
@@ -32,9 +32,6 @@ func (u *UserRoleUseCase) convertEnum(roleName string) (*response.Response, erro
 
 func (u *UserRoleUseCase) AssignRoleToUserWithName(userID string, roleName string) (*response.Response, error) {
 	convertResp, err := u.convertEnum(roleName)
-	if err != nil {
-		return convertResp, err
-	}
 	if err != nil {
 		return response.NewResponse(response.WithData(""),
 			response.WithMessage("invalid role name"), response.WithStatus("400")), err
