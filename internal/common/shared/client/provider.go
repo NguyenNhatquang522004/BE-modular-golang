@@ -2,6 +2,7 @@ package client
 
 import (
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/database"
+	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/server/middleware"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/infrastructure/redis"
 	"github.com/google/wire"
 )
@@ -19,6 +20,9 @@ var providerGRPC = wire.NewSet(
 
 	ProvideIdentityClient,
 	ProvideGRPCConnection,
+)
+var prodviderMiddleware = wire.NewSet(
+	middleware.NewAuthMiddleware,
 )
 
 // var providerResilience = wire.NewSet(

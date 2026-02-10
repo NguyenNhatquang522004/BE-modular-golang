@@ -8,10 +8,11 @@ import (
 	"github.com/Nerzal/gocloak/v13"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/events"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/server/http/response"
+	irepositoryshare "github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/IRepositoryShare"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/identity/delivery/dto/res"
+	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/identity/domain/IRepositoryKeyCloak"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/identity/domain/IRepositoryPostgres"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/identity/domain/entity"
-	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/identity/infrastructure/repository/keycloak"
 
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/identity/utils"
 	"github.com/google/uuid"
@@ -20,13 +21,15 @@ import (
 type UserAuthUseCase struct {
 	eventBus       events.EventBus
 	userRepo       IRepositoryPostgres.IUserRepository
-	keycloakClient *keycloak.KeycloakRepository
+	keycloakClient IRepositoryKeyCloak.IKeycloakRepository
+	redisRepo      irepositoryshare.IRedis
 }
 
-func NewUserAuthUseCase(userRepo IRepositoryPostgres.IUserRepository, keycloakClient *keycloak.KeycloakRepository) *UserAuthUseCase {
+func NewUserAuthUseCase(userRepo IRepositoryPostgres.IUserRepository, keycloakClient IRepositoryKeyCloak.IKeycloakRepository, redisRepo irepositoryshare.IRedis) *UserAuthUseCase {
 	return &UserAuthUseCase{
 		userRepo:       userRepo,
 		keycloakClient: keycloakClient,
+		redisRepo:      redisRepo,
 	}
 }
 
@@ -82,6 +85,17 @@ func (u *UserAuthUseCase) Login(email string, password string) (*response.Respon
 		return response.NewResponse(response.WithData(""),
 			response.WithMessage("user keycloak ID does not match."),
 			response.WithStatus("404")), errors.New("user keycloak ID does not match.")
+	}
+	_, err = u.redisRepo.Set(ctx, checkemail.ID.String(), &res.TokenResponse{
+		AccessToken:  tokenResult.AccessToken,
+		RefreshToken: tokenResult.RefreshToken,
+		ExpiresIn:    tokenResult.ExpiresIn,
+	}, time.Duration(tokenResult.ExpiresIn)*time.Second)
+	if err != nil {
+		return response.NewResponse(
+			response.WithMessage("Error caching token in Redis"),
+			response.WithStatus("500"),
+		), errors.New("error caching token in Redis")
 	}
 	return response.NewResponse(
 		response.WithData(&res.TokenResponse{
@@ -205,7 +219,9 @@ func (u *UserAuthUseCase) RegisterThree(email string, username string, password 
 	checkEmail.IsActive = true
 	checkEmail.StepRegister = 3
 	enabled := true
+	idStr := checkEmail.ID.String()
 	userKC := gocloak.User{
+		ID:            &idStr,
 		Username:      &checkEmail.Username,
 		Email:         &checkEmail.Email,
 		Enabled:       &enabled,
@@ -379,6 +395,7 @@ func (u *UserAuthUseCase) LogOut(userID string, accessToken string) (*response.R
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 	err = u.keycloakClient.Logout(ctx, accessToken)
+	_, err = u.redisRepo.Del(ctx, user.ID.String())
 	if err != nil {
 		return response.NewResponse(
 			response.WithMessage("Error logging out user from Keycloak"),

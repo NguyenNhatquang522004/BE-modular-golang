@@ -9,6 +9,18 @@ import (
 	"github.com/coreos/go-oidc/v3/oidc"
 )
 
+type KeycloakClaims struct {
+	Sub               string `json:"sub"`
+	Email             string `json:"email"`
+	PreferredUsername string `json:"preferred_username"`
+	Name              string `json:"name"`
+	EmailVerified     bool   `json:"email_verified"`
+	RealmAccess       struct {
+		Roles []string `json:"roles"`
+	} `json:"realm_access"`
+	ResourceAccess map[string]interface{} `json:"resource_access"` // Client roles
+}
+
 // AuthMiddleware struct giữ state của provider để không phải init lại mỗi request
 type AuthMiddleware struct {
 	Verifier *oidc.IDTokenVerifier
@@ -24,14 +36,12 @@ func NewAuthMiddleware(ctx context.Context, issuerURL string, clientID string) (
 
 	// 2. Cấu hình Verifier
 	oidcConfig := &oidc.Config{
-		ClientID: clientID,
-		// SkipClientIDCheck: true, // Bật cái này nếu validate Access Token thay vì ID Token
+		SkipClientIDCheck: true, // Bật cái này nếu validate Access Token thay vì ID Token
 		// Access Token của Keycloak thường có 'aud' là 'account', không phải clientID
 	}
 
 	// Mẹo Best Practice: Với Access Token, ta thường skip check ClientID
 	// và chỉ quan tâm Token đó có được ký bởi đúng Issuer hay không.
-	oidcConfig.SkipClientIDCheck = true
 
 	return &AuthMiddleware{
 		Verifier: provider.Verifier(oidcConfig),
@@ -61,18 +71,18 @@ func (am *AuthMiddleware) Handler(next http.Handler) http.Handler {
 			http.Error(w, "Invalid token: "+err.Error(), http.StatusUnauthorized)
 			return
 		}
-
 		// 3. Extract Claims (Lấy thông tin user: sub, email, roles...)
-		var claims map[string]interface{}
+		var claims KeycloakClaims
+
+		// Thư viện tự động map JSON vào Struct (Gọn gàng!)
 		if err := idToken.Claims(&claims); err != nil {
 			http.Error(w, "Failed to parse claims", http.StatusInternalServerError)
 			return
 		}
 
 		// 4. Inject vào Context để Controller sử dụng
-		ctx := context.WithValue(r.Context(), "user_id", claims["sub"])
-		ctx = context.WithValue(ctx, "claims", claims)
-
+		ctx := context.WithValue(r.Context(), "user_email", claims.Email)
+		ctx = context.WithValue(ctx, "user_roles", claims.RealmAccess.Roles)
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }

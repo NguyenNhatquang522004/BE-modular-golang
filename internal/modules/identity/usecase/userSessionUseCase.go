@@ -2,8 +2,8 @@ package usecase
 
 import (
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/server/http/response"
+	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/identity/delivery/dto/req"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/identity/domain/IRepositoryPostgres"
-	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/identity/domain/entity"
 )
 
 type UserSessionUseCase struct {
@@ -15,12 +15,18 @@ func NewUserSessionUseCase(userSessionRepo IRepositoryPostgres.IUserSessionRepos
 		userSessionRepo: userSessionRepo,
 	}
 }
-func (u *UserSessionUseCase) CreateSessionLogin(session *entity.UserSession) (*response.Response, error) {
-	return u.userSessionRepo.CreateSession(session)
+func (u *UserSessionUseCase) CreateSessionLogin(session *req.UserSessionReq) (*response.Response, error) {
+	entity := session.ToEntity()
+	if entity == nil {
+		return response.NewResponse(response.WithData(""), response.WithMessage("invalid session data"), response.WithStatus("400")), nil
+	}
+	return u.userSessionRepo.CreateSession(entity)
 }
-func (u *UserSessionUseCase) GetAllUserSessions(userID string) (*response.Response, error) {
-	return u.userSessionRepo.GetAllUserSessions(userID)
+func (u *UserSessionUseCase) GetAllUserSessions(req *req.UserSessionReq) (*response.Response, error) {
+	entity := req.ToEntity()
+	return u.userSessionRepo.GetAllUserSessions(entity.UserID.String())
 }
-func (u *UserSessionUseCase) GetUserSessionPast(userID string) (*response.Response, error) {
-	return u.userSessionRepo.GetUserSessionPast(userID)
+func (u *UserSessionUseCase) GetUserSessionPast(req *req.UserSessionReq) (*response.Response, error) {
+	entity := req.ToEntity()
+	return u.userSessionRepo.GetUserSessionPast(entity.UserID.String())
 }

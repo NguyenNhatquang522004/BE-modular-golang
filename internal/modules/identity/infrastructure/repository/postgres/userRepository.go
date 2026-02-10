@@ -47,7 +47,11 @@ func (r *UserRepository) UpdateUser(user *entity.User) error {
 }
 
 func (r *UserRepository) DeleteUser(userID string) error {
-	return r.DB.Where("id = ?", userID).Delete(&entity.User{}).Error
+	err := r.DB.Where("id = ?", userID).Delete(&entity.User{}).Error
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func (r *UserRepository) FindByKeycloakID(keycloakID string) (*entity.User, error) {
@@ -57,4 +61,33 @@ func (r *UserRepository) FindByKeycloakID(keycloakID string) (*entity.User, erro
 		return nil, err
 	}
 	return &user, nil
+}
+
+func (r *UserRepository) Panigation(Cursor string, Limit int) ([]*entity.User, string, error) {
+	var users []*entity.User
+	// 1. Khởi tạo Query cơ bản
+	// Quan trọng: Phải sort cố định để cursor hoạt động đúng
+	query := r.DB.Model(&entity.User{}).Where(&entity.User{}).Order("created_at DESC, id DESC").Limit(Limit)
+
+	if Cursor != "" {
+		// 2. Lấy thông tin của bản ghi tại cursor
+		var cursorUser entity.User
+		err := r.DB.Where("id = ?", Cursor).First(&cursorUser).Error
+		if err != nil {
+			return nil, "", err
+		}
+		// 3. Thêm điều kiện để lấy các bản ghi sau cursor
+		query = query.Where("(created_at < ?) OR (created_at = ? AND id < ?)", cursorUser.CreatedAt, cursorUser.CreatedAt, cursorUser.ID)
+	}
+	// 4. Thực hiện truy vấn
+	err := query.Find(&users).Error
+	if err != nil {
+		return nil, "", err
+	}
+	lastUser := ""
+	// 5. Xác định next cursor
+	if len(users) == Limit {
+		lastUser = users[len(users)-1].ID.String()
+	}
+	return users, lastUser, nil
 }

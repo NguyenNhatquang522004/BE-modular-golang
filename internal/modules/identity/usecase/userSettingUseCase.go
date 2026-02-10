@@ -4,8 +4,8 @@ import (
 	"errors"
 
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/server/http/response"
+	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/identity/delivery/dto/req"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/identity/domain/IRepositoryMongodb"
-	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/identity/domain/entity"
 )
 
 type UserSettingUseCase struct {
@@ -27,8 +27,9 @@ func (k *UserSettingUseCase) CreateUserSetting(userID string) (*response.Respons
 		response.WithStatus("200")), nil
 
 }
-func (k *UserSettingUseCase) UpdateUserSettings(userID string, settings *entity.UserSetting) (*response.Response, error) {
-	user, err := k.userSettingRepo.UpdateUserSettings(userID, settings)
+func (k *UserSettingUseCase) UpdateUserSettings(userID string, settings *req.UserSettingReq) (*response.Response, error) {
+	data := settings.ToEntity(userID)
+	user, err := k.userSettingRepo.UpdateUserSettings(userID, data)
 	if err != nil {
 		return response.NewResponse(response.WithData(""), response.WithMessage(err.Error()), response.WithStatus("500")), errors.New(err.Error())
 	}

@@ -8,6 +8,9 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
+type CreateUserSettingReq struct {
+	User_ID string `json:"user_id" binding:"required,uuid"`
+}
 type UserSettingReq struct {
 	ID      primitive.ObjectID `bson:"_id" json:"_id,omitempty"`
 	User_ID string             `bson:"user_id" json:"user_id"`

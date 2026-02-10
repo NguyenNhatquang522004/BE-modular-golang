@@ -11,4 +11,5 @@ type IUserRepository interface {
 	UpdateUser(user *entity.User) error
 	DeleteUser(userID string) error
 	FindByKeycloakID(keycloakID string) (*entity.User, error)
+	Panigation(Cursor string, Limit int) ([]*entity.User, string, error)
 }

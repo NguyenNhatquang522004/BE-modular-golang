@@ -2,7 +2,7 @@ package usecase
 
 import (
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/server/http/response"
-	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/identity/domain/entity"
+	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/identity/delivery/dto/req"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/identity/enum"
 	"github.com/golang-jwt/jwt/v5"
 )
@@ -17,6 +17,14 @@ type IUserRoleUseCase interface {
 	DeleteRole(roleID string) (*response.Response, error)
 	GetAllUserRoles(RoleID string) (*response.Response, error)
 	GetAllRoles() (*response.Response, error)
+}
+type IAdminUseCase interface {
+	LoadAllUsers(Cursor string, Limit int) (*response.Response, error)
+	GetUserByID(userID string) (*response.Response, error)
+	UpdateUser(req *req.UpdateUserReq) (*response.Response, error)
+	DeleteUser(userID string) (*response.Response, error)
+	CreateUser(rolename []enum.RoleType, roleID []string, req *req.CreateUserReq) (*response.Response, error)
+	AssignRoleToUser(userID string, rolename []enum.RoleType, roleID []string) (*response.Response, error)
 }
 type IGoogleAuthUseCase interface {
 	//Token Exchange
@@ -36,15 +44,23 @@ type IUserAuthService interface {
 	LogOut(userID string, accessToken string) (*response.Response, error)
 	ResetPassword(email string, newPassword string) (*response.Response, error)
 }
+type IUserService interface {
+	GetUserByID(userID string) (*response.Response, error)
+	GetUserByEmail(email string) (*response.Response, error)
+	PanigationUsers(Cursor string, Limit int) (*response.Response, error)
+	UpdateUser(req *req.UpdateUserReq) (*response.Response, error)
+	DeleteUser(userID string) (*response.Response, error)
+	CreateUser(req *req.CreateUserReq) (*response.Response, error)
+}
 type IUserSettingService interface {
 	CreateUserSetting(userID string) (*response.Response, error)
-	UpdateUserSettings(userID string, settings *entity.UserSetting) (*response.Response, error)
+	UpdateUserSettings(userID string, settings *req.UserSettingReq) (*response.Response, error)
 }
 
 type IUserSessionService interface {
-	CreateSessionLogin(session *entity.UserSession) (*response.Response, error)
-	GetAllUserSessions(userID string) (*response.Response, error)
-	GetUserSessionPast(userID string) (*response.Response, error)
+	CreateSessionLogin(session *req.UserSessionReq) (*response.Response, error)
+	GetAllUserSessions(req *req.UserSessionReq) (*response.Response, error)
+	GetUserSessionPast(req *req.UserSessionReq) (*response.Response, error)
 }
 
 type Usecase struct {
@@ -53,6 +69,8 @@ type Usecase struct {
 	UserSetting IUserSettingService
 	Session     IUserSessionService
 	Role        IUserRoleUseCase
+	User        IUserService
+	Admin       IAdminUseCase
 }
 
 func NewUsecase(
@@ -61,6 +79,9 @@ func NewUsecase(
 	userSetting IUserSettingService,
 	session IUserSessionService,
 	role IUserRoleUseCase,
+	user IUserService,
+	admin IAdminUseCase,
+
 ) *Usecase {
 	return &Usecase{
 		Auth:        auth,
@@ -68,5 +89,7 @@ func NewUsecase(
 		UserSetting: userSetting,
 		Session:     session,
 		Role:        role,
+		User:        user,
+		Admin:       admin,
 	}
 }
