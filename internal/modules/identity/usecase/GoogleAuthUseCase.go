@@ -6,7 +6,7 @@ import (
 
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/configs"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/server/http/response"
-	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/identity/delivery/res"
+	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/identity/delivery/dto/res"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/identity/domain/IRepositoryKeyCloak"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/identity/domain/IRepositoryPostgres"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/identity/domain/entity"
@@ -20,7 +20,7 @@ type GoogleAuthUseCase struct {
 	cfg            *configs.Config
 }
 
-func NewGoogleAuthUseCase(userRepo IRepositoryPostgres.IUserRepository, keycloakClient IRepositoryKeyCloak.IKeycloakRepository , cfg *configs.Config) *GoogleAuthUseCase {
+func NewGoogleAuthUseCase(userRepo IRepositoryPostgres.IUserRepository, keycloakClient IRepositoryKeyCloak.IKeycloakRepository, cfg *configs.Config) *GoogleAuthUseCase {
 	return &GoogleAuthUseCase{
 		userRepo:       userRepo,
 		keycloakClient: keycloakClient,

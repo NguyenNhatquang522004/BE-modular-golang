@@ -35,7 +35,6 @@ type IUserAuthService interface {
 	SendLinkResetPassword(email string) (*response.Response, error)
 	LogOut(userID string, accessToken string) (*response.Response, error)
 	ResetPassword(email string, newPassword string) (*response.Response, error)
-	LoginWithGoogle(provider string, token string) (*response.Response, error)
 }
 type IUserSettingService interface {
 	CreateUserSetting(userID string) (*response.Response, error)

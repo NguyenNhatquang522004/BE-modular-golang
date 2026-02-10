@@ -8,7 +8,7 @@ import (
 	"github.com/Nerzal/gocloak/v13"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/events"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/server/http/response"
-	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/identity/delivery/res"
+	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/identity/delivery/dto/res"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/identity/domain/IRepositoryPostgres"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/identity/domain/entity"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/identity/infrastructure/repository/keycloak"
@@ -389,47 +389,4 @@ func (u *UserAuthUseCase) LogOut(userID string, accessToken string) (*response.R
 		response.WithMessage("User logged out successfully"),
 		response.WithStatus("200"),
 	), nil
-}
-func (u *UserAuthUseCase) LoginWithGoogle(provider string, token string) (*response.Response, error) {
-	// provider: "google", "facebook"... (Phải khớp với Alias trong Keycloak)
-	// token: Chuỗi ID Token mà Frontend gửi lên
-
-	// 1. Gọi Keycloak để đổi Token
-	tokenResult, err := u.keycloakClient.ExchangeExternalToken(context.Background(), provider, token)
-	if err != nil {
-		return nil, errors.New("failed to exchange token with keycloak: " + err.Error())
-	}
-	ctx := context.Background()
-	// 2. Decode token để lấy User ID (sub)
-	claims, err := u.keycloakClient.DecodeAccessToken(ctx, tokenResult.AccessToken)
-	if err != nil {
-		return nil, err
-	}
-	mapClaims := *claims
-	sub, _ := mapClaims["sub"].(string)
-	email, _ := mapClaims["email"].(string)
-
-	// 3. Đồng bộ User vào DB Postgres (Giống hệt luồng Login thường)
-	// Tìm xem user này có trong DB chưa
-	user, err := u.userRepo.FindByKeycloakID(sub)
-	if err != nil || user == nil {
-		// Nếu chưa có -> Tạo mới user trong DB nội bộ (Auto Register)
-		// Lưu ý: Lúc này password để trống, vì user này login bằng Google
-		newUser := &entity.User{
-			KeycloakID: sub,
-			Email:      email,
-			IsActive:   true,
-		}
-		_, err = u.userRepo.CreateUser(newUser)
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	// 4. Trả về Token cho Frontend
-	return response.NewResponse(response.WithData(&res.TokenResponse{
-		AccessToken:  tokenResult.AccessToken,
-		RefreshToken: tokenResult.RefreshToken,
-		ExpiresIn:    tokenResult.ExpiresIn,
-	}), response.WithMessage("Login with Google successful"), response.WithStatus("200")), nil
 }

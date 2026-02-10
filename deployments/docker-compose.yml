@@ -278,6 +278,7 @@ services:
 
   keycloak_BE-modular-golang:
     image: quay.io/keycloak/keycloak:22.0.1
+   
     container_name: keycloak_BE-modular-golang
     restart: unless-stopped
     environment:
@@ -295,7 +296,24 @@ services:
       - postgres_db_BE-modular-golang
     networks:
       - be_modular_golang_network
-  
+    healthcheck: # Quan trọng: Để Terraform biết khi nào Keycloak sẵn sàng
+      test: ["CMD-SHELL", "exec 3<>/dev/tcp/127.0.0.1/8080; echo -e 'GET /health/ready HTTP/1.1\r\nHost: health\r\nConnection: close\r\n\r\n' >&3; cat <&3 | grep -q '200 OK'"]
+      interval: 10s
+      timeout: 5s
+      retries: 15
+  terraform-init:
+    image: hashicorp/terraform:light
+    container_name: terraform_init_job
+    working_dir: /app
+    volumes:
+      - ./deployments/init:/app # Mount thư mục chứa file .tf vào
+    # Lệnh này sẽ: Init -> Chờ Keycloak khỏe -> Apply config
+    entrypoint: ["sh", "-c", "terraform init && echo 'Waiting for Keycloak...' && while ! nc -z keycloak_BE-modular-golang 8080; do sleep 2; done && sleep 10 && terraform apply -auto-approve"]
+    depends_on:
+      keycloak_BE-modular-golang:
+        condition: service_healthy # Chỉ chạy khi Keycloak đã Healthcheck OK
+    networks:
+      - be_modular_golang_network  
 networks:
   be_modular_golang_network:
     driver: bridge
