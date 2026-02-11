@@ -1,0 +1,17 @@
+type User {
+  id: ID!
+  name: String!
+  avatar: String
+}
+
+type Post {
+  id: ID!
+  content: String!
+  authorId: String! # Database field
+  author: User!     # Computed field (Cần DataLoader)
+}
+
+type Query {
+  posts: [Post!]!
+  user(id: ID!): User
+}

@@ -3,12 +3,14 @@ module github.com/NguyenNhatquang522004/BE-modular-golang
 go 1.25.5
 
 require (
+	github.com/99designs/gqlgen v0.17.86
 	github.com/google/uuid v1.6.0
 	github.com/neo4j/neo4j-go-driver/v5 v5.28.4
+	github.com/vektah/gqlparser/v2 v2.5.31
 )
 
 require (
-	github.com/cenkalti/backoff/v4 v4.1.2 // indirect
+	github.com/agnivade/levenshtein v1.2.1 // indirect
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
 	github.com/go-resty/resty/v2 v2.7.0 // indirect
 	github.com/opentracing/opentracing-go v1.2.0 // indirect
@@ -16,7 +18,7 @@ require (
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2 // indirect
 	github.com/segmentio/ksuid v1.0.4 // indirect
-	go.opentelemetry.io/otel/sdk v1.38.0 // indirect
+	github.com/sosodev/duration v1.3.1 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20251029180050-ab9386a59fda // indirect
 )
 
@@ -51,7 +53,6 @@ require (
 	github.com/goccy/go-json v0.10.5 // indirect
 	github.com/gocql/gocql v1.7.0
 	github.com/golang-jwt/jwt/v5 v5.3.1
-	github.com/golang-migrate/migrate/v4 v4.19.1
 	github.com/golang/snappy v0.0.4 // indirect
 	github.com/google/wire v0.7.0
 	github.com/gorilla/websocket v1.5.3
@@ -100,13 +101,13 @@ require (
 	golang.org/x/crypto v0.47.0
 	golang.org/x/mod v0.31.0 // indirect
 	golang.org/x/net v0.49.0 // indirect
-	golang.org/x/oauth2 v0.34.0
+	golang.org/x/oauth2 v0.34.0 // indirect
 	golang.org/x/sync v0.19.0 // indirect
 	golang.org/x/sys v0.40.0 // indirect
 	golang.org/x/text v0.33.0 // indirect
 	golang.org/x/tools v0.40.0 // indirect
 	google.golang.org/grpc v1.78.0
-	google.golang.org/protobuf v1.36.11 // indirect
+	google.golang.org/protobuf v1.36.11
 	gopkg.in/alexcesaro/quotedprintable.v3 v3.0.0-20150716171945-2caba252f4dc // indirect
 	gopkg.in/gomail.v2 v2.0.0-20160411212932-81ebce5c23df
 	gopkg.in/inf.v0 v0.9.1 // indirect

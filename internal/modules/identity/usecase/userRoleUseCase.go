@@ -4,7 +4,7 @@ import (
 	"strings"
 
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/server/http/response"
-	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/identity/domain/IRepositoryPostgres"
+	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/identity/domain/IRepository/IRepositoryPostgres"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/identity/domain/entity"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/identity/enum"
 )

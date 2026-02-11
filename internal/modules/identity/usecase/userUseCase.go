@@ -2,22 +2,23 @@ package usecase
 
 import (
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/server/http/response"
-	irepositoryshare "github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/IRepositoryShare"
+	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/IRepositoryShare"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/identity/delivery/dto/req"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/identity/delivery/dto/res"
-	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/identity/domain/IRepositoryPostgres"
+	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/identity/domain/IRepository/IRepositoryPostgres"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/identity/domain/entity"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/identity/utils"
 )
 
 type UserUseCase struct {
-	userRepo   IRepositoryPostgres.IUserRepository
-	redisRepo irepositoryshare.IRedis
+	userRepo  IRepositoryPostgres.IUserRepository
+	redisRepo IRepositoryShare.IRedis
 }
 
-func NewUserUseCase(userRepo IRepositoryPostgres.IUserRepository, redisRepo irepositoryshare.IRedis) *UserUseCase {
+func NewUserUseCase(userRepo IRepositoryPostgres.IUserRepository, redisRepo IRepositoryShare.IRedis) *UserUseCase {
 	return &UserUseCase{
 		userRepo: userRepo,
+		redisRepo: redisRepo,
 	}
 }
 func (u *UserUseCase) GetUserByID(userID string) (*response.Response, error) {

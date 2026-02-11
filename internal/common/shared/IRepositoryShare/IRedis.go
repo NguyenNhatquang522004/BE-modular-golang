@@ -1,4 +1,4 @@
-package irepositoryshare
+package IRepositoryShare
 
 import (
 	"context"
