@@ -15,6 +15,7 @@ type User struct {
 	Password    string    `gorm:"type:varchar(255);not null"`
 	Username    string    `gorm:"type:varchar(50);uniqueIndex;"`
 	KeycloakID  string    `gorm:"type:varchar(100);uniqueIndex;"`
+	
 
 	StepRegister int `gorm:"default:0;"`
 

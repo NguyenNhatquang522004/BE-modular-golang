@@ -30,10 +30,9 @@ func _PrivacyLevelNoOp() {
 	_ = x[PrivacyCloseFriends-(2)]
 	_ = x[PrivacyOnlyMe-(3)]
 	_ = x[PrivacyFriendsOfFriends-(4)]
-	_ = x[PrivacyEveryone-(5)]
 }
 
-var _PrivacyLevelValues = []PrivacyLevel{PrivacyPublic, PrivacyFriends, PrivacyCloseFriends, PrivacyOnlyMe, PrivacyFriendsOfFriends, PrivacyEveryone}
+var _PrivacyLevelValues = []PrivacyLevel{PrivacyPublic, PrivacyFriends, PrivacyCloseFriends, PrivacyOnlyMe, PrivacyFriendsOfFriends}
 
 var _PrivacyLevelNameToValueMap = map[string]PrivacyLevel{
 	_PrivacyLevelName[0:6]:        PrivacyPublic,
@@ -46,8 +45,6 @@ var _PrivacyLevelNameToValueMap = map[string]PrivacyLevel{
 	_PrivacyLevelLowerName[26:33]: PrivacyOnlyMe,
 	_PrivacyLevelName[33:51]:      PrivacyFriendsOfFriends,
 	_PrivacyLevelLowerName[33:51]: PrivacyFriendsOfFriends,
-	_PrivacyLevelName[51:59]:      PrivacyEveryone,
-	_PrivacyLevelLowerName[51:59]: PrivacyEveryone,
 }
 
 var _PrivacyLevelNames = []string{

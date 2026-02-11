@@ -35,7 +35,6 @@ const (
 	PrivacyCloseFriends
 	PrivacyOnlyMe
 	PrivacyFriendsOfFriends
-	PrivacyEveryone
 )
 
 // =============================================================================

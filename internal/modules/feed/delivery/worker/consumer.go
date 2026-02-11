@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/events"
+	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/events"
 )
 
 type FeedConsumer struct {

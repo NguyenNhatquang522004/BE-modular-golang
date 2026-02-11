@@ -4,6 +4,7 @@ import (
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/database"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/server/middleware"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/infrastructure/redis"
+	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/socket"
 	"github.com/google/wire"
 )
 
@@ -23,6 +24,11 @@ var providerGRPC = wire.NewSet(
 )
 var prodviderMiddleware = wire.NewSet(
 	middleware.NewAuthMiddleware,
+)
+var providerSocket = wire.NewSet(
+	socket.NewHub,
+	wire.Bind(new(socket.Manager), new(*socket.Hub)),
+	
 )
 
 // var providerResilience = wire.NewSet(

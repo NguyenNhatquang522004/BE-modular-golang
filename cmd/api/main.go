@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"log"
 
@@ -31,6 +32,11 @@ func main() {
 		panic(err)
 	}
 	defer cleanup()
+	ctx := context.Background()
+	go func() {
+		log.Println("Starting Realtime Hub Manager...")
+		app.Hub.Run(ctx) // <--- CHÍNH LÀ NÓ
+	}()
 	// 3. Chạy gRPC Server (Trong Goroutine riêng biệt)
 	// Lý do: Để nó không chặn luồng chính
 	go func() {

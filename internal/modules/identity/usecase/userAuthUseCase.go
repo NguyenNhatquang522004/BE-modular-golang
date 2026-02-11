@@ -6,9 +6,9 @@ import (
 	"time"
 
 	"github.com/Nerzal/gocloak/v13"
-	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/events"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/server/http/response"
 	irepositoryshare "github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/IRepositoryShare"
+	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/events"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/identity/delivery/dto/res"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/identity/domain/IRepositoryKeyCloak"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/identity/domain/IRepositoryPostgres"
@@ -86,6 +86,24 @@ func (u *UserAuthUseCase) Login(email string, password string) (*response.Respon
 			response.WithMessage("user keycloak ID does not match."),
 			response.WithStatus("404")), errors.New("user keycloak ID does not match.")
 	}
+	checkcache, err := u.redisRepo.Exists(ctx, checkemail.ID.String())
+	if err != nil {
+		return response.NewResponse(
+			response.WithMessage("Error checking cache in Redis"),
+			response.WithStatus("500"),
+		), errors.New("error checking cache in Redis")
+	}
+	if checkcache.Data.(int64) > 0 {
+		// User is already logged in
+		del, err := u.redisRepo.Del(ctx, checkemail.ID.String())
+		if err != nil || del.Data.(int64) == 0 {
+			return response.NewResponse(
+				response.WithMessage("Error deleting existing session in Redis"),
+				response.WithStatus("500"),
+			), errors.New("error deleting existing session in Redis")
+		}
+	}
+	// 4. Lưu token vào Redis với thời gian hết hạn
 	_, err = u.redisRepo.Set(ctx, checkemail.ID.String(), &res.TokenResponse{
 		AccessToken:  tokenResult.AccessToken,
 		RefreshToken: tokenResult.RefreshToken,

@@ -2,6 +2,7 @@ package usecase
 
 import (
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/server/http/response"
+	irepositoryshare "github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/IRepositoryShare"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/identity/delivery/dto/req"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/identity/delivery/dto/res"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/identity/domain/IRepositoryPostgres"
@@ -10,10 +11,11 @@ import (
 )
 
 type UserUseCase struct {
-	userRepo IRepositoryPostgres.IUserRepository
+	userRepo   IRepositoryPostgres.IUserRepository
+	redisRepo irepositoryshare.IRedis
 }
 
-func NewUserUseCase(userRepo IRepositoryPostgres.IUserRepository) *UserUseCase {
+func NewUserUseCase(userRepo IRepositoryPostgres.IUserRepository, redisRepo irepositoryshare.IRedis) *UserUseCase {
 	return &UserUseCase{
 		userRepo: userRepo,
 	}

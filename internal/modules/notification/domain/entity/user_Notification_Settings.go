@@ -33,33 +33,16 @@ type FCMToken struct {
 	UpdatedAt time.Time `bson:"updated_at" json:"updated_at"`
 }
 
-// --- CHANNEL TOGGLE (Cấu trúc tái sử dụng) ---
-// Định nghĩa: Với sự kiện X, user muốn nhận qua kênh nào?
-type ChannelToggle struct {
-	Push  bool `bson:"push" json:"push"`
-	Email bool `bson:"email" json:"email"`
-}
-
-// --- DETAIL SETTINGS ---
-// Struct hóa các key thay vì dùng Map để đảm bảo Type Safety.
-// Nếu sau này thêm 'on_friend_request', chỉ cần thêm field vào đây.
-type NotificationDetailSettings struct {
-	OnPostLike ChannelToggle `bson:"on_post_like" json:"on_post_like"`
-	OnComment  ChannelToggle `bson:"on_comment" json:"on_comment"`
-	OnBirthday ChannelToggle `bson:"on_birthday" json:"on_birthday"`
-
-	// Mở rộng thêm:
-	OnFriendRequest ChannelToggle `bson:"on_friend_request" json:"on_friend_request"`
-	OnSystemAlert   ChannelToggle `bson:"on_system_alert" json:"on_system_alert"`
-}
-
 // --- GENERAL SETTINGS ---
 type GeneralSettings struct {
-	PushEnabled    bool                `bson:"push_enabled" json:"push_enabled"` // Master switch (Tắt tất cả push)
-	EmailFrequency enum.EmailFrequency `bson:"email_frequency" json:"email_frequency"`
-
+	PushEnabled      bool                `bson:"push_enabled" json:"push_enabled"` // Master switch (Tắt tất cả push)
+	EmailFrequency   enum.EmailFrequency `bson:"email_frequency" json:"email_frequency"`
+	PushInteractions bool                `bson:"push_interactions" json:"push_interactions"`
+	PushFriends      bool                `bson:"push_friends" json:"push_friends"`
+	PushGroups       bool                `bson:"push_groups" json:"push_groups"`
+	PushEvents       bool                `bson:"push_events" json:"push_events"`
+	PushBirthdays    bool                `bson:"push_birthdays" json:"push_birthdays"`
 	// Chi tiết từng loại
-	Details NotificationDetailSettings `bson:"details" json:"details"`
 }
 
 func (UserNotificationSetting) CollectionName() string {

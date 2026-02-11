@@ -1,6 +1,10 @@
 package postgres
 
 import (
+	"context"
+	"time"
+
+	irepositoryshare "github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/IRepositoryShare"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/identity/domain/entity"
 	"github.com/google/uuid"
 	"gorm.io/gorm"
@@ -8,12 +12,14 @@ import (
 
 type UserRepository struct {
 	// repository fields
-	DB *gorm.DB
+	DB        *gorm.DB
+	redisRepo irepositoryshare.IRedis
 }
 
-func NewUserRepository(db *gorm.DB) *UserRepository {
+func NewUserRepository(db *gorm.DB, redisRepo irepositoryshare.IRedis) *UserRepository {
 	return &UserRepository{
-		DB: db,
+		DB:        db,
+		redisRepo: redisRepo,
 	}
 }
 
@@ -78,6 +84,22 @@ func (r *UserRepository) Panigation(Cursor string, Limit int) ([]*entity.User, s
 		}
 		// 3. Thêm điều kiện để lấy các bản ghi sau cursor
 		query = query.Where("(created_at < ?) OR (created_at = ? AND id < ?)", cursorUser.CreatedAt, cursorUser.CreatedAt, cursorUser.ID)
+		err = query.Find(&users).Error
+		if err != nil {
+			return nil, "", err
+		}
+		lastUser := ""
+		// 5. Xác định next cursor
+		if len(users) == Limit {
+			lastUser = users[len(users)-1].ID.String()
+		}
+		return users, lastUser, nil
+	}
+	data, ok := r.redisRepo.Get(context.Background(), "page1")
+	datacursor, okcursor := r.redisRepo.Get(context.Background(), "page1cursor")
+	if ok == nil && okcursor == nil {
+		// Nếu có cache, trả về dữ liệu từ cache
+		return data.Data.([]*entity.User), datacursor.Data.(string), nil
 	}
 	// 4. Thực hiện truy vấn
 	err := query.Find(&users).Error
@@ -89,5 +111,11 @@ func (r *UserRepository) Panigation(Cursor string, Limit int) ([]*entity.User, s
 	if len(users) == Limit {
 		lastUser = users[len(users)-1].ID.String()
 	}
+	_, err = r.redisRepo.Set(context.Background(), "page1", users, time.Minute*10)
+
+	if err != nil {
+		return nil, "", err
+	}
+	_, err = r.redisRepo.Set(context.Background(), "page1cursor", lastUser, time.Minute*10)
 	return users, lastUser, nil
 }

@@ -8,13 +8,12 @@ import (
 	"time"
 
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/configs"
-	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/events"
+	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/events"
 	"github.com/google/uuid"
 	"github.com/segmentio/kafka-go"
 )
 
 // KafkaConfig cấu hình từ env
-
 
 type KafkaEventBus struct {
 	writer *kafka.Writer
