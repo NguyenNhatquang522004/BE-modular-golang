@@ -79,6 +79,11 @@ type IRedis interface {
 	// 8. UTILITIES (Scan keys - dùng cẩn thận)
 	// ---------------------------
 	Scan(ctx context.Context, match string) (*response.Response, error) // Tìm kiếm key theo pattern an toàn hơn Keys
+	// ---------------------------
+	// 9. CUSTOMIZE (Tùy biến nâng cao)
+	// ---------------------------
+	CustomizeSetCache(ctx context.Context, items map[string]any) error
+	CustomizeGetCache(ctx context.Context, items []string) (any, string, bool, int, error)
 }
 type Z struct {
 	Score  float64

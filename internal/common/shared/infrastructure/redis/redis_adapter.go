@@ -2,6 +2,8 @@ package redis
 
 import (
 	"context"
+	"fmt"
+	"strings"
 	"time"
 
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/server/http/response"
@@ -378,3 +380,38 @@ func (r *RedisAdapter) Scan(ctx context.Context, match string) (*response.Respon
 		response.WithStatus("success"),
 	), nil
 } // Tìm kiếm key theo pattern an toàn hơn Keys
+func (r *RedisAdapter) CustomizeSetCache(ctx context.Context, items map[string]any) error {
+	ttl := 30 * time.Minute // Thời gian hết hạn chung
+	for key, value := range items {
+		_, err := r.Set(ctx, key, value, ttl)
+		if err != nil {
+			// Nếu lỗi, trả về lỗi ngay lập tức (hoặc có thể log lại rồi continue tùy logic)
+			return fmt.Errorf("failed to set cache for key %s: %w", key, err)
+		}
+	}
+
+	return nil
+}
+func (r *RedisAdapter) CustomizeGetCache(ctx context.Context, items []string) (any, string, bool, int, error) {
+	var data any
+	var cursor string
+	var hasNext bool
+	var limit int
+	for _, item := range items {
+		getdata, err := r.Get(ctx, item)
+		if err != nil {
+			return nil, "", false, 0, err
+		}
+		switch {
+		case strings.Contains(item, "user"):
+			data = getdata.Data
+		case strings.Contains(item, "cursor"):
+			cursor, _ = getdata.Data.(string)
+		case strings.Contains(item, "hasnext"):
+			hasNext, _ = getdata.Data.(bool)
+		case strings.Contains(item, "limit"):
+			limit, _ = getdata.Data.(int)
+		}
+	}
+	return data, cursor, hasNext, limit, nil
+}

@@ -25,7 +25,7 @@ func (r *UserSessionRepository) CreateSession(session *entity.UserSession) (*res
 }
 
 func (r *UserSessionRepository) GetAllUserSessions(userID string) (*response.Response, error) {
-	var sessions []req.UserSessionReq
+	var sessions = []*req.UserSessionReq{}
 	err := r.db.Where("user_id = ?", userID).Find(&sessions).Error
 	if err != nil {
 		return response.NewResponse(response.WithData(""), response.WithMessage(err.Error()), response.WithStatus("")), err
@@ -33,7 +33,7 @@ func (r *UserSessionRepository) GetAllUserSessions(userID string) (*response.Res
 	return response.NewResponse(response.WithData(sessions), response.WithMessage("success"), response.WithStatus("success")), nil
 }
 func (r *UserSessionRepository) GetUserSessionPast(userID string) (*response.Response, error) {
-	var sessions req.UserSessionReq
+	var sessions = &req.UserSessionReq{}
 	err := r.db.Where("user_id", userID).Order("created_at DESC").Offset(1).Limit(1).First(&sessions).Error
 	if err != nil {
 		return response.NewResponse(response.WithData(""), response.WithMessage(err.Error()), response.WithStatus("")), err

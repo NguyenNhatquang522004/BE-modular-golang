@@ -13,12 +13,31 @@ import (
 )
 
 type ModuleSocial struct {
+	db     *gorm.DB
+	client *mongo.Database
+}
+
+func NewModuleSocial(client *mongo.Database, db *gorm.DB) *ModuleSocial {
+	m := &ModuleSocial{
+		db:     db,
+		client: client,
+	}
+	err := m.InitMongo(client)
+	if err != nil {
+		panic("Failed to init Mongo indexes for Social: " + err.Error())
+	}
+	err = m.InitPostgres(db)
+	if err != nil {
+		panic("Failed to migrate Postgres for Social: " + err.Error())
+	}
+
+	return m
 }
 
 func (m *ModuleSocial) InitPostgres(db *gorm.DB) error {
 	return db.AutoMigrate(&entity.Followers{},
 		&entity.Friendships{},
-		&entity.User_Blocks{},
+		&entity.UserBlock{},
 	)
 }
 

@@ -45,9 +45,9 @@ func (u *UserRoleRepository) DeleteRole(roleID string) (*response.Response, erro
 }
 
 func (u *UserRoleRepository) GetAllUserRoles(RoleID string) (*response.Response, error) {
-	var user []entity.User
+	var user = &[]*entity.User{}
 	result := u.db.Joins("JOIN user_roles on user_roles.user_id = users.id").
-		Joins("JOIN roles on roles.id = user_roles.role_id").Where("roles.id = ?", RoleID).Find(&user).Error
+		Joins("JOIN roles on roles.id = user_roles.role_id").Where("roles.id = ?", RoleID).Find(user).Error
 	if result != nil {
 		return response.NewResponse(response.WithData(""), response.WithMessage(result.Error()), response.WithStatus("500")), result
 	}
@@ -57,32 +57,32 @@ func (u *UserRoleRepository) GetAllUserRoles(RoleID string) (*response.Response,
 }
 
 func (u *UserRoleRepository) FindUserwithRole(userID string, role enum.RoleType) (*response.Response, error) {
-	var user entity.User
+	var user = &entity.User{}
 	err := u.db.Joins("JOIN user_roles on user_roles.user_id = users.id").
 		Joins("JOIN roles on roles.id = user_roles.role_id").
 		Where("users.id = ? AND roles.role = ?", userID, role).
-		First(&user).Error
+		First(user).Error
 	if err != nil {
 		return response.NewResponse(response.WithData(""),
 			response.WithMessage(err.Error()), response.WithStatus("")), err
 	}
-	return response.NewResponse(response.WithData(&user), response.WithMessage(""), response.WithStatus("200")), nil
+	return response.NewResponse(response.WithData(user), response.WithMessage(""), response.WithStatus("200")), nil
 }
 func (u *UserRoleRepository) FindRoleWithID(roleID string) (*response.Response, error) {
-	var role entity.UserRole
-	err := u.db.Where("id = ?", roleID).First(&role).Error
+	var role = &entity.UserRole{}
+	err := u.db.Where("id = ?", roleID).First(role).Error
 	if err != nil {
 		return nil, err
 	}
-	return response.NewResponse(response.WithData(&role), response.WithMessage(""), response.WithStatus("200")), nil
+	return response.NewResponse(response.WithData(role), response.WithMessage(""), response.WithStatus("200")), nil
 }
 func (u *UserRoleRepository) FindRoleWithName(role enum.RoleType) (*response.Response, error) {
-	var userRole entity.UserRole
-	err := u.db.Where("role = ?", role).First(&userRole).Error
+	var userRole = &entity.UserRole{}
+	err := u.db.Where("role = ?", role).First(userRole).Error
 	if err != nil {
 		return nil, err
 	}
-	return response.NewResponse(response.WithData(&userRole), response.WithMessage(""), response.WithStatus("200")), nil
+	return response.NewResponse(response.WithData(userRole), response.WithMessage(""), response.WithStatus("200")), nil
 
 }
 
@@ -93,11 +93,11 @@ func (u *UserRoleRepository) UpdateRoleDescription(roleID string, description st
 	}
 	userRole := role.Data.(*entity.UserRole)
 	userRole.Description = description
-	err = u.db.Save(&userRole).Error
+	err = u.db.Save(userRole).Error
 	if err != nil {
 		return nil, err
 	}
-	return response.NewResponse(response.WithData(&userRole), response.WithMessage(""), response.WithStatus("200")), nil
+	return response.NewResponse(response.WithData(userRole), response.WithMessage(""), response.WithStatus("200")), nil
 
 }
 func (u *UserRoleRepository) CreateRoleUser(userID string, roleID string) (*response.Response, error) {
@@ -109,8 +109,8 @@ func (u *UserRoleRepository) CreateRoleUser(userID string, roleID string) (*resp
 }
 
 func (u *UserRoleRepository) GetAllRoles() (*response.Response, error) {
-	var roles []res.UserRoleRes
-	err := u.db.Raw("SELECT ID , role, description FROM user_roles").Scan(&roles).Error
+	var roles = &[]*res.UserRoleRes{}
+	err := u.db.Raw("SELECT ID , role, description FROM user_roles").Scan(roles).Error
 	if err != nil {
 		return nil, err
 	}
@@ -127,11 +127,11 @@ func (u *UserRoleRepository) DeleteRoleFromUser(userID string, roleID string) (*
 }
 
 func (u *UserRoleRepository) UpdateRoleOfUser(userID string, roleIDs []string) (*response.Response, error) {
-	var roles []entity.UserRole
+	var roles = []*entity.UserRole{}
 	for _, id := range roleIDs {
-		roles = append(roles, entity.UserRole{ID: uuid.MustParse(id)})
+		roles = append(roles, &entity.UserRole{ID: uuid.MustParse(id)})
 	}
-	err := u.db.Model(&entity.User{ID: uuid.MustParse(userID)}).Association("Roles").Replace(&roles)
+	err := u.db.Model(&entity.User{ID: uuid.MustParse(userID)}).Association("Roles").Replace(roles)
 	if err != nil {
 		return nil, err
 	}
