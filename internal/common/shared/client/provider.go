@@ -4,17 +4,20 @@ import (
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/database"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/server/middleware"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/infrastructure/redis"
+	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/infrastructure/seaweedfs"
+	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/resilience"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/socket"
 	"github.com/google/wire"
 )
 
 var providerDatabase = wire.NewSet(
 	database.NewMongoDatabase,
-	// database.NewRedisClient,
+	database.NewRedisClient,
 	database.NewPostgresDB,
-	// database.NewElasticClient,
+	database.NewElasticClient,
 	// database.NewCassandraSession,
-	// database.NewNeo4jDriver,
+	database.NewNeo4jDriver,
+	database.NewSeaweedFSClient,
 )
 
 var providerGRPC = wire.NewSet(
@@ -28,18 +31,24 @@ var prodviderMiddleware = wire.NewSet(
 var providerSocket = wire.NewSet(
 	socket.NewHub,
 	wire.Bind(new(socket.Manager), new(*socket.Hub)),
-	
+)
+var providerSeaweedfs = wire.NewSet(
+	seaweedfs.NewSeaweedfsAdapter,
 )
 
-// var providerResilience = wire.NewSet(
-//
-//	resilience.NewBreakerProvider,
-//
-// )
+var providerResilience = wire.NewSet(
+
+	resilience.NewBreakerProvider,
+)
 var prodviderCache = wire.NewSet(
 	redis.NewRedisAdapter,
 )
 var ProviderSet = wire.NewSet(
 	providerDatabase,
 	providerGRPC,
+	prodviderMiddleware,
+	providerSocket,
+	providerSeaweedfs,
+	providerResilience,
+	prodviderCache,
 )

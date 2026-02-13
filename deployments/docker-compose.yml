@@ -73,6 +73,7 @@ services:
     environment:
       - MONGO_INITDB_ROOT_USERNAME=admin
       - MONGO_INITDB_ROOT_PASSWORD=123
+    command: ["--replSet", "rs0", "--bind_ip_all"]
     ports:
       - "27017:27017"
     networks:
@@ -101,6 +102,21 @@ services:
       - be_modular_golang_network
     depends_on:
       - mongodb_BE-modular-golang
+
+  mongo-setup_BE-modular-golang:
+    image: mongo:6.0
+    container_name: mongo_setup_BE-modular-golang
+    networks:
+      - be_modular_golang_network
+    depends_on:
+     - mongodb_BE-modular-golang
+      
+    # Script: Kết nối vào Mongo, auth bằng admin/123, và khởi tạo Replica Set
+    command: >
+      bash -c "echo 'Starting Replica Set Init...' && 
+      sleep 5 && 
+      mongosh --host mongodb_BE-modular-golang --port 27017 -u admin -p 123 --authenticationDatabase admin --eval 'try { rs.initiate({_id: \"rs0\", members: [{_id: 0, host: \"mongodb_BE-modular-golang:27017\"}]}) } catch (e) { print(e) }' && 
+      echo 'Replica Set Initialized'"
   Elasticsearch_BE-modular-golang:
     image: docker.elastic.co/elasticsearch/elasticsearch:8.10.2
     container_name: elasticsearch_BE-modular-golang

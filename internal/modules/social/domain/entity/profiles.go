@@ -7,16 +7,8 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-type Gender int
-
 const (
-	GenderMale Gender = iota
-	GenderFemale
-	GenderOther
-	GenderHidden
-)
-const (
-	collectionProfiles = "Profilesss"
+	collectionProfiles = "Profiles"
 )
 
 type Profiles struct {

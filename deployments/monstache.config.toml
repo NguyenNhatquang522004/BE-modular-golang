@@ -1,0 +1,118 @@
+# -----------------------------------------------------------------------
+# 1. KẾT NỐI (CONNECTION)
+# -----------------------------------------------------------------------
+mongo-url = "mongodb://admin:123@mongodb_BE-modular-golang:27017/?replicaSet=rs0&authSource=admin"
+elasticsearch-urls = ["http://Elasticsearch_BE-modular-golang:9200"]
+
+# Tên người dùng database (Nếu có)
+# mongo-user = "admin"
+# mongo-password = "123"
+
+# -----------------------------------------------------------------------
+# 2. CẤU HÌNH ĐỒNG BỘ (SYNC SETTINGS)
+# -----------------------------------------------------------------------
+# Namespace: "tên_db.tên_collection"
+direct-read-namespaces = ["social_db.Profiles"]
+change-stream-namespaces = ["social_db.Profiles"]
+
+# Quan trọng: Bật tính năng nén để tăng tốc độ mạng
+gzip = true
+
+# Quan trọng: Ghi nhớ vị trí sync. Nếu Monstache sập, bật lại nó sẽ chạy tiếp
+# chứ không chạy lại từ đầu.
+resume = true 
+resume-name = "default" 
+
+# Log chi tiết để debug
+verbose = true
+index-stats = true
+
+# -----------------------------------------------------------------------
+# 3. MAPPING INDEX (Đổi tên Index cho đẹp)
+# -----------------------------------------------------------------------
+# Mặc định ES sẽ tạo index tên "social_db.Profiles". 
+# Ta đổi thành "profiles" để URL đẹp hơn: GET /profiles/_search
+[[mapping]]
+namespace = "social_db.Profiles"
+index = "profiles"
+
+# -----------------------------------------------------------------------
+# 4. SCRIPT TRANSFORMATION (JAVASCRIPT) - ĐÃ FIX BUG
+# -----------------------------------------------------------------------
+[[script]]
+namespace = "social_db.Profiles"
+script = """
+module.exports = function(doc) {
+    // --- 1. CLEAN DATA ---
+    // Xóa các trường nhạy cảm hoặc không cần thiết cho việc search
+    delete doc.notifications;
+    delete doc.settings; // Settings thường để logic app, ít khi search
+    
+    // --- 2. HANDLE ID (PRIMARY KEY) ---
+    // Convert _id (ObjectID) -> id (String)
+    doc.id = doc._id.toString();
+    delete doc._id;
+
+    // --- 3. HANDLE GENDER (ENUM) ---
+    // Mapping: 0->Male, 1->Female...
+    var genders = ["Male", "Female", "Other", "Hidden"];
+    if (doc.gender !== undefined && doc.gender !== null && genders[doc.gender]) {
+        doc.gender = genders[doc.gender];
+    } else {
+        doc.gender = "Other"; // Default safe value
+    }
+
+    // --- 4. HANDLE ADDRESS (POINTER SAFETY CHECK) ---
+    // Phải check if (doc.address) vì trong DB có thể nó không tồn tại
+    if (doc.address) {
+        doc.address_city = doc.address.city;
+        doc.address_country = doc.address.country;
+        
+        // Validate Coordinates trước khi gán
+        if (doc.address.coordinates && doc.address.coordinates.length === 2) {
+             doc.location = doc.address.coordinates;
+        }
+    }
+    // Xóa object address gốc nếu muốn làm phẳng (flatten) hoàn toàn
+    // delete doc.address; 
+
+    // --- 5. HANDLE SUB-ARRAYS (WORK EXPERIENCE & EDUCATION) ---
+    // Vấn đề: Các item trong mảng này có _id là ObjectID. Cần convert sang String.
+    
+    if (doc.work_experience && Array.isArray(doc.work_experience)) {
+        for (var i = 0; i < doc.work_experience.length; i++) {
+            var item = doc.work_experience[i];
+            if (item._id) {
+                item.id = item._id.toString(); // Convert sub-document ID
+                delete item._id;
+            }
+            // Date handling: ES nhận string ISO ok, nhưng nếu cần có thể xử lý thêm ở đây
+        }
+    }
+
+    if (doc.education && Array.isArray(doc.education)) {
+        for (var i = 0; i < doc.education.length; i++) {
+            var item = doc.education[i];
+            if (item._id) {
+                item.id = item._id.toString();
+                delete item._id;
+            }
+        }
+    }
+
+    // --- 6. HANDLE CV DOCUMENT ---
+    // CVDocument có FileID là ObjectID -> Convert string
+    if (doc.cv_document && doc.cv_document.file_id) {
+        doc.cv_document.file_id = doc.cv_document.file_id.toString();
+    }
+
+    // --- 7. HANDLE SOFT DELETE ---
+    // Nếu dùng Soft Delete (DeletedAt != null), có thể bạn KHÔNG muốn index nó vào ES
+    // Return false để Monstache bỏ qua document này (không index)
+    if (doc.deleted_at) {
+        return false; 
+    }
+
+    return doc;
+}
+"""
