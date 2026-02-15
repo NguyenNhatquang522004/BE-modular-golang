@@ -29,7 +29,7 @@ type PostNode struct {
 }
 
 // GroupNode (Community)
-type GroupNode struct {
+type GroupNode struct {	
 	GroupID     string `json:"group_id"`
 	Privacy     string `json:"privacy"` // public, closed, secret
 	MemberCount int    `json:"member_count"`

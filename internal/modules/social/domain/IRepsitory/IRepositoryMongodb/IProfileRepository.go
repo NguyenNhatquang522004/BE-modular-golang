@@ -7,8 +7,8 @@ import (
 
 type IProfileRepositoryMongodb interface {
 	// Define methods for profile repository
-	CreateProfile(profileData req.ProfileReq) error
+	CreateProfile(profileData *req.ProfileReq) error
 	GetProfileByID(profileID string) (*entity.Profiles, error)
-	UpdateProfile(profileID string, updateData req.ProfileReq) error
+	UpdateProfile(profileID string, updateData *req.ProfileReq) error
 	GetProfileByUserID(userID string) (*entity.Profiles, error)
 }

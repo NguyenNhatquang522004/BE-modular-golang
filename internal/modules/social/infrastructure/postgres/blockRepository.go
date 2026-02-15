@@ -35,7 +35,10 @@ func (r *BlockRepository) CreateBlockUser(blockerUserID uuid.UUID, blockedUserID
 		Type_Block:     statusBlock,
 	}).Error
 }
-
+func (r *BlockRepository) DeleteBlockUser(blockerUserID uuid.UUID, blockedUserID uuid.UUID) error {
+	// Implementation here
+	return r.db.Where(&entity.UserBlock{Blocker_UserID: blockerUserID, Blocked_UserID: blockedUserID}).Delete(&entity.UserBlock{}).Error
+}
 func (r *BlockRepository) UpdateBlockUser(blockerUserID uuid.UUID, blockedUserID uuid.UUID, statusBlock enum.Type_Block) error {
 	// Implementation here
 	data, err := r.GetBlockedUsers(blockerUserID, blockedUserID)

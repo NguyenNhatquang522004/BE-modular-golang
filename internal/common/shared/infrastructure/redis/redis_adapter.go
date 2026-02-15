@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/server/http/response"
-	irepositoryshare "github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/IRepositoryShare"
+	 "github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/IRepositoryShare"
 	"github.com/redis/go-redis/v9"
 )
 
@@ -15,7 +15,7 @@ type RedisAdapter struct {
 	client *redis.Client
 }
 
-func NewRedisAdapter(client *redis.Client) irepositoryshare.IRedis {
+func NewRedisAdapter(client *redis.Client) IRepositoryShare.IRedis {
 	return &RedisAdapter{
 		client: client,
 	}
@@ -300,7 +300,7 @@ func (r *RedisAdapter) SRem(ctx context.Context, key string, members ...any) (*r
 		response.WithStatus("success"),
 	), nil
 }
-func (r *RedisAdapter) ZAdd(ctx context.Context, key string, members ...irepositoryshare.Z) (*response.Response, error) {
+func (r *RedisAdapter) ZAdd(ctx context.Context, key string, members ...IRepositoryShare.Z) (*response.Response, error) {
 	// 1. Create a slice of the type the redis library expects
 	redisMembers := make([]redis.Z, len(members))
 

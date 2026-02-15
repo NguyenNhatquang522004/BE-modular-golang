@@ -16,8 +16,5 @@ type Friendships struct {
 	Created_At   time.Time
 	Updated_At   time.Time
 	Deleted_At   gorm.DeletedAt `gorm:"index"`
-	// // Người gửi lời mời kết bạn
-	// RequesterUser *entity.User `gorm:"foreignKey:Requester_ID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
-	// // Người nhận lời mời kết bạn
-	// RecipientUser *entity.User `gorm:"foreignKey:Recipient_ID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
+
 }

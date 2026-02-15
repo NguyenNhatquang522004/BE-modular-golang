@@ -39,7 +39,7 @@ func NewKafkaEventBus(cfg *configs.KafkaConfig) events.EventBus {
 	}
 }
 
-func (k *KafkaEventBus) Publish(ctx context.Context, topic string, key string, payload events.EventPayload) error {
+func (k *KafkaEventBus) Publish(ctx context.Context, topic string, key string, eventType string, payload events.EventPayload) error {
 	eventID := uuid.New().String()
 	msgKey := key
 	if msgKey == "" {
@@ -47,6 +47,7 @@ func (k *KafkaEventBus) Publish(ctx context.Context, topic string, key string, p
 	}
 	event := events.IntegrationEvent{
 		ID:        eventID,
+		Type:      eventType,
 		Topic:     topic,
 		Timestamp: time.Now(),
 		Payload:   payload,

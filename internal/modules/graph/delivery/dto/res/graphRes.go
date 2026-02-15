@@ -1,6 +1,6 @@
 package res
 
-import "github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/social/domain/entity"
+import "github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/graph/domain/entity"
 
 // UserRecommendation: Kết quả gợi ý kết bạn (PYMK)
 type UserRecommendation struct {

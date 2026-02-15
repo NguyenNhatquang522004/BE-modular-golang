@@ -1,11 +1,12 @@
 package mapper
 
 import (
+	entityES "github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/search/domain/entity"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/social/domain/entity"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/social/enum"
 )
 
-func ToElasticProfile(m *entity.Profiles) *entity.ProfileES {
+func ToElasticProfile(m *entity.Profiles) *entityES.ProfileES {
 	if m == nil {
 		return nil
 	}
@@ -39,12 +40,12 @@ func ToElasticProfile(m *entity.Profiles) *entity.ProfileES {
 			location = m.Address.Coordinates
 		}
 	}
-
+	
 	// 4. Map Work Experience
-	var workHistory []entity.ESWorkHistory
+	var workHistory []entityES.ESWorkHistory
 	for _, w := range m.WorkExperience {
 		if w != nil {
-			workHistory = append(workHistory, entity.ESWorkHistory{
+			workHistory = append(workHistory, entityES.ESWorkHistory{
 				Company:   w.Company,
 				Position:  w.Position,
 				IsCurrent: w.IsCurrent,
@@ -53,10 +54,10 @@ func ToElasticProfile(m *entity.Profiles) *entity.ProfileES {
 	}
 
 	// 5. Map Education
-	var eduList []entity.ESEducation
+	var eduList []entityES.ESEducation
 	for _, e := range m.Education {
 		if e != nil {
-			eduList = append(eduList, entity.ESEducation{
+			eduList = append(eduList, entityES.ESEducation{
 				Institution: e.Institution,
 				Degree:      e.Degree,
 			})
@@ -64,7 +65,7 @@ func ToElasticProfile(m *entity.Profiles) *entity.ProfileES {
 	}
 
 	// 6. Return ES Entity
-	return &entity.ProfileES{
+	return &entityES.ProfileES{
 		ID:             m.ID.Hex(), // Convert ObjectID to String
 		UserID:         m.UserID,
 		FullName:       m.FullName,

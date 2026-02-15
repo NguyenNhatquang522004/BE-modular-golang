@@ -6,6 +6,8 @@ import (
 	"log"
 
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/configs"
+	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/constants"
+	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/infrastructure/kafka"
 )
 
 // @title Swagger Example API
@@ -25,7 +27,21 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
+	if len(cfg.Kafka.BROKERS) > 0 {
+		kafkaBroker := cfg.Kafka.BROKERS[0]
+		log.Println("⚡ Starting Kafka Topic Migration...")
 
+		// Duyệt qua danh sách Topic đã định nghĩa ở constants
+		for _, t := range constants.SocialTopics {
+			// ReplicationFactor: Để 1 khi dev local, 3 khi Production
+			err := kafka.EnsureTopicExists(kafkaBroker, t.Name.String(), t.Partitions, 1)
+			if err != nil {
+				// Tùy chọn: Panic nếu không tạo được topic quan trọng, hoặc chỉ log warning
+				log.Fatalf("❌ Failed to ensure topic %s: %v", t.Name, err)
+			}
+		}
+		log.Println("✅ Kafka Topic Migration Completed!")
+	}
 	// 2. Init App (Wire làm hết việc tạo object ở đây)
 	app, cleanup, err := InitializeApp(cfg)
 	if err != nil {

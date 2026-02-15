@@ -3,6 +3,8 @@ package client
 import (
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/database"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/server/middleware"
+	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/events"
+	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/infrastructure/kafka"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/infrastructure/redis"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/infrastructure/seaweedfs"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/resilience"
@@ -35,7 +37,10 @@ var providerSocket = wire.NewSet(
 var providerSeaweedfs = wire.NewSet(
 	seaweedfs.NewSeaweedfsAdapter,
 )
-
+var providerKafka = wire.NewSet(
+	kafka.NewKafkaEventBus,
+	wire.Bind(new(events.EventBus), new(*kafka.KafkaEventBus)),
+)
 var providerResilience = wire.NewSet(
 
 	resilience.NewBreakerProvider,
@@ -51,4 +56,5 @@ var ProviderSet = wire.NewSet(
 	providerSeaweedfs,
 	providerResilience,
 	prodviderCache,
+	providerKafka,
 )

@@ -16,8 +16,4 @@ type UserBlock struct {
 	CreatedAt      time.Time
 	UpdatedAt      time.Time
 	DeletedAt      gorm.DeletedAt `gorm:"index"`
-	// // Người chặn
-	// BlockerUser *entity.User `gorm:"foreignKey:Blocker_UserID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
-	// // Người bị chặn
-	// BlockedUser *entity.User `gorm:"foreignKey:Blocked_UserID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
 }

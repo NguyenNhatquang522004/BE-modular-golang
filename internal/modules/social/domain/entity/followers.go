@@ -15,8 +15,4 @@ type Followers struct {
 	CreatedAt       time.Time
 	UpdatedAt       time.Time
 	DeletedAt       gorm.DeletedAt `gorm:"index"`
-	// Người đi theo dõi (Fan)
-	// FollowerUser *entity.User `gorm:"foreignKey:Follower_UserID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
-	// // Người được theo dõi (Idol)
-	// FollowedUser *entity.User `gorm:"foreignKey:Followed_UserID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
 }

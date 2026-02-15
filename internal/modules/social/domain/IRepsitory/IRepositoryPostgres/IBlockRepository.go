@@ -9,6 +9,7 @@ import (
 
 type IBlockRepository interface {
 	CreateBlockUser(blockerUserID uuid.UUID, blockedUserID uuid.UUID, statusBlock enum.Type_Block) error
+	DeleteBlockUser(blockerUserID uuid.UUID, blockedUserID uuid.UUID) error
 	UpdateBlockUser(blockerUserID uuid.UUID, blockedUserID uuid.UUID, statusBlock enum.Type_Block) error
 	IsBlocked(blockerUserID uuid.UUID, blockedUserID uuid.UUID) (bool, error)
 	GetBlockedUsers(blockerUserID uuid.UUID, blockedUserID uuid.UUID) ([]*entity.UserBlock, error)

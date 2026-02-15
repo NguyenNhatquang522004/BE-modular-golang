@@ -1,12 +1,15 @@
 package seaweedfs
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"io"
+	"net/url" // Bắt buộc phải có để tạo tham số xóa
 	"path/filepath"
 	"strings"
 
+	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/configs"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/IRepositoryShare"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/dto"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/utils"
@@ -15,12 +18,17 @@ import (
 )
 
 type SeaweedfsAdapter struct {
-	client *goseaweedfs.Filer
+	client     *goseaweedfs.Filer
+	publicHost string // Ví dụ: https://cdn.mysocial.com
+	cfg        *configs.Config
 }
 
-func NewSeaweedfsAdapter(client *goseaweedfs.Filer) IRepositoryShare.ISeaweedfs {
+func NewSeaweedfsAdapter(client *goseaweedfs.Filer, cfg *configs.Config) IRepositoryShare.ISeaweedfs {
+	publicHost := cfg.SEAWEEDFS.SEAWEEDFS_FILER_URL // Hoặc có thể dùng biến cấu hình riêng cho public host nếu khác
 	return &SeaweedfsAdapter{
-		client: client,
+		client:     client,
+		publicHost: publicHost,
+		cfg:        cfg,
 	}
 }
 
@@ -66,55 +74,172 @@ func (r *SeaweedfsAdapter) Upload(ctx context.Context, input *dto.FileUploadInpu
 }
 
 // Download: Lấy nội dung file (Dùng khi cần xử lý ảnh/video ở Backend)
+// Download thực hiện lấy nội dung file từ SeaweedFS dưới dạng stream
 func (r *SeaweedfsAdapter) Download(ctx context.Context, filePath string) (io.ReadCloser, error) {
-	// Download implementation here
-	return nil, nil
+	// 1. KIỂM TRA ĐƯỜNG DẪN
+	cleanPath := strings.TrimSpace(filePath)
+	if cleanPath == "" {
+		return nil, fmt.Errorf("seaweedfs_adapter: file path is empty")
+	}
+
+	// Đảm bảo đường dẫn bắt đầu bằng /
+	if !strings.HasPrefix(cleanPath, "/") {
+		cleanPath = "/" + cleanPath
+	}
+
+	// 2. SỬ DỤNG IO.PIPE ĐỂ STREAM DỮ LIỆU
+	// io.Pipe tạo ra một cặp (Reader, Writer).
+	// Những gì ghi vào Writer sẽ được đọc trực tiếp từ Reader mà không tốn RAM trung gian.
+	pr, pw := io.Pipe()
+
+	// 3. CHẠY DOWNLOAD TRONG GOROUTINE
+	// Chúng ta cần chạy Download trong một luồng riêng để không chặn luồng chính
+	go func() {
+		// Gọi hàm Download của thư viện linxGnu
+		// Tham số: (path string, callback func(io.Reader) error)
+		err := r.client.Download(cleanPath, nil, func(reader io.Reader) error {
+			// Copy dữ liệu từ SeaweedFS trực tiếp vào Pipe Writer
+			_, copyErr := io.Copy(pw, reader)
+			return copyErr
+		})
+
+		// Đóng Pipe Writer kèm theo lỗi (nếu có)
+		// Khi pw đóng, pr (Reader) sẽ nhận được tín hiệu kết thúc hoặc lỗi.
+		if err != nil {
+			pw.CloseWithError(fmt.Errorf("seaweedfs_adapter: download stream failed: %w", err))
+		} else {
+			pw.Close()
+		}
+	}()
+
+	// Trả về Pipe Reader (đóng vai trò là io.ReadCloser) cho Service sử dụng
+	return pr, nil
 }
 
-// Delete: Xóa file đơn lẻ (Ví dụ: Xóa ảnh cũ khi đổi avatar)
+// Delete thực hiện xóa một file vật lý trên SeaweedFS
 func (r *SeaweedfsAdapter) Delete(ctx context.Context, filePath string) error {
-	// Delete implementation here
+	// 1. KIỂM TRA ĐẦU VÀO
+	// Nếu đường dẫn rỗng, ta coi như đã xóa xong (Idempotent)
+	cleanPath := strings.TrimSpace(filePath)
+	if cleanPath == "" {
+		return nil
+	}
+
+	// 2. CHUẨN HÓA ĐƯỜNG DẪN
+	// SeaweedFS Filer yêu cầu đường dẫn tuyệt đối bắt đầu bằng /
+	if !strings.HasPrefix(cleanPath, "/") {
+		cleanPath = "/" + cleanPath
+	}
+
+	// 3. THỰC HIỆN XÓA
+	// Tham số thứ 2 là 'recursive'. Ở đây xóa 1 file nên ta để là 'false'.
+	// SeaweedFS sẽ tự động dọn dẹp Metadata ở Filer và Data ở Volume.
+	err := r.client.Delete(cleanPath, nil)
+	if err != nil {
+		// Nếu lỗi là "Not Found", có thể bỏ qua hoặc wrap lỗi tùy nhu cầu logic
+		// Ở đây ta wrap lỗi để dễ dàng debug trong dự án modular
+		return fmt.Errorf("seaweedfs_adapter: failed to delete file [%s]: %w", cleanPath, err)
+	}
+
 	return nil
 }
 
-// DeleteFolder: Xóa toàn bộ thư mục (Dùng khi Hard Delete User/Group)
+// DeleteFolder thực hiện xóa toàn bộ thư mục và các file bên trong một cách đệ quy
 func (r *SeaweedfsAdapter) DeleteFolder(ctx context.Context, folderPath string) error {
-	// DeleteFolder implementation here
+	// 1. KIỂM TRA BẢO MẬT CỰC KỲ QUAN TRỌNG
+	// Loại bỏ khoảng trắng và chuẩn hóa
+	cleanPath := strings.TrimSpace(folderPath)
+
+	// Ngăn chặn xóa root hoặc đường dẫn rỗng để bảo vệ dữ liệu hệ thống
+	if cleanPath == "" || cleanPath == "/" {
+		return fmt.Errorf("seaweedfs_adapter: dangerous operation: cannot delete root or empty path")
+	}
+
+	// 2. CHUẨN HÓA ĐƯỜNG DẪN
+	// Đảm bảo bắt đầu bằng / nhưng không kết thúc bằng / (SeaweedFS Filer chuẩn)
+	if !strings.HasPrefix(cleanPath, "/") {
+		cleanPath = "/" + cleanPath
+	}
+	cleanPath = strings.TrimSuffix(cleanPath, "/")
+
+	// 3. THỰC HIỆN XÓA ĐỆ QUY (RECURSIVE)
+	// Tham số thứ 2 là 'recursive'. Đặt là 'true' để xóa sạch folder và con của nó.
+	// Lưu ý: Dựa trên signature của goseaweedfs, hàm Delete không nhận Context.
+	params := url.Values{}
+	params.Set("recursive", "true")
+	err := r.client.Delete(cleanPath, params)
+	if err != nil {
+		// Kiểm tra nếu lỗi không phải do folder không tồn tại (404)
+		// Một số phiên bản goseaweedfs trả lỗi cụ thể, nếu không ta wrap lỗi chung
+		return fmt.Errorf("seaweedfs_adapter: failed to delete folder [%s]: %w", cleanPath, err)
+	}
+
 	return nil
 }
 
-// Exists: Kiểm tra file đã tồn tại chưa (Tránh upload trùng)
+// Exists: Kiểm tra file/thư mục đã tồn tại trên Filer chưa
+
 func (r *SeaweedfsAdapter) Exists(ctx context.Context, filePath string) (bool, error) {
-	// Exists implementation here
+	cleanPath := "/" + strings.Trim(filePath, "/")
+
+	// Gọi hàm Head mới thêm vào
+	statusCode, _ := r.client.Head(cleanPath, nil, nil)
+
+	if statusCode == 200 {
+		return true, nil
+	}
 	return false, nil
 }
 
 // --- LIVE STREAM & REALTIME OPERATIONS ---
 
-// UploadStreamSegment: Upload từng mảnh video (ts/m4s) của Live Stream
-// Sử dụng cho cơ chế HLS/DASH để đạt hiệu suất realtime
+// UploadStreamSegment: Đẩy từng mảnh video (.ts) lên folder tạm của buổi Live
+//sessionID là định danh duy nhất cho buổi live hiện tại
+//segmentName là tên file mảnh video, content là nội dung mảnh video
+// Thường segmentName có dạng: segment0001.ts, segment0002.ts, ...
 func (r *SeaweedfsAdapter) UploadStreamSegment(ctx context.Context, sessionID string, segmentName string, content io.Reader) error {
-	// UploadStreamSegment implementation here
-	return nil
+	// Quy hoạch folder: /lives/{sessionID}/{segmentName}
+	// Lưu ý: Stream segment thường nhỏ nên ta dùng TTL ngắn (ví dụ: 10 phút) để tự dọn rác
+	liveFolder := fmt.Sprintf("/lives/%s", sessionID)
+	fullPath := fmt.Sprintf("%s/%s", liveFolder, segmentName)
+
+	// Vì đây là stream realtime, ta không cần lưu Metadata phức tạp vào DB chính
+	// Dùng TTL "10m" để SeaweedFS tự xóa các segment cũ
+	// Lưu ý: Cần biết Size của segment. Nếu không có, bạn phải buffer hoặc dùng chunked upload.
+	// Ở đây giả định bạn đã lấy được size từ encoder (ví dụ FFmpeg).
+	_, err := r.client.Upload(content, 0, fullPath, "", "")
+	return err
 }
 
-// UpdateStreamManifest: Cập nhật file chỉ mục (.m3u8 hoặc .mpd)
-// Để trình phát (Player) biết segment nào mới nhất để load
+// UpdateStreamManifest: Cập nhật file danh sách phát .m3u8
+// manifestContent là nội dung mới của file manifest/index.m3u8
+//sessionID là định danh duy nhất cho buổi live hiện tại
 func (r *SeaweedfsAdapter) UpdateStreamManifest(ctx context.Context, sessionID string, manifestContent []byte) error {
-	// UpdateStreamManifest implementation here
-	return nil
+	manifestPath := fmt.Sprintf("/lives/%s/index.m3u8", sessionID)
+
+	// Manifest phải luôn được ghi đè để người xem cập nhật được segment mới nhất
+	reader := bytes.NewReader(manifestContent)
+	_, err := r.client.Upload(reader, int64(len(manifestContent)), manifestPath, "", "")
+	return err
 }
 
 // --- HELPER METHODS ---
 
-// GetPublicURL: Trả về URL ảnh/video để hiển thị trên UI
+// GetPublicURL: Trả về URL đầy đủ để hiển thị ảnh/video
 func (r *SeaweedfsAdapter) GetPublicURL(filePath string) string {
-	// GetPublicURL implementation here
-	return ""
+	if filePath == "" {
+		return ""
+	}
+	// Đảm bảo không bị dư dấu / khi nối chuỗi: http://host/path
+	base := strings.TrimRight(r.publicHost, "/")
+	path := "/" + strings.TrimLeft(filePath, "/")
+
+	return base + path
 }
 
-// GetStreamURL: Trả về URL của file manifest để xem Live Stream
+// GetStreamURL: Trả về link file manifest để trình phát video (HLS Player) kết nối
 func (r *SeaweedfsAdapter) GetStreamURL(sessionID string) string {
-	// GetStreamURL implementation here
-	return ""
+	// Đường dẫn chuẩn cho trình phát: http://filer:8888/lives/{sessionID}/index.m3u8
+	manifestPath := fmt.Sprintf("/lives/%s/index.m3u8", sessionID)
+	return r.GetPublicURL(manifestPath)
 }

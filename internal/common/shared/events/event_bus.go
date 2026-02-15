@@ -11,6 +11,7 @@ type EventPayload interface{}
 // IntegrationEvent là cấu trúc chuẩn cho mọi event trong hệ thống
 type IntegrationEvent struct {
 	ID        string       `json:"id"`
+	Type      string       `json:"type"`
 	Topic     string       `json:"topic"`
 	Timestamp time.Time    `json:"timestamp"`
 	Payload   EventPayload `json:"payload"`
@@ -21,7 +22,9 @@ type EventHandler func(ctx context.Context, event IntegrationEvent) error
 
 // EventBus interface (Dependency Inversion)
 type EventBus interface {
-	Publish(ctx context.Context, topic string, key string, payload EventPayload) error
+	// THAY ĐỔI: Thêm tham số eventType vào đây
+	Publish(ctx context.Context, topic string, key string, eventType string, payload EventPayload) error
+
 	Subscribe(ctx context.Context, topic string, handler EventHandler) error
 	Close() error
 }
