@@ -1,7 +1,7 @@
 package IRepositoryPostgres
 
 import (
-	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/server/http/response"
+	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/dto"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/social/domain/entity"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/social/enum"
 	"github.com/google/uuid"
@@ -12,8 +12,9 @@ type IFriendshipsRepository interface {
 	UpdateFriendshipStatus(friendshipID uuid.UUID, status enum.StatusFriendship) error
 	DeleteHardFriendship(friendshipID uuid.UUID) error
 	DeleteSoftFriendship(friendshipID uuid.UUID) error
-	PanigationAcceptedFriendship(userID uuid.UUID, cursor string, limit int) (*response.Response, error)
-	PanigationPendingFriendship(userID uuid.UUID, cursor string, limit int) (*response.Response, error)
-	GetFriendshipByUserIDs(friendshipID uuid.UUID) (*entity.Friendships, error)
-	GetFriendshipBybidirectional(requesterID uuid.UUID, recipientID uuid.UUID) (*entity.Friendships, error)
+	PanigationAcceptedFriendship(userID uuid.UUID, cursor string, limit int) (*dto.PaginationRes, error)
+	PanigationPendingFriendship(userID uuid.UUID, cursor string, limit int) (*dto.PaginationRes, error)
+	GetFriendshipTableByTableId(friendshipID uuid.UUID) (*entity.Friendships, error)
+	GetFriendshipTableBybidirectional(requesterID uuid.UUID, recipientID uuid.UUID) (*entity.Friendships, error)
+	GetFriendshipIndiscriminate(requesterID uuid.UUID, recipientID uuid.UUID) (*entity.Friendships, error)
 }

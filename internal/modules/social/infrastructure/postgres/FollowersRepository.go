@@ -3,7 +3,6 @@ package postgres
 import (
 	"context"
 
-	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/server/http/response"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/IRepositoryShare"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/dto"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/utils"
@@ -29,6 +28,7 @@ func (r *FollowersRepository) CreateFollowUser(followerUserID uuid.UUID, followe
 	return r.db.Create(&entity.Followers{
 		Follower_UserID: followerUserID,
 		Followed_UserID: followedUserID,
+		IsMuted:         false,
 	}).Error
 }
 
@@ -43,7 +43,30 @@ func (r *FollowersRepository) DeleteSoftFollowUser(follower uuid.UUID) error {
 	}
 	return nil
 }
+func (r *FollowersRepository) DeleteBatchSoftFollowUser(followerID uuid.UUID, followedUserID uuid.UUID) error {
+	// Implementation here
+	err := r.db.Where(&entity.Followers{Follower_UserID: followerID, Followed_UserID: followedUserID}).
+		Or(&entity.Followers{Follower_UserID: followedUserID, Followed_UserID: followerID}).
+		Update("deleted_at", gorm.Expr("updated_at")).
+		Error
 
+	if err != nil {
+		return err
+	}
+	return nil
+}
+func (r *FollowersRepository) DeleteBatchHardFollowUser(followerID uuid.UUID, followedUserID uuid.UUID) error {
+	// Implementation here
+	err := r.db.Where(&entity.Followers{Follower_UserID: followerID, Followed_UserID: followedUserID}).
+		Or(&entity.Followers{Follower_UserID: followedUserID, Followed_UserID: followerID}).
+		Delete(&entity.Followers{}).
+		Error
+
+	if err != nil {
+		return err
+	}
+	return nil
+}
 func (r *FollowersRepository) DeleteHardFollowUser(follower uuid.UUID) error {
 	data, err := r.GetFollowerByID(follower)
 	if err != nil {
@@ -66,7 +89,7 @@ func (r *FollowersRepository) UpdatateMuteFollowUser(followerUserID uuid.UUID, f
 	return nil
 }
 
-func (r *FollowersRepository) PaginationFollowers(FollowerUserID uuid.UUID, cursor string, limit int) (*response.Response, error) {
+func (r *FollowersRepository) PaginationFollowers(FollowerUserID uuid.UUID, cursor string, limit int) (*dto.PaginationRes, error) {
 	// Implementation here
 	var followers = []*entity.Followers{}
 	queryLimit := limit + 1
@@ -81,12 +104,12 @@ func (r *FollowersRepository) PaginationFollowers(FollowerUserID uuid.UUID, curs
 		return nil, err
 	}
 	if data != nil {
-		return response.NewResponse(response.WithData(&dto.PaginationRes{
+		return &dto.PaginationRes{
 			NextCursor: cursor,
 			HasNext:    hasNextcache,
 			Data:       data,
 			Limit:      limit,
-		})), nil
+		}, nil
 	}
 
 	query := r.db.Where(&entity.Followers{Follower_UserID: FollowerUserID}).Order("created_at DESC ,id DESC").Limit(queryLimit)
@@ -108,12 +131,12 @@ func (r *FollowersRepository) PaginationFollowers(FollowerUserID uuid.UUID, curs
 
 		lastFollower := followers[len(followers)-1]
 		nextCursor := utils.EncodeCursor(lastFollower.CreatedAt, lastFollower.Followed_UserID)
-		return response.NewResponse(response.WithData(&dto.PaginationRes{
+		return &dto.PaginationRes{
 			NextCursor: nextCursor,
 			HasNext:    hasNext,
 			Data:       followers,
 			Limit:      limit,
-		})), nil
+		}, nil
 
 	}
 	err = query.Find(followers).Error
@@ -141,14 +164,14 @@ func (r *FollowersRepository) PaginationFollowers(FollowerUserID uuid.UUID, curs
 	if err != nil {
 		return nil, err
 	}
-	return response.NewResponse(response.WithData(&dto.PaginationRes{
+	return &dto.PaginationRes{
 		NextCursor: nextCursor,
 		HasNext:    hasNext,
 		Data:       followers,
 		Limit:      limit,
-	})), nil
+	}, nil
 }
-func (r *FollowersRepository) PaginationFolloweds(FollowedUserID uuid.UUID, cursor string, limit int) (*response.Response, error) {
+func (r *FollowersRepository) PaginationFolloweds(FollowedUserID uuid.UUID, cursor string, limit int) (*dto.PaginationRes, error) {
 	// Implementation here
 	queryLimit := limit + 1
 	var followeds = []*entity.Followers{}
@@ -163,12 +186,12 @@ func (r *FollowersRepository) PaginationFolloweds(FollowedUserID uuid.UUID, curs
 		return nil, err
 	}
 	if data != nil {
-		return response.NewResponse(response.WithData(&dto.PaginationRes{
+		return &dto.PaginationRes{
 			NextCursor: cursor,
 			HasNext:    hasNextcache,
 			Data:       data,
 			Limit:      limit,
-		})), nil
+		}, nil
 	}
 	query := r.db.Where(&entity.Followers{Followed_UserID: FollowedUserID}).Order("created_at DESC ,id DESC  ").Limit(queryLimit)
 	if cursor != "" {
@@ -189,12 +212,12 @@ func (r *FollowersRepository) PaginationFolloweds(FollowedUserID uuid.UUID, curs
 
 		lastFollower := followeds[len(followeds)-1]
 		nextCursor := utils.EncodeCursor(lastFollower.CreatedAt, lastFollower.ID)
-		return response.NewResponse(response.WithData(&dto.PaginationRes{
+		return &dto.PaginationRes{
 			NextCursor: nextCursor,
 			HasNext:    hasNext,
 			Data:       followeds,
 			Limit:      limit,
-		})), nil
+		}, nil
 
 	}
 
@@ -223,12 +246,12 @@ func (r *FollowersRepository) PaginationFolloweds(FollowedUserID uuid.UUID, curs
 	if err != nil {
 		return nil, err
 	}
-	return response.NewResponse(response.WithData(&dto.PaginationRes{
+	return &dto.PaginationRes{
 		NextCursor: nextCursor,
 		HasNext:    hasNext,
 		Data:       followeds,
 		Limit:      limit,
-	})), nil
+	}, nil
 }
 func (r *FollowersRepository) GetFollowerByID(follower uuid.UUID) (*entity.Followers, error) {
 	// Implementation her
@@ -244,6 +267,14 @@ func (r *FollowersRepository) GetFollowerBybidirectional(followerUserID uuid.UUI
 	// Implementation here
 	data := &entity.Followers{}
 	err := r.db.Where(&entity.Followers{Follower_UserID: followerUserID, Followed_UserID: followedUserID}).First(data).Error
+	if err != nil {
+		return nil, err
+	}
+	return data, nil
+}
+func (r *FollowersRepository) GetFollowerIndiscriminate(followerUserID uuid.UUID, followedUserID uuid.UUID) (*[]entity.Followers, error) {
+	data := &[]entity.Followers{}
+	err := r.db.Where(&entity.Followers{Follower_UserID: followerUserID, Followed_UserID: followedUserID}).Or(&entity.Followers{Follower_UserID: followedUserID, Followed_UserID: followerUserID}).Find(data).Error
 	if err != nil {
 		return nil, err
 	}

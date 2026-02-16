@@ -7,8 +7,14 @@ option go_package = "github.com/quang/social-network/pkg/pb/v1;pb";
 service IdentityService {
   rpc Register (RegisterRequest) returns (RegisterResponse);
   rpc Login (LoginRequest) returns (LoginResponse);
+  rpc GetProtectUser (GetProtectUserRequest) returns (GetProtectUserResponse);
 }
-
+message GetProtectUserRequest {
+  string user_id = 1;
+}
+message GetProtectUserResponse {
+  bool is_protected = 1;
+}
 message RegisterRequest {
   string email = 1;
   string password = 2;

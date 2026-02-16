@@ -4,6 +4,7 @@ import (
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/database"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/server/middleware"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/events"
+	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/infrastructure/concurrency"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/infrastructure/kafka"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/infrastructure/redis"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/infrastructure/seaweedfs"
@@ -48,6 +49,11 @@ var providerResilience = wire.NewSet(
 var prodviderCache = wire.NewSet(
 	redis.NewRedisAdapter,
 )
+var providerLifecycle = wire.NewSet(
+	concurrency.NewManager,
+	// wire.Bind(new(concurrency.Service), new(*concurrency.Manager)),
+	ProvideLifecycleManager,
+)
 var ProviderSet = wire.NewSet(
 	providerDatabase,
 	providerGRPC,
@@ -57,4 +63,5 @@ var ProviderSet = wire.NewSet(
 	providerResilience,
 	prodviderCache,
 	providerKafka,
+	providerLifecycle,
 )

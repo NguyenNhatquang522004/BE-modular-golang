@@ -1,12 +1,12 @@
 package social
 
 import (
-	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/social/domain/IRepsitory/IKafka"
+	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/social/domain/IRepsitory/IProducer"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/social/domain/IRepsitory/IRepositoryMongodb"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/social/domain/IRepsitory/IRepositoryPostgres"
-	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/social/infrastructure/kafka"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/social/infrastructure/mongodb"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/social/infrastructure/postgres"
+	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/social/infrastructure/producer"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/social/usecase"
 	"github.com/google/wire"
 )
@@ -22,12 +22,12 @@ var RepositorySet = wire.NewSet(
 	wire.Bind(new(IRepositoryMongodb.IProfileRepositoryMongodb), new(*mongodb.ProfileRepository)),
 )
 var KafkaRepositorySet = wire.NewSet(
-	kafka.NewBlockMessage,
-	kafka.NewFollowMessage,
-	kafka.NewFriendshipMessage,
-	wire.Bind(new(IKafka.IBlockMessage), new(*kafka.BlockMessage)),
-	wire.Bind(new(IKafka.IFollowMessage), new(*kafka.FollowMessage)),
-	wire.Bind(new(IKafka.IFriendshipMessage), new(*kafka.FriendshipMessage)),
+	producer.NewBlockMessage,
+	producer.NewFollowMessage,
+	producer.NewFriendshipMessage,
+	wire.Bind(new(IProducer.IBlockMessage), new(*producer.BlockMessage)),
+	wire.Bind(new(IProducer.IFollowMessage), new(*producer.FollowMessage)),
+	wire.Bind(new(IProducer.IFriendshipMessage), new(*producer.FriendshipMessage)),
 )
 var UseCaseSet = wire.NewSet(
 	usecase.NewAdminSocialUseCase,
@@ -42,7 +42,15 @@ var UseCaseSet = wire.NewSet(
 	wire.Bind(new(usecase.IProfileUseCase), new(*usecase.ProfileUseCase)),
 	usecase.NewUseCase,
 )
-
+var ProducerSet = wire.NewSet(
+	producer.NewBlockMessage,
+	producer.NewFollowMessage,
+	producer.NewFriendshipMessage,
+	wire.Bind(new(IProducer.IBlockMessage), new(*producer.BlockMessage)),
+	wire.Bind(new(IProducer.IFollowMessage), new(*producer.FollowMessage)),
+	wire.Bind(new(IProducer.IFriendshipMessage), new(*producer.FriendshipMessage)),
+)
+var ConsumerSet = wire.NewSet()
 var HandlerSet = wire.NewSet()
 
 var ModuleSocialSet = wire.NewSet(
@@ -51,4 +59,6 @@ var ModuleSocialSet = wire.NewSet(
 	UseCaseSet,
 	HandlerSet,
 	KafkaRepositorySet,
+	ProducerSet,
+	ConsumerSet,
 )

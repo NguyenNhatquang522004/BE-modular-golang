@@ -1,4 +1,4 @@
-package IWorker
+package IConsumer
 
 type IWorkerFollow interface {
 	CreateFollow() error

@@ -145,7 +145,7 @@ func (r *FriendshipsRepository) PanigationAcceptedFriendship(userID uuid.UUID, c
 		Limit:      limit,
 	}), response.WithMessage(""), response.WithStatus("")), nil
 }
-func (r *FriendshipsRepository) PanigationPendingFriendship(userID uuid.UUID, cursor string, limit int) (*response.Response, error) {
+func (r *FriendshipsRepository) PanigationPendingFriendship(userID uuid.UUID, cursor string, limit int) (*dto.PaginationRes, error) {
 	var data = []*entity.Friendships{}
 	ctx := context.Background()
 	items := []string{
@@ -159,12 +159,12 @@ func (r *FriendshipsRepository) PanigationPendingFriendship(userID uuid.UUID, cu
 		return nil, err
 	}
 	if cachedData != nil {
-		return response.NewResponse(response.WithData(&dto.PaginationRes{
+		return &dto.PaginationRes{
 			NextCursor: nextCursor,
 			HasNext:    hasNext,
 			Data:       cachedData,
 			Limit:      limit,
-		}), response.WithMessage(""), response.WithStatus("")), nil
+		}, nil
 	}
 
 	querylimit := limit + 1
@@ -188,12 +188,12 @@ func (r *FriendshipsRepository) PanigationPendingFriendship(userID uuid.UUID, cu
 		}
 		lastdata := data[len(data)-1]
 		nextcursor := utils.EncodeCursor(lastdata.Created_At, lastdata.ID)
-		return response.NewResponse(response.WithData(&dto.PaginationRes{
+		return &dto.PaginationRes{
 			NextCursor: nextcursor,
 			HasNext:    hasnext,
 			Data:       data,
 			Limit:      limit,
-		}), response.WithMessage(""), response.WithStatus("")), nil
+		}, nil
 	}
 
 	err = query.Find(data).Error
@@ -221,12 +221,12 @@ func (r *FriendshipsRepository) PanigationPendingFriendship(userID uuid.UUID, cu
 		return nil, err
 	}
 
-	return response.NewResponse(response.WithData(&dto.PaginationRes{
+	return &dto.PaginationRes{
 		NextCursor: nextcursor,
 		HasNext:    hasnext,
 		Data:       data,
 		Limit:      limit,
-	}), response.WithMessage(""), response.WithStatus("")), nil
+	}, nil
 }
 func (r *FriendshipsRepository) GetFriendshipByUserIDs(friendshipID uuid.UUID) (*entity.Friendships, error) {
 	var data = &entity.Friendships{}
@@ -239,6 +239,14 @@ func (r *FriendshipsRepository) GetFriendshipByUserIDs(friendshipID uuid.UUID) (
 func (r *FriendshipsRepository) GetFriendshipBybidirectional(requesterID uuid.UUID, recipientID uuid.UUID) (*entity.Friendships, error) {
 	data := &entity.Friendships{}
 	err := r.db.Where(&entity.Friendships{Requester_ID: requesterID, Recipient_ID: recipientID}).First(data).Error
+	if err != nil {
+		return nil, err
+	}
+	return data, nil
+}
+func (r *FriendshipsRepository) GetFriendshipIndiscriminate(requesterID uuid.UUID, recipientID uuid.UUID) (*entity.Friendships, error) {
+	data := &entity.Friendships{}
+	err := r.db.Where(&entity.Friendships{Requester_ID: requesterID, Recipient_ID: recipientID}).Or(&entity.Friendships{Requester_ID: recipientID, Recipient_ID: requesterID}).First(data).Error
 	if err != nil {
 		return nil, err
 	}

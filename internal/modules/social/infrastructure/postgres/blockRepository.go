@@ -3,7 +3,6 @@ package postgres
 import (
 	"context"
 
-	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/server/http/response"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/IRepositoryShare"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/dto"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/utils"
@@ -68,14 +67,14 @@ func (r *BlockRepository) IsBlocked(blockerUserID uuid.UUID, blockedUserID uuid.
 func (r *BlockRepository) GetBlockedUsers(blockerUserID uuid.UUID, blockedUserID uuid.UUID) (*entity.UserBlock, error) {
 	// Implementation here
 	var data = &entity.UserBlock{}
-	err := r.db.Where(&entity.UserBlock{Blocker_UserID: blockerUserID, Blocked_UserID: blockedUserID}).First(data).Error
+	err := r.db.Where(&entity.UserBlock{Blocker_UserID: blockerUserID, Blocked_UserID: blockedUserID}).Or(&entity.UserBlock{Blocker_UserID: blockedUserID, Blocked_UserID: blockerUserID}).First(data).Error
 	if err != nil {
 		return nil, err
 	}
 	return data, nil
 }
 
-func (r *BlockRepository) GetPaginationTypeBlock(BlockerUserID uuid.UUID, cursor string, limit int) (*response.Response, error) {
+func (r *BlockRepository) GetPaginationTypeBlock(BlockerUserID uuid.UUID, cursor string, limit int) (*dto.PaginationRes, error) {
 	// Implementation here
 	data := []*entity.UserBlock{}
 	querylimit := limit + 1
@@ -90,12 +89,12 @@ func (r *BlockRepository) GetPaginationTypeBlock(BlockerUserID uuid.UUID, cursor
 		return nil, err
 	}
 	if cacheData != nil {
-		return response.NewResponse(response.WithData(&dto.PaginationRes{
+		return &dto.PaginationRes{
 			NextCursor: cacheCursor,
 			HasNext:    hasNextCache,
 			Data:       cacheData,
 			Limit:      cacheLimit,
-		})), nil
+		}, nil
 	}
 	query := r.db.Where(&entity.UserBlock{Blocker_UserID: BlockerUserID}).Order("created_at DESC ,id DESC").Limit(querylimit)
 	if cursor != "" {
@@ -116,12 +115,12 @@ func (r *BlockRepository) GetPaginationTypeBlock(BlockerUserID uuid.UUID, cursor
 
 		lastBlock := data[len(data)-1]
 		nextCursor := utils.EncodeCursor(lastBlock.CreatedAt, lastBlock.ID)
-		return response.NewResponse(response.WithData(&dto.PaginationRes{
+		return &dto.PaginationRes{
 			NextCursor: nextCursor,
 			HasNext:    hasNext,
 			Data:       data,
 			Limit:      limit,
-		})), nil
+		}, nil
 	}
 	err = query.Find(data).Error
 	if err != nil {
@@ -139,10 +138,19 @@ func (r *BlockRepository) GetPaginationTypeBlock(BlockerUserID uuid.UUID, cursor
 		nextCursor = utils.EncodeCursor(lastBlock.CreatedAt, lastBlock.ID)
 	}
 
-	return response.NewResponse(response.WithData(&dto.PaginationRes{
+	return &dto.PaginationRes{
 		NextCursor: nextCursor,
 		HasNext:    hasNext,
 		Data:       data,
 		Limit:      limit,
-	})), nil
+	}, nil
+}
+
+func (r *BlockRepository) GetBlockIndiscriminate(requesterID uuid.UUID, recipientID uuid.UUID) (*entity.UserBlock, error) {
+	data := &entity.UserBlock{}
+	err := r.db.Where(&entity.UserBlock{Blocker_UserID: requesterID, Blocked_UserID: recipientID}).Or(&entity.UserBlock{Blocker_UserID: recipientID, Blocked_UserID: requesterID}).First(data).Error
+	if err != nil {
+		return nil, err
+	}
+	return data, nil
 }

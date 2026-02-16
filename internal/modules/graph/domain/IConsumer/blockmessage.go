@@ -1,4 +1,4 @@
-package IWorker
+package IConsumer
 
 type IWorkerBlock interface {
 	CreateBlock() error
