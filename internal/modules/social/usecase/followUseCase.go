@@ -8,17 +8,17 @@ import (
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/dto"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/events/socialEvent"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/social/delivery/dto/req"
-	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/social/domain/IRepsitory/IProducer"
+	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/social/domain/IRepsitory/IProducer/IGraph"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/social/domain/IRepsitory/IRepositoryPostgres"
 	"github.com/google/uuid"
 )
 
 type FollowUseCase struct {
 	followRepo     IRepositoryPostgres.IFollowersRepository
-	followProducer IProducer.IFollowMessage
+	followProducer IGraph.IFollowMessage
 }
 
-func NewFollowUseCase(followRepo IRepositoryPostgres.IFollowersRepository, followProducer IProducer.IFollowMessage) *FollowUseCase {
+func NewFollowUseCase(followRepo IRepositoryPostgres.IFollowersRepository, followProducer IGraph.IFollowMessage) *FollowUseCase {
 	return &FollowUseCase{
 		followRepo:     followRepo,
 		followProducer: followProducer,

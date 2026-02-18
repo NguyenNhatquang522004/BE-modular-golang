@@ -1,4 +1,4 @@
-package IProducer
+package IGraph
 
 import (
 	"context"
@@ -7,7 +7,6 @@ import (
 )
 
 type IFollowMessage interface {
-
 	PublishFollowDeleteMessage(ctx context.Context, payload ...*socialEvent.FollowDeletePayload) error
 	PublishFollowUpdateMessage(ctx context.Context, payload ...*socialEvent.FollowUpdatePayload) error
 }

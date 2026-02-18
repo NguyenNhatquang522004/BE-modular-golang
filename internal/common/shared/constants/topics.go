@@ -3,8 +3,6 @@ package constants
 type EventType string
 
 const (
-	// Domain Friendship
-	Created EventType = "FRIENDSHIP_CREATED"
 	Updated EventType = "FRIENDSHIP_UPDATED"
 	Deleted EventType = "FRIENDSHIP_DELETED"
 )

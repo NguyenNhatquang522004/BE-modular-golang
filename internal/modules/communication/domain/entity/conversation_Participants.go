@@ -37,7 +37,7 @@ type ConversationParticipant struct {
 	LastSeenMessageID string `bson:"last_seen_message_id" json:"last_seen_message_id"`
 
 	// --- 4. CÀI ĐẶT CÁ NHÂN (PERSONAL SETTINGS) ---
-	IsMuted    bool `bson:"is_muted" json:"is_muted"`       // Tắt thông báo
+	MuteUntil    *time.Time `bson:"mute_until,omitempty" json:"mute_until,omitempty"` //Cho phép tắt thông báo trong 1 giờ, 8 giờ hoặc mãi mãi. sửa cái này 
 	IsArchived bool `bson:"is_archived" json:"is_archived"` // Lưu trữ (ẩn khỏi Inbox)
 
 	// --- 5. TÍNH NĂNG XÓA LỊCH SỬ ---

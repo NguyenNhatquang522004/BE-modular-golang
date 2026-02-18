@@ -16,13 +16,24 @@ type RecipientIDRequest struct {
 type FriendshipIDRequest struct {
 	FriendshipID string `json:"friendship_id" validate:"required,uuid4"`
 }
-type CreateFriendshipRequest struct {
+type FriendStatusRequest struct {
+	Status enum.StatusFriendship `json:"status" validate:"required,oneof=accepted rejected"`
+}
+type FriendShipUseCaseRequest struct {
+	*FriendshipIDRequest
 	*RequesterIDRequest
 	*RecipientIDRequest
+	*FriendStatusRequest
+}
+type CreateFriendshipRequest struct {
+	*FriendshipIDRequest
+	*RequesterIDRequest
+	*RecipientIDRequest
+	*FriendStatusRequest
 }
 type UpdateFriendshipStatusRequest struct {
 	*FriendshipIDRequest
-	Status enum.StatusFriendship `json:"status" validate:"required,oneof=accepted rejected"`
+	*FriendStatusRequest
 }
 type UpdateBlockFriendshipRequest struct {
 	*FriendshipIDRequest

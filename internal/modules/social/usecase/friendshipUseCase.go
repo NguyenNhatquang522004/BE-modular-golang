@@ -8,7 +8,7 @@ import (
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/dto"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/events/socialEvent"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/social/delivery/dto/req"
-	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/social/domain/IRepsitory/IProducer"
+	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/social/domain/IRepsitory/IProducer/IGraph"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/social/domain/IRepsitory/IRepositoryPostgres"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/social/enum"
 	"github.com/google/uuid"
@@ -17,18 +17,18 @@ import (
 type FriendshipUseCase struct {
 	friendshipRepo     IRepositoryPostgres.IFriendshipsRepository
 	followRepo         IRepositoryPostgres.IFollowersRepository
-	followProducer     IProducer.IFollowMessage
-	friendshipProducer IProducer.IFriendshipMessage
+	followProducer     IGraph.IFollowMessage
+	friendshipProducer IGraph.IFriendshipMessage
 	blockRepo          IRepositoryPostgres.IBlockRepository
-	blockProducer      IProducer.IBlockMessage
+	blockProducer      IGraph.IBlockMessage
 }
 
 func NewFriendshipUseCase(friendshipRepo IRepositoryPostgres.IFriendshipsRepository,
 	followRepo IRepositoryPostgres.IFollowersRepository,
-	followProducer IProducer.IFollowMessage,
-	friendshipProducer IProducer.IFriendshipMessage,
+	followProducer IGraph.IFollowMessage,
+	friendshipProducer IGraph.IFriendshipMessage,
 	blockRepo IRepositoryPostgres.IBlockRepository,
-	blockProducer IProducer.IBlockMessage) *FriendshipUseCase {
+	blockProducer IGraph.IBlockMessage) *FriendshipUseCase {
 	return &FriendshipUseCase{
 		friendshipRepo:     friendshipRepo,
 		followRepo:         followRepo,

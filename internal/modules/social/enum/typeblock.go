@@ -6,4 +6,8 @@ type Type_Block int
 const (
 	Type_Block_Full Type_Block = iota
 	Type_Block_Partial
+	Type_Block_Chat
+	Type_Block_Profile
+	Type_Block_None
+	//... Thêm các loại block khác vào đây
 )

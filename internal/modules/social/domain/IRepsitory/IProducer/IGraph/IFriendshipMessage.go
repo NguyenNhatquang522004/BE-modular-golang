@@ -1,4 +1,4 @@
-package IProducer
+package IGraph
 
 import (
 	"context"
@@ -7,7 +7,6 @@ import (
 )
 
 type IFriendshipMessage interface {
-
 	PublishFriendshipDeleteMessage(ctx context.Context, payload ...*socialEvent.FriendshipsDeletePayload) error
 	PublishFriendshipUpdateMessage(ctx context.Context, payload ...*socialEvent.FriendshipsUpdatePayload) error
 }

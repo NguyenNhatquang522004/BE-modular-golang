@@ -11,21 +11,24 @@ type BlockerUserIDRequest struct {
 type BlockedUserIDRequest struct {
 	BlockedUserID string `json:"blocked_user_id" validate:"required,uuid4"`
 }
-
+type StatusBlockRequest struct {
+	Status enum.Type_Block `json:"status_block" validate:"required,oneof=0 1"`
+}
 type BlockCreateRequest struct {
 	*BlockerUserIDRequest
 	*BlockedUserIDRequest
-	Status enum.Type_Block `json:"status_block" validate:"required,oneof=0 1"`
+	*StatusBlockRequest
 }
 type BlockDeleteRequest struct {
 	*BlockerUserIDRequest
 	*BlockedUserIDRequest
+	*StatusBlockRequest
 }
 
 type BlockUpdateRequest struct {
 	*BlockerUserIDRequest
 	*BlockedUserIDRequest
-	Status enum.Type_Block `json:"status_block" validate:"required,oneof=0 1"`
+	StatusBlockRequest
 }
 
 type BlockIsBlockedRequest struct {
@@ -40,5 +43,6 @@ type BlockGetBlockedUsersRequest struct {
 
 type BlockPaginationTypeBlockRequest struct {
 	BlockerUserID string             `form:"blocker_user_id" validate:"required,uuid4"`
+	BlockType     enum.Type_Block    `form:"block_type" validate:"required,oneof=0 1"`
 	Metadata      *dto.PaginationReq `form:"metadata"`
 }

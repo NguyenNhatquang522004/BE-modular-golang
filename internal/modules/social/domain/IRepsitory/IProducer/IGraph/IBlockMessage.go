@@ -1,4 +1,4 @@
-package IProducer
+package IGraph
 
 import (
 	"context"
@@ -7,7 +7,6 @@ import (
 )
 
 type IBlockMessage interface {
-	
 	PublishBlockUpdateMessage(ctx context.Context, payload ...*socialEvent.BlockUpdatePayload) error
 	PublishBlockDeleteMessage(ctx context.Context, payload ...*socialEvent.BlockDeletePayload) error
 }

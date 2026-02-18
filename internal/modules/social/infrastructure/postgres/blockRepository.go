@@ -74,7 +74,7 @@ func (r *BlockRepository) GetBlockedUsers(blockerUserID uuid.UUID, blockedUserID
 	return data, nil
 }
 
-func (r *BlockRepository) GetPaginationTypeBlock(BlockerUserID uuid.UUID, cursor string, limit int) (*dto.PaginationRes, error) {
+func (r *BlockRepository) GetPaginationTypeBlock(BlockerUserID uuid.UUID, cursor string, limit int , blocktype enum.Type_Block) (*dto.PaginationRes, error) {
 	// Implementation here
 	data := []*entity.UserBlock{}
 	querylimit := limit + 1
@@ -96,7 +96,7 @@ func (r *BlockRepository) GetPaginationTypeBlock(BlockerUserID uuid.UUID, cursor
 			Limit:      cacheLimit,
 		}, nil
 	}
-	query := r.db.Where(&entity.UserBlock{Blocker_UserID: BlockerUserID}).Order("created_at DESC ,id DESC").Limit(querylimit)
+	query := r.db.Where(&entity.UserBlock{Blocker_UserID: BlockerUserID, Type_Block: blocktype}).Order("created_at DESC ,id DESC").Limit(querylimit)
 	if cursor != "" {
 		time, id, err := utils.DecodeCursor(cursor)
 		if err != nil {

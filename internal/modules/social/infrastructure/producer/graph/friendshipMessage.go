@@ -1,4 +1,4 @@
-package producer
+package graph
 
 import (
 	"context"
@@ -16,15 +16,6 @@ func NewFriendshipMessage(eventBus events.EventBus) *FriendshipMessage {
 	return &FriendshipMessage{
 		eventBus: eventBus,
 	}
-}
-func (r *FriendshipMessage) PublishFriendshipCreateMessage(ctx context.Context, payload ...*socialEvent.FriendshipsCreatePayload) error {
-	for _, p := range payload {
-		err := r.eventBus.Publish(ctx, constants.TopicFriendship.String(), p.Requester_ID, constants.Created.String(), p)
-		if err != nil {
-			return err
-		}
-	}
-	return nil
 }
 func (r *FriendshipMessage) PublishFriendshipDeleteMessage(ctx context.Context, payload ...*socialEvent.FriendshipsDeletePayload) error {
 	for _, p := range payload {

@@ -15,6 +15,7 @@ type IFollowUseCase interface {
 }
 
 type IFriendshipUseCase interface {
+	FriendShipUseCase(req *req.FriendShipUseCaseRequest) (*response.Response, error)
 	CreateFriendshipUseCase(req *req.CreateFriendshipRequest) (*response.Response, error)
 	UpdateFriendshipStatusUseCase(req *req.UpdateFriendshipStatusRequest) (*response.Response, error)
 	UpdateBlockFriendshipUseCase(req *req.UpdateBlockFriendshipRequest) (*response.Response, error)
@@ -23,12 +24,9 @@ type IFriendshipUseCase interface {
 }
 
 type IBlockUseCase interface {
-	CreateBlockUserUseCase(req *req.BlockCreateRequest) (*response.Response, error)
-	DeleteBlockUserUseCase(req *req.BlockDeleteRequest) (*response.Response, error)
-	UpdateBlockUserUseCase(req *req.BlockUpdateRequest) (*response.Response, error)
-	IsBlockedUseCase(req *req.BlockIsBlockedRequest) (*response.Response, error)
-	GetBlockedUsersUseCase(req *req.BlockGetBlockedUsersRequest) (*response.Response, error)
+	UseCaseBlockUser(req *req.BlockCreateRequest) (*response.Response, error)
 	GetPaginationTypeBlockUseCase(req *req.BlockPaginationTypeBlockRequest) (*response.Response, error)
+	IsBlockedUseCase(req *req.BlockIsBlockedRequest) (*response.Response, error)
 }
 
 type IProfileUseCase interface {

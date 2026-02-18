@@ -17,5 +17,5 @@ type IFollowersRepository interface {
 	PaginationFolloweds(FollowedUserID uuid.UUID, cursor string, limit int) (*dto.PaginationRes, error)
 	GetFollowerTableByID(follower uuid.UUID) (*entity.Followers, error)
 	GetFollowerTableBybidirectional(followerUserID uuid.UUID, followedUserID uuid.UUID) (*entity.Followers, error)
-	GetFollowerIndiscriminate(requesterID uuid.UUID, recipientID uuid.UUID) (*[]entity.Followers, error)
+	GetFollowerIndiscriminate(requesterID uuid.UUID, recipientID uuid.UUID) ([]*entity.Followers, error)
 }
