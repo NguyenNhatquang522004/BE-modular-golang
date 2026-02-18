@@ -54,7 +54,7 @@ func (r *BlockRepository) UpdateBlockUser(blockerUserID uuid.UUID, blockedUserID
 
 func (r *BlockRepository) IsBlocked(blockerUserID uuid.UUID, blockedUserID uuid.UUID) (bool, error) {
 	// Implementation here
-	data, err := r.GetBlockedUsers(blockerUserID, blockedUserID)
+	data, err := r.GetBlockIndiscriminate(blockerUserID, blockedUserID)
 	if err != nil {
 		return false, err
 	}
@@ -74,7 +74,7 @@ func (r *BlockRepository) GetBlockedUsers(blockerUserID uuid.UUID, blockedUserID
 	return data, nil
 }
 
-func (r *BlockRepository) GetPaginationTypeBlock(BlockerUserID uuid.UUID, cursor string, limit int , blocktype enum.Type_Block) (*dto.PaginationRes, error) {
+func (r *BlockRepository) GetPaginationTypeBlock(BlockerUserID uuid.UUID, cursor string, limit int, blocktype enum.Type_Block) (*dto.PaginationRes, error) {
 	// Implementation here
 	data := []*entity.UserBlock{}
 	querylimit := limit + 1

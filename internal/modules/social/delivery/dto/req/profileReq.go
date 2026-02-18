@@ -6,6 +6,14 @@ import (
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/social/enum"
 )
 
+type ProfileIDRequest struct {
+	ProfileID string `json:"profile_id" validate:"required,uuid4"`
+}
+type UpdateProfileRequest struct {
+	*ProfileIDRequest
+	*ProfileReq
+}
+
 // CreateProfileReq dùng cho việc tạo mới Profile
 type ProfileReq struct {
 	UserID      string      `json:"user_id" binding:"required"`

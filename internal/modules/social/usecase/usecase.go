@@ -15,10 +15,8 @@ type IFollowUseCase interface {
 }
 
 type IFriendshipUseCase interface {
-	FriendShipUseCase(req *req.FriendShipUseCaseRequest) (*response.Response, error)
+	HandleFriendShipUseCase(req *req.FriendShipUseCaseRequest) (*response.Response, error)
 	CreateFriendshipUseCase(req *req.CreateFriendshipRequest) (*response.Response, error)
-	UpdateFriendshipStatusUseCase(req *req.UpdateFriendshipStatusRequest) (*response.Response, error)
-	UpdateBlockFriendshipUseCase(req *req.UpdateBlockFriendshipRequest) (*response.Response, error)
 	PanigationAcceptedFriendshipUseCase(req *req.PaginationFriendshipRequest) (*response.Response, error)
 	PanigationPendingFriendshipUseCase(req *req.PaginationFriendshipRequest) (*response.Response, error)
 }
@@ -30,6 +28,10 @@ type IBlockUseCase interface {
 }
 
 type IProfileUseCase interface {
+	CreateProfileUseCase(profileData *req.ProfileReq) (*response.Response, error)
+	GetProfileByIDUseCase(req *req.ProfileIDRequest) (*response.Response, error)
+	UpdateProfileUseCase(req *req.UpdateProfileRequest) (*response.Response, error)
+	GetProfileByUserIDUseCase(req *req.ProfileIDRequest) (*response.Response, error)
 }
 
 type IAdminSocialUseCase interface {

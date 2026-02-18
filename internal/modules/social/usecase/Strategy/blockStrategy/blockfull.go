@@ -78,18 +78,19 @@ func (h *BlockFull) Execute(ctx context.Context, req *req.BlockCreateRequest) (*
 	}
 	friendship, err := h.friendshipRepo.GetFriendshipIndiscriminate(uuid.MustParse(req.BlockerUserID), uuid.MustParse(req.BlockedUserID))
 	if err == nil && friendship != nil {
-		err = h.friendshipRepo.UpdateFriendshipStatus(friendship.ID, enum.StatusFriendship_Blocked)
+		friendship.Status = enum.StatusFriendship_Blocked
+		err = h.friendshipRepo.UpdateFriendshipStatus(friendship)
 		if err != nil {
 			return response.NewResponse(response.WithData(""), response.WithMessage(err.Error()), response.WithStatus("")), err
 		}
-	}
-	payloadFriendship1 := &socialEvent.FriendshipsDeletePayload{
-		Requester_ID: friendship.Requester_ID.String(),
-		Recipient_ID: friendship.Recipient_ID.String(),
-	}
-	err = h.friendShipProducer.PublishFriendshipDeleteMessage(ctx, payloadFriendship1)
-	if err != nil {
-		return response.NewResponse(response.WithData(""), response.WithMessage(err.Error()), response.WithStatus("")), err
+		payloadFriendship1 := &socialEvent.FriendshipsDeletePayload{
+			Requester_ID: friendship.Requester_ID.String(),
+			Recipient_ID: friendship.Recipient_ID.String(),
+		}
+		err = h.friendShipProducer.PublishFriendshipDeleteMessage(ctx, payloadFriendship1)
+		if err != nil {
+			return response.NewResponse(response.WithData(""), response.WithMessage(err.Error()), response.WithStatus("")), err
+		}
 	}
 	payloadBlock1 := &socialEvent.BlockUpdatePayload{
 		Blocker_UserID: req.BlockerUserID,

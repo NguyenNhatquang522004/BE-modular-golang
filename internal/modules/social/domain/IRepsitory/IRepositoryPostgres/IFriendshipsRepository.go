@@ -9,11 +9,10 @@ import (
 
 type IFriendshipsRepository interface {
 	CreateFriendship(Requester_ID uuid.UUID, Recipient_ID uuid.UUID) error
-	UpdateFriendshipStatus(friendshipID uuid.UUID, status enum.StatusFriendship) error
+	UpdateFriendshipStatus(data *entity.Friendships) error
 	DeleteHardFriendship(friendshipID uuid.UUID) error
 	DeleteSoftFriendship(friendshipID uuid.UUID) error
-	PanigationAcceptedFriendship(userID uuid.UUID, cursor string, limit int) (*dto.PaginationRes, error)
-	PanigationPendingFriendship(userID uuid.UUID, cursor string, limit int) (*dto.PaginationRes, error)
+	PanigationStatusFriendship(userID uuid.UUID, cursor string, limit int, status enum.StatusFriendship) (*dto.PaginationRes, error)
 	GetFriendshipTableByTableId(friendshipID uuid.UUID) (*entity.Friendships, error)
 	GetFriendshipTableBybidirectional(requesterID uuid.UUID, recipientID uuid.UUID) (*entity.Friendships, error)
 	GetFriendshipIndiscriminate(requesterID uuid.UUID, recipientID uuid.UUID) (*entity.Friendships, error)

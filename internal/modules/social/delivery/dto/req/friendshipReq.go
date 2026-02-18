@@ -20,9 +20,8 @@ type FriendStatusRequest struct {
 	Status enum.StatusFriendship `json:"status" validate:"required,oneof=accepted rejected"`
 }
 type FriendShipUseCaseRequest struct {
+	UserID string `json:"user_id" validate:"required,uuid4"`
 	*FriendshipIDRequest
-	*RequesterIDRequest
-	*RecipientIDRequest
 	*FriendStatusRequest
 }
 type CreateFriendshipRequest struct {
@@ -31,14 +30,6 @@ type CreateFriendshipRequest struct {
 	*RecipientIDRequest
 	*FriendStatusRequest
 }
-type UpdateFriendshipStatusRequest struct {
-	*FriendshipIDRequest
-	*FriendStatusRequest
-}
-type UpdateBlockFriendshipRequest struct {
-	*FriendshipIDRequest
-	Status enum.Type_Block `json:"status" validate:"required,oneof=blocked unblocked"`
-}
 type DeleteSoftFriendshipRequest struct {
 	*FriendshipIDRequest
 }
@@ -46,8 +37,8 @@ type DeleteSoftFriendshipRequest struct {
 type DeleteHardFriendshipRequest struct {
 	*FriendshipIDRequest
 }
-
 type PaginationFriendshipRequest struct {
-	UserID   string             `form:"user_id" validate:"required,uuid4"`
+	UserID string `form:"user_id" validate:"required,uuid4"`
+	*FriendStatusRequest
 	Metadata *dto.PaginationReq `form:"metadata"`
 }

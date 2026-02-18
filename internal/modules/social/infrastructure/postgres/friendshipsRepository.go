@@ -3,7 +3,6 @@ package postgres
 import (
 	"context"
 
-	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/server/http/response"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/IRepositoryShare"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/dto"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/utils"
@@ -32,12 +31,7 @@ func (r *FriendshipsRepository) CreateFriendship(Requester_ID uuid.UUID, Recipie
 	}).Error
 }
 
-func (r *FriendshipsRepository) UpdateFriendshipStatus(friendshipID uuid.UUID, status enum.StatusFriendship) error {
-	data, err := r.GetFriendshipByUserIDs(friendshipID)
-	if err != nil {
-		return err
-	}
-	data.Status = status
+func (r *FriendshipsRepository) UpdateFriendship(data *entity.Friendships) error {
 	r.db.Save(data)
 	return nil
 }
@@ -65,25 +59,25 @@ func (r *FriendshipsRepository) DeleteSoftFriendship(friendshipID uuid.UUID) err
 	}
 	return nil
 }
-func (r *FriendshipsRepository) PanigationAcceptedFriendship(userID uuid.UUID, cursor string, limit int) (*response.Response, error) {
+func (r *FriendshipsRepository) PanigationStatusFriendship(userID uuid.UUID, cursor string, limit int, status enum.StatusFriendship) (*dto.PaginationRes, error) {
 	var data = []*entity.Friendships{}
 	items := []string{
-		"friendship_AC_cache_user_" + userID.String(),
-		"friendship_AC_cache_nextcursor_user_" + userID.String(),
-		"friendship_AC_cache_hasnext_user_" + userID.String(),
-		"friendship_AC_cache_limit_user_" + userID.String(),
+		"friendship_" + string(status) + "_cache_user_" + userID.String(),
+		"friendship_" + string(status) + "_cache_nextcursor_user_" + userID.String(),
+		"friendship_" + string(status) + "_cache_hasnext_user_" + userID.String(),
+		"friendship_" + string(status) + "_cache_limit_user_" + userID.String(),
 	}
 	cachedData, nextCursor, hasNext, limit, err := r.redisRepo.CustomizeGetCache(context.Background(), items)
 	if err != nil {
 		return nil, err
 	}
 	if cachedData != nil {
-		return response.NewResponse(response.WithData(&dto.PaginationRes{
+		return &dto.PaginationRes{
 			NextCursor: nextCursor,
 			HasNext:    hasNext,
 			Data:       cachedData,
 			Limit:      limit,
-		}), response.WithMessage(""), response.WithStatus("")), nil
+		}, nil
 
 	}
 	querylimit := limit + 1
@@ -107,12 +101,12 @@ func (r *FriendshipsRepository) PanigationAcceptedFriendship(userID uuid.UUID, c
 		}
 		lastdata := data[len(data)-1]
 		nextcursor := utils.EncodeCursor(lastdata.Created_At, lastdata.ID)
-		return response.NewResponse(response.WithData(&dto.PaginationRes{
+		return &dto.PaginationRes{
 			NextCursor: nextcursor,
 			HasNext:    hasnext,
 			Data:       data,
 			Limit:      limit,
-		}), response.WithMessage(""), response.WithStatus("")), nil
+		}, nil
 	}
 	err = query.Find(&data).Error
 	if err != nil {
@@ -129,98 +123,15 @@ func (r *FriendshipsRepository) PanigationAcceptedFriendship(userID uuid.UUID, c
 		nextcursor = utils.EncodeCursor(lastdata.Created_At, lastdata.ID)
 	}
 	var itemCache = map[string]any{
-		"friendship_AC_cache_user_" + userID.String():            data,
-		"friendship_AC_cache_nextcursor_user_" + userID.String(): nextcursor,
-		"friendship_AC_cache_hasnext_user_" + userID.String():    hasnext,
-		"friendship_AC_cache_limit_user_" + userID.String():      limit,
+		"friendship_" + string(status) + "_cache_user_" + userID.String():            data,
+		"friendship_" + string(status) + "_cache_nextcursor_user_" + userID.String(): nextcursor,
+		"friendship_" + string(status) + "_cache_hasnext_user_" + userID.String():    hasnext,
+		"friendship_" + string(status) + "_cache_limit_user_" + userID.String():      limit,
 	}
 	err = r.redisRepo.CustomizeSetCache(context.Background(), itemCache)
 	if err != nil {
 		return nil, err
 	}
-	return response.NewResponse(response.WithData(&dto.PaginationRes{
-		NextCursor: nextcursor,
-		HasNext:    hasnext,
-		Data:       data,
-		Limit:      limit,
-	}), response.WithMessage(""), response.WithStatus("")), nil
-}
-func (r *FriendshipsRepository) PanigationPendingFriendship(userID uuid.UUID, cursor string, limit int) (*dto.PaginationRes, error) {
-	var data = []*entity.Friendships{}
-	ctx := context.Background()
-	items := []string{
-		"friendship_PD_cache_user_" + userID.String(),
-		"friendship_PD_cache_nextcursor_user_" + userID.String(),
-		"friendship_PD_cache_hasnext_user_" + userID.String(),
-		"friendship_PD_cache_limit_user_" + userID.String(),
-	}
-	cachedData, nextCursor, hasNext, limit, err := r.redisRepo.CustomizeGetCache(ctx, items)
-	if err != nil {
-		return nil, err
-	}
-	if cachedData != nil {
-		return &dto.PaginationRes{
-			NextCursor: nextCursor,
-			HasNext:    hasNext,
-			Data:       cachedData,
-			Limit:      limit,
-		}, nil
-	}
-
-	querylimit := limit + 1
-	query := r.db.Where(&entity.Friendships{Status: enum.StatusFriendship_Pending}).
-		Where("requester_id = ? OR recipient_id = ?", userID, userID).
-		Order("created_at DESC ,id DESC").Limit(querylimit)
-	if cursor != "" {
-		time, datacursor, err := utils.DecodeCursor(cursor)
-		if err != nil {
-			return nil, err
-		}
-		query = query.Where("(created_at > ?) OR (created_at = ? AND id > ?)", time, time, datacursor.ID)
-		err = query.Find(data).Error
-		if err != nil {
-			return nil, err
-		}
-		hasnext := false
-		if len(data) == querylimit {
-			hasnext = true
-			data = data[:limit]
-		}
-		lastdata := data[len(data)-1]
-		nextcursor := utils.EncodeCursor(lastdata.Created_At, lastdata.ID)
-		return &dto.PaginationRes{
-			NextCursor: nextcursor,
-			HasNext:    hasnext,
-			Data:       data,
-			Limit:      limit,
-		}, nil
-	}
-
-	err = query.Find(data).Error
-	if err != nil {
-		return nil, err
-	}
-	hasnext := false
-	if len(data) == querylimit {
-		hasnext = true
-		data = data[:limit]
-	}
-	var nextcursor string
-	if len(data) > 0 {
-		lastdata := data[len(data)-1]
-		nextcursor = utils.EncodeCursor(lastdata.Created_At, lastdata.ID)
-	}
-	itemCache := map[string]any{
-		"friendship_PD_cache_user_" + userID.String():            data,
-		"friendship_PD_cache_nextcursor_user_" + userID.String(): nextcursor,
-		"friendship_PD_cache_hasnext_user_" + userID.String():    hasnext,
-		"friendship_PD_cache_limit_user_" + userID.String():      limit,
-	}
-	err = r.redisRepo.CustomizeSetCache(ctx, itemCache)
-	if err != nil {
-		return nil, err
-	}
-
 	return &dto.PaginationRes{
 		NextCursor: nextcursor,
 		HasNext:    hasnext,
@@ -228,6 +139,7 @@ func (r *FriendshipsRepository) PanigationPendingFriendship(userID uuid.UUID, cu
 		Limit:      limit,
 	}, nil
 }
+
 func (r *FriendshipsRepository) GetFriendshipByUserIDs(friendshipID uuid.UUID) (*entity.Friendships, error) {
 	var data = &entity.Friendships{}
 	err := r.db.Where(&entity.Friendships{ID: friendshipID}).First(data).Error
