@@ -246,6 +246,7 @@ services:
     restart: unless-stopped
     ports:
       - "8333:8333" # S3 API port
+    
     command: ["s3", "-filer=seaweedfs-filer_BE-modular-golang:8888", "-ip=seaweedfs-s3_BE-modular-golang"]
     networks:
       - be_modular_golang_network

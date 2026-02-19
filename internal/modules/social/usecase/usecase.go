@@ -28,9 +28,9 @@ type IBlockUseCase interface {
 }
 
 type IProfileUseCase interface {
-	CreateProfileUseCase(profileData *req.ProfileReq) (*response.Response, error)
+	CreateProfileUseCase(req *req.CreateAndUpdateProfileRequest) (*response.Response, error)
 	GetProfileByIDUseCase(req *req.ProfileIDRequest) (*response.Response, error)
-	UpdateProfileUseCase(req *req.UpdateProfileRequest) (*response.Response, error)
+	UpdateProfileUseCase(req *req.CreateAndUpdateProfileRequest) (*response.Response, error)
 	GetProfileByUserIDUseCase(req *req.ProfileIDRequest) (*response.Response, error)
 }
 

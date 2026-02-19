@@ -8,6 +8,7 @@ import (
 	"net/url" // Bắt buộc phải có để tạo tham số xóa
 	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/configs"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/IRepositoryShare"
@@ -15,10 +16,12 @@ import (
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/utils"
 	"github.com/google/uuid"
 	"github.com/linxGnu/goseaweedfs"
+	"github.com/minio/minio-go/v7"
 )
 
 type SeaweedfsAdapter struct {
 	client     *goseaweedfs.Filer
+	s3Client   *minio.Client
 	publicHost string // Ví dụ: https://cdn.mysocial.com
 	cfg        *configs.Config
 }
@@ -194,8 +197,8 @@ func (r *SeaweedfsAdapter) Exists(ctx context.Context, filePath string) (bool, e
 // --- LIVE STREAM & REALTIME OPERATIONS ---
 
 // UploadStreamSegment: Đẩy từng mảnh video (.ts) lên folder tạm của buổi Live
-//sessionID là định danh duy nhất cho buổi live hiện tại
-//segmentName là tên file mảnh video, content là nội dung mảnh video
+// sessionID là định danh duy nhất cho buổi live hiện tại
+// segmentName là tên file mảnh video, content là nội dung mảnh video
 // Thường segmentName có dạng: segment0001.ts, segment0002.ts, ...
 func (r *SeaweedfsAdapter) UploadStreamSegment(ctx context.Context, sessionID string, segmentName string, content io.Reader) error {
 	// Quy hoạch folder: /lives/{sessionID}/{segmentName}
@@ -213,7 +216,7 @@ func (r *SeaweedfsAdapter) UploadStreamSegment(ctx context.Context, sessionID st
 
 // UpdateStreamManifest: Cập nhật file danh sách phát .m3u8
 // manifestContent là nội dung mới của file manifest/index.m3u8
-//sessionID là định danh duy nhất cho buổi live hiện tại
+// sessionID là định danh duy nhất cho buổi live hiện tại
 func (r *SeaweedfsAdapter) UpdateStreamManifest(ctx context.Context, sessionID string, manifestContent []byte) error {
 	manifestPath := fmt.Sprintf("/lives/%s/index.m3u8", sessionID)
 
@@ -242,4 +245,71 @@ func (r *SeaweedfsAdapter) GetStreamURL(sessionID string) string {
 	// Đường dẫn chuẩn cho trình phát: http://filer:8888/lives/{sessionID}/index.m3u8
 	manifestPath := fmt.Sprintf("/lives/%s/index.m3u8", sessionID)
 	return r.GetPublicURL(manifestPath)
+}
+
+func (r *SeaweedfsAdapter) GetUploadPresignedUrl(ctx context.Context, input *dto.FileUploadInput) (*dto.PresignedURLResponse, error) {
+	// 1. VALIDATION INPUT
+	if input.FileName == "" {
+		return nil, fmt.Errorf("filename is required")
+	}
+
+	// 2. TẠO TÊN FILE DUY NHẤT (UUID)
+	// Format: uuid_timestamp.ext (Giúp sort theo thời gian và unique tuyệt đối)
+	ext := filepath.Ext(input.FileName)
+	if ext == "" {
+		ext = ".bin"
+	}
+	// Dùng UnixNano để đảm bảo tính duy nhất cao nhất kết hợp UUID
+	uniqueFileName := fmt.Sprintf("%s_%d%s", uuid.New().String(), time.Now().Unix(), ext)
+
+	// 3. XÁC ĐỊNH FOLDER (Logic giống hàm Upload thường)
+	folderPath := input.Folder
+	if folderPath == "" {
+		folderPath = utils.GenerateStoragePath(input.OwnerID, input.Storage)
+	}
+
+	// Chuẩn hóa path: S3 key không nên bắt đầu bằng dấu "/" (relative to bucket)
+	// VD: avatars/user_123/abc.jpg (ĐÚNG) - /avatars/user_123/abc.jpg (SAI với một số S3 client)
+	cleanFolder := strings.Trim(folderPath, "/")
+	objectName := fmt.Sprintf("%s/%s", cleanFolder, uniqueFileName)
+
+	// 4. CẤU HÌNH PRESIGNED URL
+	// Thời gian hết hạn: 15 phút (Đủ để user upload file lớn, nhưng không quá lâu để rò rỉ)
+	expiry := 15 * time.Minute
+
+	// Best Practice Security: Ép buộc Content-Type
+	// Nếu Frontend upload file khác loại (vd đổi đuôi .exe thành .jpg), S3 sẽ từ chối.
+	reqParams := make(url.Values)
+	if input.ContentType != "" {
+		reqParams.Set("response-content-type", input.ContentType)
+		reqParams.Set("Content-Type", input.ContentType)
+	}
+
+	// 5. GỌI MINIO SDK TẠO URL
+	presignedURL, err := r.s3Client.PresignedPutObject(ctx, r.cfg.SEAWEEDFS.S3_BUCKET_NAME, objectName, expiry)
+	if err != nil {
+		return nil, fmt.Errorf("failed to generate presigned url: %w", err)
+	}
+
+	// 6. TẠO PUBLIC URL
+	// Public URL để lưu DB cần mapping từ Bucket S3 sang Filer Path hoặc CDN
+	// Trong SeaweedFS: Bucket "default", Object "avatars/img.jpg" -> Filer Path "/buckets/default/avatars/img.jpg"
+	// Hoặc nếu dùng S3 Gateway trực tiếp làm CDN thì là: http://s3-host/bucket/key
+
+	// Ở đây ta dùng Filer Path để đồng bộ với logic cũ
+	internalFilePath := fmt.Sprintf("/buckets/%s/%s", r.cfg.SEAWEEDFS.S3_BUCKET_NAME, objectName)
+
+	// Nếu r.publicHost trỏ vào Filer (port 8888)
+	finalPublicURL := fmt.Sprintf("%s%s", strings.TrimRight(r.publicHost, "/"), internalFilePath)
+
+	// 7. TRẢ VỀ RESPONSE
+	return &dto.PresignedURLResponse{
+		URL:       presignedURL.String(),
+		FilePath:  internalFilePath, // Lưu cái này vào DB
+		PublicURL: finalPublicURL,   // Dùng để hiển thị
+		Method:    "PUT",            // Frontend bắt buộc dùng PUT
+		Headers: map[string]string{
+			"Content-Type": input.ContentType, // Frontend bắt buộc set header này khớp
+		},
+	}, nil
 }

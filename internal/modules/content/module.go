@@ -4,103 +4,51 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"strings"
 
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/content/domain/entity"
-	"github.com/elastic/go-elasticsearch/v8"
-	"github.com/elastic/go-elasticsearch/v8/esapi"
 	"github.com/gin-gonic/gin"
+	"github.com/gocql/gocql"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 type ModuleContent struct {
+	clientmongodb   *mongo.Database
+	clientcassandra *gocql.Session
 }
 
+func NewModuleContent(mongoDB *mongo.Database, cassandraSession *gocql.Session) *ModuleContent {
+	module := &ModuleContent{
+		clientmongodb:   mongoDB,
+		clientcassandra: cassandraSession,
+	}
+
+	// 1. Khởi tạo MongoDB Indexes (Nếu có lỗi sẽ panic để dev fix ngay)
+	if err := module.InitMongo(mongoDB); err != nil {
+		log.Panicf("Failed to initialize MongoDB indexes for Content Module: %v", err)
+	}
+
+	// 2. Khởi tạo Cassandra Schemas (Nếu có lỗi sẽ panic để dev fix ngay)
+	if err := module.initCassandraSchemas(cassandraSession); err != nil {
+		log.Panicf("Failed to initialize Cassandra schemas for Content Module: %v", err)
+	}
+	return module
+}
 func (m *ModuleContent) RegisterRoute(r *gin.RouterGroup) {
 
 }
+func (m *ModuleContent) initCassandraSchemas(session *gocql.Session) error {
+	ctx := context.Background() // Context giữ chỗ (gocql thường dùng context trong query)
+	_ = ctx
 
-// InitElastic: Khởi tạo Index và Mapping cho Search Module
-func (m *ModuleContent) InitElastic(client *elasticsearch.Client) error {
-	ctx := context.Background()
-	indexName := entity.SearchPost{}.IndexName()
-
-	// 1. Kiểm tra xem Index đã tồn tại chưa
-	// Dùng esapi để gọi API check exists
-	reqExists := esapi.IndicesExistsRequest{
-		Index: []string{indexName},
-	}
-	resExists, err := reqExists.Do(ctx, client)
-	if err != nil {
-		return fmt.Errorf("check index exists error: %w", err)
-	}
-	defer resExists.Body.Close()
-
-	// Nếu Index đã tồn tại (StatusCode 200) -> Bỏ qua (hoặc xử lý migration nếu cần)
-	if resExists.StatusCode == 200 {
-		return nil
+	// 1. INIT TABLE: POST INSIGHT (High Write Throughput)
+	// Gọi hàm EnsureTableExists từ Entity PostInsight
+	if err := (&entity.PostInsight{}).EnsureTableExists(session); err != nil {
+		return fmt.Errorf("cassandra init failed for PostInsight: %w", err)
 	}
 
-	// 2. Định nghĩa Mapping & Settings (JSON)
-	// Đây là phần QUAN TRỌNG NHẤT
-	mapping := `{
-		"settings": {
-			"number_of_shards": 1,
-			"number_of_replicas": 0,
-			"analysis": {
-				"analyzer": {
-					"vietnamese_folding": {
-						"tokenizer": "standard",
-						"filter": ["lowercase", "asciifolding"] 
-					}
-				}
-			}
-		},
-		"mappings": {
-			"properties": {
-				"id": { "type": "keyword" },
-				
-				"content": { 
-					"type": "text",
-					"analyzer": "vietnamese_folding",
-					"search_analyzer": "vietnamese_folding"
-				},
-				
-				"hashtags": { "type": "keyword" },
-				"author_id": { "type": "keyword" },
-				"group_id": { "type": "keyword" },
-				"page_id": { "type": "keyword" },
-				
-				"media_types": { "type": "keyword" },
-				"privacy": { "type": "keyword" },
-				
-				"created_at": { "type": "date" },
-				
-				"likes_count": { "type": "integer" },
-				"comments_count": { "type": "integer" }
-			}
-		}
-	}`
-
-	// 3. Tạo Index
-	reqCreate := esapi.IndicesCreateRequest{
-		Index: indexName,
-		Body:  strings.NewReader(mapping),
-	}
-
-	resCreate, err := reqCreate.Do(ctx, client)
-	if err != nil {
-		return fmt.Errorf("create index error: %w", err)
-	}
-	defer resCreate.Body.Close()
-
-	if resCreate.IsError() {
-		return fmt.Errorf("create index failed: %s", resCreate.String())
-	}
-
-	fmt.Printf(">>> Elastic Index [%s] initialized successfully with Vietnamese Analyzer\n", indexName)
+	// log.Println(">>> Cassandra Tables Initialized")
 	return nil
 }
 

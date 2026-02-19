@@ -83,6 +83,7 @@ type IRedis interface {
 	// 9. CUSTOMIZE (Tùy biến nâng cao)
 	// ---------------------------
 	CustomizeSetCache(ctx context.Context, items map[string]any) error
+	//any, string, bool, int, error : data , nextcursor , hasnext , limit
 	CustomizeGetCache(ctx context.Context, items []string) (any, string, bool, int, error)
 }
 type Z struct {

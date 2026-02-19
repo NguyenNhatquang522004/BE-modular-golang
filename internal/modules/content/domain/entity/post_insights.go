@@ -1,13 +1,17 @@
 package entity
 
 import (
+	"fmt"
+	"log"
 	"time"
 
 	"github.com/gocql/gocql"
 )
+
 const (
 	collectionnamepostinsight = "PostInsight"
 )
+
 // PostInsight đại diện cho bảng 'post_insights' trong Cassandra
 // Dùng để lưu trữ số liệu phân tích hiệu năng bài viết (High Write/Read throughput)
 type PostInsight struct {
@@ -33,6 +37,37 @@ type PostInsight struct {
 	UpdatedAt time.Time `cql:"updated_at" json:"updated_at"`
 }
 
-func (PostSetting) Collectionnamepostinsight() string {
+func (PostInsight) Collectionnamepostinsight() string {
 	return collectionnamepostinsight
+}
+
+func (p *PostInsight) EnsureTableExists(session *gocql.Session) error {
+	// 1. Định nghĩa câu lệnh CQL
+	// Sử dụng 'IF NOT EXISTS' để tránh lỗi nếu bảng đã có rồi.
+	// Lưu ý: Cassandra yêu cầu xác định rõ Replication Strategy khi tạo KEYSPACE,
+	// nhưng ở đây ta giả định Keyspace đã được config trong Session.
+	query := fmt.Sprintf(`
+		CREATE TABLE IF NOT EXISTS %s (
+			post_id         UUID,
+			reach           bigint,
+			impressions     bigint,
+			engagement_rate float,
+			reactions_total int,
+			comments_total  int,
+			shares_total    int,
+			clicks_total    int,
+			video_views_3s  int,
+			updated_at      timestamp,
+			PRIMARY KEY (post_id)
+		) WITH compaction = { 'class' : 'LeveledCompactionStrategy' }
+		AND comment = 'Auto-generated table for PostInsight';
+	`, p.Collectionnamepostinsight())
+
+	// 2. Thực thi query
+	if err := session.Query(query).Exec(); err != nil {
+		return fmt.Errorf("failed to auto-create table %s: %w", p.Collectionnamepostinsight(), err)
+	}
+
+	log.Printf("Successfully ensured table '%s' exists.", p.Collectionnamepostinsight())
+	return nil
 }

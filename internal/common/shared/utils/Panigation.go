@@ -4,9 +4,12 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"errors"
+	"fmt"
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 type Cursor struct {
@@ -56,4 +59,53 @@ func DecodeCursor(encodedCursor string) (time.Time, uuid.UUID, error) {
 	}
 
 	return c.CreatedAt, c.ID, nil
+}
+
+// / mongodb
+// CursorMongodb chứa dữ liệu đã giải mã
+type CursorMongodb struct {
+	CreatedAt time.Time
+	PostID    primitive.ObjectID
+}
+
+// EncodeCursor: Tạo chuỗi cursor từ bài viết cuối cùng
+// Format: "RFCNanoTimestamp,HexID" (base64 encoded)
+func EncodeCursorMongodb(t time.Time, id primitive.ObjectID) string {
+	// Dùng RFC3339Nano để giữ độ chính xác tối đa của MongoDB Date
+	key := fmt.Sprintf("%s,%s", t.Format(time.RFC3339Nano), id.Hex())
+	return base64.StdEncoding.EncodeToString([]byte(key))
+}
+
+// DecodeCursor: Giải mã chuỗi cursor từ Client gửi lên
+func DecodeCursorMongodb(cursor string) (*CursorMongodb, error) {
+	if cursor == "" {
+		return nil, nil // Cursor rỗng -> Trang đầu tiên
+	}
+
+	bytes, err := base64.StdEncoding.DecodeString(cursor)
+	if err != nil {
+		return nil, errors.New("invalid cursor format")
+	}
+
+	parts := strings.Split(string(bytes), ",")
+	if len(parts) != 2 {
+		return nil, errors.New("invalid cursor data")
+	}
+
+	// 1. Parse Time
+	createdAt, err := time.Parse(time.RFC3339Nano, parts[0])
+	if err != nil {
+		return nil, errors.New("invalid cursor time")
+	}
+
+	// 2. Parse ID
+	oid, err := primitive.ObjectIDFromHex(parts[1])
+	if err != nil {
+		return nil, errors.New("invalid cursor id")
+	}
+
+	return &CursorMongodb{
+		CreatedAt: createdAt,
+		PostID:    oid,
+	}, nil
 }

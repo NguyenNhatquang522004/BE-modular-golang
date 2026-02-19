@@ -3,15 +3,17 @@ package req
 import (
 	"time"
 
+	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/dto"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/social/enum"
 )
 
 type ProfileIDRequest struct {
 	ProfileID string `json:"profile_id" validate:"required,uuid4"`
 }
-type UpdateProfileRequest struct {
+type CreateAndUpdateProfileRequest struct {
 	*ProfileIDRequest
 	*ProfileReq
+	Attachments []*dto.FileUploadInput
 }
 
 // CreateProfileReq dùng cho việc tạo mới Profile

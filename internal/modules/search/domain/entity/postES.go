@@ -3,15 +3,10 @@ package entity
 import (
 	"time"
 
-	// Import Enum từ module Content để tái sử dụng -> BEST PRACTICE (DRY)
 	contentEnum "github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/content/enum"
 )
-type (
-	
-)
-// SearchPost đại diện cho document trong index "search_posts"
-// Index này dùng để tìm kiếm Full-text và lọc nâng cao
-type SearchPost struct {
+
+type PostES struct {
 	// 1. ĐỊNH DANH
 	// Trong ES, _id là string. Ta map field này vào _id khi bulk index.
 	ID string `json:"id"`
@@ -48,6 +43,6 @@ type SearchPost struct {
 }
 
 // IndexName trả về tên index trong Elasticsearch
-func (SearchPost) IndexName() string {
+func (PostES) IndexName() string {
 	return "search_posts"
 }

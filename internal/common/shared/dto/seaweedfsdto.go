@@ -47,3 +47,17 @@ type FileUploadOutput struct {
 	// FileID: ID nội bộ của SeaweedFS (nếu cần dùng cho advanced logic)
 	FileID string
 }
+type PresignedURLResponse struct {
+	// URL tạm thời để upload trực tiếp từ Frontend đến SeaweedFS
+	URL string
+	// FilePath: Đường dẫn nội bộ trong SeaweedFS (ví dụ: "/avatars/abc-123.jpg")
+	FilePath string
+	// PublicURL: Đường dẫn đầy đủ để Frontend truy cập sau khi upload thành công
+	PublicURL string
+	// FileID: ID nội bộ của SeaweedFS (nếu cần dùng cho advanced logic)
+	FileID string
+	// Method: HTTP method (PUT, POST) mà Frontend sẽ sử dụng để upload
+	Method string
+	// Headers: Các header cần thiết (ví dụ: Content-Type, Authorization) để upload thành công
+	Headers map[string]string
+}

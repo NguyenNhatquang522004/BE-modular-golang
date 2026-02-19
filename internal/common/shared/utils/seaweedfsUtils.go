@@ -52,14 +52,17 @@ var AllowedDocTypes = map[string]bool{
 	"application/vnd.openxmlformats-officedocument.wordprocessingml.document": true, // .docx
 }
 
+func (r StorageType) String() string {
+	return string(r)
+}
 func GenerateStoragePath(ownerID string, bucketType StorageType) string {
 	// Base path: users/{uuid}/{type}
 	// VD: users/550e8400.../avatar
-	basePath := fmt.Sprintf("users/%s/%s", ownerID, bucketType)
+	basePath := fmt.Sprintf("users/%s/%s", ownerID, bucketType.String())
 
 	// Nhóm Group thì path khác một chút
 	if bucketType == BucketGroupAvatar || bucketType == BucketGroupCover || bucketType == BucketGroupFile {
-		basePath = fmt.Sprintf("%s/%s", bucketType, ownerID) // groups/avatar/{group_id}
+		basePath = fmt.Sprintf("%s/%s", bucketType.String(), ownerID) // groups/avatar/{group_id}
 	}
 
 	// Logic phân chia thư mục theo thời gian (Partitioning)
@@ -72,7 +75,7 @@ func GenerateStoragePath(ownerID string, bucketType StorageType) string {
 		// VD: users/.../posts/2026/02
 		return fmt.Sprintf("%s/%d/%02d", basePath, now.Year(), now.Month())
 	}
-	
+
 	// Các loại tĩnh (Avatar, Cover, CV) không cần chia ngày tháng
 	// User thay avatar mới thì xóa cái cũ hoặc ghi đè, số lượng ít.
 	return basePath

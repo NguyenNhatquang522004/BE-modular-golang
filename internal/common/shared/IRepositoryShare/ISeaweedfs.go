@@ -42,4 +42,8 @@ type ISeaweedfs interface {
 
 	// GetStreamURL: Trả về URL của file manifest để xem Live Stream
 	GetStreamURL(sessionID string) string
+	// GetUploadPresignedUrl: Lấy URL tạm thời để upload trực tiếp từ Frontend đến SeaweedFS
+	GetUploadPresignedUrl(ctx context.Context, input *dto.FileUploadInput) (*dto.PresignedURLResponse, error)
+
+	
 }
