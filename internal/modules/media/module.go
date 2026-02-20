@@ -14,8 +14,24 @@ import (
 
 type ModuleMedia struct {
 	// Dependency injections (Repo, Usecase...) sẽ nằm ở đây
+	session *gocql.Session
+	client  *mongo.Database
 }
 
+func NewModuleMedia(session *gocql.Session, client *mongo.Database) *ModuleMedia {
+	m := &ModuleMedia{
+		session: session,
+		client:  client,
+	}
+	if err := m.InitMongo(client); err != nil {
+		log.Fatalf(">>> Media Module: Failed to initialize MongoDB - %v", err)
+	}
+	if err := m.InitCassandra(session); err != nil {
+		log.Fatalf(">>> Media Module: Failed to initialize Cassandra - %v", err)
+	}
+	log.Println(">>> Media Module: Initialization Completed")
+	return m
+}
 
 // =============================================================================
 // 1. MONGODB INITIALIZATION
@@ -275,6 +291,9 @@ func (m *ModuleMedia) InitCassandra(session *gocql.Session) error {
 	if err := m.initLiveCommentsTable(session); err != nil {
 		return err
 	}
+	if err := m.InitViewsCassandraLiveCommentsTable(session); err != nil {
+		return err
+	}
 
 	// 2. Table: STORY VIEWS (Write Heavy + Read List)
 	if err := m.initStoryViewsTable(session); err != nil {
@@ -307,6 +326,33 @@ func (m *ModuleMedia) initLiveCommentsTable(session *gocql.Session) error {
 	if err := session.Query(query).Exec(); err != nil {
 		return fmt.Errorf("failed to create table live_comments: %w", err)
 	}
+	return nil
+}
+func (m *ModuleMedia) InitViewsCassandraLiveCommentsTable(session *gocql.Session) error {
+	// Lệnh 1: Tạo Keyspace (nếu chưa có) - Thường làm thủ công hoặc ở bước riêng,
+	// nhưng có thể để ở đây nếu dùng cho test cục bộ.
+
+	// Lệnh 2: Tạo Materialized View
+	createMVQuery := `
+		CREATE MATERIALIZED VIEW IF NOT EXISTS live_comments_by_user AS
+			SELECT *
+			FROM live_comments
+			WHERE user_id IS NOT NULL 
+			  AND created_at IS NOT NULL 
+			  AND stream_id IS NOT NULL 
+			  AND comment_id IS NOT NULL
+			PRIMARY KEY (user_id, created_at, stream_id, comment_id)
+			WITH CLUSTERING ORDER BY (created_at DESC);
+	`
+
+	log.Println("Checking and initializing Cassandra schemas...")
+
+	// Thực thi lệnh. Việc có IF NOT EXISTS giúp lệnh này an toàn dù chạy nhiều lần.
+	if err := session.Query(createMVQuery).Exec(); err != nil {
+		return fmt.Errorf("failed to create materialized view live_comments_by_user: %w", err)
+	}
+
+	log.Println("Cassandra schemas initialized successfully.")
 	return nil
 }
 
