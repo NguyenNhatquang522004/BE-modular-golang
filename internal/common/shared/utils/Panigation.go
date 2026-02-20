@@ -109,3 +109,23 @@ func DecodeCursorMongodb(cursor string) (*CursorMongodb, error) {
 		PostID:    oid,
 	}, nil
 }
+
+// EncodeCursorCassandra mã hóa Paging State của gocql thành chuỗi Base64
+func EncodeCursorCassandra(pageState []byte) string {
+	if len(pageState) == 0 {
+		return ""
+	}
+	return base64.StdEncoding.EncodeToString(pageState)
+}
+
+// DecodeCursorCassandra giải mã chuỗi Base64 từ Client thành Paging State
+func DecodeCursorCassandra(cursor string) ([]byte, error) {
+	if cursor == "" {
+		return nil, nil // Trang đầu tiên
+	}
+	bytes, err := base64.StdEncoding.DecodeString(cursor)
+	if err != nil {
+		return nil, errors.New("invalid cursor format")
+	}
+	return bytes, nil
+}

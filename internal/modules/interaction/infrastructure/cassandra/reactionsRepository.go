@@ -4,21 +4,25 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/IRepositoryShare"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/dto"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/infrastructure/concurrency"
+	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/utils"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/interaction/domain/entity"
 	"github.com/gocql/gocql"
 )
 
 type ReactionsRepository struct {
-	session *gocql.Session
-	pool    *concurrency.WorkerPool
+	session   *gocql.Session
+	pool      *concurrency.WorkerPool
+	redisRepo IRepositoryShare.IRedis
 }
 
-func NewReactionsRepository(session *gocql.Session, pool *concurrency.WorkerPool) *ReactionsRepository {
+func NewReactionsRepository(session *gocql.Session, pool *concurrency.WorkerPool, redisRepo IRepositoryShare.IRedis) *ReactionsRepository {
 	return &ReactionsRepository{
-		session: session,
-		pool:    pool,
+		session:   session,
+		pool:      pool,
+		redisRepo: redisRepo,
 	}
 }
 func (r *ReactionsRepository) CreateReaction(ctx context.Context, reaction *entity.EntityReaction) error {
@@ -380,8 +384,239 @@ func (r *ReactionsRepository) DeleteBulkReactions(ctx context.Context, targetIDs
 	return successCount, bulkErrors, finalErr
 }
 func (r *ReactionsRepository) UpdateReaction(ctx context.Context, reaction *entity.EntityReaction) error {
+	// 1. FAIL-FAST: Validate đầu vào
+	if reaction == nil {
+		return fmt.Errorf("reaction payload is nil")
+	}
+	if reaction.TargetID == "" || reaction.UserID.String() == "00000000-0000-0000-0000-000000000000" {
+		return fmt.Errorf("missing primary key: target_id and user_id are required for update")
+	}
+
+	// 2. BẢO VỆ CONTEXT: Đảm bảo thao tác ghi không bị đứt gãy nếu HTTP Request bị ngắt
+	safeCtx := context.WithoutCancel(ctx)
+
+	tableName := entity.EntityReaction{}.CassandratableEntityReaction()
+
+	// 3. Cú pháp UPDATE chuẩn của Cassandra (SET các data fields, WHERE bằng toàn bộ Primary Key)
+	query := fmt.Sprintf(`
+		UPDATE %s 
+		SET target_type = ?, reaction_code = ?, created_at = ? 
+		WHERE target_id = ? AND user_id = ?
+	`, tableName)
+
+	// 4. Thực thi query
+	err := r.session.Query(query,
+		reaction.TargetType,
+		reaction.ReactionCode,
+		reaction.CreatedAt, // Lưu ý: Nếu có trường UpdatedAt thì nên dùng UpdatedAt ở đây
+		reaction.TargetID,
+		reaction.UserID,
+	).WithContext(safeCtx).Exec()
+
+	if err != nil {
+		return fmt.Errorf("failed to update reaction for target %s by user %s: %w", reaction.TargetID, reaction.UserID.String(), err)
+	}
+
 	return nil
 }
 func (r *ReactionsRepository) UpdateBulkReactions(ctx context.Context, reactions []*entity.EntityReaction) (int64, []*dto.ReactionBulkError, error) {
-	return 0, nil, nil
+	if len(reactions) == 0 {
+		return 0, nil, nil
+	}
+
+	// 1. Struct nội bộ để vận chuyển kết quả qua Channel an toàn
+	type taskResult struct {
+		reaction *entity.EntityReaction
+		err      error
+	}
+
+	// Khởi tạo Buffered Channel với dung lượng bằng số lượng task (Chống Deadlock)
+	resultCh := make(chan taskResult, len(reactions))
+	tableName := entity.EntityReaction{}.CassandratableEntityReaction()
+
+	// Cú pháp UPDATE
+	query := fmt.Sprintf(`
+		UPDATE %s 
+		SET target_type = ?, reaction_code = ?, created_at = ? 
+		WHERE target_id = ? AND user_id = ?
+	`, tableName)
+
+	// 2. Phân phối công việc vào Worker Pool
+	for i, item := range reactions {
+		// Xử lý an toàn con trỏ nil
+		if item == nil {
+			resultCh <- taskResult{
+				reaction: nil,
+				err:      fmt.Errorf("reaction pointer at index %d is nil", i),
+			}
+			continue
+		}
+
+		// Copy biến cục bộ để Closure của Goroutine không tham chiếu sai vùng nhớ
+		payload := item
+
+		err := r.pool.Run(ctx, func() {
+			// BEST PRACTICE: Tách context bảo vệ thao tác Ghi
+			safeCtx := context.WithoutCancel(ctx)
+
+			execErr := r.session.Query(query,
+				payload.TargetType,
+				payload.ReactionCode,
+				payload.CreatedAt,
+				payload.TargetID,
+				payload.UserID,
+			).WithContext(safeCtx).Exec()
+
+			// Trả kết quả về channel
+			resultCh <- taskResult{
+				reaction: payload,
+				err:      execErr,
+			}
+		})
+
+		// Xử lý khi Pool bị quá tải hoặc Context gốc đã timeout/cancel không nhận thêm task
+		if err != nil {
+			resultCh <- taskResult{
+				reaction: payload,
+				err:      fmt.Errorf("worker pool rejected update task (context canceled): %w", err),
+			}
+			break // Cắt đứt vòng lặp để giữ an toàn cho hệ thống
+		}
+	}
+
+	// 3. ĐỒNG BỘ: Đợi các worker đang chạy hoàn tất và đóng kênh
+	r.pool.Wait()
+	close(resultCh)
+
+	// 4. TỔNG HỢP KẾT QUẢ (Lock-Free)
+	var successCount int64
+	var bulkErrors []*dto.ReactionBulkError
+
+	for res := range resultCh {
+		if res.err != nil {
+			// Trích xuất ID an toàn ngay cả khi payload bị nil
+			tID := "unknown_target"
+			uID := "unknown_user"
+			if res.reaction != nil {
+				tID = res.reaction.TargetID
+				uID = res.reaction.UserID.String()
+			}
+
+			bulkErrors = append(bulkErrors, &dto.ReactionBulkError{
+				TargetID: tID,
+				UserID:   uID,
+				Error:    res.err.Error(),
+			})
+		} else {
+			successCount++
+		}
+	}
+
+	// 5. Kết luận trạng thái (Partial Success)
+	var finalErr error
+	if len(bulkErrors) > 0 {
+		finalErr = fmt.Errorf("bulk update completed with errors: %d/%d success, %d failed", successCount, len(reactions), len(bulkErrors))
+	}
+
+	return successCount, bulkErrors, finalErr
+}
+func (r *ReactionsRepository) PaginateReactionsByTargetID(ctx context.Context, targetID string, cursor string, limit int) (*dto.PaginationRes, error) {
+	// 1. Check Cache (Chỉ check khi gọi trang đầu tiên)
+	if cursor == "" {
+		datacache, nextcursor, hasnext, limitcache, err := r.redisRepo.CustomizeGetCache(ctx, []string{
+			"reaction_cache_targetid_" + targetID,
+			"reaction_cache_nextcursor_targetid_" + targetID,
+			"reaction_cache_hasnext_targetid_" + targetID,
+			"reaction_cache_limit_targetid_" + targetID,
+		})
+
+		if err == nil && datacache != nil {
+			if reactionList, ok := datacache.([]*entity.EntityReaction); ok {
+				return &dto.PaginationRes{
+					Data:       reactionList,
+					NextCursor: nextcursor,
+					HasNext:    hasnext,
+					Limit:      limitcache,
+				}, nil
+			}
+		}
+	}
+
+	// 2. Decode Cursor (Lấy Page State)
+	pageState, err := utils.DecodeCursorCassandra(cursor)
+	if err != nil {
+		return nil, fmt.Errorf("invalid cursor: %w", err)
+	}
+
+	// 3. Chuẩn bị Query cho Cassandra
+	tableName := entity.EntityReaction{}.CassandratableEntityReaction()
+	query := fmt.Sprintf(`
+		SELECT target_id, user_id, target_type, reaction_code, created_at 
+		FROM %s WHERE target_id = ?
+	`, tableName)
+
+	// Cấu hình query với PageSize và PageState
+	q := r.session.Query(query, targetID).WithContext(ctx).PageSize(limit)
+	if len(pageState) > 0 {
+		q = q.PageState(pageState)
+	}
+
+	// 4. Thực thi và duyệt kết quả
+	iter := q.Iter()
+	scanner := iter.Scanner()
+	var reactions []*entity.EntityReaction
+
+	for scanner.Next() {
+		var rct entity.EntityReaction
+		err := scanner.Scan(
+			&rct.TargetID,
+			&rct.UserID,
+			&rct.TargetType,
+			&rct.ReactionCode,
+			&rct.CreatedAt,
+		)
+		if err != nil {
+			return nil, fmt.Errorf("failed to scan reaction for target %s: %w", targetID, err)
+		}
+		reactions = append(reactions, &rct)
+	}
+
+	if err := scanner.Err(); err != nil {
+		return nil, fmt.Errorf("database error during pagination: %w", err)
+	}
+
+	// 5. Xử lý Next Cursor và HasNext
+	// iter.PageState() trả về state cho trang kế tiếp. Nếu len > 0 nghĩa là còn dữ liệu.
+	nextPageState := iter.PageState()
+	nextCursorStr := utils.EncodeCursorCassandra(nextPageState)
+	hasNext := len(nextPageState) > 0
+
+	// Nếu trả về slice nil thì gán bằng mảng rỗng để tránh lỗi null ở FE
+	if reactions == nil {
+		reactions = []*entity.EntityReaction{}
+	}
+
+	// 6. Cache kết quả cho trang đầu tiên
+	if cursor == "" && len(reactions) > 0 {
+		items := map[string]any{
+			"reaction_cache_targetid_" + targetID:            reactions,
+			"reaction_cache_nextcursor_targetid_" + targetID: nextCursorStr,
+			"reaction_cache_hasnext_targetid_" + targetID:    hasNext,
+			"reaction_cache_limit_targetid_" + targetID:      limit,
+		}
+
+		err = r.redisRepo.CustomizeSetCache(ctx, items)
+		if err != nil {
+			// Chỉ log lỗi chứ không chặn flow vì cache miss/error không nên làm hỏng main flow
+			fmt.Printf("Failed to set cache for reaction pagination: %v\n", err)
+		}
+	}
+
+	// 7. Trả về kết quả
+	return &dto.PaginationRes{
+		Data:       reactions,
+		NextCursor: nextCursorStr,
+		HasNext:    hasNext,
+		Limit:      limit,
+	}, nil
 }

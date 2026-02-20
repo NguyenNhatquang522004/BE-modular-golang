@@ -17,4 +17,6 @@ type IReactionsRepository interface {
 	DeleteBulkReactions(ctx context.Context, targetID string, userID gocql.UUID) (int64, []*dto.ReactionBulkError, error)
 	UpdateReaction(ctx context.Context, reaction *entity.EntityReaction) error
 	UpdateBulkReactions(ctx context.Context, reactions []*entity.EntityReaction) (int64, []*dto.ReactionBulkError, error)
+	PaginateReactionsByTargetID(ctx context.Context, targetID string, cursor string, limit int) (*dto.PaginationRes, error)
+	
 }
