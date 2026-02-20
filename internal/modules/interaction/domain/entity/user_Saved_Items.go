@@ -39,7 +39,9 @@ type UserSavedItem struct {
 	CollectionName string `bson:"collection_name" json:"collection_name"`
 
 	// 5. META
-	CreatedAt time.Time `bson:"created_at" json:"created_at"`
+	CreatedAt   time.Time  `bson:"created_at" json:"created_at"`
+	UpdatedAt   time.Time  `bson:"updated_at" json:"updated_at"`
+	DeletedAt   *time.Time `bson:"deleted_at,omitempty" json:"deleted_at,omitempty"`
 }
 
 // =============================================================================

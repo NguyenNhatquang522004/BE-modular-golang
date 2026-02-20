@@ -7,6 +7,7 @@ import (
 )
 
 type Config struct {
+	WorkerPool     WorkerPoolConfig
 	CircuitBreaker CircuitBreakerConfig
 	GRPCServer     GRPCServerConfig
 	Kafka          KafkaConfig
@@ -22,6 +23,10 @@ type Config struct {
 	RedisDB        RedisConfig
 	PostgresDB     PostgresConfig
 	Server         ServerConfig
+}
+type WorkerPoolConfig struct {
+	WORKER_POOL_SIZE_MAX          int
+	WORKER_POOL_POST_INSIGHTS_MAX int
 }
 type CircuitBreakerConfig struct {
 	Name                   string
@@ -126,6 +131,12 @@ func LoadConfig() (*Config, error) {
 	// Vì file .env của bạn đặt tên biến lộn xộn (Host, POSTGRES_USER...)
 	// nên ta phải lấy từng cái bỏ vào đúng chỗ trong Struct.
 	cfg := &Config{
+		// --- Worker Pool ---
+		WorkerPool: WorkerPoolConfig{
+			WORKER_POOL_SIZE_MAX:          int(viper.GetInt64("WORKER_POOL_SIZE_MAX")),
+			WORKER_POOL_POST_INSIGHTS_MAX: int(viper.GetInt64("WORKER_POOL_POST_INSIGHTS_MAX")),
+		},
+		// --- Circuit Breaker ---
 		CircuitBreaker: CircuitBreakerConfig{
 			FailureThreshold:       viper.GetFloat64("CIRCUIT_BREAKER_FAILURE_THRESHOLD"),
 			RecoveryTimeoutSeconds: int(viper.GetDuration("CIRCUIT_BREAKER_RECOVERY_TIMEOUT_SECONDS").Seconds()),
@@ -154,7 +165,6 @@ func LoadConfig() (*Config, error) {
 			KEYCLOAK_AUTH_URL:      viper.GetString("KEYCLOAK_AuthURL"),
 			KEYCLOAK_TOKEN_URL:     viper.GetString("KEYCLOAK_TokenURL"),
 			KEYCLOAK_USERINFO_URL:  viper.GetString("KEYCLOAK_UserInfoURL"),
-
 		},
 		// --- Email SMTP ---
 		EmailSMTP: EmailSMTPConfig{

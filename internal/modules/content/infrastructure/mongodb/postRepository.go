@@ -156,7 +156,7 @@ func (r *PostRepository) UpdatePost(post *entity.Post) (*entity.Post, error) {
 
 	return post, nil
 }
-func (r *PostRepository) UpdateBulkPosts(posts []*entity.Post) (int64, []dto.BulkError, error) {
+func (r *PostRepository) UpdateBulkPosts(posts []*entity.Post) (int64, []*dto.BulkError, error) {
 	// Implement the logic to update multiple posts in MongoDB
 	if len(posts) == 0 {
 		return 0, nil, nil // Return early if there are no posts to update
@@ -183,7 +183,7 @@ func (r *PostRepository) UpdateBulkPosts(posts []*entity.Post) (int64, []dto.Bul
 		return 0, nil, fmt.Errorf("bulk write system error: %w", err)
 	}
 	// Trường hợp 2: Có lỗi xảy ra với một vài document (Partial Failure)
-	var failedDocs []dto.BulkError
+	var failedDocs []*dto.BulkError
 	if err != nil {
 		// Dùng errors.As để ép kiểu err về mongo.BulkWriteException
 		var bulkErr mongo.BulkWriteException
@@ -197,8 +197,8 @@ func (r *PostRepository) UpdateBulkPosts(posts []*entity.Post) (int64, []dto.Bul
 					failedPost := posts[failedIndex]
 
 					// Ghi nhận lại ID và lý do lỗi
-					failedDocs = append(failedDocs, dto.BulkError{
-						PostID: failedPost.ID.Hex(), // Hoặc failedPost.ID.String()
+					failedDocs = append(failedDocs, &dto.BulkError{
+						ID: failedPost.ID.Hex(), // Hoặc failedPost.ID.String()
 						Reason: we.Message,
 					})
 				}
@@ -228,7 +228,7 @@ func (r *PostRepository) DeletePost(postID string) error {
 	return nil
 }
 
-func (r *PostRepository) DeleteBulkPosts(postIDs []string) (int64, []dto.BulkError, error) {
+func (r *PostRepository) DeleteBulkPosts(postIDs []string) (int64, []*dto.BulkError, error) {
 	// Implement the logic to delete multiple posts by their IDs from MongoDB
 	if len(postIDs) == 0 {
 		return 0, nil, nil // Return early if there are no post IDs to delete
@@ -248,7 +248,7 @@ func (r *PostRepository) DeleteBulkPosts(postIDs []string) (int64, []dto.BulkErr
 	if result == nil && err != nil {
 		return 0, nil, fmt.Errorf("bulk delete system error: %w", err)
 	}
-	var failedDocs []dto.BulkError
+	var failedDocs []*dto.BulkError
 	if err != nil {
 		var bulkErr mongo.BulkWriteException
 		if errors.As(err, &bulkErr) {
@@ -256,8 +256,8 @@ func (r *PostRepository) DeleteBulkPosts(postIDs []string) (int64, []dto.BulkErr
 				failedIndex := we.Index
 				if failedIndex < len(postIDs) {
 					failedPostID := postIDs[failedIndex]
-					failedDocs = append(failedDocs, dto.BulkError{
-						PostID: failedPostID,
+					failedDocs = append(failedDocs, &dto.BulkError{
+						ID: failedPostID,
 						Reason: we.Message,
 					})
 				}
@@ -273,7 +273,7 @@ func (r *PostRepository) PanigationPosts(userID string, cursor string, limit int
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 	collection := r.client.Collection(entity.Post{}.CollectionNamePost())
-	queryliimit := limit + 1
+	querylimit := limit + 1
 	filter := bson.M{"user_id": userID}
 	if cursor == "" {
 		dataCache, nextcursor, hasnext, limitcache, err := r.redisRepo.CustomizeGetCache(ctx, []string{
@@ -312,7 +312,7 @@ func (r *PostRepository) PanigationPosts(userID string, cursor string, limit int
 			{Key: "created_at", Value: -1},
 			{Key: "_id", Value: -1}, // Tie-breaker
 		}).
-		SetLimit(int64(queryliimit))
+		SetLimit(int64(querylimit))
 	data, err := collection.Find(ctx, filter, opts)
 	if err != nil {
 		return nil, err
@@ -335,15 +335,17 @@ func (r *PostRepository) PanigationPosts(userID string, cursor string, limit int
 		lastPost := posts[len(posts)-1]
 		nextCursor = utils.EncodeCursorMongodb(lastPost.CreatedAt, lastPost.ID)
 	}
-	items := map[string]any{
-		"post_cache_user_" + userID:            posts,
-		"post_cache_nextcursor_user_" + userID: nextCursor,
-		"post_cache_hasnext_user_" + userID:    hasNext,
-		"post_cache_limit_user_" + userID:      limit,
-	}
-	err = r.redisRepo.CustomizeSetCache(ctx, items)
-	if err != nil {
-		fmt.Printf("Failed to set cache for pagination: %v\n", err)
+	if cursor == "" {
+		items := map[string]any{
+			"post_cache_user_" + userID:            posts,
+			"post_cache_nextcursor_user_" + userID: nextCursor,
+			"post_cache_hasnext_user_" + userID:    hasNext,
+			"post_cache_limit_user_" + userID:      limit,
+		}
+		err = r.redisRepo.CustomizeSetCache(ctx, items)
+		if err != nil {
+			fmt.Printf("Failed to set cache for pagination: %v\n", err)
+		}
 	}
 	return &dto.PaginationRes{
 		Data:       posts,      // Slice bài viết

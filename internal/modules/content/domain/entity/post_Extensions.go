@@ -24,6 +24,10 @@ type PostExtension struct {
 	QnAData        *QnAData        `bson:"qna_data,omitempty" json:"qna_data,omitempty"`
 	ActivityData   *ActivityData   `bson:"activity_data,omitempty" json:"activity_data,omitempty"`
 	LocationDetail *LocationDetail `bson:"location_detail,omitempty" json:"location_detail,omitempty"`
+
+	CreatedAt time.Time  `bson:"created_at" json:"created_at"`
+	UpdatedAt time.Time  `bson:"updated_at" json:"updated_at"`
+	DeletedAt *time.Time `bson:"deleted_at,omitempty" json:"deleted_at,omitempty"`
 }
 
 // --- A. SHARE DATA ---

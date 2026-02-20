@@ -3,17 +3,24 @@ package concurrency
 import (
 	"context"
 	"sync"
+
+	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/configs"
 	"golang.org/x/sync/semaphore"
 )
 
 type WorkerPool struct {
-	sem *semaphore.Weighted
-	wg  sync.WaitGroup 
+	sem            *semaphore.Weighted
+	wg             sync.WaitGroup
+	maxConcurrency int64
+	cfg            *configs.Config
 }
 
-func NewWorkerPool(maxConcurrency int64) *WorkerPool {
+func NewWorkerPool(cfg *configs.Config) *WorkerPool {
+	maxConcurrency := int64(cfg.WorkerPool.WORKER_POOL_SIZE_MAX)
 	return &WorkerPool{
-		sem: semaphore.NewWeighted(maxConcurrency),
+		sem:            semaphore.NewWeighted(maxConcurrency),
+		maxConcurrency: maxConcurrency,
+		cfg:            cfg,
 	}
 }
 
@@ -21,7 +28,7 @@ func NewWorkerPool(maxConcurrency int64) *WorkerPool {
 func (p *WorkerPool) Run(ctx context.Context, task func()) error {
 	// 1. Xin slot (Block nếu đã full slot)
 	if err := p.sem.Acquire(ctx, 1); err != nil {
-		return err 
+		return err
 	}
 
 	p.wg.Add(1) // 2. Đánh dấu có 1 task đang chạy
@@ -29,10 +36,11 @@ func (p *WorkerPool) Run(ctx context.Context, task func()) error {
 	go func() {
 		defer p.sem.Release(1) // 4. Trả slot
 		defer p.wg.Done()      // 5. Báo cáo xong task
-		
-        // Recover panic để an toàn
+
+		// Recover panic để an toàn
 		defer func() {
-			if r := recover(); r != nil { /* Log error */ }
+			if r := recover(); r != nil { /* Log error */
+			}
 		}()
 
 		task() // 3. Thực thi logic

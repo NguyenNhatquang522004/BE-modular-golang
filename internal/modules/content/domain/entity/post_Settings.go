@@ -21,6 +21,9 @@ type PostSetting struct {
 	Schedule  *PostSchedule  `bson:"schedule,omitempty" json:"schedule,omitempty"`
 	AdsInfo   *AdsInfo       `bson:"ads_info,omitempty" json:"ads_info,omitempty"`
 	Targeting *PostTargeting `bson:"targeting,omitempty" json:"targeting,omitempty"`
+	CreatedAt time.Time      `bson:"created_at" json:"created_at"`
+	UpdatedAt time.Time      `bson:"updated_at" json:"updated_at"`
+	DeletedAt *time.Time     `bson:"deleted_at,omitempty" json:"deleted_at,omitempty"`
 }
 
 // --- 1. SCHEDULE (Quản lý đăng bài) ---

@@ -14,6 +14,26 @@ import (
 
 type ModuleInteraction struct {
 	// Các dependency khác nếu có (UseCases, Repos...)
+	db      *mongo.Database
+	session *gocql.Session
+}
+
+func NewModuleInteraction(db *mongo.Database, session *gocql.Session) *ModuleInteraction {
+	m := &ModuleInteraction{
+		db:      db,
+		session: session,
+	}
+	err := m.InitMongo(db)
+	if err != nil {
+		log.Fatalf(">>> Interaction Module: Failed to initialize MongoDB indexes: %v", err)
+	}
+
+	err = m.InitCassandra(session)
+	if err != nil {
+		log.Fatalf(">>> Interaction Module: Failed to initialize Cassandra tables: %v", err)
+	}
+	log.Println(">>> Interaction Module: Initialization Completed Successfully")
+	return m
 }
 
 // =============================================================================

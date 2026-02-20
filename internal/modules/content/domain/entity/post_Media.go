@@ -1,6 +1,8 @@
 package entity
 
 import (
+	"time"
+
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/content/enum"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -16,7 +18,10 @@ type PostMedia struct {
 	PostID primitive.ObjectID `bson:"post_id" json:"post_id"`
 
 	// Danh sách các file media (ảnh, video)
-	Items []*MediaItem `bson:"items" json:"items"`
+	Items     []*MediaItem `bson:"items" json:"items"`
+	CreatedAt time.Time    `bson:"created_at" json:"created_at"`
+	UpdatedAt time.Time    `bson:"updated_at" json:"updated_at"`
+	DeletedAt *time.Time   `bson:"deleted_at,omitempty" json:"deleted_at,omitempty"`
 }
 
 // --- 2. Sub-Struct: MEDIA ITEM ---
