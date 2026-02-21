@@ -6,9 +6,11 @@ import (
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/communication/enum"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
+
 const (
 	CollectionCallLogs = "CallLogs"
 )
+
 type CallLog struct {
 	ID primitive.ObjectID `bson:"_id,omitempty" json:"id"`
 
@@ -40,8 +42,12 @@ type CallLog struct {
 	DurationSeconds int `bson:"duration_seconds" json:"duration_seconds"`
 
 	// 5. GROUP CALL FLAG
-	IsGroupCall bool `bson:"is_group_call" json:"is_group_call"`
+	IsGroupCall bool       `bson:"is_group_call" json:"is_group_call"`
+	CreatedAt   time.Time  `bson:"created_at" json:"created_at"`
+	UpdatedAt   time.Time  `bson:"updated_at" json:"updated_at"`
+	DeletedAt   *time.Time `bson:"deleted_at,omitempty" json:"deleted_at,omitempty"`
 }
+
 func (CallLog) CollectionName() string {
 	return CollectionCallLogs
 }

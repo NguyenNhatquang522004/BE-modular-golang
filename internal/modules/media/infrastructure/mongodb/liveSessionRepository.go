@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/errors/mongodbErrors"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/IRepositoryShare"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/dto"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/utils"
@@ -40,7 +41,7 @@ func (r *LiveSessionRepository) CreateLiveSession(ctx context.Context, liveSessi
 
 }
 
-func (r *LiveSessionRepository) CreateBulkLiveSessions(ctx context.Context, liveSessions []*entity.LiveSession) (int64, []*dto.BulkError, error) {
+func (r *LiveSessionRepository) CreateBulkLiveSessions(ctx context.Context, liveSessions []*entity.LiveSession) (int64, []*mongodbErrors.BulkError, error) {
 	collection := r.client.Collection(entity.LiveSession{}.CollectionName())
 	for _, liveSession := range liveSessions {
 		if liveSession.ID.IsZero() {
@@ -54,13 +55,13 @@ func (r *LiveSessionRepository) CreateBulkLiveSessions(ctx context.Context, live
 		return 0, nil, err
 	}
 
-	var failedDocs []*dto.BulkError
+	var failedDocs []*mongodbErrors.BulkError
 	if err != nil {
 		// Kiểm tra xem có phải lỗi BulkWriteException không
 		var bulkErr mongo.BulkWriteException
 		if errors.As(err, &bulkErr) {
 			for _, we := range bulkErr.WriteErrors {
-				failedDocs = append(failedDocs, &dto.BulkError{
+				failedDocs = append(failedDocs, &mongodbErrors.BulkError{
 					ID:     liveSessions[we.Index].ID.Hex(),
 					Reason: we.Message,
 				})
@@ -263,7 +264,7 @@ func (r *LiveSessionRepository) UpdateLiveSession(ctx context.Context, liveSessi
 	}
 	return nil
 }
-func (r *LiveSessionRepository) UpdateBulkLiveSessions(ctx context.Context, liveSessions []*entity.LiveSession) (int64, []*dto.BulkError, error) {
+func (r *LiveSessionRepository) UpdateBulkLiveSessions(ctx context.Context, liveSessions []*entity.LiveSession) (int64, []*mongodbErrors.BulkError, error) {
 	collection := r.client.Collection(entity.LiveSession{}.CollectionName())
 	models := make([]mongo.WriteModel, 0, len(liveSessions))
 	for _, ps := range liveSessions {
@@ -278,7 +279,7 @@ func (r *LiveSessionRepository) UpdateBulkLiveSessions(ctx context.Context, live
 		return 0, nil, fmt.Errorf("bulk write system error: %w", err)
 	}
 	// Trường hợp 2: Có lỗi xảy ra với một vài document (Partial Failure)
-	var failedDocs []*dto.BulkError
+	var failedDocs []*mongodbErrors.BulkError
 	if err != nil {
 		// Dùng errors.As để ép kiểu err về mongo.BulkWriteException
 		var bulkErr mongo.BulkWriteException
@@ -292,7 +293,7 @@ func (r *LiveSessionRepository) UpdateBulkLiveSessions(ctx context.Context, live
 					failedLiveSession := liveSessions[failedIndex]
 
 					// Ghi nhận lại ID và lý do lỗi
-					failedDocs = append(failedDocs, &dto.BulkError{
+					failedDocs = append(failedDocs, &mongodbErrors.BulkError{
 						ID:     failedLiveSession.ID.Hex(), // Hoặc failedLiveSession.ID.String()
 						Reason: we.Message,
 					})
@@ -319,7 +320,7 @@ func (r *LiveSessionRepository) DeleteLiveSession(ctx context.Context, id string
 	}
 	return nil
 }
-func (r *LiveSessionRepository) DeleteBulkLiveSessions(ctx context.Context, ids []string) (int64, []*dto.BulkError, error) {
+func (r *LiveSessionRepository) DeleteBulkLiveSessions(ctx context.Context, ids []string) (int64, []*mongodbErrors.BulkError, error) {
 	for _, id := range ids {
 		if _, err := primitive.ObjectIDFromHex(id); err != nil {
 			return 0, nil, fmt.Errorf("invalid live session ID: %s", id)
@@ -336,7 +337,7 @@ func (r *LiveSessionRepository) DeleteBulkLiveSessions(ctx context.Context, ids 
 	if result == nil && err != nil {
 		return 0, nil, fmt.Errorf("bulk delete system error: %w", err)
 	}
-	var failedDocs []*dto.BulkError
+	var failedDocs []*mongodbErrors.BulkError
 	if err != nil {
 		var bulkErr mongo.BulkWriteException
 		if errors.As(err, &bulkErr) {
@@ -344,7 +345,7 @@ func (r *LiveSessionRepository) DeleteBulkLiveSessions(ctx context.Context, ids 
 				failedIndex := we.Index
 				if failedIndex < len(ids) {
 					failedID := ids[failedIndex]
-					failedDocs = append(failedDocs, &dto.BulkError{
+					failedDocs = append(failedDocs, &mongodbErrors.BulkError{
 						ID:     failedID,
 						Reason: we.Message,
 					})

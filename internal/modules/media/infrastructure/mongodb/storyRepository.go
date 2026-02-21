@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/errors/mongodbErrors"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/IRepositoryShare"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/dto"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/utils"
@@ -35,7 +36,7 @@ func (r *StoryRepository) CreateStory(ctx context.Context, story *entity.Story) 
 	}
 	return nil
 }
-func (r *StoryRepository) CreateBulkStories(ctx context.Context, stories []*entity.Story) (int64, []*dto.BulkError, error) {
+func (r *StoryRepository) CreateBulkStories(ctx context.Context, stories []*entity.Story) (int64, []*mongodbErrors.BulkError, error) {
 	collection := r.client.Collection(entity.Story{}.CollectionName())
 	for _, story := range stories {
 		if story.ID.IsZero() {
@@ -49,13 +50,13 @@ func (r *StoryRepository) CreateBulkStories(ctx context.Context, stories []*enti
 		return 0, nil, err
 	}
 
-	var failedDocs []*dto.BulkError
+	var failedDocs []*mongodbErrors.BulkError
 	if err != nil {
 		// Kiểm tra xem có phải lỗi BulkWriteException không
 		var bulkErr mongo.BulkWriteException
 		if errors.As(err, &bulkErr) {
 			for _, we := range bulkErr.WriteErrors {
-				failedDocs = append(failedDocs, &dto.BulkError{
+				failedDocs = append(failedDocs, &mongodbErrors.BulkError{
 					ID:     stories[we.Index].ID.Hex(),
 					Reason: we.Message,
 				})
@@ -193,7 +194,7 @@ func (r *StoryRepository) UpdateStory(ctx context.Context, story *entity.Story) 
 	// Implement the logic to update a story in MongoDB
 	return nil
 }
-func (r *StoryRepository) UpdateBulkStories(ctx context.Context, stories []*entity.Story) (int64, []*dto.BulkError, error) {
+func (r *StoryRepository) UpdateBulkStories(ctx context.Context, stories []*entity.Story) (int64, []*mongodbErrors.BulkError, error) {
 	// Implement the logic to update multiple stories in MongoDB
 	return 0, nil, nil
 }
@@ -201,7 +202,7 @@ func (r *StoryRepository) DeleteStory(ctx context.Context, id string) error {
 	// Implement the logic to delete a story by its ID from MongoDB
 	return nil
 }
-func (r *StoryRepository) DeleteBulkStories(ctx context.Context, ids []string) (int64, []*dto.BulkError, error) {
+func (r *StoryRepository) DeleteBulkStories(ctx context.Context, ids []string) (int64, []*mongodbErrors.BulkError, error) {
 	// Implement the logic to delete multiple stories by their IDs from MongoDB
 	return 0, nil, nil
 }

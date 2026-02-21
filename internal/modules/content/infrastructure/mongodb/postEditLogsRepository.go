@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/errors/mongodbErrors"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/IRepositoryShare"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/dto"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/utils"
@@ -37,7 +38,7 @@ func (r *PostEditLogsRepository) CreatePostEditLog(ctx context.Context, postEdit
 	}
 	return nil
 }
-func (r *PostEditLogsRepository) CreateBulkPostEditLog(ctx context.Context, postEditLogs []*entity.PostEntityEditLog) (int64, []*dto.BulkError, error) {
+func (r *PostEditLogsRepository) CreateBulkPostEditLog(ctx context.Context, postEditLogs []*entity.PostEntityEditLog) (int64, []*mongodbErrors.BulkError, error) {
 	// Implementation of creating multiple post edit logs in MongoDB with bulk operation
 	collection := r.client.Collection(entity.PostEntityEditLog{}.Collectionnameposteditlog())
 	for _, postEditLog := range postEditLogs {
@@ -52,14 +53,14 @@ func (r *PostEditLogsRepository) CreateBulkPostEditLog(ctx context.Context, post
 		return 0, nil, err
 	}
 
-	var failedDocs []*dto.BulkError
+	var failedDocs []*mongodbErrors.BulkError
 	if err != nil {
 		// Kiểm tra xem có phải lỗi BulkWriteException không
 		var bulkErr mongo.BulkWriteException
 		if errors.As(err, &bulkErr) {
 			for _, we := range bulkErr.WriteErrors {
-				failedDocs = append(failedDocs, &dto.BulkError{
-					ID: postEditLogs[we.Index].TargetID.Hex(),
+				failedDocs = append(failedDocs, &mongodbErrors.BulkError{
+					ID:     postEditLogs[we.Index].TargetID.Hex(),
 					Reason: we.Message,
 				})
 			}
@@ -205,7 +206,7 @@ func (r *PostEditLogsRepository) UpdatePostEditLog(ctx context.Context, postEdit
 	}
 	return nil
 }
-func (r *PostEditLogsRepository) UpdateBulkPostEditLog(ctx context.Context, postEditLogs []*entity.PostEntityEditLog) (int64, []*dto.BulkError, error) {
+func (r *PostEditLogsRepository) UpdateBulkPostEditLog(ctx context.Context, postEditLogs []*entity.PostEntityEditLog) (int64, []*mongodbErrors.BulkError, error) {
 	// Implementation of updating multiple post edit logs in MongoDB with bulk operation
 	collection := r.client.Collection(entity.PostEntityEditLog{}.Collectionnameposteditlog())
 	models := make([]mongo.WriteModel, 0, len(postEditLogs))
@@ -221,7 +222,7 @@ func (r *PostEditLogsRepository) UpdateBulkPostEditLog(ctx context.Context, post
 		return 0, nil, fmt.Errorf("bulk write system error: %w", err)
 	}
 	// Trường hợp 2: Có lỗi xảy ra với một vài document (Partial Failure)
-	var failedDocs []*dto.BulkError
+	var failedDocs []*mongodbErrors	.BulkError
 	if err != nil {
 		// Dùng errors.As để ép kiểu err về mongo.BulkWriteException
 		var bulkErr mongo.BulkWriteException
@@ -235,8 +236,8 @@ func (r *PostEditLogsRepository) UpdateBulkPostEditLog(ctx context.Context, post
 					failedPost := postEditLogs[failedIndex]
 
 					// Ghi nhận lại ID và lý do lỗi
-					failedDocs = append(failedDocs, &dto.BulkError{
-						ID: failedPost.ID.Hex(), // Hoặc failedPost.ID.String()
+					failedDocs = append(failedDocs, &mongodbErrors.BulkError{
+						ID:     failedPost.ID.Hex(), // Hoặc failedPost.ID.String()
 						Reason: we.Message,
 					})
 				}

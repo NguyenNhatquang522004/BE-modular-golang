@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/errors/mongodbErrors"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/IRepositoryShare"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/dto"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/utils"
@@ -38,7 +39,7 @@ func (r *AlbumsRepository) CreateAlbum(ctx context.Context, album *entity.Album)
 	}
 	return nil
 }
-func (r *AlbumsRepository) CreateBulkAlbums(ctx context.Context, albums []*entity.Album) (int64, []*dto.BulkError, error) {
+func (r *AlbumsRepository) CreateBulkAlbums(ctx context.Context, albums []*entity.Album) (int64, []*mongodbErrors.BulkError, error) {
 	collection := r.client.Collection(entity.Album{}.CollectionName())
 	for _, album := range albums {
 		if album.ID.IsZero() {
@@ -52,13 +53,13 @@ func (r *AlbumsRepository) CreateBulkAlbums(ctx context.Context, albums []*entit
 		return 0, nil, err
 	}
 
-	var failedDocs []*dto.BulkError
+	var failedDocs []*mongodbErrors.BulkError
 	if err != nil {
 		// Kiểm tra xem có phải lỗi BulkWriteException không
 		var bulkErr mongo.BulkWriteException
 		if errors.As(err, &bulkErr) {
 			for _, we := range bulkErr.WriteErrors {
-				failedDocs = append(failedDocs, &dto.BulkError{
+				failedDocs = append(failedDocs, &mongodbErrors.BulkError{
 					ID:     albums[we.Index].ID.Hex(),
 					Reason: we.Message,
 				})
@@ -282,7 +283,7 @@ func (r *AlbumsRepository) UpdateAlbum(ctx context.Context, album *entity.Album)
 	}
 	return nil
 }
-func (r *AlbumsRepository) UpdateBulkAlbums(ctx context.Context, albums []*entity.Album) (int64, []*dto.BulkError, error) {
+func (r *AlbumsRepository) UpdateBulkAlbums(ctx context.Context, albums []*entity.Album) (int64, []*mongodbErrors.BulkError, error) {
 	collection := r.client.Collection(entity.Album{}.CollectionName())
 	models := make([]mongo.WriteModel, 0, len(albums))
 	for _, ps := range albums {
@@ -297,7 +298,7 @@ func (r *AlbumsRepository) UpdateBulkAlbums(ctx context.Context, albums []*entit
 		return 0, nil, fmt.Errorf("bulk write system error: %w", err)
 	}
 	// Trường hợp 2: Có lỗi xảy ra với một vài document (Partial Failure)
-	var failedDocs []*dto.BulkError
+	var failedDocs []*mongodbErrors.BulkError
 	if err != nil {
 		// Dùng errors.As để ép kiểu err về mongo.BulkWriteException
 		var bulkErr mongo.BulkWriteException
@@ -311,7 +312,7 @@ func (r *AlbumsRepository) UpdateBulkAlbums(ctx context.Context, albums []*entit
 					failedAlbum := albums[failedIndex]
 
 					// Ghi nhận lại ID và lý do lỗi
-					failedDocs = append(failedDocs, &dto.BulkError{
+					failedDocs = append(failedDocs, &mongodbErrors.BulkError{
 						ID:     failedAlbum.ID.Hex(), // Hoặc failedAlbum.ID.String()
 						Reason: we.Message,
 					})
@@ -338,7 +339,7 @@ func (r *AlbumsRepository) DeleteAlbum(ctx context.Context, id string) error {
 	}
 	return nil
 }
-func (r *AlbumsRepository) DeleteBulkAlbums(ctx context.Context, ids []string) (int64, []*dto.BulkError, error) {
+func (r *AlbumsRepository) DeleteBulkAlbums(ctx context.Context, ids []string) (int64, []*mongodbErrors.BulkError, error) {
 	for _, id := range ids {
 		if _, err := primitive.ObjectIDFromHex(id); err != nil {
 			return 0, nil, fmt.Errorf("invalid album ID: %s", id)
@@ -355,7 +356,7 @@ func (r *AlbumsRepository) DeleteBulkAlbums(ctx context.Context, ids []string) (
 	if result == nil && err != nil {
 		return 0, nil, fmt.Errorf("bulk delete system error: %w", err)
 	}
-	var failedDocs []*dto.BulkError
+	var failedDocs []*mongodbErrors.BulkError
 	if err != nil {
 		var bulkErr mongo.BulkWriteException
 		if errors.As(err, &bulkErr) {
@@ -363,7 +364,7 @@ func (r *AlbumsRepository) DeleteBulkAlbums(ctx context.Context, ids []string) (
 				failedIndex := we.Index
 				if failedIndex < len(ids) {
 					failedID := ids[failedIndex]
-					failedDocs = append(failedDocs, &dto.BulkError{
+					failedDocs = append(failedDocs, &mongodbErrors.BulkError{
 						ID:     failedID,
 						Reason: we.Message,
 					})

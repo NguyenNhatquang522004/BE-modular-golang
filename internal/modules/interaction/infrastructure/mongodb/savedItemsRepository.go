@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/errors/mongodbErrors"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/IRepositoryShare"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/dto"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/utils"
@@ -35,7 +36,7 @@ func (r *SavedItemsRepository) CreateSaveItem(ctx context.Context, saveItem *ent
 	}
 	return nil
 }
-func (r *SavedItemsRepository) CreateBulkSaveItem(ctx context.Context, saveItems []*entity.UserSavedItem) (int64, []*dto.BulkError, error) {
+func (r *SavedItemsRepository) CreateBulkSaveItem(ctx context.Context, saveItems []*entity.UserSavedItem) (int64, []*mongodbErrors.BulkError, error) {
 	collection := r.client.Collection(entity.UserSavedItem{}.CollectionnamUserSavedItem())
 	for _, saveItem := range saveItems {
 		if saveItem.ID.IsZero() {
@@ -49,13 +50,13 @@ func (r *SavedItemsRepository) CreateBulkSaveItem(ctx context.Context, saveItems
 		return 0, nil, err
 	}
 
-	var failedDocs []*dto.BulkError
+	var failedDocs []*mongodbErrors.BulkError
 	if err != nil {
 		// Kiểm tra xem có phải lỗi BulkWriteException không
 		var bulkErr mongo.BulkWriteException
 		if errors.As(err, &bulkErr) {
 			for _, we := range bulkErr.WriteErrors {
-				failedDocs = append(failedDocs, &dto.BulkError{
+				failedDocs = append(failedDocs, &mongodbErrors.BulkError{
 					ID:     saveItems[we.Index].ID.Hex(),
 					Reason: we.Message,
 				})
@@ -134,7 +135,7 @@ func (r *SavedItemsRepository) UpdateSaveItem(ctx context.Context, saveItem *ent
 	}
 	return nil
 }
-func (r *SavedItemsRepository) UpdateBulkSaveItem(ctx context.Context, saveItems []*entity.UserSavedItem) (int64, []*dto.BulkError, error) {
+func (r *SavedItemsRepository) UpdateBulkSaveItem(ctx context.Context, saveItems []*entity.UserSavedItem) (int64, []*mongodbErrors.BulkError, error) {
 	collection := r.client.Collection(entity.UserSavedItem{}.CollectionnamUserSavedItem())
 	models := make([]mongo.WriteModel, 0, len(saveItems))
 	for _, ps := range saveItems {
@@ -149,7 +150,7 @@ func (r *SavedItemsRepository) UpdateBulkSaveItem(ctx context.Context, saveItems
 		return 0, nil, fmt.Errorf("bulk write system error: %w", err)
 	}
 	// Trường hợp 2: Có lỗi xảy ra với một vài document (Partial Failure)
-	var failedDocs []*dto.BulkError
+	var failedDocs []*mongodbErrors.BulkError
 	if err != nil {
 		// Dùng errors.As để ép kiểu err về mongo.BulkWriteException
 		var bulkErr mongo.BulkWriteException
@@ -163,7 +164,7 @@ func (r *SavedItemsRepository) UpdateBulkSaveItem(ctx context.Context, saveItems
 					failedSaveItem := saveItems[failedIndex]
 
 					// Ghi nhận lại ID và lý do lỗi
-					failedDocs = append(failedDocs, &dto.BulkError{
+					failedDocs = append(failedDocs, &mongodbErrors.BulkError{
 						ID:     failedSaveItem.ID.Hex(), // Hoặc failedSaveItem.ID.String()
 						Reason: we.Message,
 					})
@@ -190,7 +191,7 @@ func (r *SavedItemsRepository) DeleteSaveItem(ctx context.Context, saveItemID st
 	}
 	return nil
 }
-func (r *SavedItemsRepository) DeleteBulkSaveItem(ctx context.Context, saveItemIDs []string) (int64, []*dto.BulkError, error) {
+func (r *SavedItemsRepository) DeleteBulkSaveItem(ctx context.Context, saveItemIDs []string) (int64, []*mongodbErrors.BulkError, error) {
 	for _, id := range saveItemIDs {
 		if _, err := primitive.ObjectIDFromHex(id); err != nil {
 			return 0, nil, fmt.Errorf("invalid save item ID: %s", id)
@@ -207,7 +208,7 @@ func (r *SavedItemsRepository) DeleteBulkSaveItem(ctx context.Context, saveItemI
 	if result == nil && err != nil {
 		return 0, nil, fmt.Errorf("bulk delete system error: %w", err)
 	}
-	var failedDocs []*dto.BulkError
+	var failedDocs []*mongodbErrors.BulkError
 	if err != nil {
 		var bulkErr mongo.BulkWriteException
 		if errors.As(err, &bulkErr) {
@@ -215,7 +216,7 @@ func (r *SavedItemsRepository) DeleteBulkSaveItem(ctx context.Context, saveItemI
 				failedIndex := we.Index
 				if failedIndex < len(saveItemIDs) {
 					failedSaveItemID := saveItemIDs[failedIndex]
-					failedDocs = append(failedDocs, &dto.BulkError{
+					failedDocs = append(failedDocs, &mongodbErrors.BulkError{
 						ID:     failedSaveItemID,
 						Reason: we.Message,
 					})

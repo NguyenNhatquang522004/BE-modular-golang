@@ -6,9 +6,11 @@ import (
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/communication/enum"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
+
 const (
 	CollectionConversationParticipants = "ConversationParticipants"
 )
+
 // ConversationParticipant đại diện cho 1 thành viên trong 1 cuộc hội thoại.
 // Đây là collection TRUNG GIAN quan trọng nhất để render danh sách Inbox.
 type ConversationParticipant struct {
@@ -37,8 +39,8 @@ type ConversationParticipant struct {
 	LastSeenMessageID string `bson:"last_seen_message_id" json:"last_seen_message_id"`
 
 	// --- 4. CÀI ĐẶT CÁ NHÂN (PERSONAL SETTINGS) ---
-	MuteUntil    *time.Time `bson:"mute_until,omitempty" json:"mute_until,omitempty"` //Cho phép tắt thông báo trong 1 giờ, 8 giờ hoặc mãi mãi. sửa cái này 
-	IsArchived bool `bson:"is_archived" json:"is_archived"` // Lưu trữ (ẩn khỏi Inbox)
+	MuteUntil  *time.Time `bson:"mute_until,omitempty" json:"mute_until,omitempty"` //Cho phép tắt thông báo trong 1 giờ, 8 giờ hoặc mãi mãi. sửa cái này
+	IsArchived bool       `bson:"is_archived" json:"is_archived"`                   // Lưu trữ (ẩn khỏi Inbox)
 
 	// --- 5. TÍNH NĂNG XÓA LỊCH SỬ ---
 	// Mốc thời gian xóa tin nhắn phía client.
@@ -50,7 +52,12 @@ type ConversationParticipant struct {
 
 	// Người add user này vào nhóm (Postgres UUID -> String)
 	AddedByUserID string `bson:"added_by_user_id" json:"added_by_user_id"`
+
+	CreatedAt time.Time  `bson:"created_at" json:"created_at"`
+	UpdatedAt time.Time  `bson:"updated_at" json:"updated_at"`
+	DeletedAt *time.Time `bson:"deleted_at,omitempty" json:"deleted_at,omitempty"`
 }
+
 func (ConversationParticipant) CollectionName() string {
 	return CollectionConversationParticipants
 }

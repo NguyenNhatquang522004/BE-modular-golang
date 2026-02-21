@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/errors/mongodbErrors"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/IRepositoryShare"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/dto"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/utils"
@@ -38,7 +39,7 @@ func (r *MediaAssetsRepository) CreateMediaAsset(ctx context.Context, asset *ent
 	return nil
 }
 
-func (r *MediaAssetsRepository) CreateBulkMediaAssets(ctx context.Context, assets []*entity.MediaAsset) (int64, []*dto.BulkError, error) {
+func (r *MediaAssetsRepository) CreateBulkMediaAssets(ctx context.Context, assets []*entity.MediaAsset) (int64, []*mongodbErrors.BulkError, error) {
 	collection := r.client.Collection(entity.MediaAsset{}.CollectionName())
 	for _, asset := range assets {
 		if asset.ID.IsZero() {
@@ -52,13 +53,13 @@ func (r *MediaAssetsRepository) CreateBulkMediaAssets(ctx context.Context, asset
 		return 0, nil, err
 	}
 
-	var failedDocs []*dto.BulkError
+	var failedDocs []*mongodbErrors.BulkError
 	if err != nil {
 		// Kiểm tra xem có phải lỗi BulkWriteException không
 		var bulkErr mongo.BulkWriteException
 		if errors.As(err, &bulkErr) {
 			for _, we := range bulkErr.WriteErrors {
-				failedDocs = append(failedDocs, &dto.BulkError{
+				failedDocs = append(failedDocs, &mongodbErrors.BulkError{
 					ID:     assets[we.Index].ID.Hex(),
 					Reason: we.Message,
 				})
@@ -420,7 +421,7 @@ func (r *MediaAssetsRepository) UpdateMediaAsset(ctx context.Context, asset *ent
 	}
 	return nil
 }
-func (r *MediaAssetsRepository) UpdateBulkMediaAssets(ctx context.Context, assets []*entity.MediaAsset) (int64, []*dto.BulkError, error) {
+func (r *MediaAssetsRepository) UpdateBulkMediaAssets(ctx context.Context, assets []*entity.MediaAsset) (int64, []*mongodbErrors.BulkError, error) {
 	collection := r.client.Collection(entity.MediaAsset{}.CollectionName())
 	models := make([]mongo.WriteModel, 0, len(assets))
 	for _, ps := range assets {
@@ -435,7 +436,7 @@ func (r *MediaAssetsRepository) UpdateBulkMediaAssets(ctx context.Context, asset
 		return 0, nil, fmt.Errorf("bulk write system error: %w", err)
 	}
 	// Trường hợp 2: Có lỗi xảy ra với một vài document (Partial Failure)
-	var failedDocs []*dto.BulkError
+	var failedDocs []*mongodbErrors.BulkError
 	if err != nil {
 		// Dùng errors.As để ép kiểu err về mongo.BulkWriteException
 		var bulkErr mongo.BulkWriteException
@@ -449,7 +450,7 @@ func (r *MediaAssetsRepository) UpdateBulkMediaAssets(ctx context.Context, asset
 					failedAsset := assets[failedIndex]
 
 					// Ghi nhận lại ID và lý do lỗi
-					failedDocs = append(failedDocs, &dto.BulkError{
+					failedDocs = append(failedDocs, &mongodbErrors.BulkError{
 						ID:     failedAsset.ID.Hex(), // Hoặc failedAsset.ID.String()
 						Reason: we.Message,
 					})
@@ -476,7 +477,7 @@ func (r *MediaAssetsRepository) DeleteMediaAsset(ctx context.Context, id string)
 	}
 	return nil
 }
-func (r *MediaAssetsRepository) DeleteBulkMediaAssets(ctx context.Context, ids []string) (int64, []*dto.BulkError, error) {
+func (r *MediaAssetsRepository) DeleteBulkMediaAssets(ctx context.Context, ids []string) (int64, []*mongodbErrors.BulkError, error) {
 	for _, id := range ids {
 		if _, err := primitive.ObjectIDFromHex(id); err != nil {
 			return 0, nil, fmt.Errorf("invalid media asset ID: %s", id)
@@ -493,7 +494,7 @@ func (r *MediaAssetsRepository) DeleteBulkMediaAssets(ctx context.Context, ids [
 	if result == nil && err != nil {
 		return 0, nil, fmt.Errorf("bulk delete system error: %w", err)
 	}
-	var failedDocs []*dto.BulkError
+	var failedDocs []*mongodbErrors.BulkError
 	if err != nil {
 		var bulkErr mongo.BulkWriteException
 		if errors.As(err, &bulkErr) {
@@ -501,7 +502,7 @@ func (r *MediaAssetsRepository) DeleteBulkMediaAssets(ctx context.Context, ids [
 				failedIndex := we.Index
 				if failedIndex < len(ids) {
 					failedID := ids[failedIndex]
-					failedDocs = append(failedDocs, &dto.BulkError{
+					failedDocs = append(failedDocs, &mongodbErrors.BulkError{
 						ID:     failedID,
 						Reason: we.Message,
 					})

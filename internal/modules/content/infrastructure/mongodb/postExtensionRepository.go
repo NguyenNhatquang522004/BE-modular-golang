@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/errors/mongodbErrors"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/IRepositoryShare"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/dto"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/utils"
@@ -36,7 +37,7 @@ func (r *PostExtensionRepository) CreatePostExtension(ctx context.Context, postE
 	}
 	return nil
 }
-func (r *PostExtensionRepository) CreateBulkPostExtension(ctx context.Context, postExtensions []*entity.PostExtension) (int64, []*dto.BulkError, error) {
+func (r *PostExtensionRepository) CreateBulkPostExtension(ctx context.Context, postExtensions []*entity.PostExtension) (int64, []*mongodbErrors.BulkError, error) {
 	collection := r.client.Collection(entity.PostExtension{}.Collectionnamepostextension())
 	for _, postExtension := range postExtensions {
 		if postExtension.ID.IsZero() {
@@ -50,13 +51,13 @@ func (r *PostExtensionRepository) CreateBulkPostExtension(ctx context.Context, p
 		return 0, nil, err
 	}
 
-	var failedDocs []*dto.BulkError
+	var failedDocs []*mongodbErrors.BulkError
 	if err != nil {
 		// Kiểm tra xem có phải lỗi BulkWriteException không
 		var bulkErr mongo.BulkWriteException
 		if errors.As(err, &bulkErr) {
 			for _, we := range bulkErr.WriteErrors {
-				failedDocs = append(failedDocs, &dto.BulkError{
+				failedDocs = append(failedDocs, &mongodbErrors.BulkError{
 					ID:     postExtensions[we.Index].PostID.Hex(),
 					Reason: we.Message,
 				})
@@ -171,7 +172,7 @@ func (r *PostExtensionRepository) UpdatePostExtension(ctx context.Context, postE
 	}
 	return nil
 }
-func (r *PostExtensionRepository) UpdateBulkPostExtension(ctx context.Context, postExtensions []*entity.PostExtension) (int64, []*dto.BulkError, error) {
+func (r *PostExtensionRepository) UpdateBulkPostExtension(ctx context.Context, postExtensions []*entity.PostExtension) (int64, []*mongodbErrors.BulkError, error) {
 	collection := r.client.Collection(entity.PostExtension{}.Collectionnamepostextension())
 	models := make([]mongo.WriteModel, 0, len(postExtensions))
 	for _, ps := range postExtensions {
@@ -186,7 +187,7 @@ func (r *PostExtensionRepository) UpdateBulkPostExtension(ctx context.Context, p
 		return 0, nil, fmt.Errorf("bulk write system error: %w", err)
 	}
 	// Trường hợp 2: Có lỗi xảy ra với một vài document (Partial Failure)
-	var failedDocs []*dto.BulkError
+	var failedDocs []*mongodbErrors.BulkError
 	if err != nil {
 		// Dùng errors.As để ép kiểu err về mongo.BulkWriteException
 		var bulkErr mongo.BulkWriteException
@@ -200,7 +201,7 @@ func (r *PostExtensionRepository) UpdateBulkPostExtension(ctx context.Context, p
 					failedPost := postExtensions[failedIndex]
 
 					// Ghi nhận lại ID và lý do lỗi
-					failedDocs = append(failedDocs, &dto.BulkError{
+					failedDocs = append(failedDocs, &mongodbErrors.BulkError{
 						ID:     failedPost.ID.Hex(), // Hoặc failedPost.ID.String()
 						Reason: we.Message,
 					})
@@ -227,7 +228,7 @@ func (r *PostExtensionRepository) DeleteByPostID(ctx context.Context, postID str
 	}
 	return nil
 }
-func (r *PostExtensionRepository) DeleteBulkByPostIDs(ctx context.Context, postIDs []string) (int64, []*dto.BulkError, error) {
+func (r *PostExtensionRepository) DeleteBulkByPostIDs(ctx context.Context, postIDs []string) (int64, []*mongodbErrors.BulkError, error) {
 	for _, id := range postIDs {
 		if _, err := primitive.ObjectIDFromHex(id); err != nil {
 			return 0, nil, fmt.Errorf("invalid post ID: %s", id)
@@ -244,7 +245,7 @@ func (r *PostExtensionRepository) DeleteBulkByPostIDs(ctx context.Context, postI
 	if result == nil && err != nil {
 		return 0, nil, fmt.Errorf("bulk delete system error: %w", err)
 	}
-	var failedDocs []*dto.BulkError
+	var failedDocs []*mongodbErrors.BulkError
 	if err != nil {
 		var bulkErr mongo.BulkWriteException
 		if errors.As(err, &bulkErr) {
@@ -252,7 +253,7 @@ func (r *PostExtensionRepository) DeleteBulkByPostIDs(ctx context.Context, postI
 				failedIndex := we.Index
 				if failedIndex < len(postIDs) {
 					failedPostID := postIDs[failedIndex]
-					failedDocs = append(failedDocs, &dto.BulkError{
+					failedDocs = append(failedDocs, &mongodbErrors.BulkError{
 						ID:     failedPostID,
 						Reason: we.Message,
 					})

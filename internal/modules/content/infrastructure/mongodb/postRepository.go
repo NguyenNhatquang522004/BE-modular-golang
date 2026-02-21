@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/errors/mongodbErrors"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/IRepositoryShare"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/dto"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/utils"
@@ -156,7 +157,7 @@ func (r *PostRepository) UpdatePost(post *entity.Post) (*entity.Post, error) {
 
 	return post, nil
 }
-func (r *PostRepository) UpdateBulkPosts(posts []*entity.Post) (int64, []*dto.BulkError, error) {
+func (r *PostRepository) UpdateBulkPosts(posts []*entity.Post) (int64, []*mongodbErrors.BulkError, error) {
 	// Implement the logic to update multiple posts in MongoDB
 	if len(posts) == 0 {
 		return 0, nil, nil // Return early if there are no posts to update
@@ -183,7 +184,7 @@ func (r *PostRepository) UpdateBulkPosts(posts []*entity.Post) (int64, []*dto.Bu
 		return 0, nil, fmt.Errorf("bulk write system error: %w", err)
 	}
 	// Trường hợp 2: Có lỗi xảy ra với một vài document (Partial Failure)
-	var failedDocs []*dto.BulkError
+	var failedDocs []*mongodbErrors.BulkError
 	if err != nil {
 		// Dùng errors.As để ép kiểu err về mongo.BulkWriteException
 		var bulkErr mongo.BulkWriteException
@@ -197,8 +198,8 @@ func (r *PostRepository) UpdateBulkPosts(posts []*entity.Post) (int64, []*dto.Bu
 					failedPost := posts[failedIndex]
 
 					// Ghi nhận lại ID và lý do lỗi
-					failedDocs = append(failedDocs, &dto.BulkError{
-						ID: failedPost.ID.Hex(), // Hoặc failedPost.ID.String()
+					failedDocs = append(failedDocs, &mongodbErrors.BulkError{
+						ID:     failedPost.ID.Hex(), // Hoặc failedPost.ID.String()
 						Reason: we.Message,
 					})
 				}
@@ -228,7 +229,7 @@ func (r *PostRepository) DeletePost(postID string) error {
 	return nil
 }
 
-func (r *PostRepository) DeleteBulkPosts(postIDs []string) (int64, []*dto.BulkError, error) {
+func (r *PostRepository) DeleteBulkPosts(postIDs []string) (int64, []*mongodbErrors.BulkError, error) {
 	// Implement the logic to delete multiple posts by their IDs from MongoDB
 	if len(postIDs) == 0 {
 		return 0, nil, nil // Return early if there are no post IDs to delete
@@ -248,7 +249,7 @@ func (r *PostRepository) DeleteBulkPosts(postIDs []string) (int64, []*dto.BulkEr
 	if result == nil && err != nil {
 		return 0, nil, fmt.Errorf("bulk delete system error: %w", err)
 	}
-	var failedDocs []*dto.BulkError
+	var failedDocs []*mongodbErrors.BulkError
 	if err != nil {
 		var bulkErr mongo.BulkWriteException
 		if errors.As(err, &bulkErr) {
@@ -256,8 +257,8 @@ func (r *PostRepository) DeleteBulkPosts(postIDs []string) (int64, []*dto.BulkEr
 				failedIndex := we.Index
 				if failedIndex < len(postIDs) {
 					failedPostID := postIDs[failedIndex]
-					failedDocs = append(failedDocs, &dto.BulkError{
-						ID: failedPostID,
+					failedDocs = append(failedDocs, &mongodbErrors.BulkError{
+						ID:     failedPostID,
 						Reason: we.Message,
 					})
 				}

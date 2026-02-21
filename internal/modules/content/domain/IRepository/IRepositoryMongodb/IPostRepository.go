@@ -1,6 +1,7 @@
 package IRepositoryMongodb
 
 import (
+	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/errors/mongodbErrors"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/dto"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/content/domain/entity"
 )
@@ -12,8 +13,8 @@ type IPostRepository interface {
 	GetPostsBulkByIDs(postIDs []string) ([]*entity.Post, error)
 	GetPostsByUserID(userID string) ([]*entity.Post, error)
 	UpdatePost(post *entity.Post) (*entity.Post, error)
-	UpdateBulkPosts(posts []*entity.Post) (int64, []*dto.BulkError, error)
+	UpdateBulkPosts(posts []*entity.Post) (int64, []*mongodbErrors.BulkError, error)
 	DeletePost(postID string) error
-	DeleteBulkPosts(postIDs []string) (int64, []*dto.BulkError, error)
+	DeleteBulkPosts(postIDs []string) (int64, []*mongodbErrors.BulkError, error)
 	PanigationPosts(userID string, cursor string, limit int) (*dto.PaginationRes, error)
 }

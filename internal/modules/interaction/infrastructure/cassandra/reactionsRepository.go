@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/errors/cassandraErrors"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/IRepositoryShare"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/dto"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/infrastructure/concurrency"
@@ -56,7 +57,7 @@ func (r *ReactionsRepository) CreateReaction(ctx context.Context, reaction *enti
 
 	return nil
 }
-func (r *ReactionsRepository) CreateBulkReactions(ctx context.Context, reactions []*entity.EntityReaction) (int64, []*dto.ReactionBulkError, error) {
+func (r *ReactionsRepository) CreateBulkReactions(ctx context.Context, reactions []*entity.EntityReaction) (int64, []*cassandraErrors.ReactionBulkError, error) {
 	if len(reactions) == 0 {
 		return 0, nil, nil
 	}
@@ -117,7 +118,7 @@ func (r *ReactionsRepository) CreateBulkReactions(ctx context.Context, reactions
 
 	// 4. Tổng hợp dữ liệu (Lock-free vì chỉ 1 main goroutine đọc channel)
 	var successCount int64
-	var bulkErrors []*dto.ReactionBulkError
+	var bulkErrors []*cassandraErrors.ReactionBulkError
 
 	for res := range resultCh {
 		if res.err != nil {
@@ -129,7 +130,7 @@ func (r *ReactionsRepository) CreateBulkReactions(ctx context.Context, reactions
 				userID = res.reaction.UserID.String()
 			}
 
-			bulkErrors = append(bulkErrors, &dto.ReactionBulkError{
+			bulkErrors = append(bulkErrors, &cassandraErrors.ReactionBulkError{
 				TargetID: targetID,
 				UserID:   userID,
 				Error:    res.err.Error(),
@@ -275,7 +276,7 @@ func (r *ReactionsRepository) DeleteReaction(ctx context.Context, targetID strin
 
 	return nil
 }
-func (r *ReactionsRepository) DeleteBulkReactions(ctx context.Context, targetIDs []*string, userIDs []*gocql.UUID) (int64, []*dto.ReactionBulkError, error) {
+func (r *ReactionsRepository) DeleteBulkReactions(ctx context.Context, targetIDs []*string, userIDs []*gocql.UUID) (int64, []*cassandraErrors.ReactionBulkError, error) {
 	// 1. FAIL-FAST: Kiểm tra tính hợp lệ của input
 	if len(targetIDs) == 0 || len(userIDs) == 0 {
 		return 0, nil, nil
@@ -361,11 +362,11 @@ func (r *ReactionsRepository) DeleteBulkReactions(ctx context.Context, targetIDs
 
 	// 5. Gom kết quả (Lock-free Aggregation)
 	var successCount int64
-	var bulkErrors []*dto.ReactionBulkError
+	var bulkErrors []*cassandraErrors.ReactionBulkError
 
 	for res := range resultCh {
 		if res.err != nil {
-			bulkErrors = append(bulkErrors, &dto.ReactionBulkError{
+			bulkErrors = append(bulkErrors, &cassandraErrors.ReactionBulkError{
 				TargetID: res.payload.TargetID,
 				UserID:   res.payload.UserID.String(), // Fallback về chuỗi rỗng nếu UUID chưa được gán chuẩn do lỗi nil pointer
 				Error:    res.err.Error(),
@@ -419,7 +420,7 @@ func (r *ReactionsRepository) UpdateReaction(ctx context.Context, reaction *enti
 
 	return nil
 }
-func (r *ReactionsRepository) UpdateBulkReactions(ctx context.Context, reactions []*entity.EntityReaction) (int64, []*dto.ReactionBulkError, error) {
+func (r *ReactionsRepository) UpdateBulkReactions(ctx context.Context, reactions []*entity.EntityReaction) (int64, []*cassandraErrors.ReactionBulkError, error) {
 	if len(reactions) == 0 {
 		return 0, nil, nil
 	}
@@ -490,7 +491,7 @@ func (r *ReactionsRepository) UpdateBulkReactions(ctx context.Context, reactions
 
 	// 4. TỔNG HỢP KẾT QUẢ (Lock-Free)
 	var successCount int64
-	var bulkErrors []*dto.ReactionBulkError
+	var bulkErrors []*cassandraErrors.ReactionBulkError
 
 	for res := range resultCh {
 		if res.err != nil {
@@ -502,7 +503,7 @@ func (r *ReactionsRepository) UpdateBulkReactions(ctx context.Context, reactions
 				uID = res.reaction.UserID.String()
 			}
 
-			bulkErrors = append(bulkErrors, &dto.ReactionBulkError{
+			bulkErrors = append(bulkErrors, &cassandraErrors.ReactionBulkError{
 				TargetID: tID,
 				UserID:   uID,
 				Error:    res.err.Error(),

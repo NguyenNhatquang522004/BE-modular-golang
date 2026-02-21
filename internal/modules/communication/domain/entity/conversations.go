@@ -23,7 +23,7 @@ type Conversation struct {
 	Avatar *ConversationAvatar `bson:"avatar,omitempty" json:"avatar,omitempty"`
 
 	// 3. OWNERSHIP & LINKING
-	// UserID từ Postgres (UUID) -> String
+	// UserID từ Postgres (UUID) -> String/
 	CreatorID string `bson:"creator_id" json:"creator_id"`
 	OwnerID   string `bson:"owner_id" json:"owner_id"`
 

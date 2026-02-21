@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/errors/cassandraErrors"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/IRepositoryShare"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/dto"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/infrastructure/concurrency"
@@ -72,7 +73,7 @@ func (r *StoryViewRepository) CreateStoryView(ctx context.Context, storyView *en
 
 	return nil
 }
-func (r *StoryViewRepository) CreateBulkStoryViews(ctx context.Context, storyViews []*entity.StoryView) (int64, []*dto.StoryViewBulkError, error) {
+func (r *StoryViewRepository) CreateBulkStoryViews(ctx context.Context, storyViews []*entity.StoryView) (int64, []*cassandraErrors.StoryViewBulkError, error) {
 	// 1. Fail-fast validation
 	if len(storyViews) == 0 {
 		return 0, nil, nil
@@ -148,7 +149,7 @@ func (r *StoryViewRepository) CreateBulkStoryViews(ctx context.Context, storyVie
 
 	// 5. Tổng hợp dữ liệu (Lock-free vì chỉ 1 main goroutine đọc channel)
 	var successCount int64
-	var bulkErrors []*dto.StoryViewBulkError
+	var bulkErrors []*cassandraErrors.StoryViewBulkError
 
 	for res := range resultCh {
 		if res.err != nil {
@@ -161,7 +162,7 @@ func (r *StoryViewRepository) CreateBulkStoryViews(ctx context.Context, storyVie
 				uID = res.storyView.ViewerID.String()
 			}
 
-			bulkErrors = append(bulkErrors, &dto.StoryViewBulkError{
+			bulkErrors = append(bulkErrors, &cassandraErrors.StoryViewBulkError{
 				StoryID: sID,
 				UserID:  uID,
 				Error:   res.err.Error(),
@@ -451,7 +452,7 @@ func (r *StoryViewRepository) UpdateStoryView(ctx context.Context, storyView *en
 	return nil
 }
 
-func (r *StoryViewRepository) UpdateBulkStoryViews(ctx context.Context, storyViews []*entity.StoryView) (int64, []*dto.StoryViewBulkError, error) {
+func (r *StoryViewRepository) UpdateBulkStoryViews(ctx context.Context, storyViews []*entity.StoryView) (int64, []*cassandraErrors.StoryViewBulkError, error) {
 	// 1. Fail-fast validation
 	if len(storyViews) == 0 {
 		return 0, nil, nil
@@ -537,7 +538,7 @@ func (r *StoryViewRepository) UpdateBulkStoryViews(ctx context.Context, storyVie
 
 	// 5. Tổng hợp dữ liệu (Lock-free)
 	var successCount int64
-	var bulkErrors []*dto.StoryViewBulkError
+	var bulkErrors []*cassandraErrors.StoryViewBulkError
 
 	for res := range resultCh {
 		if res.err != nil {
@@ -550,7 +551,7 @@ func (r *StoryViewRepository) UpdateBulkStoryViews(ctx context.Context, storyVie
 				uID = res.storyView.ViewerID.String()
 			}
 
-			bulkErrors = append(bulkErrors, &dto.StoryViewBulkError{
+			bulkErrors = append(bulkErrors, &cassandraErrors.StoryViewBulkError{
 				StoryID: sID,
 				UserID:  uID,
 				Error:   res.err.Error(),
@@ -596,7 +597,7 @@ func (r *StoryViewRepository) DeleteStoryView(ctx context.Context, storyID strin
 	return nil
 }
 
-func (r *StoryViewRepository) DeleteBulkStoryViews(ctx context.Context, storyIDs []string) (int64, []*dto.StoryViewBulkError, error) {
+func (r *StoryViewRepository) DeleteBulkStoryViews(ctx context.Context, storyIDs []string) (int64, []*cassandraErrors.StoryViewBulkError, error) {
 	// 1. Fail-fast validation
 	if len(storyIDs) == 0 {
 		return 0, nil, nil
@@ -655,11 +656,11 @@ func (r *StoryViewRepository) DeleteBulkStoryViews(ctx context.Context, storyIDs
 
 	// 5. Tổng hợp dữ liệu
 	var successCount int64
-	var bulkErrors []*dto.StoryViewBulkError
+	var bulkErrors []*cassandraErrors.StoryViewBulkError
 
 	for res := range resultCh {
 		if res.err != nil {
-			bulkErrors = append(bulkErrors, &dto.StoryViewBulkError{
+			bulkErrors = append(bulkErrors, &cassandraErrors.StoryViewBulkError{
 				StoryID: res.storyID.String(),
 				// Điền "all_viewers" hoặc rỗng vì thao tác này xóa nguyên partition, không nhắm tới 1 user cụ thể
 				UserID: "all_viewers",
@@ -911,7 +912,7 @@ func (r *StoryViewRepository) DeleteStoryViewsByStoryIDAndUserID(ctx context.Con
 	return nil
 }
 
-func (r *StoryViewRepository) DeleteBulkStoryViewsByUserIAndStoryID(ctx context.Context, userID string, storyID []string) (int64, []*dto.StoryViewBulkError, error) {
+func (r *StoryViewRepository) DeleteBulkStoryViewsByUserIAndStoryID(ctx context.Context, userID string, storyID []string) (int64, []*cassandraErrors.StoryViewBulkError, error) {
 	// 1. Fail-fast validation
 	if userID == "" || len(storyID) == 0 {
 		return 0, nil, nil
@@ -996,11 +997,11 @@ func (r *StoryViewRepository) DeleteBulkStoryViewsByUserIAndStoryID(ctx context.
 
 	// 5. Tổng hợp dữ liệu (Lock-free)
 	var successCount int64
-	var bulkErrors []*dto.StoryViewBulkError
+	var bulkErrors []*cassandraErrors.StoryViewBulkError
 
 	for res := range resultCh {
 		if res.err != nil {
-			bulkErrors = append(bulkErrors, &dto.StoryViewBulkError{
+			bulkErrors = append(bulkErrors, &cassandraErrors.StoryViewBulkError{
 				StoryID: res.storyID.String(),
 				UserID:  userID,
 				Error:   res.err.Error(),
@@ -1019,7 +1020,7 @@ func (r *StoryViewRepository) DeleteBulkStoryViewsByUserIAndStoryID(ctx context.
 	return successCount, bulkErrors, finalErr
 }
 
-func (r *StoryViewRepository) DeleteBulkStoryViewsByStoryIDAndUserID(ctx context.Context, storyID []string, userID string) (int64, []*dto.StoryViewBulkError, error) {
+func (r *StoryViewRepository) DeleteBulkStoryViewsByStoryIDAndUserID(ctx context.Context, storyID []string, userID string) (int64, []*cassandraErrors.StoryViewBulkError, error) {
 	// BEST PRACTICE: Tránh lặp lại mã (DRY - Don't Repeat Yourself).
 	// Vì logic của hàm này giống y hệt hàm trên, ta chỉ cần định tuyến (route)
 	// lại tham số và gọi thẳng vào hàm đã được implement trọn vẹn.
@@ -1057,7 +1058,7 @@ func (r *StoryViewRepository) DeleteStoryViewsByViewedAt(ctx context.Context, st
 	return nil
 }
 
-func (r *StoryViewRepository) DeleteBulkStoryViewsByViewedAt(ctx context.Context, storyIDs []string, viewedAt time.Time) (int64, []*dto.StoryViewBulkError, error) {
+func (r *StoryViewRepository) DeleteBulkStoryViewsByViewedAt(ctx context.Context, storyIDs []string, viewedAt time.Time) (int64, []*cassandraErrors.StoryViewBulkError, error) {
 	// 1. Fail-fast validation
 	if len(storyIDs) == 0 {
 		return 0, nil, nil
@@ -1092,10 +1093,10 @@ func (r *StoryViewRepository) DeleteBulkStoryViewsByViewedAt(ctx context.Context
 
 		err := r.pool.Run(ctx, func() {
 			safeCtx := context.WithoutCancel(ctx)
-			
+
 			// Bắn lệnh xóa theo khoảng thời gian
 			execErr := r.session.Query(query, payloadID, viewedAt).WithContext(safeCtx).Exec()
-			
+
 			resultCh <- taskResult{
 				storyID: payloadID,
 				err:     execErr,
@@ -1118,11 +1119,11 @@ func (r *StoryViewRepository) DeleteBulkStoryViewsByViewedAt(ctx context.Context
 
 	// 5. Tổng hợp dữ liệu (Lock-free)
 	var successCount int64
-	var bulkErrors []*dto.StoryViewBulkError
+	var bulkErrors []*cassandraErrors.StoryViewBulkError
 
 	for res := range resultCh {
 		if res.err != nil {
-			bulkErrors = append(bulkErrors, &dto.StoryViewBulkError{
+			bulkErrors = append(bulkErrors, &cassandraErrors.StoryViewBulkError{
 				StoryID: res.storyID.String(),
 				UserID:  "range_deletion", // Đánh dấu đây là lỗi của quá trình xóa diện rộng, không phải 1 user cụ thể
 				Error:   res.err.Error(),

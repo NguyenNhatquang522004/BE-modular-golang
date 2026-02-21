@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/errors/mongodbErrors"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/IRepositoryShare"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/dto"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/utils"
@@ -34,7 +35,7 @@ func (r *GroupJoinQuestionsRepository) CreateGroupJoinQuestion(ctx context.Conte
 	}
 	return nil
 }
-func (r *GroupJoinQuestionsRepository) CreateBulkGroupJoinQuestions(ctx context.Context, questions []entity.GroupJoinQuestion) (int64, []*dto.BulkError, error) {
+func (r *GroupJoinQuestionsRepository) CreateBulkGroupJoinQuestions(ctx context.Context, questions []entity.GroupJoinQuestion) (int64, []*mongodbErrors.BulkError, error) {
 	collection := r.client.Collection(entity.GroupJoinQuestion{}.CollectionName())
 
 	for i := range questions {
@@ -48,12 +49,12 @@ func (r *GroupJoinQuestionsRepository) CreateBulkGroupJoinQuestions(ctx context.
 	if result == nil && err != nil {
 		return 0, nil, err
 	}
-	var faildocs []*dto.BulkError
+	var faildocs []*mongodbErrors.BulkError
 	if err != nil {
 		var bulkerr mongo.BulkWriteException
 		if errors.As(err, &bulkerr) {
 			for _, writeError := range bulkerr.WriteErrors {
-				faildocs = append(faildocs, &dto.BulkError{
+				faildocs = append(faildocs, &mongodbErrors.BulkError{
 					ID:     questions[writeError.Index].ID.Hex(),
 					Reason: writeError.Message,
 				})
@@ -173,7 +174,7 @@ func (r *GroupJoinQuestionsRepository) UpdateGroupJoinQuestion(ctx context.Conte
 	}
 	return nil
 }
-func (r *GroupJoinQuestionsRepository) UpdateBulkGroupJoinQuestions(ctx context.Context, questions []entity.GroupJoinQuestion) (int64, []*dto.BulkError, error) {
+func (r *GroupJoinQuestionsRepository) UpdateBulkGroupJoinQuestions(ctx context.Context, questions []entity.GroupJoinQuestion) (int64, []*mongodbErrors.BulkError, error) {
 	collection := r.client.Collection(entity.GroupJoinQuestion{}.CollectionName())
 	var models []mongo.WriteModel
 	for _, question := range questions {
@@ -184,12 +185,12 @@ func (r *GroupJoinQuestionsRepository) UpdateBulkGroupJoinQuestions(ctx context.
 	if result == nil && err != nil {
 		return 0, nil, err
 	}
-	var faildocs []*dto.BulkError
+	var faildocs []*mongodbErrors.BulkError
 	if err != nil {
 		var bulkerr mongo.BulkWriteException
 		if errors.As(err, &bulkerr) {
 			for _, writeError := range bulkerr.WriteErrors {
-				faildocs = append(faildocs, &dto.BulkError{
+				faildocs = append(faildocs, &mongodbErrors.BulkError{
 					ID:     questions[writeError.Index].ID.Hex(),
 					Reason: writeError.Message,
 				})
@@ -215,7 +216,7 @@ func (r *GroupJoinQuestionsRepository) DeleteGroupJoinQuestion(ctx context.Conte
 	}
 	return nil
 }
-func (r *GroupJoinQuestionsRepository) DeleteBulkGroupJoinQuestions(ctx context.Context, questionIDs []string) (int64, []*dto.BulkError, error) {
+func (r *GroupJoinQuestionsRepository) DeleteBulkGroupJoinQuestions(ctx context.Context, questionIDs []string) (int64, []*mongodbErrors.BulkError, error) {
 	for _, id := range questionIDs {
 		if _, err := primitive.ObjectIDFromHex(id); err != nil {
 			return 0, nil, fmt.Errorf("invalid question ID: %s", id)
@@ -232,12 +233,12 @@ func (r *GroupJoinQuestionsRepository) DeleteBulkGroupJoinQuestions(ctx context.
 	if result == nil && err != nil {
 		return 0, nil, err
 	}
-	var faildocs []*dto.BulkError
+	var faildocs []*mongodbErrors.BulkError
 	if err != nil {
 		var bulkerr mongo.BulkWriteException
 		if errors.As(err, &bulkerr) {
 			for _, writeError := range bulkerr.WriteErrors {
-				faildocs = append(faildocs, &dto.BulkError{
+				faildocs = append(faildocs, &mongodbErrors.BulkError{
 					ID:     questionIDs[writeError.Index],
 					Reason: writeError.Message,
 				})
@@ -248,7 +249,7 @@ func (r *GroupJoinQuestionsRepository) DeleteBulkGroupJoinQuestions(ctx context.
 	}
 	return int64(result.DeletedCount), faildocs, nil
 }
-func (r *GroupJoinQuestionsRepository) DeleteGroupJoinQuestionsByGroupIDAndQuestionIDs(ctx context.Context, groupID string, questionIDs []string) (int64, []*dto.BulkError, error) {
+func (r *GroupJoinQuestionsRepository) DeleteGroupJoinQuestionsByGroupIDAndQuestionIDs(ctx context.Context, groupID string, questionIDs []string) (int64, []*mongodbErrors.BulkError, error) {
 	var objIDs []primitive.ObjectID
 	for _, id := range questionIDs {
 		objID, err := primitive.ObjectIDFromHex(id)
@@ -272,12 +273,12 @@ func (r *GroupJoinQuestionsRepository) DeleteGroupJoinQuestionsByGroupIDAndQuest
 	if result == nil && err != nil {
 		return 0, nil, err
 	}
-	var faildocs []*dto.BulkError
+	var faildocs []*mongodbErrors.BulkError
 	if err != nil {
 		var bulkerr mongo.BulkWriteException
 		if errors.As(err, &bulkerr) {
 			for _, writeError := range bulkerr.WriteErrors {
-				faildocs = append(faildocs, &dto.BulkError{
+				faildocs = append(faildocs, &mongodbErrors.BulkError{
 					ID:     questionIDs[writeError.Index],
 					Reason: writeError.Message,
 				})
@@ -307,7 +308,7 @@ func (r *GroupJoinQuestionsRepository) DeleteGroupJoinQuestionsByGroupID(ctx con
 	}
 	return result.DeletedCount, nil
 }
-func (r *GroupJoinQuestionsRepository) DeleteBulkGroupJoinQuestionsByGroupID(ctx context.Context, groupIDs []string) (int64, []*dto.BulkError, error) {
+func (r *GroupJoinQuestionsRepository) DeleteBulkGroupJoinQuestionsByGroupID(ctx context.Context, groupIDs []string) (int64, []*mongodbErrors.BulkError, error) {
 	collection := r.client.Collection(entity.GroupJoinQuestion{}.CollectionName())
 	var model []mongo.WriteModel
 	for _, groupID := range groupIDs {
@@ -322,12 +323,12 @@ func (r *GroupJoinQuestionsRepository) DeleteBulkGroupJoinQuestionsByGroupID(ctx
 	if result == nil && err != nil {
 		return 0, nil, err
 	}
-	var faildocs []*dto.BulkError
+	var faildocs []*mongodbErrors.BulkError
 	if err != nil {
 		var bulkerr mongo.BulkWriteException
 		if errors.As(err, &bulkerr) {
 			for _, writeError := range bulkerr.WriteErrors {
-				faildocs = append(faildocs, &dto.BulkError{
+				faildocs = append(faildocs, &mongodbErrors.BulkError{
 					ID:     groupIDs[writeError.Index],
 					Reason: writeError.Message,
 				})
@@ -357,7 +358,7 @@ func (r *GroupJoinQuestionsRepository) DeleteGroupJoinQuestionByIDAndGroupID(ctx
 	}
 	return nil
 }
-func (r *GroupJoinQuestionsRepository) DeleteBulkGroupJoinQuestionByIDAndGroupID(ctx context.Context, questionIDs []string, groupID string) (int64, []*dto.BulkError, error) {
+func (r *GroupJoinQuestionsRepository) DeleteBulkGroupJoinQuestionByIDAndGroupID(ctx context.Context, questionIDs []string, groupID string) (int64, []*mongodbErrors.BulkError, error) {
 	collection := r.client.Collection(entity.GroupJoinQuestion{}.CollectionName())
 	groupObjID, err := primitive.ObjectIDFromHex(groupID)
 	if err != nil {
@@ -376,12 +377,12 @@ func (r *GroupJoinQuestionsRepository) DeleteBulkGroupJoinQuestionByIDAndGroupID
 	if result == nil && err != nil {
 		return 0, nil, err
 	}
-	var faildocs []*dto.BulkError
+	var faildocs []*mongodbErrors.BulkError
 	if err != nil {
 		var bulkerr mongo.BulkWriteException
 		if errors.As(err, &bulkerr) {
 			for _, writeError := range bulkerr.WriteErrors {
-				faildocs = append(faildocs, &dto.BulkError{
+				faildocs = append(faildocs, &mongodbErrors.BulkError{
 					ID:     questionIDs[writeError.Index],
 					Reason: writeError.Message,
 				})
@@ -390,5 +391,5 @@ func (r *GroupJoinQuestionsRepository) DeleteBulkGroupJoinQuestionByIDAndGroupID
 			return 0, nil, err
 		}
 	}
-	return result.DeletedCount, faildocs, nil	
+	return result.DeletedCount, faildocs, nil
 }

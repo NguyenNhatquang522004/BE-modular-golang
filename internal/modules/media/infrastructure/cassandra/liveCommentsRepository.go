@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/errors/cassandraErrors"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/IRepositoryShare"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/dto"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/infrastructure/concurrency"
@@ -73,7 +74,7 @@ func (r *LiveCommentsRepository) CreateLiveComment(ctx context.Context, comment 
 	return nil
 }
 
-func (r *LiveCommentsRepository) CreateBulkLiveComments(ctx context.Context, comments []*entity.LiveComment) (int64, []*dto.LiveCommentBulkError, error) {
+func (r *LiveCommentsRepository) CreateBulkLiveComments(ctx context.Context, comments []*entity.LiveComment) (int64, []*cassandraErrors.LiveCommentBulkError, error) {
 	// 1. Fail-fast validation
 	if len(comments) == 0 {
 		return 0, nil, nil
@@ -161,7 +162,7 @@ func (r *LiveCommentsRepository) CreateBulkLiveComments(ctx context.Context, com
 
 	// 5. Tổng hợp dữ liệu (Lock-free)
 	var successCount int64
-	var bulkErrors []*dto.LiveCommentBulkError
+	var bulkErrors []*cassandraErrors.LiveCommentBulkError
 
 	for res := range resultCh {
 		if res.err != nil {
@@ -176,7 +177,7 @@ func (r *LiveCommentsRepository) CreateBulkLiveComments(ctx context.Context, com
 				uID = res.comment.UserID.String()
 			}
 
-			bulkErrors = append(bulkErrors, &dto.LiveCommentBulkError{
+			bulkErrors = append(bulkErrors, &cassandraErrors.LiveCommentBulkError{
 				StreamID:  sID,
 				CommentID: cID,
 				UserID:    uID,
@@ -603,7 +604,7 @@ func (r *LiveCommentsRepository) UpdateLiveComment(ctx context.Context, comment 
 	return nil
 }
 
-func (r *LiveCommentsRepository) UpdateBulkLiveComments(ctx context.Context, comments []*entity.LiveComment) (int64, []*dto.LiveCommentBulkError, error) {
+func (r *LiveCommentsRepository) UpdateBulkLiveComments(ctx context.Context, comments []*entity.LiveComment) (int64, []*cassandraErrors.LiveCommentBulkError, error) {
 	// 1. Fail-fast validation
 	if len(comments) == 0 {
 		return 0, nil, nil
@@ -689,7 +690,7 @@ func (r *LiveCommentsRepository) UpdateBulkLiveComments(ctx context.Context, com
 
 	// 5. Thu gom kết quả (Lock-free)
 	var successCount int64
-	var bulkErrors []*dto.LiveCommentBulkError
+	var bulkErrors []*cassandraErrors.LiveCommentBulkError
 
 	for res := range resultCh {
 		if res.err != nil {
@@ -704,7 +705,7 @@ func (r *LiveCommentsRepository) UpdateBulkLiveComments(ctx context.Context, com
 				uID = res.comment.UserID.String()
 			}
 
-			bulkErrors = append(bulkErrors, &dto.LiveCommentBulkError{
+			bulkErrors = append(bulkErrors, &cassandraErrors.LiveCommentBulkError{
 				StreamID:  sID,
 				CommentID: cID,
 				UserID:    uID,
@@ -758,7 +759,7 @@ func (r *LiveCommentsRepository) DeleteLiveComment(ctx context.Context, streamID
 	return nil
 }
 
-func (r *LiveCommentsRepository) DeleteBulkLiveComments(ctx context.Context, streamID string, commentIDs []string, createdAt time.Time) (int64, []*dto.LiveCommentBulkError, error) {
+func (r *LiveCommentsRepository) DeleteBulkLiveComments(ctx context.Context, streamID string, commentIDs []string, createdAt time.Time) (int64, []*cassandraErrors.LiveCommentBulkError, error) {
 	// 1. Fail-fast validation
 	if streamID == "" || len(commentIDs) == 0 {
 		return 0, nil, nil
@@ -798,10 +799,10 @@ func (r *LiveCommentsRepository) DeleteBulkLiveComments(ctx context.Context, str
 
 		err := r.pool.Run(ctx, func() {
 			safeCtx := context.WithoutCancel(ctx)
-			
+
 			// Bắn lệnh xóa xuống DB
 			execErr := r.session.Query(query, sID, createdAt, payloadCID).WithContext(safeCtx).Exec()
-			
+
 			resultCh <- taskResult{
 				commentID: payloadCID,
 				err:       execErr,
@@ -824,11 +825,11 @@ func (r *LiveCommentsRepository) DeleteBulkLiveComments(ctx context.Context, str
 
 	// 5. Tổng hợp dữ liệu (Lock-free)
 	var successCount int64
-	var bulkErrors []*dto.LiveCommentBulkError
+	var bulkErrors []*cassandraErrors.LiveCommentBulkError
 
 	for res := range resultCh {
 		if res.err != nil {
-			bulkErrors = append(bulkErrors, &dto.LiveCommentBulkError{
+			bulkErrors = append(bulkErrors, &cassandraErrors.LiveCommentBulkError{
 				StreamID:  streamID,
 				CommentID: res.commentID.String(),
 				UserID:    "unknown_user", // Do ta không cần UserID để xóa, ta set fallback label
@@ -882,7 +883,7 @@ func (r *LiveCommentsRepository) DeleteLiveCommentsByTimeRange(ctx context.Conte
 	return nil
 }
 
-func (r *LiveCommentsRepository) DeleteBulkLiveCommentsByTimeRange(ctx context.Context, streamIDs []string, startTime time.Time, endTime time.Time) (int64, []*dto.LiveCommentBulkError, error) {
+func (r *LiveCommentsRepository) DeleteBulkLiveCommentsByTimeRange(ctx context.Context, streamIDs []string, startTime time.Time, endTime time.Time) (int64, []*cassandraErrors.LiveCommentBulkError, error) {
 	// 1. Fail-fast validation
 	if len(streamIDs) == 0 {
 		return 0, nil, nil
@@ -920,10 +921,10 @@ func (r *LiveCommentsRepository) DeleteBulkLiveCommentsByTimeRange(ctx context.C
 
 		err := r.pool.Run(ctx, func() {
 			safeCtx := context.WithoutCancel(ctx)
-			
+
 			// Bắn lệnh Range Deletion xuống DB
 			execErr := r.session.Query(query, payloadID, startTime, endTime).WithContext(safeCtx).Exec()
-			
+
 			resultCh <- taskResult{
 				streamID: payloadID,
 				err:      execErr,
@@ -946,14 +947,14 @@ func (r *LiveCommentsRepository) DeleteBulkLiveCommentsByTimeRange(ctx context.C
 
 	// 5. Tổng hợp dữ liệu (Lock-free)
 	var successCount int64
-	var bulkErrors []*dto.LiveCommentBulkError
+	var bulkErrors []*cassandraErrors.LiveCommentBulkError
 
 	for res := range resultCh {
 		if res.err != nil {
-			bulkErrors = append(bulkErrors, &dto.LiveCommentBulkError{
-				StreamID:  res.streamID.String(),
+			bulkErrors = append(bulkErrors, &cassandraErrors.LiveCommentBulkError{
+				StreamID: res.streamID.String(),
 				// Đánh dấu rõ đây là tác vụ dọn dẹp hàng loạt, không nhắm tới 1 comment hay 1 user cụ thể
-				CommentID: "range_deletion", 
+				CommentID: "range_deletion",
 				UserID:    "all_users_in_range",
 				Error:     res.err.Error(),
 			})

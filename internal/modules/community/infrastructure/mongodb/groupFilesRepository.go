@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/errors/mongodbErrors"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/IRepositoryShare"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/dto"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/utils"
@@ -34,7 +35,7 @@ func (r *GroupFilesRepository) CreateGroupFile(ctx context.Context, file *entity
 	}
 	return nil
 }
-func (r *GroupFilesRepository) CreateBulkGroupFiles(ctx context.Context, files []entity.GroupFile) (int64, []*dto.BulkError, error) {
+func (r *GroupFilesRepository) CreateBulkGroupFiles(ctx context.Context, files []entity.GroupFile) (int64, []*mongodbErrors.BulkError, error) {
 	collection := r.client.Collection(entity.GroupFile{}.CollectionName())
 	docs := utils.ToInterfaceSlice(files)
 	var model []mongo.WriteModel
@@ -46,12 +47,12 @@ func (r *GroupFilesRepository) CreateBulkGroupFiles(ctx context.Context, files [
 	if result == nil && err != nil {
 		return 0, nil, err
 	}
-	var faildocs []*dto.BulkError
+	var faildocs []*mongodbErrors.BulkError
 	if err != nil {
 		var bulkErr mongo.BulkWriteException
 		if errors.As(err, &bulkErr) {
 			for _, writeError := range bulkErr.WriteErrors {
-				faildocs = append(faildocs, &dto.BulkError{
+				faildocs = append(faildocs, &mongodbErrors.BulkError{
 					ID:     files[writeError.Index].ID.Hex(),
 					Reason: writeError.Message,
 				})
@@ -260,7 +261,7 @@ func (r *GroupFilesRepository) DeleteGroupFile(ctx context.Context, id string) e
 	}
 	return nil
 }
-func (r *GroupFilesRepository) deleteBulkGroupFiles(ctx context.Context, ids []string) (int64, []*dto.BulkError, error) {
+func (r *GroupFilesRepository) deleteBulkGroupFiles(ctx context.Context, ids []string) (int64, []*mongodbErrors.BulkError, error) {
 	collection := r.client.Collection(entity.GroupFile{}.CollectionName())
 	var model []mongo.WriteModel
 	for _, id := range ids {
@@ -275,12 +276,12 @@ func (r *GroupFilesRepository) deleteBulkGroupFiles(ctx context.Context, ids []s
 	if result == nil && err != nil {
 		return 0, nil, err
 	}
-	var faildocs []*dto.BulkError
+	var faildocs []*mongodbErrors.BulkError
 	if err != nil {
 		var bulkErr mongo.BulkWriteException
 		if errors.As(err, &bulkErr) {
 			for _, writeError := range bulkErr.WriteErrors {
-				faildocs = append(faildocs, &dto.BulkError{
+				faildocs = append(faildocs, &mongodbErrors.BulkError{
 					ID:     ids[writeError.Index],
 					Reason: writeError.Message,
 				})
@@ -304,7 +305,7 @@ func (r *GroupFilesRepository) DeleteGroupFilesByGroupID(ctx context.Context, gr
 	}
 	return nil
 }
-func (r *GroupFilesRepository) DeleteBulkGroupFilesByGroupID(ctx context.Context, groupIDs []string) (int64, []*dto.BulkError, error) {
+func (r *GroupFilesRepository) DeleteBulkGroupFilesByGroupID(ctx context.Context, groupIDs []string) (int64, []*mongodbErrors.BulkError, error) {
 	collection := r.client.Collection(entity.GroupFile{}.CollectionName())
 	var model []mongo.WriteModel
 	for _, groupID := range groupIDs {
@@ -319,12 +320,12 @@ func (r *GroupFilesRepository) DeleteBulkGroupFilesByGroupID(ctx context.Context
 	if result == nil && err != nil {
 		return 0, nil, err
 	}
-	var faildocs []*dto.BulkError
+	var faildocs []*mongodbErrors.BulkError
 	if err != nil {
 		var bulkErr mongo.BulkWriteException
 		if errors.As(err, &bulkErr) {
 			for _, writeError := range bulkErr.WriteErrors {
-				faildocs = append(faildocs, &dto.BulkError{
+				faildocs = append(faildocs, &mongodbErrors.BulkError{
 					ID:     groupIDs[writeError.Index],
 					Reason: writeError.Message,
 				})
@@ -351,7 +352,7 @@ func (r *GroupFilesRepository) DeleteGroupFileByIDAndGroupID(ctx context.Context
 	}
 	return nil
 }
-func (r *GroupFilesRepository) DeleteBulkGroupFileByIDAndGroupID(ctx context.Context, ids []string, groupID string) (int64, []*dto.BulkError, error) {
+func (r *GroupFilesRepository) DeleteBulkGroupFileByIDAndGroupID(ctx context.Context, ids []string, groupID string) (int64, []*mongodbErrors.BulkError, error) {
 	collection := r.client.Collection(entity.GroupFile{}.CollectionName())
 	groupIDObj, err := primitive.ObjectIDFromHex(groupID)
 	if err != nil {
@@ -370,12 +371,12 @@ func (r *GroupFilesRepository) DeleteBulkGroupFileByIDAndGroupID(ctx context.Con
 	if result == nil && err != nil {
 		return 0, nil, err
 	}
-	var faildocs []*dto.BulkError
+	var faildocs []*mongodbErrors.BulkError
 	if err != nil {
 		var bulkErr mongo.BulkWriteException
 		if errors.As(err, &bulkErr) {
 			for _, writeError := range bulkErr.WriteErrors {
-				faildocs = append(faildocs, &dto.BulkError{
+				faildocs = append(faildocs, &mongodbErrors.BulkError{
 					ID:     ids[writeError.Index],
 					Reason: writeError.Message,
 				})
@@ -399,7 +400,7 @@ func (r *GroupFilesRepository) DeleteGroupFilesByGroupIDAndUploaderID(ctx contex
 	}
 	return nil
 }
-func (r *GroupFilesRepository) DeleteBulkGroupFilesByGroupIDAndUploaderID(ctx context.Context, groupID string, uploaderIDs []string) (int64, []*dto.BulkError, error) {
+func (r *GroupFilesRepository) DeleteBulkGroupFilesByGroupIDAndUploaderID(ctx context.Context, groupID string, uploaderIDs []string) (int64, []*mongodbErrors.BulkError, error) {
 	collection := r.client.Collection(entity.GroupFile{}.CollectionName())
 	groupIDObj, err := primitive.ObjectIDFromHex(groupID)
 	if err != nil {
@@ -414,12 +415,12 @@ func (r *GroupFilesRepository) DeleteBulkGroupFilesByGroupIDAndUploaderID(ctx co
 	if result == nil && err != nil {
 		return 0, nil, err
 	}
-	var faildocs []*dto.BulkError
+	var faildocs []*mongodbErrors.BulkError
 	if err != nil {
 		var bulkErr mongo.BulkWriteException
 		if errors.As(err, &bulkErr) {
 			for _, writeError := range bulkErr.WriteErrors {
-				faildocs = append(faildocs, &dto.BulkError{
+				faildocs = append(faildocs, &mongodbErrors.BulkError{
 					ID:     uploaderIDs[writeError.Index],
 					Reason: writeError.Message,
 				})

@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/errors/mongodbErrors"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/IRepositoryShare"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/dto"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/utils"
@@ -32,7 +33,7 @@ func (r *CommentRepository) CreateComment(ctx context.Context, comment *entity.C
 	}
 	return nil
 }
-func (r *CommentRepository) CreateBulkComments(ctx context.Context, comments []*entity.Comment) (int64, []*dto.BulkError, error) {
+func (r *CommentRepository) CreateBulkComments(ctx context.Context, comments []*entity.Comment) (int64, []*mongodbErrors.BulkError, error) {
 	collection := r.client.Collection(entity.Comment{}.CollectionnamComment())
 	for _, comment := range comments {
 		if comment.ID.IsZero() {
@@ -46,13 +47,13 @@ func (r *CommentRepository) CreateBulkComments(ctx context.Context, comments []*
 		return 0, nil, err
 	}
 
-	var failedDocs []*dto.BulkError
+	var failedDocs []*mongodbErrors.BulkError
 	if err != nil {
 		// Kiểm tra xem có phải lỗi BulkWriteException không
 		var bulkErr mongo.BulkWriteException
 		if errors.As(err, &bulkErr) {
 			for _, we := range bulkErr.WriteErrors {
-				failedDocs = append(failedDocs, &dto.BulkError{
+				failedDocs = append(failedDocs, &mongodbErrors.BulkError{
 					ID:     comments[we.Index].ID.Hex(),
 					Reason: we.Message,
 				})
@@ -131,7 +132,7 @@ func (r *CommentRepository) UpdateComment(ctx context.Context, comment *entity.C
 	}
 	return nil
 }
-func (r *CommentRepository) UpdateBulkComments(ctx context.Context, comments []*entity.Comment) (int64, []*dto.BulkError, error) {
+func (r *CommentRepository) UpdateBulkComments(ctx context.Context, comments []*entity.Comment) (int64, []*mongodbErrors.BulkError, error) {
 	collection := r.client.Collection(entity.Comment{}.CollectionnamComment())
 	models := make([]mongo.WriteModel, 0, len(comments))
 	for _, ps := range comments {
@@ -146,7 +147,7 @@ func (r *CommentRepository) UpdateBulkComments(ctx context.Context, comments []*
 		return 0, nil, fmt.Errorf("bulk write system error: %w", err)
 	}
 	// Trường hợp 2: Có lỗi xảy ra với một vài document (Partial Failure)
-	var failedDocs []*dto.BulkError
+	var failedDocs []*mongodbErrors.BulkError
 	if err != nil {
 		// Dùng errors.As để ép kiểu err về mongo.BulkWriteException
 		var bulkErr mongo.BulkWriteException
@@ -160,7 +161,7 @@ func (r *CommentRepository) UpdateBulkComments(ctx context.Context, comments []*
 					failedComment := comments[failedIndex]
 
 					// Ghi nhận lại ID và lý do lỗi
-					failedDocs = append(failedDocs, &dto.BulkError{
+					failedDocs = append(failedDocs, &mongodbErrors.BulkError{
 						ID:     failedComment.ID.Hex(), // Hoặc failedComment.ID.String()
 						Reason: we.Message,
 					})
@@ -187,7 +188,7 @@ func (r *CommentRepository) DeleteComment(ctx context.Context, commentID string)
 	}
 	return nil
 }
-func (r *CommentRepository) DeleteBulkComments(ctx context.Context, commentIDs []string) (int64, []*dto.BulkError, error) {
+func (r *CommentRepository) DeleteBulkComments(ctx context.Context, commentIDs []string) (int64, []*mongodbErrors.BulkError, error) {
 	for _, id := range commentIDs {
 		if _, err := primitive.ObjectIDFromHex(id); err != nil {
 			return 0, nil, fmt.Errorf("invalid comment ID: %s", id)
@@ -204,7 +205,7 @@ func (r *CommentRepository) DeleteBulkComments(ctx context.Context, commentIDs [
 	if result == nil && err != nil {
 		return 0, nil, fmt.Errorf("bulk delete system error: %w", err)
 	}
-	var failedDocs []*dto.BulkError
+	var failedDocs []*mongodbErrors.BulkError
 	if err != nil {
 		var bulkErr mongo.BulkWriteException
 		if errors.As(err, &bulkErr) {
@@ -212,7 +213,7 @@ func (r *CommentRepository) DeleteBulkComments(ctx context.Context, commentIDs [
 				failedIndex := we.Index
 				if failedIndex < len(commentIDs) {
 					failedCommentID := commentIDs[failedIndex]
-					failedDocs = append(failedDocs, &dto.BulkError{
+					failedDocs = append(failedDocs, &mongodbErrors.BulkError{
 						ID:     failedCommentID,
 						Reason: we.Message,
 					})

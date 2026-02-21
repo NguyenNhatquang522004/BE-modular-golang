@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/errors/mongodbErrors"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/IRepositoryShare"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/dto"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/utils"
@@ -35,7 +36,7 @@ func (r *ReelRepository) CreateReel(ctx context.Context, reel *entity.Reel) erro
 	}
 	return nil
 }
-func (r *ReelRepository) CreateBulkReels(ctx context.Context, reels []*entity.Reel) (int64, []*dto.BulkError, error) {
+func (r *ReelRepository) CreateBulkReels(ctx context.Context, reels []*entity.Reel) (int64, []*mongodbErrors.BulkError, error) {
 	collection := r.client.Collection(entity.Reel{}.CollectionName())
 	for _, reel := range reels {
 		if reel.ID.IsZero() {
@@ -49,13 +50,13 @@ func (r *ReelRepository) CreateBulkReels(ctx context.Context, reels []*entity.Re
 		return 0, nil, err
 	}
 
-	var failedDocs []*dto.BulkError
+	var failedDocs []*mongodbErrors.BulkError
 	if err != nil {
 		// Kiểm tra xem có phải lỗi BulkWriteException không
 		var bulkErr mongo.BulkWriteException
 		if errors.As(err, &bulkErr) {
 			for _, we := range bulkErr.WriteErrors {
-				failedDocs = append(failedDocs, &dto.BulkError{
+				failedDocs = append(failedDocs, &mongodbErrors.BulkError{
 					ID:     reels[we.Index].ID.Hex(),
 					Reason: we.Message,
 				})
@@ -179,7 +180,7 @@ func (r *ReelRepository) UpdateReel(ctx context.Context, reel *entity.Reel) erro
 	}
 	return nil
 }
-func (r *ReelRepository) UpdateBulkReels(ctx context.Context, reels []*entity.Reel) (int64, []*dto.BulkError, error) {
+func (r *ReelRepository) UpdateBulkReels(ctx context.Context, reels []*entity.Reel) (int64, []*mongodbErrors.BulkError, error) {
 	collection := r.client.Collection(entity.Reel{}.CollectionName())
 	models := make([]mongo.WriteModel, 0, len(reels))
 	for _, ps := range reels {
@@ -194,7 +195,7 @@ func (r *ReelRepository) UpdateBulkReels(ctx context.Context, reels []*entity.Re
 		return 0, nil, fmt.Errorf("bulk write system error: %w", err)
 	}
 	// Trường hợp 2: Có lỗi xảy ra với một vài document (Partial Failure)
-	var failedDocs []*dto.BulkError
+	var failedDocs []*mongodbErrors.BulkError
 	if err != nil {
 		// Dùng errors.As để ép kiểu err về mongo.BulkWriteException
 		var bulkErr mongo.BulkWriteException
@@ -208,7 +209,7 @@ func (r *ReelRepository) UpdateBulkReels(ctx context.Context, reels []*entity.Re
 					failedReel := reels[failedIndex]
 
 					// Ghi nhận lại ID và lý do lỗi
-					failedDocs = append(failedDocs, &dto.BulkError{
+					failedDocs = append(failedDocs, &mongodbErrors.BulkError{
 						ID:     failedReel.ID.Hex(), // Hoặc failedReel.ID.String()
 						Reason: we.Message,
 					})
@@ -226,7 +227,7 @@ func (r *ReelRepository) UpdateBulkReels(ctx context.Context, reels []*entity.Re
 	return result.ModifiedCount, nil, nil
 }
 func (r *ReelRepository) DeleteReel(ctx context.Context, id string) error {
-		collection := r.client.Collection(entity.Reel{}.CollectionName())
+	collection := r.client.Collection(entity.Reel{}.CollectionName())
 	finalid, _ := primitive.ObjectIDFromHex(id)
 	filter := bson.M{"_id": finalid}
 	_, err := collection.DeleteOne(ctx, filter)
@@ -235,8 +236,8 @@ func (r *ReelRepository) DeleteReel(ctx context.Context, id string) error {
 	}
 	return nil
 }
-func (r *ReelRepository) DeleteBulkReels(ctx context.Context, ids []string) (int64, []*dto.BulkError, error) {
-		for _, id := range ids {
+func (r *ReelRepository) DeleteBulkReels(ctx context.Context, ids []string) (int64, []*mongodbErrors.BulkError, error) {
+	for _, id := range ids {
 		if _, err := primitive.ObjectIDFromHex(id); err != nil {
 			return 0, nil, fmt.Errorf("invalid reel ID: %s", id)
 		}
@@ -252,7 +253,7 @@ func (r *ReelRepository) DeleteBulkReels(ctx context.Context, ids []string) (int
 	if result == nil && err != nil {
 		return 0, nil, fmt.Errorf("bulk delete system error: %w", err)
 	}
-	var failedDocs []*dto.BulkError
+	var failedDocs []*mongodbErrors.BulkError
 	if err != nil {
 		var bulkErr mongo.BulkWriteException
 		if errors.As(err, &bulkErr) {
@@ -260,7 +261,7 @@ func (r *ReelRepository) DeleteBulkReels(ctx context.Context, ids []string) (int
 				failedIndex := we.Index
 				if failedIndex < len(ids) {
 					failedID := ids[failedIndex]
-					failedDocs = append(failedDocs, &dto.BulkError{
+					failedDocs = append(failedDocs, &mongodbErrors.BulkError{
 						ID:     failedID,
 						Reason: we.Message,
 					})

@@ -14,6 +14,22 @@ import (
 
 type ModuleCommunication struct {
 	// Dependencies...
+	client  *mongo.Database
+	session *gocql.Session
+}
+
+func NewModuleCommunication(client *mongo.Database, session *gocql.Session) *ModuleCommunication {
+	m := &ModuleCommunication{
+		client:  client,
+		session: session,
+	}
+	if err := m.InitMongo(client); err != nil {
+		log.Fatalf("Failed to initialize MongoDB for Communication Module: %v", err)
+	}
+	if err := m.InitCassandra(session); err != nil {
+		log.Fatalf("Failed to initialize Cassandra for Communication Module: %v", err)
+	}
+	return m
 }
 
 // =============================================================================

@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/errors/cassandraErrors"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/IRepositoryShare"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/dto"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/infrastructure/concurrency"
@@ -57,7 +58,7 @@ func (r *ReactionsHistoryRepository) CreateReactionHistory(ctx context.Context, 
 
 	return nil
 }
-func (r *ReactionsHistoryRepository) CreateBulkReactionHistory(ctx context.Context, reactions []*entity.UserReactionHistory) (int64, []*dto.ReactionBulkError, error) {
+func (r *ReactionsHistoryRepository) CreateBulkReactionHistory(ctx context.Context, reactions []*entity.UserReactionHistory) (int64, []*cassandraErrors.ReactionBulkError, error) {
 	if len(reactions) == 0 {
 		return 0, nil, nil
 	}
@@ -126,7 +127,7 @@ func (r *ReactionsHistoryRepository) CreateBulkReactionHistory(ctx context.Conte
 
 	// 4. GOM KẾT QUẢ (Không cần Mutex vì chỉ có 1 Goroutine chính đọc Channel)
 	var successCount int64
-	var bulkErrors []*dto.ReactionBulkError
+	var bulkErrors []*cassandraErrors.ReactionBulkError
 
 	for res := range resultCh {
 		if res.err != nil {
@@ -138,7 +139,7 @@ func (r *ReactionsHistoryRepository) CreateBulkReactionHistory(ctx context.Conte
 				tID = res.reaction.TargetID
 			}
 
-			bulkErrors = append(bulkErrors, &dto.ReactionBulkError{
+			bulkErrors = append(bulkErrors, &cassandraErrors.ReactionBulkError{
 				UserID:   uID,
 				TargetID: tID,
 				Error:    res.err.Error(),

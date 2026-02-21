@@ -1,9 +1,6 @@
-package dto
+package cassandraErrors
 
-type BulkError struct {
-	ID     string
-	Reason string
-}
+
 
 type ReactionBulkError struct {
 	TargetID string `json:"target_id"` // PostID/CommentID bị lỗi

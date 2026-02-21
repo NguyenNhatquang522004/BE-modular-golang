@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/errors/mongodbErrors"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/IRepositoryShare"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/dto"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/utils"
@@ -35,7 +36,7 @@ func (r *GroupMembersRepository) CreateGroupMember(ctx context.Context, groupMem
 	}
 	return nil
 }
-func (r *GroupMembersRepository) CreateBulkGroupMembers(ctx context.Context, groupMembers []*entity.GroupMember) (int64, []*dto.BulkError, error) {
+func (r *GroupMembersRepository) CreateBulkGroupMembers(ctx context.Context, groupMembers []*entity.GroupMember) (int64, []*mongodbErrors.BulkError, error) {
 	collection := r.client.Collection(entity.GroupMember{}.CollectionName())
 	for _, groupMember := range groupMembers {
 		if groupMember.ID.IsZero() {
@@ -49,13 +50,13 @@ func (r *GroupMembersRepository) CreateBulkGroupMembers(ctx context.Context, gro
 		return 0, nil, err
 	}
 
-	var failedDocs []*dto.BulkError
+	var failedDocs []*mongodbErrors.BulkError
 	if err != nil {
 		// Kiểm tra xem có phải lỗi BulkWriteException không
 		var bulkErr mongo.BulkWriteException
 		if errors.As(err, &bulkErr) {
 			for _, we := range bulkErr.WriteErrors {
-				failedDocs = append(failedDocs, &dto.BulkError{
+				failedDocs = append(failedDocs, &mongodbErrors.BulkError{
 					ID:     groupMembers[we.Index].ID.Hex(),
 					Reason: we.Message,
 				})
@@ -255,7 +256,7 @@ func (r *GroupMembersRepository) UpdateGroupMember(ctx context.Context, groupMem
 	}
 	return nil
 }
-func (r *GroupMembersRepository) UpdateBulkGroupMembers(ctx context.Context, groupMembers []*entity.GroupMember) (int64, []*dto.BulkError, error) {
+func (r *GroupMembersRepository) UpdateBulkGroupMembers(ctx context.Context, groupMembers []*entity.GroupMember) (int64, []*mongodbErrors.BulkError, error) {
 	collection := r.client.Collection(entity.GroupMember{}.CollectionName())
 	models := make([]mongo.WriteModel, 0, len(groupMembers))
 	for _, ps := range groupMembers {
@@ -270,7 +271,7 @@ func (r *GroupMembersRepository) UpdateBulkGroupMembers(ctx context.Context, gro
 		return 0, nil, fmt.Errorf("bulk write system error: %w", err)
 	}
 	// Trường hợp 2: Có lỗi xảy ra với một vài document (Partial Failure)
-	var failedDocs []*dto.BulkError
+	var failedDocs []*mongodbErrors.BulkError
 	if err != nil {
 		// Dùng errors.As để ép kiểu err về mongo.BulkWriteException
 		var bulkErr mongo.BulkWriteException
@@ -284,7 +285,7 @@ func (r *GroupMembersRepository) UpdateBulkGroupMembers(ctx context.Context, gro
 					failedGroupMember := groupMembers[failedIndex]
 
 					// Ghi nhận lại ID và lý do lỗi
-					failedDocs = append(failedDocs, &dto.BulkError{
+					failedDocs = append(failedDocs, &mongodbErrors.BulkError{
 						ID:     failedGroupMember.ID.Hex(), // Hoặc failedGroupMember.ID.String()
 						Reason: we.Message,
 					})
@@ -311,7 +312,7 @@ func (r *GroupMembersRepository) DeleteGroupMember(ctx context.Context, groupID 
 	}
 	return nil
 }
-func (r *GroupMembersRepository) DeleteBulkGroupMembers(ctx context.Context, groupIDs []string) (int64, []*dto.BulkError, error) {
+func (r *GroupMembersRepository) DeleteBulkGroupMembers(ctx context.Context, groupIDs []string) (int64, []*mongodbErrors.BulkError, error) {
 	for _, id := range groupIDs {
 		if _, err := primitive.ObjectIDFromHex(id); err != nil {
 			return 0, nil, fmt.Errorf("invalid group ID: %s", id)
@@ -328,7 +329,7 @@ func (r *GroupMembersRepository) DeleteBulkGroupMembers(ctx context.Context, gro
 	if result == nil && err != nil {
 		return 0, nil, fmt.Errorf("bulk delete system error: %w", err)
 	}
-	var failedDocs []*dto.BulkError
+	var failedDocs []*mongodbErrors.BulkError
 	if err != nil {
 		var bulkErr mongo.BulkWriteException
 		if errors.As(err, &bulkErr) {
@@ -336,7 +337,7 @@ func (r *GroupMembersRepository) DeleteBulkGroupMembers(ctx context.Context, gro
 				failedIndex := we.Index
 				if failedIndex < len(groupIDs) {
 					failedGroupID := groupIDs[failedIndex]
-					failedDocs = append(failedDocs, &dto.BulkError{
+					failedDocs = append(failedDocs, &mongodbErrors.BulkError{
 						ID:     failedGroupID,
 						Reason: we.Message,
 					})
@@ -350,7 +351,7 @@ func (r *GroupMembersRepository) DeleteBulkGroupMembers(ctx context.Context, gro
 	return result.DeletedCount, nil, nil
 }
 func (r *GroupMembersRepository) DeleteGroupMemberByUserIDAndGroupID(ctx context.Context, userID string, groupID string) error {
-collection := r.client.Collection(entity.GroupMember{}.CollectionName())
+	collection := r.client.Collection(entity.GroupMember{}.CollectionName())
 
 	// Validate và convert GroupID sang ObjectID
 	objGroupID, err := primitive.ObjectIDFromHex(groupID)
@@ -371,7 +372,7 @@ collection := r.client.Collection(entity.GroupMember{}.CollectionName())
 
 	return nil
 }
-func (r *GroupMembersRepository) DeleteBulkGroupMemberByUserIDAndGroupID(ctx context.Context, userID string, groupIDs []string) (int64, []*dto.BulkError, error) {
+func (r *GroupMembersRepository) DeleteBulkGroupMemberByUserIDAndGroupID(ctx context.Context, userID string, groupIDs []string) (int64, []*mongodbErrors.BulkError, error) {
 	collection := r.client.Collection(entity.GroupMember{}.CollectionName())
 
 	// Chuẩn bị các operation cho BulkWrite
@@ -407,13 +408,13 @@ func (r *GroupMembersRepository) DeleteBulkGroupMemberByUserIDAndGroupID(ctx con
 	}
 
 	// Trường hợp 2: Lỗi cục bộ (Partial Failure)
-	var failedDocs []*dto.BulkError
+	var failedDocs []*mongodbErrors.BulkError
 	if err != nil {
 		var bulkErr mongo.BulkWriteException
 		if errors.As(err, &bulkErr) {
 			for _, we := range bulkErr.WriteErrors {
 				if we.Index < len(groupIDs) {
-					failedDocs = append(failedDocs, &dto.BulkError{
+					failedDocs = append(failedDocs, &mongodbErrors.BulkError{
 						ID:     groupIDs[we.Index],
 						Reason: we.Message,
 					})
@@ -428,7 +429,7 @@ func (r *GroupMembersRepository) DeleteBulkGroupMemberByUserIDAndGroupID(ctx con
 
 	return result.DeletedCount, nil, nil
 }
-func (r *GroupMembersRepository) DeleteBulkGroupMemberByManyUserIDAndGroupID(ctx context.Context, userID []string, groupIDs []string) (int64, []*dto.BulkError, error) {
+func (r *GroupMembersRepository) DeleteBulkGroupMemberByManyUserIDAndGroupID(ctx context.Context, userID []string, groupIDs []string) (int64, []*mongodbErrors.BulkError, error) {
 	collection := r.client.Collection(entity.GroupMember{}.CollectionName())
 
 	// 1. Validate và convert toàn bộ groupIDs sang ObjectID
@@ -484,7 +485,7 @@ func (r *GroupMembersRepository) DeleteBulkGroupMemberByManyUserIDAndGroupID(ctx
 	}
 
 	// Trường hợp 2: Lỗi cục bộ (Partial Failure)
-	var failedDocs []*dto.BulkError
+	var failedDocs []*mongodbErrors.BulkError
 	if err != nil {
 		var bulkErr mongo.BulkWriteException
 		if errors.As(err, &bulkErr) {
@@ -493,8 +494,8 @@ func (r *GroupMembersRepository) DeleteBulkGroupMemberByManyUserIDAndGroupID(ctx
 					p := pairs[we.Index]
 					// Gom UserID và GroupID thành chuỗi ID để client dễ nhận diện lỗi
 					identifier := fmt.Sprintf("userID:%s|groupID:%s", p.userID, p.groupID)
-					
-					failedDocs = append(failedDocs, &dto.BulkError{
+
+					failedDocs = append(failedDocs, &mongodbErrors.BulkError{
 						ID:     identifier,
 						Reason: we.Message,
 					})

@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/errors/mongodbErrors"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/IRepositoryShare"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/dto"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/utils"
@@ -35,7 +36,7 @@ func (r *GroupEventsRepository) CreateGroupEvent(ctx context.Context, event *ent
 	}
 	return nil
 }
-func (r *GroupEventsRepository) CreateBulkGroupEvents(ctx context.Context, events []*entity.GroupEvent) (int64, []*dto.BulkError, error) {
+func (r *GroupEventsRepository) CreateBulkGroupEvents(ctx context.Context, events []*entity.GroupEvent) (int64, []*mongodbErrors.BulkError, error) {
 	collection := r.client.Collection(entity.GroupEvent{}.CollectionName())
 	docs := utils.ToInterfaceSlice(events)
 	var model []mongo.WriteModel
@@ -47,12 +48,12 @@ func (r *GroupEventsRepository) CreateBulkGroupEvents(ctx context.Context, event
 	if result == nil && err != nil {
 		return 0, nil, err
 	}
-	var faildocs []*dto.BulkError
+	var faildocs []*mongodbErrors.BulkError
 	if err != nil {
 		var bunkErr mongo.BulkWriteException
 		if errors.As(err, &bunkErr) {
 			for _, writeError := range bunkErr.WriteErrors {
-				faildocs = append(faildocs, &dto.BulkError{
+				faildocs = append(faildocs, &mongodbErrors.BulkError{
 					ID:     string(events[writeError.Index].ID.Hex()),
 					Reason: writeError.Message,
 				})
@@ -170,7 +171,7 @@ func (r *GroupEventsRepository) UpdateGroupEvent(ctx context.Context, event *ent
 	}
 	return nil
 }
-func (r *GroupEventsRepository) UpdateBulkGroupEvents(ctx context.Context, events []*entity.GroupEvent) (int64, []*dto.BulkError, error) {
+func (r *GroupEventsRepository) UpdateBulkGroupEvents(ctx context.Context, events []*entity.GroupEvent) (int64, []*mongodbErrors.BulkError, error) {
 	collection := r.client.Collection(entity.GroupEvent{}.CollectionName())
 	var model []mongo.WriteModel
 	for _, event := range events {
@@ -183,12 +184,12 @@ func (r *GroupEventsRepository) UpdateBulkGroupEvents(ctx context.Context, event
 	if result == nil && err != nil {
 		return 0, nil, err
 	}
-	var faildocs []*dto.BulkError
+	var faildocs []*mongodbErrors.BulkError
 	if err != nil {
 		var bunkErr mongo.BulkWriteException
 		if errors.As(err, &bunkErr) {
 			for _, writeError := range bunkErr.WriteErrors {
-				faildocs = append(faildocs, &dto.BulkError{
+				faildocs = append(faildocs, &mongodbErrors.BulkError{
 					ID:     string(events[writeError.Index].ID.Hex()),
 					Reason: writeError.Message,
 				})
@@ -227,7 +228,7 @@ func (r *GroupEventsRepository) DeleteGroupEvent(ctx context.Context, id string)
 	}
 	return nil
 }
-func (r *GroupEventsRepository) DeleteBulkGroupEvents(ctx context.Context, ids []string) (int64, []*dto.BulkError, error) {
+func (r *GroupEventsRepository) DeleteBulkGroupEvents(ctx context.Context, ids []string) (int64, []*mongodbErrors.BulkError, error) {
 	var model []mongo.WriteModel
 	for _, id := range ids {
 		idObj, err := primitive.ObjectIDFromHex(id)
@@ -241,12 +242,12 @@ func (r *GroupEventsRepository) DeleteBulkGroupEvents(ctx context.Context, ids [
 	if result == nil && err != nil {
 		return 0, nil, err
 	}
-	var faildocs []*dto.BulkError
+	var faildocs []*mongodbErrors.BulkError
 	if err != nil {
 		var bunkErr mongo.BulkWriteException
 		if errors.As(err, &bunkErr) {
 			for _, writeError := range bunkErr.WriteErrors {
-				faildocs = append(faildocs, &dto.BulkError{
+				faildocs = append(faildocs, &mongodbErrors.BulkError{
 					ID:     ids[writeError.Index],
 					Reason: writeError.Message,
 				})

@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/errors/mongodbErrors"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/IRepositoryShare"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/dto"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/utils"
@@ -35,7 +36,7 @@ func (r *CommentEditLogsRepository) CreateEditLog(ctx context.Context, editlog *
 	}
 	return nil
 }
-func (r *CommentEditLogsRepository) CreateBulkEditLogs(ctx context.Context, editLogs []*entity.CommentEntityEditLog) (int64, []*dto.BulkError, error) {
+func (r *CommentEditLogsRepository) CreateBulkEditLogs(ctx context.Context, editLogs []*entity.CommentEntityEditLog) (int64, []*mongodbErrors.BulkError, error) {
 	collection := r.client.Collection(entity.CommentEntityEditLog{}.CollectionnamCommentEditLog())
 	for _, editLog := range editLogs {
 		if editLog.ID.IsZero() {
@@ -49,13 +50,13 @@ func (r *CommentEditLogsRepository) CreateBulkEditLogs(ctx context.Context, edit
 		return 0, nil, err
 	}
 
-	var failedDocs []*dto.BulkError
+	var failedDocs []*mongodbErrors.BulkError
 	if err != nil {
 		// Kiểm tra xem có phải lỗi BulkWriteException không
 		var bulkErr mongo.BulkWriteException
 		if errors.As(err, &bulkErr) {
 			for _, we := range bulkErr.WriteErrors {
-				failedDocs = append(failedDocs, &dto.BulkError{
+				failedDocs = append(failedDocs, &mongodbErrors.BulkError{
 					ID:     editLogs[we.Index].ID.Hex(),
 					Reason: we.Message,
 				})
@@ -160,7 +161,7 @@ func (r *CommentEditLogsRepository) UpdateEditLog(ctx context.Context, editlog *
 	}
 	return nil
 }
-func (r *CommentEditLogsRepository) UpdateBulkEditLogs(ctx context.Context, editLogs []*entity.CommentEntityEditLog) (int64, []*dto.BulkError, error) {
+func (r *CommentEditLogsRepository) UpdateBulkEditLogs(ctx context.Context, editLogs []*entity.CommentEntityEditLog) (int64, []*mongodbErrors.BulkError, error) {
 	collection := r.client.Collection(entity.CommentEntityEditLog{}.CollectionnamCommentEditLog())
 	models := make([]mongo.WriteModel, 0, len(editLogs))
 	for _, ps := range editLogs {
@@ -175,7 +176,7 @@ func (r *CommentEditLogsRepository) UpdateBulkEditLogs(ctx context.Context, edit
 		return 0, nil, fmt.Errorf("bulk write system error: %w", err)
 	}
 	// Trường hợp 2: Có lỗi xảy ra với một vài document (Partial Failure)
-	var failedDocs []*dto.BulkError
+	var failedDocs []*mongodbErrors.BulkError
 	if err != nil {
 		// Dùng errors.As để ép kiểu err về mongo.BulkWriteException
 		var bulkErr mongo.BulkWriteException
@@ -189,7 +190,7 @@ func (r *CommentEditLogsRepository) UpdateBulkEditLogs(ctx context.Context, edit
 					failedEditLog := editLogs[failedIndex]
 
 					// Ghi nhận lại ID và lý do lỗi
-					failedDocs = append(failedDocs, &dto.BulkError{
+					failedDocs = append(failedDocs, &mongodbErrors.BulkError{
 						ID:     failedEditLog.ID.Hex(), // Hoặc failedEditLog.ID.String()
 						Reason: we.Message,
 					})
@@ -216,7 +217,7 @@ func (r *CommentEditLogsRepository) DeleteEditLog(ctx context.Context, editLogID
 	}
 	return nil
 }
-func (r *CommentEditLogsRepository) DeleteBulkEditLogs(ctx context.Context, editLogsIds []string) (int64, []*dto.BulkError, error) {
+func (r *CommentEditLogsRepository) DeleteBulkEditLogs(ctx context.Context, editLogsIds []string) (int64, []*mongodbErrors.BulkError, error) {
 	for _, id := range editLogsIds {
 		if _, err := primitive.ObjectIDFromHex(id); err != nil {
 			return 0, nil, fmt.Errorf("invalid edit log ID: %s", id)
@@ -233,7 +234,7 @@ func (r *CommentEditLogsRepository) DeleteBulkEditLogs(ctx context.Context, edit
 	if result == nil && err != nil {
 		return 0, nil, fmt.Errorf("bulk delete system error: %w", err)
 	}
-	var failedDocs []*dto.BulkError
+	var failedDocs []*mongodbErrors.BulkError
 	if err != nil {
 		var bulkErr mongo.BulkWriteException
 		if errors.As(err, &bulkErr) {
@@ -241,7 +242,7 @@ func (r *CommentEditLogsRepository) DeleteBulkEditLogs(ctx context.Context, edit
 				failedIndex := we.Index
 				if failedIndex < len(editLogsIds) {
 					failedEditLogID := editLogsIds[failedIndex]
-					failedDocs = append(failedDocs, &dto.BulkError{
+					failedDocs = append(failedDocs, &mongodbErrors.BulkError{
 						ID:     failedEditLogID,
 						Reason: we.Message,
 					})
