@@ -4,11 +4,8 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"strings"
 
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/community/domain/entity"
-	"github.com/elastic/go-elasticsearch/v8"
-	"github.com/elastic/go-elasticsearch/v8/esapi"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
@@ -16,6 +13,18 @@ import (
 
 type ModuleCommunity struct {
 	// Dependency Injection (UseCases, Repositories...)
+	client *mongo.Database
+}
+
+func NewModuleCommunity(client *mongo.Database) *ModuleCommunity {
+	m := &ModuleCommunity{
+		client: client,
+	}
+	err := m.InitMongo(client)
+	if err != nil {
+		panic("Failed to init MongoDB for Community Module: " + err.Error())
+	}
+	return m
 }
 
 // =============================================================================
@@ -227,82 +236,82 @@ func (m *ModuleCommunity) initGroupQuestionIndexes(ctx context.Context, db *mong
 // 2. ELASTICSEARCH INITIALIZATION
 // =============================================================================
 
-func (m *ModuleCommunity) InitElastic(client *elasticsearch.Client) error {
-	ctx := context.Background()
-	indexName := entity.SearchGroup{}.IndexName() // "search_groups"
+// func (m *ModuleCommunity) InitElastic(client *elasticsearch.Client) error {
+// 	ctx := context.Background()
+// 	indexName := entity.SearchGroup{}.IndexName() // "search_groups"
 
-	// 1. Check Index Exists
-	reqExists := esapi.IndicesExistsRequest{
-		Index: []string{indexName},
-	}
-	resExists, err := reqExists.Do(ctx, client)
-	if err != nil {
-		return fmt.Errorf("check index exists error: %w", err)
-	}
-	defer resExists.Body.Close()
+// 	// 1. Check Index Exists
+// 	reqExists := esapi.IndicesExistsRequest{
+// 		Index: []string{indexName},
+// 	}
+// 	resExists, err := reqExists.Do(ctx, client)
+// 	if err != nil {
+// 		return fmt.Errorf("check index exists error: %w", err)
+// 	}
+// 	defer resExists.Body.Close()
 
-	if resExists.StatusCode == 200 {
-		return nil // Index already exists
-	}
+// 	if resExists.StatusCode == 200 {
+// 		return nil // Index already exists
+// 	}
 
-	// 2. Define Mapping
-	// Chú ý: Cấu hình Analyzer Tiếng Việt (vietnamese_folding)
-	// Chú ý: Field location dùng type "geo_point" cho Geo-Search
-	mapping := `{
-		"settings": {
-			"number_of_shards": 1,
-			"number_of_replicas": 0,
-			"analysis": {
-				"analyzer": {
-					"vietnamese_folding": {
-						"tokenizer": "standard",
-						"filter": ["lowercase", "asciifolding"]
-					}
-				}
-			}
-		},
-		"mappings": {
-			"properties": {
-				"id": { "type": "keyword" },
-				
-				"name": { 
-					"type": "text", 
-					"analyzer": "vietnamese_folding",
-					"search_analyzer": "vietnamese_folding",
-					"boost": 2.0 
-				},
-				"description": { 
-					"type": "text", 
-					"analyzer": "vietnamese_folding",
-					"search_analyzer": "vietnamese_folding"
-				},
-				
-				"tags": { "type": "keyword" },
-				"privacy": { "type": "keyword" },
-				
-				"member_count": { "type": "integer" },
-				
-				"location": { "type": "geo_point" }
-			}
-		}
-	}`
+// 	// 2. Define Mapping
+// 	// Chú ý: Cấu hình Analyzer Tiếng Việt (vietnamese_folding)
+// 	// Chú ý: Field location dùng type "geo_point" cho Geo-Search
+// 	mapping := `{
+// 		"settings": {
+// 			"number_of_shards": 1,
+// 			"number_of_replicas": 0,
+// 			"analysis": {
+// 				"analyzer": {
+// 					"vietnamese_folding": {
+// 						"tokenizer": "standard",
+// 						"filter": ["lowercase", "asciifolding"]
+// 					}
+// 				}
+// 			}
+// 		},
+// 		"mappings": {
+// 			"properties": {
+// 				"id": { "type": "keyword" },
 
-	// 3. Create Index
-	reqCreate := esapi.IndicesCreateRequest{
-		Index: indexName,
-		Body:  strings.NewReader(mapping),
-	}
+// 				"name": {
+// 					"type": "text",
+// 					"analyzer": "vietnamese_folding",
+// 					"search_analyzer": "vietnamese_folding",
+// 					"boost": 2.0
+// 				},
+// 				"description": {
+// 					"type": "text",
+// 					"analyzer": "vietnamese_folding",
+// 					"search_analyzer": "vietnamese_folding"
+// 				},
 
-	resCreate, err := reqCreate.Do(ctx, client)
-	if err != nil {
-		return fmt.Errorf("create index error: %w", err)
-	}
-	defer resCreate.Body.Close()
+// 				"tags": { "type": "keyword" },
+// 				"privacy": { "type": "keyword" },
 
-	if resCreate.IsError() {
-		return fmt.Errorf("create index failed: %s", resCreate.String())
-	}
+// 				"member_count": { "type": "integer" },
 
-	log.Printf(">>> Elastic Index [%s] initialized successfully\n", indexName)
-	return nil
-}
+// 				"location": { "type": "geo_point" }
+// 			}
+// 		}
+// 	}`
+
+// 	// 3. Create Index
+// 	reqCreate := esapi.IndicesCreateRequest{
+// 		Index: indexName,
+// 		Body:  strings.NewReader(mapping),
+// 	}
+
+// 	resCreate, err := reqCreate.Do(ctx, client)
+// 	if err != nil {
+// 		return fmt.Errorf("create index error: %w", err)
+// 	}
+// 	defer resCreate.Body.Close()
+
+// 	if resCreate.IsError() {
+// 		return fmt.Errorf("create index failed: %s", resCreate.String())
+// 	}
+
+// 	log.Printf(">>> Elastic Index [%s] initialized successfully\n", indexName)
+// 	return nil
+// }

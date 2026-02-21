@@ -6,9 +6,11 @@ import (
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/community/enum"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
+
 const (
 	CollectionGroupMembers = "GroupMembers"
 )
+
 type GroupMember struct {
 	ID primitive.ObjectID `bson:"_id,omitempty" json:"id"`
 
@@ -43,6 +45,13 @@ type GroupMember struct {
 
 	// Index: { group_id: 1, last_active_at: 1 } -> Lọc thành viên "Tàu ngầm" (ít tương tác)
 	LastActiveAt time.Time `bson:"last_active_at" json:"last_active_at"`
+
+	// 8. TIMESTAMPS
+	CreatedAt time.Time `bson:"created_at" json:"created_at"`
+	UpdatedAt time.Time `bson:"updated_at" json:"updated_at"`
+
+	// Soft Delete
+	DeletedAt *time.Time `bson:"deleted_at,omitempty" json:"deleted_at,omitempty"`
 }
 
 // --- JOIN ANSWERS ---
@@ -61,6 +70,7 @@ type DisciplineInfo struct {
 	// Thời điểm hết hạn. Null = Vĩnh viễn.
 	UntilDate *time.Time `bson:"until_date,omitempty" json:"until_date,omitempty"`
 }
+
 func (GroupMember) CollectionName() string {
 	return CollectionGroupMembers
 }

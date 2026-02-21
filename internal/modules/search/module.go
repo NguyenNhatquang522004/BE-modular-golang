@@ -3,6 +3,7 @@ package search
 import (
 	"context"
 	"fmt"
+	"log"
 	"strings"
 
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/search/domain/entity"
@@ -104,5 +105,84 @@ func (m *ModuleSearch) InitElasticPostES() error {
 	}
 
 	fmt.Printf(">>> Elastic Index [%s] initialized successfully with Vietnamese Analyzer\n", indexName)
+	return nil
+}
+func (m *ModuleSearch) InitGroupEs(client *elasticsearch.Client) error {
+	ctx := context.Background()
+	indexName := entity.SearchGroup{}.IndexName() // "search_groups"
+
+	// 1. Check Index Exists
+	reqExists := esapi.IndicesExistsRequest{
+		Index: []string{indexName},
+	}
+	resExists, err := reqExists.Do(ctx, client)
+	if err != nil {
+		return fmt.Errorf("check index exists error: %w", err)
+	}
+	defer resExists.Body.Close()
+
+	if resExists.StatusCode == 200 {
+		return nil // Index already exists
+	}
+
+	// 2. Define Mapping
+	// Chú ý: Cấu hình Analyzer Tiếng Việt (vietnamese_folding)
+	// Chú ý: Field location dùng type "geo_point" cho Geo-Search
+	mapping := `{
+		"settings": {
+			"number_of_shards": 1,
+			"number_of_replicas": 0,
+			"analysis": {
+				"analyzer": {
+					"vietnamese_folding": {
+						"tokenizer": "standard",
+						"filter": ["lowercase", "asciifolding"]
+					}
+				}
+			}
+		},
+		"mappings": {
+			"properties": {
+				"id": { "type": "keyword" },
+				
+				"name": { 
+					"type": "text", 
+					"analyzer": "vietnamese_folding",
+					"search_analyzer": "vietnamese_folding",
+					"boost": 2.0 
+				},
+				"description": { 
+					"type": "text", 
+					"analyzer": "vietnamese_folding",
+					"search_analyzer": "vietnamese_folding"
+				},
+				
+				"tags": { "type": "keyword" },
+				"privacy": { "type": "keyword" },
+				
+				"member_count": { "type": "integer" },
+				
+				"location": { "type": "geo_point" }
+			}
+		}
+	}`
+
+	// 3. Create Index
+	reqCreate := esapi.IndicesCreateRequest{
+		Index: indexName,
+		Body:  strings.NewReader(mapping),
+	}
+
+	resCreate, err := reqCreate.Do(ctx, client)
+	if err != nil {
+		return fmt.Errorf("create index error: %w", err)
+	}
+	defer resCreate.Body.Close()
+
+	if resCreate.IsError() {
+		return fmt.Errorf("create index failed: %s", resCreate.String())
+	}
+
+	log.Printf(">>> Elastic Index [%s] initialized successfully\n", indexName)
 	return nil
 }
