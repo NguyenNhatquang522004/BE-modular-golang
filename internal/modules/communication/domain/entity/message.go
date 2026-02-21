@@ -45,6 +45,7 @@ type Message struct {
 	// =========================================================================
 	// 3. REFERENCES (Nullable -> Pointer)
 	// =========================================================================
+	IsEdited bool `cql:"is_edited" json:"is_edited"` // Tin nhắn đã bị chỉnh sửa hay chưa?
 
 	// Reply tin nhắn nào trong cùng conversation?
 	ReplyToMessageID *gocql.UUID `cql:"reply_to_message_id" json:"reply_to_message_id"`

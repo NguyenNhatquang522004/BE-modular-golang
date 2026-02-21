@@ -935,7 +935,7 @@ func (r *StoryViewRepository) DeleteBulkStoryViewsByUserIAndStoryID(ctx context.
 	// 2. Khởi tạo Channel và các Query
 	type taskResult struct {
 		storyID gocql.UUID
-		err     error
+		err     error	
 	}
 	resultCh := make(chan taskResult, len(uuids))
 
