@@ -3,6 +3,7 @@ package client
 import (
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/database"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/server/middleware"
+	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/IRepositoryShare"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/events"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/infrastructure/concurrency"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/infrastructure/kafka"
@@ -54,6 +55,10 @@ var providerLifecycle = wire.NewSet(
 	// wire.Bind(new(concurrency.Service), new(*concurrency.Manager)),
 	ProvideLifecycleManager,
 )
+var WorkerPoolProvider = wire.NewSet(
+	concurrency.NewWorkerPool,
+	wire.Bind(new(IRepositoryShare.IWorkerPool), new(IRepositoryShare.IWorkerPool)),
+)
 var ProviderSet = wire.NewSet(
 	providerDatabase,
 	providerGRPC,
@@ -64,4 +69,5 @@ var ProviderSet = wire.NewSet(
 	prodviderCache,
 	providerKafka,
 	providerLifecycle,
+	WorkerPoolProvider,
 )

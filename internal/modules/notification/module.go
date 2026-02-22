@@ -12,6 +12,24 @@ import (
 )
 
 type ModuleNotification struct {
+	session *gocql.Session
+	mongoDB *mongo.Database
+}
+
+func NewModuleNotification(session *gocql.Session, mongoDB *mongo.Database) *ModuleNotification {
+	m := &ModuleNotification{
+		session: session,
+		mongoDB: mongoDB,
+	}
+	err := m.InitMongo(mongoDB)
+	if err != nil {
+		panic("Failed to initialize MongoDB for Notification Module: " + err.Error())
+	}
+	err = m.InitCassandra(session)
+	if err != nil {
+		panic("Failed to initialize Cassandra for Notification Module: " + err.Error())
+	}
+	return m
 }
 
 func (m *ModuleNotification) InitMongo(db *mongo.Database) error {

@@ -2,6 +2,7 @@ package business
 
 import (
 	"context"
+	"log"
 	"time"
 
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/business/domain/entity"
@@ -13,9 +14,31 @@ import (
 )
 
 type ModuleBusiness struct {
-	// Dependency Injection (UseCases, Repositories...)
+	db      *gorm.DB
+	client  *mongo.Database
+	Session *gocql.Session
 }
 
+func NewModuleBusiness(db *gorm.DB, client *mongo.Database, session *gocql.Session) *ModuleBusiness {
+	m := &ModuleBusiness{
+		db:      db,
+		client:  client,
+		Session: session,
+	}
+	err := m.InitMongo(client)
+	if err != nil {
+		log.Println("")
+	}
+	err = m.InitPostgres(db)
+	if err != nil {
+		log.Println("")
+	}
+	err = m.InitCassandra(session)
+	if err != nil {
+		log.Println("")
+	}
+	return m
+}
 func (m *ModuleBusiness) InitMongo(db *mongo.Database) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()

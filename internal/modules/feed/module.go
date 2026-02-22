@@ -11,9 +11,18 @@ import (
 )
 
 type ModuleFeed struct {
-	// Dependency Injection (UseCases, Repositories...)
+	client *mongo.Database
 }
 
+func NewModuleFeed(db *mongo.Database) *ModuleFeed {
+	module := &ModuleFeed{
+		client: db,
+	}
+	if err := module.InitMongo(db); err != nil {
+		panic("Failed to initialize MongoDB indexes for ModuleFeed: " + err.Error())
+	}
+	return module
+}
 func (m *ModuleFeed) InitMongo(db *mongo.Database) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()

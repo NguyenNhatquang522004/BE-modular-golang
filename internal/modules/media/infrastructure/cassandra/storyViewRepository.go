@@ -8,7 +8,6 @@ import (
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/errors/cassandraErrors"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/IRepositoryShare"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/dto"
-	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/infrastructure/concurrency"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/utils"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/media/domain/entity"
 	"github.com/gocql/gocql"
@@ -17,12 +16,12 @@ import (
 type StoryViewRepository struct {
 	// Add necessary fields for Cassandra connection and table handling
 	session   *gocql.Session
-	pool      *concurrency.WorkerPool
+	pool      IRepositoryShare.IWorkerPool
 	redisRepo IRepositoryShare.IRedis
 }
 
 // Implement methods for StoryViewRepository here, ensuring they satisfy the IStoryViewRepository interface defined in the domain layer.
-func NewStoryViewRepository(session *gocql.Session, pool *concurrency.WorkerPool, redisRepo IRepositoryShare.IRedis) *StoryViewRepository {
+func NewStoryViewRepository(session *gocql.Session, pool IRepositoryShare.IWorkerPool, redisRepo IRepositoryShare.IRedis) *StoryViewRepository {
 	return &StoryViewRepository{
 		session:   session,
 		pool:      pool,
@@ -935,7 +934,7 @@ func (r *StoryViewRepository) DeleteBulkStoryViewsByUserIAndStoryID(ctx context.
 	// 2. Khởi tạo Channel và các Query
 	type taskResult struct {
 		storyID gocql.UUID
-		err     error	
+		err     error
 	}
 	resultCh := make(chan taskResult, len(uuids))
 

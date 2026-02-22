@@ -6,9 +6,11 @@ import (
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/business/enum"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
+
 const (
 	CollectionPageRoles = "PageRoles"
 )
+
 type PageRole struct {
 	ID primitive.ObjectID `bson:"_id,omitempty" json:"id"`
 
@@ -30,12 +32,14 @@ type PageRole struct {
 	// Dùng để mở rộng quyền cho các role thấp hơn hoặc giới hạn quyền.
 	CustomPermissions []string `bson:"custom_permissions,omitempty" json:"custom_permissions,omitempty"`
 
-	// 3. AUDIT & TIMESTAMPS
-	CreatedAt time.Time `bson:"created_at" json:"created_at"`
+	CreatedAt time.Time  `bson:"created_at" json:"created_at"`
+	UpdatedAt time.Time  `bson:"updated_at" json:"updated_at"`
+	DeletedAt *time.Time `bson:"deleted_at,omitempty" json:"deleted_at,omitempty"`
 
 	// Người cấp quyền này (Postgres UUID -> String)
 	AssignedBy string `bson:"assigned_by" json:"assigned_by"`
 }
+
 func (PageRole) CollectionName() string {
 	return CollectionPageRoles
 }

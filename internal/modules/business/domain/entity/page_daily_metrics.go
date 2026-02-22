@@ -17,7 +17,7 @@ type PageDailyMetric struct {
 
 	// PARTITION KEY
 	// ID của Page (Lưu ý: SQL là UUID, nếu dùng Mongo ObjectId thì cần đổi SQL thành TEXT)
-	PageID gocql.UUID `cql:"page_id" json:"page_id"`
+	ID gocql.UUID `cql:"page_id" json:"page_id"`
 
 	// CLUSTERING KEY
 	// Ngày thống kê (VD: 2024-01-01). Sắp xếp giảm dần (DESC) để lấy ngày mới nhất.

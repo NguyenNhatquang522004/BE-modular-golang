@@ -5,14 +5,17 @@ import (
 
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/business/enum"
 	"github.com/google/uuid"
+	"gorm.io/gorm"
 )
-const(
+
+const (
 	CollectionAdCampaigns = "ad_campaigns"
 )
+
 // AdCampaign đại diện cho bảng 'ad_campaigns' trong Postgres.
 type AdCampaign struct {
 	// 1. IDENTITY
-	CampaignID uuid.UUID `gorm:"type:uuid;primary_key;default:gen_random_uuid()" json:"campaign_id"`
+	ID uuid.UUID `gorm:"type:uuid;primary_key;default:gen_random_uuid()" json:"campaign_id"`
 
 	// 2. RELATIONS
 	// Liên kết tới Ad_Accounts. Cần Index để lọc "Chiến dịch của tài khoản X"
@@ -38,6 +41,10 @@ type AdCampaign struct {
 	// 6. STATUS
 	// Index để lọc nhanh các chiến dịch đang chạy (Active)
 	Status enum.CampaignStatus `gorm:"type:varchar(20);index;default:'paused'" json:"status"`
+
+	CreatedAt time.Time      `gorm:"type:timestamp;default:now()" json:"created_at"`
+	UpdatedAt time.Time      `gorm:"type:timestamp;default:now()" json:"updated_at"`
+	DeletedAt gorm.DeletedAt `gorm:"index"`
 }
 
 // TableName ghi đè tên bảng

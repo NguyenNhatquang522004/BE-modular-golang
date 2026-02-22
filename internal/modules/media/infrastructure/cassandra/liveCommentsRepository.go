@@ -8,7 +8,6 @@ import (
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/errors/cassandraErrors"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/IRepositoryShare"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/dto"
-	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/infrastructure/concurrency"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/utils"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/media/domain/entity"
 	"github.com/gocql/gocql"
@@ -17,12 +16,12 @@ import (
 type LiveCommentsRepository struct {
 	// Add necessary fields for Cassandra connection and table handling
 	session   *gocql.Session
-	pool      *concurrency.WorkerPool
+	pool      IRepositoryShare.IWorkerPool
 	redisRepo IRepositoryShare.IRedis
 }
 
 // Implement methods for LiveCommentsRepository here, ensuring they satisfy the ILiveCommentsRepository interface defined in the domain layer.
-func NewLiveCommentsRepository(session *gocql.Session, pool *concurrency.WorkerPool, redisRepo IRepositoryShare.IRedis) *LiveCommentsRepository {
+func NewLiveCommentsRepository(session *gocql.Session, pool IRepositoryShare.IWorkerPool, redisRepo IRepositoryShare.IRedis) *LiveCommentsRepository {
 	return &LiveCommentsRepository{
 		session:   session,
 		pool:      pool,

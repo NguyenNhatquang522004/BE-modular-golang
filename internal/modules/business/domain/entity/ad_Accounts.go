@@ -6,14 +6,16 @@ import (
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/business/enum"
 	"github.com/google/uuid"
 )
+
 const (
 	CollectionAdAccounts = "ad_accounts"
 )
+
 // AdAccount đại diện cho bảng 'ad_accounts' trong Postgres.
 type AdAccount struct {
 	// 1. PRIMARY KEY
 	// Dùng uuid.UUID cho Postgres là chuẩn nhất
-	AccountID uuid.UUID `gorm:"type:uuid;primary_key;default:gen_random_uuid()" json:"account_id"`
+	ID uuid.UUID `gorm:"type:uuid;primary_key;default:gen_random_uuid()" json:"account_id"`
 
 	// 2. OWNERSHIP
 	// Khóa ngoại tham chiếu tới bảng Users
@@ -36,7 +38,9 @@ type AdAccount struct {
 	Status enum.AccountStatus `gorm:"type:varchar(20);index" json:"status"`
 
 	// 6. TIMESTAMPS
-	CreatedAt time.Time `gorm:"type:timestamp;default:now()" json:"created_at"`
+	CreatedAt time.Time  `gorm:"type:timestamp;default:now()" json:"created_at"`
+	UpdatedAt time.Time  `gorm:"type:timestamp;default:now()" json:"updated_at"`
+	DeletedAt *time.Time `gorm:"index" json:"deleted_at,omitempty"`
 }
 
 func (AdAccount) TableName() string {

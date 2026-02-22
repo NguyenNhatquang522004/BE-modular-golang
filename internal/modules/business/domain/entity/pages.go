@@ -6,9 +6,11 @@ import (
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/business/enum"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
+
 const (
 	CollectionPages = "Pages"
 )
+
 type Page struct {
 	ID primitive.ObjectID `bson:"_id,omitempty" json:"id"`
 
@@ -30,15 +32,15 @@ type Page struct {
 	Status     enum.PageStatus `bson:"status" json:"status"`
 
 	// 2. BRANDING
-	Avatar PageAvatar `bson:"avatar" json:"avatar"`
-	Cover  PageCover  `bson:"cover" json:"cover"`
+	Avatar *PageAvatar `bson:"avatar" json:"avatar"`
+	Cover  *PageCover  `bson:"cover" json:"cover"`
 
 	// 3. BUSINESS INFO
-	Bio         string      `bson:"bio" json:"bio"`
-	Website     string      `bson:"website" json:"website"`
-	Email       string      `bson:"email" json:"email"`
-	PhoneNumber string      `bson:"phone_number" json:"phone_number"`
-	Address     PageAddress `bson:"address" json:"address"`
+	Bio         string       `bson:"bio" json:"bio"`
+	Website     string       `bson:"website" json:"website"`
+	Email       string       `bson:"email" json:"email"`
+	PhoneNumber string       `bson:"phone_number" json:"phone_number"`
+	Address     *PageAddress `bson:"address" json:"address"`
 
 	// 4. GIỜ MỞ CỬA (Array)
 	BusinessHours []BusinessHour `bson:"business_hours,omitempty" json:"business_hours,omitempty"`
@@ -47,15 +49,16 @@ type Page struct {
 	CTAButton *CTAButton `bson:"cta_button,omitempty" json:"cta_button,omitempty"`
 
 	// 6. CÀI ĐẶT
-	Settings PageSettings `bson:"settings" json:"settings"`
+	Settings *PageSettings `bson:"settings" json:"settings"`
 
 	// 7. METRICS
 	// Index: { "stats.followers_count": -1 } -> Gợi ý page hot
-	Stats PageStats `bson:"stats" json:"stats"`
+	Stats *PageStats `bson:"stats" json:"stats"`
 
 	// 8. TIMESTAMPS
-	CreatedAt time.Time `bson:"created_at" json:"created_at"`
-	UpdatedAt time.Time `bson:"updated_at" json:"updated_at"`
+	CreatedAt time.Time  `bson:"created_at" json:"created_at"`
+	UpdatedAt time.Time  `bson:"updated_at" json:"updated_at"`
+	DeletedAt *time.Time `bson:"deleted_at,omitempty" json:"deleted_at,omitempty"`
 }
 
 // --- BRANDING ---

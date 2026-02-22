@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/infrastructure/concurrency"
+	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/IRepositoryShare"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/content/delivery/dto/req"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/content/delivery/mapper"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/content/domain/entity"
@@ -14,10 +14,10 @@ import (
 
 type PostInsightsRepository struct {
 	session *gocql.Session
-	pool    *concurrency.WorkerPool
+	pool    IRepositoryShare.IWorkerPool
 }
 
-func NewPostInsightsRepository(session *gocql.Session, pool *concurrency.WorkerPool) *PostInsightsRepository {
+func NewPostInsightsRepository(session *gocql.Session, pool IRepositoryShare.IWorkerPool) *PostInsightsRepository {
 	return &PostInsightsRepository{session: session, pool: pool}
 }
 func (r *PostInsightsRepository) CreatePostInsightInitPost(ctx context.Context, PostID string) error {

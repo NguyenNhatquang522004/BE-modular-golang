@@ -19,11 +19,11 @@ type UserNotificationSetting struct {
 	UserID string `bson:"user_id" json:"user_id"`
 
 	// Cấu hình
-	Settings GeneralSettings `bson:"settings" json:"settings"`
+	Settings *GeneralSettings `bson:"settings" json:"settings"`
 
 	// Danh sách FCM Token (Array)
 	// Index: Multikey { "fcm_tokens.token": 1 } -> Để tìm và xóa token chết (invalid)da
-	FCMTokens []FCMToken `bson:"fcm_tokens,omitempty" json:"fcm_tokens,omitempty"`
+	FCMTokens []*FCMToken `bson:"fcm_tokens,omitempty" json:"fcm_tokens,omitempty"`
 }
 
 // --- FCM TOKEN (Mobile Push) ---

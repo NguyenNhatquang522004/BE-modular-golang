@@ -7,7 +7,6 @@ import (
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/errors/cassandraErrors"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/IRepositoryShare"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/dto"
-	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/infrastructure/concurrency"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/utils"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/interaction/domain/entity"
 	"github.com/gocql/gocql"
@@ -15,11 +14,11 @@ import (
 
 type ReactionsRepository struct {
 	session   *gocql.Session
-	pool      *concurrency.WorkerPool
+	pool      IRepositoryShare.IWorkerPool
 	redisRepo IRepositoryShare.IRedis
 }
 
-func NewReactionsRepository(session *gocql.Session, pool *concurrency.WorkerPool, redisRepo IRepositoryShare.IRedis) *ReactionsRepository {
+func NewReactionsRepository(session *gocql.Session, pool IRepositoryShare.IWorkerPool, redisRepo IRepositoryShare.IRedis) *ReactionsRepository {
 	return &ReactionsRepository{
 		session:   session,
 		pool:      pool,

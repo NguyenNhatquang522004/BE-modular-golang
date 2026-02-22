@@ -26,7 +26,9 @@ func NewCommentRepository(client *mongo.Database, redisRepo IRepositoryShare.IRe
 }
 func (r *CommentRepository) CreateComment(ctx context.Context, comment *entity.Comment) error {
 	collection := r.client.Collection(entity.Comment{}.CollectionnamComment())
-	comment.ID = primitive.NewObjectID()
+	if comment.ID.IsZero() {
+		comment.ID = primitive.NewObjectID()
+	}
 	_, err := collection.InsertOne(ctx, comment)
 	if err != nil {
 		return err

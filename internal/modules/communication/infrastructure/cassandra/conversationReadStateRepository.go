@@ -6,18 +6,17 @@ import (
 
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/errors/cassandraErrors"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/IRepositoryShare"
-	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/infrastructure/concurrency"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/communication/domain/entity"
 	"github.com/gocql/gocql"
 )
 
 type ConversationReadStateRepository struct {
 	session   *gocql.Session
-	pool      *concurrency.WorkerPool
+	pool      IRepositoryShare.IWorkerPool
 	redisRepo IRepositoryShare.IRedis
 }
 
-func NewConversationReadStateRepository(session *gocql.Session, pool *concurrency.WorkerPool, redisRepo IRepositoryShare.IRedis) *ConversationReadStateRepository {
+func NewConversationReadStateRepository(session *gocql.Session, pool IRepositoryShare.IWorkerPool, redisRepo IRepositoryShare.IRedis) *ConversationReadStateRepository {
 	return &ConversationReadStateRepository{
 		session:   session,
 		pool:      pool,

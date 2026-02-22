@@ -7,7 +7,6 @@ import (
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/errors/cassandraErrors"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/IRepositoryShare"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/dto"
-	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/infrastructure/concurrency"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/utils"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/communication/domain/entity"
 	"github.com/gocql/gocql"
@@ -15,11 +14,11 @@ import (
 
 type MessageRepository struct {
 	session   *gocql.Session
-	pool      *concurrency.WorkerPool
+	pool      IRepositoryShare.IWorkerPool
 	redisRepo IRepositoryShare.IRedis
 }
 
-func NewMessageRepository(session *gocql.Session, pool *concurrency.WorkerPool, redisRepo IRepositoryShare.IRedis) *MessageRepository {
+func NewMessageRepository(session *gocql.Session, pool IRepositoryShare.IWorkerPool, redisRepo IRepositoryShare.IRedis) *MessageRepository {
 	return &MessageRepository{
 		session:   session,
 		pool:      pool,
@@ -420,47 +419,45 @@ func (r *MessageRepository) DeleteBulkMessages(ctx context.Context, conversation
 	}
 
 	// Chuyển đổi toàn bộ mảng messageID sang UUID trước để bắt lỗi sớm (Fail-fast)
-	uuids := make([]gocql.UUID, 0, len(messageIDs))
-	for _, idStr := range messageIDs {
-		id, err := gocql.ParseUUID(idStr)
-		if err != nil {
-			return 0, nil, fmt.Errorf("bulk delete aborted - invalid messageID format '%s': %w", idStr, err)
-		}
-		uuids = append(uuids, id)
-	}
 
 	// 2. Chuẩn bị Struct và Channel an toàn cho Worker Pool
 	type taskResult struct {
-		messageID gocql.UUID
-		err       error
+		message *entity.Message
+		err     error
 	}
-	resultCh := make(chan taskResult, len(uuids))
+	resultCh := make(chan taskResult, len(messageIDs))
 
 	tableName := entity.Message{}.TableName()
 	query := fmt.Sprintf("DELETE FROM %s WHERE conversation_id = ? AND bucket = ? AND message_id = ?", tableName)
 
 	// 3. Phân phối nhiệm vụ vào Worker Pool
-	for _, msgID := range uuids {
+	for _, msgID := range messageIDs {
 		// Copy biến cục bộ an toàn cho Goroutine (Go < 1.22)
-		payloadID := msgID
-
-		err := r.pool.Run(ctx, func() {
+		// Copy giá trị UUID vào biến cục bộ
+		finalid, err := gocql.ParseUUID(msgID)
+		payloadID := finalid
+		if err != nil {
+			resultCh <- taskResult{
+				message: nil,
+				err:     fmt.Errorf("invalid messageID format for %s: %w", msgID, err),
+			}
+			continue
+		}
+		err = r.pool.Run(ctx, func() {
 			// BẢO VỆ CONTEXT vì DELETE là thao tác ghi Tombstone
 			safeCtx := context.WithoutCancel(ctx)
-
 			execErr := r.session.Query(query, conversationID, bucket, payloadID).WithContext(safeCtx).Exec()
-
 			resultCh <- taskResult{
-				messageID: payloadID,
-				err:       execErr,
+				message: &entity.Message{MessageID: payloadID},
+				err:     execErr,
 			}
 		})
 
 		// Xử lý khi Worker Pool từ chối task (Context gốc bị cancel/timeout)
 		if err != nil {
 			resultCh <- taskResult{
-				messageID: payloadID,
-				err:       fmt.Errorf("worker pool rejected delete task: %w", err),
+				message: nil,
+				err:     fmt.Errorf("worker pool rejected delete task: %w", err),
 			}
 			break
 		}
@@ -476,9 +473,17 @@ func (r *MessageRepository) DeleteBulkMessages(ctx context.Context, conversation
 
 	for res := range resultCh {
 		if res.err != nil {
+			ConversationID := "unknown_conversation"
+			MessageID := "unknown_message_id"
+
+			if res.message != nil {
+				MessageID = res.message.MessageID.String()
+				ConversationID = conversationID
+			}
+
 			bulkErrors = append(bulkErrors, &cassandraErrors.MessageBulkError{
-				ConversationID: conversationID,
-				MessageID:      res.messageID.String(),
+				ConversationID: ConversationID,
+				MessageID:      MessageID,
 				Error:          res.err.Error(),
 			})
 		} else {

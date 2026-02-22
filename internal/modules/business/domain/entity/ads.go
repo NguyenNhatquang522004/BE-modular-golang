@@ -5,15 +5,18 @@ import (
 
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/business/enum"
 	"github.com/google/uuid"
+	"gorm.io/gorm"
 )
+
 const (
 	CollectionAds = "ads"
 )
+
 // Ad đại diện cho bảng 'ads' trong Postgres.
 // Một Chiến dịch (Campaign) có thể chứa nhiều Quảng cáo (Ads/Ad Sets).
 type Ad struct {
 	// 1. PRIMARY KEY
-	AdID uuid.UUID `gorm:"type:uuid;primary_key;default:gen_random_uuid()" json:"ad_id"`
+	ID uuid.UUID `gorm:"type:uuid;primary_key;default:gen_random_uuid()" json:"id"`
 
 	// 2. RELATIONS
 	// Thuộc về chiến dịch nào?
@@ -39,9 +42,9 @@ type Ad struct {
 
 	// 6. TIMESTAMPS
 	// (Nên thêm để tracking thời gian tạo/sửa quảng cáo)
-	CreatedAt time.Time `gorm:"type:timestamp;default:now()" json:"created_at"`
-	UpdatedAt time.Time `gorm:"type:timestamp;default:now()" json:"updated_at"`
-
+	CreatedAt time.Time      `gorm:"type:timestamp;default:now()" json:"created_at"`
+	UpdatedAt time.Time      `gorm:"type:timestamp;default:now()" json:"updated_at"`
+	DeletedAt gorm.DeletedAt `gorm:"index" json:"deleted_at,omitempty"`
 }
 
 // TableName ghi đè tên bảng

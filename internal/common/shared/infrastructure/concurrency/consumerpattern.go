@@ -6,7 +6,7 @@ package concurrency
 
 // 	"github.com/IBM/sarama"
 //     // Import pkg worker pool của bạn
-// 	"your-project/pkg/concurrency" 
+// 	"your-project/pkg/concurrency"
 // 	"your-project/internal/modules/order/usecase"
 // )
 
@@ -16,7 +16,7 @@ package concurrency
 // }
 
 // type OrderConsumer struct {
-// 	pool    *concurrency.WorkerPool
+// 	pool    IRepositoryShare.IWorkerPool
 // 	useCase usecase.OrderUseCase
 //     cfg     OrderConsumerConfig // Lưu config để log hoặc debug nếu cần
 // }
@@ -39,9 +39,9 @@ package concurrency
 // 	for msg := range claim.Messages() {
 // 		// Dùng hàm xử lý riêng để code gọn
 // 		c.processMessage(sess.Context(), msg)
-		
+
 // 		// Mark message ngay vì chúng ta xử lý Async (cân nhắc trade-off)
-// 		sess.MarkMessage(msg, "") 
+// 		sess.MarkMessage(msg, "")
 // 	}
 // 	return nil
 // }
@@ -51,10 +51,10 @@ package concurrency
 // 	// Task này chạy Async trong WorkerPool
 // 	err := c.pool.Run(ctx, func() {
 // 		// A. Tách Context: Dùng WithoutCancel (Go 1.21+) để giữ Tracing nhưng không bị Cancel
-//         // Nếu chưa lên Go 1.21, dùng context.Background() là chấp nhận được, 
+//         // Nếu chưa lên Go 1.21, dùng context.Background() là chấp nhận được,
 //         // nhưng tốt nhất là copy values từ ctx cha.
-// 		processCtx := context.WithoutCancel(ctx) 
-		
+// 		processCtx := context.WithoutCancel(ctx)
+
 // 		// B. Xử lý nghiệp vụ & Log lỗi (KHÔNG ĐƯỢC NUỐT LỖI)
 // 		err := c.useCase.ProcessOrder(processCtx, msg.Value)
 // 		if err != nil {
