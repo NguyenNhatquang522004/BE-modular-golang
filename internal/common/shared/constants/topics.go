@@ -3,8 +3,8 @@ package constants
 type EventType string
 
 const (
-	Updated EventType = "FRIENDSHIP_UPDATED"
-	Deleted EventType = "FRIENDSHIP_DELETED"
+	Updated EventType = "UPDATED"
+	Deleted EventType = "DELETED"
 )
 
 type TopicName string
@@ -13,6 +13,7 @@ const (
 	TopicFriendship TopicName = "social.friendship.events"
 	TopicBlock      TopicName = "social.block.events"
 	TopicFollow     TopicName = "social.follow.events"
+	TopicContent    TopicName = "content.events"
 )
 
 type TopicConfig struct {
@@ -32,5 +33,6 @@ var SocialTopics = []TopicConfig{
 	{Name: TopicFriendship, Partitions: 6}, // Gom 3 cái Create/Update/Delete vào 1
 	{Name: TopicBlock, Partitions: 6},
 	{Name: TopicFollow, Partitions: 3},
+	{Name: TopicContent, Partitions: 3},
 	// Thêm các topic khác vào đây
 }

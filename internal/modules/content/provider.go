@@ -3,8 +3,11 @@ package content
 import (
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/content/domain/IRepository/IRepositoryCassandra"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/content/domain/IRepository/IRepositoryMongodb"
+	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/content/domain/IStrategy"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/content/infrastructure/cassandra"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/content/infrastructure/mongodb"
+	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/content/usecase"
+	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/content/usecase/strategy"
 	"github.com/google/wire"
 )
 
@@ -22,11 +25,37 @@ var RepositorySet = wire.NewSet(
 	wire.Bind(new(IRepositoryMongodb.IPostRepository), new(*mongodb.PostRepository)),
 	wire.Bind(new(IRepositoryCassandra.IPostInsights), new(*cassandra.PostInsightsRepository)),
 )
-var UsecaseSet = wire.NewSet()
+var UsecaseSet = wire.NewSet(
+	usecase.NewDeletePostUseCase,
+	usecase.NewGetPostByUserIDUseCase,
+	usecase.NewGetPostDetailUseCase,
+	usecase.NewHideOrUnhidePostUseCase,
+	usecase.NewEditPostUseCase,
+	usecase.NewPublishPostUseCase,
+	usecase.NewUsecaseContent,
+	wire.Bind(new(usecase.IDeletePostUseCase), new(*usecase.DeletePostUseCase)),
+	wire.Bind(new(usecase.IGetPostByUserIDUseCase), new(*usecase.GetPostByUserIDUseCase)),
+	wire.Bind(new(usecase.IGetPostDetailUseCase), new(*usecase.GetPostDetailUseCase)),
+	wire.Bind(new(usecase.IHideOrUnhidePostUseCase), new(*usecase.HideOrUnhidePostUseCase)),
+	wire.Bind(new(usecase.IEditPostUseCase), new(*usecase.EditPostUseCase)),
+	wire.Bind(new(usecase.IPublishPostUseCase), new(*usecase.PublishPostUseCase)),
+)
+
 var HandlerSet = wire.NewSet()
 var producerSet = wire.NewSet()
 var consumerSet = wire.NewSet()
-
+var StrategyPublishPostSet = wire.NewSet(
+	strategy.NewPublishPostStrategy,
+	strategy.NewPostExtensionStrategy,
+	strategy.NewPostInsightStrategy,
+	strategy.NewMediaStrategy,
+	strategy.NewSettingStrategy,
+	strategy.NewPublishPostStrategy,
+	wire.Bind(new(IStrategy.IPublishPostStrategy), new(*strategy.PostExtensionStrategy)),
+	wire.Bind(new(IStrategy.IPublishPostStrategy), new(*strategy.PostInsightStrategy)),
+	wire.Bind(new(IStrategy.IPublishPostStrategy), new(*strategy.MediaStrategy)),
+	wire.Bind(new(IStrategy.IPublishPostStrategy), new(*strategy.SettingStrategy)),
+)
 var ModuleContentSet = wire.NewSet(
 	NewModuleContent,
 	RepositorySet,

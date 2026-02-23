@@ -1,4 +1,4 @@
-package business
+package IConsumerbusiness
 
 type IPostAdCampaigns interface {
 

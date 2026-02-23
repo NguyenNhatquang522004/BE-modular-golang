@@ -30,7 +30,9 @@ func NewPostExtensionRepository(client *mongo.Database, redisRepo IRepositorySha
 
 func (r *PostExtensionRepository) CreatePostExtension(ctx context.Context, postExtension *entity.PostExtension) error {
 	collection := r.client.Collection(entity.PostExtension{}.Collectionnamepostextension())
-	postExtension.ID = primitive.NewObjectID()
+	if postExtension.ID.IsZero() {
+		postExtension.ID = primitive.NewObjectID()
+	}
 	_, err := collection.InsertOne(ctx, postExtension)
 	if err != nil {
 		return err

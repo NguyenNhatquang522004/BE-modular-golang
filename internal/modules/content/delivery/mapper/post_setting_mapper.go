@@ -4,27 +4,36 @@ import (
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/content/delivery/dto/req"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/content/delivery/dto/res"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/content/domain/entity"
-
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-// --- 1. REQ TO ENTITY (CREATE) ---
-
-func ToPostSettingEntity(r req.CreatePostSettingReq) (*entity.PostSetting, error) {
-	// Convert PostID from string to ObjectID
-	postObjID, err := primitive.ObjectIDFromHex(r.PostID)
-	if err != nil {
-		return nil, err
+// --- 1. Request -> Entity (Dùng cho Create) ---
+func ToPostSettingEntityPostSetting(r *req.PostSettingReq) *entity.PostSetting {
+	if r == nil {
+		return nil
 	}
 
-	ent := &entity.PostSetting{
-		ID:     primitive.NewObjectID(), // Tự sinh ID mới
-		PostID: postObjID,
+	// Xử lý ObjectID chính
+	objectID := primitive.NewObjectID()
+	if r.ID != "" {
+		if oid, err := primitive.ObjectIDFromHex(r.ID); err == nil {
+			objectID = oid
+		}
 	}
 
-	// Map Schedule
+	// Xử lý PostID (Bắt buộc)
+	postID, _ := primitive.ObjectIDFromHex(r.PostID)
+
+	setting := &entity.PostSetting{
+		ID:        objectID,
+		PostID:    postID,
+		CreatedAt: r.CreatedAt,
+		UpdatedAt: r.UpdatedAt,
+		DeletedAt: r.DeletedAt,
+	}
+
 	if r.Schedule != nil {
-		ent.Schedule = &entity.PostSchedule{
+		setting.Schedule = &entity.PostSchedule{
 			IsScheduled:        r.Schedule.IsScheduled,
 			PublishTime:        r.Schedule.PublishTime,
 			PublisherUserID:    r.Schedule.PublisherUserID,
@@ -32,21 +41,17 @@ func ToPostSettingEntity(r req.CreatePostSettingReq) (*entity.PostSetting, error
 		}
 	}
 
-	// Map AdsInfo
 	if r.AdsInfo != nil {
-		campaignObjID, err := primitive.ObjectIDFromHex(r.AdsInfo.CampaignID)
-		if err == nil { // Nếu ID lỗi thì có thể bỏ qua hoặc return err tùy logic strict
-			ent.AdsInfo = &entity.AdsInfo{
-				CampaignID:  campaignObjID,
-				IsSponsored: r.AdsInfo.IsSponsored,
-				CTALink:     r.AdsInfo.CTALink,
-			}
+		campaignID, _ := primitive.ObjectIDFromHex(r.AdsInfo.CampaignID)
+		setting.AdsInfo = &entity.AdsInfo{
+			CampaignID:  campaignID,
+			IsSponsored: r.AdsInfo.IsSponsored,
+			CTALink:     r.AdsInfo.CTALink,
 		}
 	}
 
-	// Map Targeting
 	if r.Targeting != nil {
-		ent.Targeting = &entity.PostTargeting{
+		setting.Targeting = &entity.PostTargeting{
 			Locations: r.Targeting.Locations,
 			AgeMin:    r.Targeting.AgeMin,
 			AgeMax:    r.Targeting.AgeMax,
@@ -56,96 +61,139 @@ func ToPostSettingEntity(r req.CreatePostSettingReq) (*entity.PostSetting, error
 		}
 	}
 
-	return ent, nil
+	return setting
 }
 
-// --- 2. REQ TO ENTITY (UPDATE) ---
+// --- 2. Update Request -> Existing Entity ---
+func UpdatePostSettingEntityPostSetting(r *req.PostSettingReq, setting *entity.PostSetting) {
+	if r == nil || setting == nil {
+		return
+	}
 
-func UpdatePostSettingEntity(existingEnt *entity.PostSetting, r req.UpdatePostSettingReq) {
-	// Chỉ update nếu request gửi dữ liệu (khác nil)
+	// Best Practice: Bỏ qua ID, PostID, CreatedAt khi update để đảm bảo an toàn dữ liệu
+	setting.UpdatedAt = r.UpdatedAt
+	setting.DeletedAt = r.DeletedAt
 
-	// 1. Update Schedule
 	if r.Schedule != nil {
-		// Nếu trong DB chưa có (nil) thì khởi tạo mới
-		if existingEnt.Schedule == nil {
-			existingEnt.Schedule = &entity.PostSchedule{}
+		if setting.Schedule == nil {
+			setting.Schedule = &entity.PostSchedule{}
 		}
-		// Gán giá trị
-		existingEnt.Schedule.IsScheduled = r.Schedule.IsScheduled
-		existingEnt.Schedule.PublishTime = r.Schedule.PublishTime
-		existingEnt.Schedule.PublisherUserID = r.Schedule.PublisherUserID
-		existingEnt.Schedule.AuthorRoleSnapshot = r.Schedule.AuthorRoleSnapshot
+		setting.Schedule.IsScheduled = r.Schedule.IsScheduled
+		setting.Schedule.PublishTime = r.Schedule.PublishTime
+		setting.Schedule.PublisherUserID = r.Schedule.PublisherUserID
+		setting.Schedule.AuthorRoleSnapshot = r.Schedule.AuthorRoleSnapshot
 	}
 
-	// 2. Update AdsInfo
 	if r.AdsInfo != nil {
-		campaignObjID, err := primitive.ObjectIDFromHex(r.AdsInfo.CampaignID)
-		if err == nil { // Chỉ update nếu ID hợp lệ
-			if existingEnt.AdsInfo == nil {
-				existingEnt.AdsInfo = &entity.AdsInfo{}
-			}
-			existingEnt.AdsInfo.CampaignID = campaignObjID
-			existingEnt.AdsInfo.IsSponsored = r.AdsInfo.IsSponsored
-			existingEnt.AdsInfo.CTALink = r.AdsInfo.CTALink
+		if setting.AdsInfo == nil {
+			setting.AdsInfo = &entity.AdsInfo{}
 		}
+		if cid, err := primitive.ObjectIDFromHex(r.AdsInfo.CampaignID); err == nil {
+			setting.AdsInfo.CampaignID = cid
+		}
+		setting.AdsInfo.IsSponsored = r.AdsInfo.IsSponsored
+		setting.AdsInfo.CTALink = r.AdsInfo.CTALink
 	}
 
-	// 3. Update Targeting
 	if r.Targeting != nil {
-		if existingEnt.Targeting == nil {
-			existingEnt.Targeting = &entity.PostTargeting{}
+		if setting.Targeting == nil {
+			setting.Targeting = &entity.PostTargeting{}
 		}
-		existingEnt.Targeting.Locations = r.Targeting.Locations
-		existingEnt.Targeting.AgeMin = r.Targeting.AgeMin
-		existingEnt.Targeting.AgeMax = r.Targeting.AgeMax
-		existingEnt.Targeting.Genders = r.Targeting.Genders
-		existingEnt.Targeting.Languages = r.Targeting.Languages
-		existingEnt.Targeting.Interests = r.Targeting.Interests
+		setting.Targeting.Locations = r.Targeting.Locations
+		setting.Targeting.AgeMin = r.Targeting.AgeMin
+		setting.Targeting.AgeMax = r.Targeting.AgeMax
+		setting.Targeting.Genders = r.Targeting.Genders
+		setting.Targeting.Languages = r.Targeting.Languages
+		setting.Targeting.Interests = r.Targeting.Interests
 	}
 }
 
-// --- 3. ENTITY TO RES ---
-
-func ToPostSettingRes(ent *entity.PostSetting) *res.PostSettingRes {
-	if ent == nil {
+// --- 3. Entity -> Response ---
+func ToPostSettingResPostSetting(setting *entity.PostSetting) *res.PostSettingRes {
+	if setting == nil {
 		return nil
 	}
 
-	response := &res.PostSettingRes{
-		ID:     ent.ID.Hex(),
-		PostID: ent.PostID.Hex(),
+	result := &res.PostSettingRes{
+		ID:        setting.ID.Hex(),
+		PostID:    setting.PostID.Hex(),
+		CreatedAt: setting.CreatedAt,
+		UpdatedAt: setting.UpdatedAt,
+		DeletedAt: setting.DeletedAt,
 	}
 
-	// Map Schedule Res
-	if ent.Schedule != nil {
-		response.Schedule = &res.PostScheduleRes{
-			IsScheduled:        ent.Schedule.IsScheduled,
-			PublishTime:        ent.Schedule.PublishTime,
-			PublisherUserID:    ent.Schedule.PublisherUserID,
-			AuthorRoleSnapshot: ent.Schedule.AuthorRoleSnapshot,
+	if setting.Schedule != nil {
+		result.Schedule = &res.PostScheduleRes{
+			IsScheduled:        setting.Schedule.IsScheduled,
+			PublishTime:        setting.Schedule.PublishTime,
+			PublisherUserID:    setting.Schedule.PublisherUserID,
+			AuthorRoleSnapshot: setting.Schedule.AuthorRoleSnapshot,
 		}
 	}
 
-	// Map AdsInfo Res
-	if ent.AdsInfo != nil {
-		response.AdsInfo = &res.AdsInfoRes{
-			CampaignID:  ent.AdsInfo.CampaignID.Hex(),
-			IsSponsored: ent.AdsInfo.IsSponsored,
-			CTALink:     ent.AdsInfo.CTALink,
+	if setting.AdsInfo != nil {
+		result.AdsInfo = &res.AdsInfoRes{
+			CampaignID:  setting.AdsInfo.CampaignID.Hex(),
+			IsSponsored: setting.AdsInfo.IsSponsored,
+			CTALink:     setting.AdsInfo.CTALink,
 		}
 	}
 
-	// Map Targeting Res
-	if ent.Targeting != nil {
-		response.Targeting = &res.PostTargetingRes{
-			Locations: ent.Targeting.Locations,
-			AgeMin:    ent.Targeting.AgeMin,
-			AgeMax:    ent.Targeting.AgeMax,
-			Genders:   ent.Targeting.Genders,
-			Languages: ent.Targeting.Languages,
-			Interests: ent.Targeting.Interests,
+	if setting.Targeting != nil {
+		result.Targeting = &res.PostTargetingRes{
+			Locations: setting.Targeting.Locations,
+			AgeMin:    setting.Targeting.AgeMin,
+			AgeMax:    setting.Targeting.AgeMax,
+			Genders:   setting.Targeting.Genders,
+			Languages: setting.Targeting.Languages,
+			Interests: setting.Targeting.Interests,
 		}
 	}
 
-	return response
+	return result
+}
+
+// --- 4. Request -> Response ---
+func ReqToPostSettingResPostSetting(r *req.PostSettingReq) *res.PostSettingRes {
+	if r == nil {
+		return nil
+	}
+
+	result := &res.PostSettingRes{
+		ID:        r.ID,
+		PostID:    r.PostID,
+		CreatedAt: r.CreatedAt,
+		UpdatedAt: r.UpdatedAt,
+		DeletedAt: r.DeletedAt,
+	}
+
+	if r.Schedule != nil {
+		result.Schedule = &res.PostScheduleRes{
+			IsScheduled:        r.Schedule.IsScheduled,
+			PublishTime:        r.Schedule.PublishTime,
+			PublisherUserID:    r.Schedule.PublisherUserID,
+			AuthorRoleSnapshot: r.Schedule.AuthorRoleSnapshot,
+		}
+	}
+
+	if r.AdsInfo != nil {
+		result.AdsInfo = &res.AdsInfoRes{
+			CampaignID:  r.AdsInfo.CampaignID,
+			IsSponsored: r.AdsInfo.IsSponsored,
+			CTALink:     r.AdsInfo.CTALink,
+		}
+	}
+
+	if r.Targeting != nil {
+		result.Targeting = &res.PostTargetingRes{
+			Locations: r.Targeting.Locations,
+			AgeMin:    r.Targeting.AgeMin,
+			AgeMax:    r.Targeting.AgeMax,
+			Genders:   r.Targeting.Genders,
+			Languages: r.Targeting.Languages,
+			Interests: r.Targeting.Interests,
+		}
+	}
+
+	return result
 }

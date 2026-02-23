@@ -10,7 +10,7 @@ import (
 
 type IPostEditLogsRepository interface {
 	CreatePostEditLog(ctx context.Context, postEditLog *entity.PostEntityEditLog) error
-	CreateBulkPostEditLog(ctx context.Context, postEditLogs []*entity.PostEntityEditLog) (int64, []*mongodbErrors.BulkError, error)
+	CreateBulkPostEditLog(ctx context.Context, postEditLogs []*entity.PostEntityEditLog) (int64, []*mongodbErrors.EditLogsBulkError, error)
 	GetByTargetID(ctx context.Context, targetID string) (*entity.PostEntityEditLog, error)
 	GetBulkByTargetID(ctx context.Context, targetIDs []string) ([]*entity.PostEntityEditLog, error)
 	GetByID(ctx context.Context, id string) (*entity.PostEntityEditLog, error)
@@ -18,6 +18,6 @@ type IPostEditLogsRepository interface {
 	GetLatestVersion(ctx context.Context, targetID string) (int, error)
 	GetAllVersions(ctx context.Context, targetID string) ([]*entity.PostEntityEditLog, error)
 	UpdatePostEditLog(ctx context.Context, postEditLog *entity.PostEntityEditLog) error
-	UpdateBulkPostEditLog(ctx context.Context, postEditLogs []*entity.PostEntityEditLog) (int64, []*mongodbErrors.BulkError, error)
+	UpdateBulkPostEditLog(ctx context.Context, postEditLogs []*entity.PostEntityEditLog) (int64, []*mongodbErrors.EditLogsBulkError, error)
 	PaginationPostEditLog(ctx context.Context, targetID string, cursor string, limit int) (*dto.PaginationRes, error)
 }

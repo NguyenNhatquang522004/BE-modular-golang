@@ -29,7 +29,9 @@ func NewPostMediaRepository(client *mongo.Database, redisRepo IRepositoryShare.I
 }
 func (r *PostMediaRepository) CreatePostMedia(ctx context.Context, postMedia *entity.PostMedia) error {
 	collection := r.client.Collection(entity.PostMedia{}.CollectionNamePostMedia())
-	postMedia.ID = primitive.NewObjectID()
+	if postMedia.ID.IsZero() {
+		postMedia.ID = primitive.NewObjectID()
+	}
 	_, err := collection.InsertOne(ctx, postMedia)
 	if err != nil {
 		return err

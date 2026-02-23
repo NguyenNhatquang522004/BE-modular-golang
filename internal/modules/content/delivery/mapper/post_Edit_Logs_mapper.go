@@ -1,30 +1,35 @@
 package mapper
 
 import (
-	"time"
-
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/content/delivery/dto/req"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/content/delivery/dto/res"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/content/domain/entity"
-
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-// --- 1. REQ TO ENTITY (CREATE) ---
-
-func ToPostEntityEditLogEntity(r req.CreatePostEntityEditLogReq) (*entity.PostEntityEditLog, error) {
-	// Convert TargetID string -> ObjectID
-	targetObjID, err := primitive.ObjectIDFromHex(r.TargetID)
-	if err != nil {
-		return nil, err
+// --- 1. Request -> Entity (Tạo mới) ---
+func ToPostEntityEditLogEntity(r *req.PostEntityEditLogReq) *entity.PostEntityEditLog {
+	if r == nil {
+		return nil
 	}
 
-	ent := &entity.PostEntityEditLog{
-		ID:               primitive.NewObjectID(),
+	// Xử lý ID chính
+	objectID := primitive.NewObjectID()
+	if r.ID != "" {
+		if oid, err := primitive.ObjectIDFromHex(r.ID); err == nil {
+			objectID = oid
+		}
+	}
+
+	// Xử lý TargetID
+	targetID, _ := primitive.ObjectIDFromHex(r.TargetID)
+
+	logEntity := &entity.PostEntityEditLog{
+		ID:               objectID,
 		TargetCollection: r.TargetCollection,
-		TargetID:         targetObjID,
+		TargetID:         targetID,
 		Version:          r.Version,
-		EditedAt:         time.Now(), // Thời điểm tạo log là thời điểm hiện tại
+		EditedAt:         r.EditedAt,
 		EditorID:         r.EditorID,
 		Diff: entity.LogDiff{
 			OldContent:    r.Diff.OldContent,
@@ -33,60 +38,86 @@ func ToPostEntityEditLogEntity(r req.CreatePostEntityEditLogReq) (*entity.PostEn
 		},
 		IPAddress: r.IPAddress,
 		UserAgent: r.UserAgent,
+		CreatedAt: r.CreatedAt,
+		UpdatedAt: r.UpdatedAt,
+		DeletedAt: r.DeletedAt,
 	}
 
-	return ent, nil
+	return logEntity
 }
 
-// --- 2. REQ TO ENTITY (UPDATE) ---
-
-func UpdatePostEntityEditLogEntity(existingEnt *entity.PostEntityEditLog, r req.UpdatePostEntityEditLogReq) {
-	// Chỉ update các trường được gửi lên (khác nil hoặc khác rỗng)
-
-	if r.Version != nil {
-		existingEnt.Version = *r.Version
+// --- 2. Update Request -> Existing Entity ---
+func UpdatePostEntityEditLogEntity(r *req.PostEntityEditLogReq, logEntity *entity.PostEntityEditLog) {
+	if r == nil || logEntity == nil {
+		return
 	}
 
-	if r.Diff != nil {
-		existingEnt.Diff = entity.LogDiff{
-			OldContent:    r.Diff.OldContent,
-			NewContent:    r.Diff.NewContent,
-			ChangedFields: r.Diff.ChangedFields,
-		}
-	}
+	// Lưu ý: Đối với bảng Log, thường ít khi Update.
+	// Dưới đây chỉ map những trường có thể thay đổi hợp lý, bảo vệ ID, TargetID, CreatedAt.
+	logEntity.TargetCollection = r.TargetCollection
+	logEntity.Version = r.Version
+	logEntity.EditedAt = r.EditedAt
+	logEntity.EditorID = r.EditorID
+	logEntity.IPAddress = r.IPAddress
+	logEntity.UserAgent = r.UserAgent
+	logEntity.UpdatedAt = r.UpdatedAt
+	logEntity.DeletedAt = r.DeletedAt
 
-	if r.IPAddress != "" {
-		existingEnt.IPAddress = r.IPAddress
+	logEntity.Diff = entity.LogDiff{
+		OldContent:    r.Diff.OldContent,
+		NewContent:    r.Diff.NewContent,
+		ChangedFields: r.Diff.ChangedFields,
 	}
-
-	if r.UserAgent != "" {
-		existingEnt.UserAgent = r.UserAgent
-	}
-
-	// Lưu ý: TargetCollection, TargetID, EditorID, EditedAt thường không cho phép sửa
-	// trong logic Audit Log chuẩn, nên mình không đưa vào hàm update này.
 }
 
-// --- 3. ENTITY TO RES ---
-
-func ToPostEntityEditLogRes(ent *entity.PostEntityEditLog) *res.PostEntityEditLogRes {
-	if ent == nil {
+// --- 3. Entity -> Response ---
+func ToPostEntityEditLogRes(logEntity *entity.PostEntityEditLog) *res.PostEntityEditLogRes {
+	if logEntity == nil {
 		return nil
 	}
 
 	return &res.PostEntityEditLogRes{
-		ID:               ent.ID.Hex(),
-		TargetCollection: ent.TargetCollection,
-		TargetID:         ent.TargetID.Hex(),
-		Version:          ent.Version,
-		EditedAt:         ent.EditedAt,
-		EditorID:         ent.EditorID,
+		ID:               logEntity.ID.Hex(),
+		TargetCollection: logEntity.TargetCollection,
+		TargetID:         logEntity.TargetID.Hex(),
+		Version:          logEntity.Version,
+		EditedAt:         logEntity.EditedAt,
+		EditorID:         logEntity.EditorID,
 		Diff: res.LogDiffRes{
-			OldContent:    ent.Diff.OldContent,
-			NewContent:    ent.Diff.NewContent,
-			ChangedFields: ent.Diff.ChangedFields,
+			OldContent:    logEntity.Diff.OldContent,
+			NewContent:    logEntity.Diff.NewContent,
+			ChangedFields: logEntity.Diff.ChangedFields,
 		},
-		IPAddress: ent.IPAddress,
-		UserAgent: ent.UserAgent,
+		IPAddress: logEntity.IPAddress,
+		UserAgent: logEntity.UserAgent,
+		CreatedAt: logEntity.CreatedAt,
+		UpdatedAt: logEntity.UpdatedAt,
+		DeletedAt: logEntity.DeletedAt,
+	}
+}
+
+// --- 4. Request -> Response ---
+func ReqToPostEntityEditLogRes(r *req.PostEntityEditLogReq) *res.PostEntityEditLogRes {
+	if r == nil {
+		return nil
+	}
+
+	return &res.PostEntityEditLogRes{
+		ID:               r.ID,
+		TargetCollection: r.TargetCollection,
+		TargetID:         r.TargetID,
+		Version:          r.Version,
+		EditedAt:         r.EditedAt,
+		EditorID:         r.EditorID,
+		Diff: res.LogDiffRes{
+			OldContent:    r.Diff.OldContent,
+			NewContent:    r.Diff.NewContent,
+			ChangedFields: r.Diff.ChangedFields,
+		},
+		IPAddress: r.IPAddress,
+		UserAgent: r.UserAgent,
+		CreatedAt: r.CreatedAt,
+		UpdatedAt: r.UpdatedAt,
+		DeletedAt: r.DeletedAt,
 	}
 }

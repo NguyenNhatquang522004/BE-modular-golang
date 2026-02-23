@@ -7,128 +7,240 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-// --- 1. REQ TO ENTITY (CREATE) ---
-
-func ToPostMediaEntity(r req.CreatePostMediaReq) (*entity.PostMedia, error) {
-	postObjID, err := primitive.ObjectIDFromHex(r.PostID)
-	if err != nil {
-		return nil, err
-	}
-
-	ent := &entity.PostMedia{
-		ID:     primitive.NewObjectID(),
-		PostID: postObjID,
-		Items:  make([]*entity.MediaItem, 0, len(r.Items)),
-	}
-
-	// Map từng Media Item
-	for _, itemReq := range r.Items {
-		ent.Items = append(ent.Items, mapMediaItemToEntity(itemReq))
-	}
-
-	return ent, nil
-}
-
-// --- 2. REQ TO ENTITY (UPDATE) ---
-
-func UpdatePostMediaEntity(existingEnt *entity.PostMedia, r req.UpdatePostMediaReq) {
-	// Với Media, chiến lược update thường là thay thế toàn bộ danh sách Items
-	// để đảm bảo thứ tự (Order) và đồng bộ dữ liệu chính xác nhất.
-
-	newItems := make([]*entity.MediaItem, 0, len(r.Items))
-
-	for _, itemReq := range r.Items {
-		newItems = append(newItems, mapMediaItemToEntity(itemReq))
-	}
-
-	existingEnt.Items = newItems
-}
-
-// --- Helper: Map Media Item (Dùng chung cho Create và Update) ---
-func mapMediaItemToEntity(req *req.MediaItemReq) *entity.MediaItem {
-	// Xử lý ID cho Item: Nếu req có ID hợp lệ thì giữ, nếu không thì tạo mới
-	var itemID primitive.ObjectID
-	if req.ID != "" {
-		if id, err := primitive.ObjectIDFromHex(req.ID); err == nil {
-			itemID = id
-		} else {
-			itemID = primitive.NewObjectID()
-		}
-	} else {
-		itemID = primitive.NewObjectID()
-	}
-
-	itemEnt := &entity.MediaItem{
-		ID:           itemID,
-		MediaType:    req.MediaType,
-		URL:          req.URL,
-		ThumbnailURL: req.ThumbnailURL,
-		Metadata: entity.MediaMetadata{
-			Width:     req.Metadata.Width,
-			Height:    req.Metadata.Height,
-			Duration:  req.Metadata.Duration,
-			SizeBytes: req.Metadata.SizeBytes,
-			MimeType:  req.Metadata.MimeType,
-		},
-		Order:       req.Order,
-		TaggedUsers: make([]entity.TaggedUser, 0, len(req.TaggedUsers)),
-	}
-
-	// Map Tagged Users
-	for _, uReq := range req.TaggedUsers {
-		itemEnt.TaggedUsers = append(itemEnt.TaggedUsers, entity.TaggedUser{
-			UserID: uReq.UserID,
-			Name:   uReq.Name,
-			X:      uReq.X,
-			Y:      uReq.Y,
-		})
-	}
-
-	return itemEnt
-}
-
-// --- 3. ENTITY TO RES ---
-
-func ToPostMediaRes(ent *entity.PostMedia) *res.PostMediaRes {
-	if ent == nil {
+// --- 1. Request -> Entity (Tạo mới) ---
+func ToPostMediaEntityPostMedia(r *req.PostMediaReq) *entity.PostMedia {
+	if r == nil {
 		return nil
 	}
 
-	response := &res.PostMediaRes{
-		ID:     ent.ID.Hex(),
-		PostID: ent.PostID.Hex(),
-		Items:  make([]*res.MediaItemRes, 0, len(ent.Items)),
+	objectID := primitive.NewObjectID()
+	if r.ID != "" {
+		if oid, err := primitive.ObjectIDFromHex(r.ID); err == nil {
+			objectID = oid
+		}
 	}
 
-	for _, itemEnt := range ent.Items {
-		itemRes := &res.MediaItemRes{
-			ID:           itemEnt.ID.Hex(),
-			MediaType:    itemEnt.MediaType,
-			URL:          itemEnt.URL,
-			ThumbnailURL: itemEnt.ThumbnailURL,
-			Metadata: res.MediaMetadataRes{
-				Width:     itemEnt.Metadata.Width,
-				Height:    itemEnt.Metadata.Height,
-				Duration:  itemEnt.Metadata.Duration,
-				SizeBytes: itemEnt.Metadata.SizeBytes,
-				MimeType:  itemEnt.Metadata.MimeType,
-			},
-			Order:       itemEnt.Order,
-			TaggedUsers: make([]res.TaggedUserRes, 0, len(itemEnt.TaggedUsers)),
-		}
+	postID, _ := primitive.ObjectIDFromHex(r.PostID)
 
-		// Map Tagged Users Res
-		for _, tagEnt := range itemEnt.TaggedUsers {
-			itemRes.TaggedUsers = append(itemRes.TaggedUsers, res.TaggedUserRes{
-				UserID: tagEnt.UserID,
-				Name:   tagEnt.Name,
-				X:      tagEnt.X,
-				Y:      tagEnt.Y,
-			})
-		}
-
-		response.Items = append(response.Items, itemRes)
+	media := &entity.PostMedia{
+		ID:        objectID,
+		PostID:    postID,
+		CreatedAt: r.CreatedAt,
+		UpdatedAt: r.UpdatedAt,
+		DeletedAt: r.DeletedAt,
 	}
 
-	return response
+	if len(r.Items) > 0 {
+		media.Items = make([]*entity.MediaItem, 0, len(r.Items))
+		for _, itemReq := range r.Items {
+			if itemReq == nil {
+				continue
+			}
+
+			itemID := primitive.NewObjectID()
+			if itemReq.ID != "" {
+				if oid, err := primitive.ObjectIDFromHex(itemReq.ID); err == nil {
+					itemID = oid
+				}
+			}
+
+			itemEntity := &entity.MediaItem{
+				ID:           itemID,
+				MediaType:    itemReq.MediaType,
+				URL:          itemReq.URL,
+				ThumbnailURL: itemReq.ThumbnailURL,
+				Order:        itemReq.Order,
+				Metadata: entity.MediaMetadata{
+					Width:     itemReq.Metadata.Width,
+					Height:    itemReq.Metadata.Height,
+					Duration:  itemReq.Metadata.Duration,
+					SizeBytes: itemReq.Metadata.SizeBytes,
+					MimeType:  itemReq.Metadata.MimeType,
+				},
+			}
+
+			if len(itemReq.TaggedUsers) > 0 {
+				itemEntity.TaggedUsers = make([]entity.TaggedUser, 0, len(itemReq.TaggedUsers))
+				for _, tuReq := range itemReq.TaggedUsers {
+					itemEntity.TaggedUsers = append(itemEntity.TaggedUsers, entity.TaggedUser{
+						UserID: tuReq.UserID,
+						Name:   tuReq.Name,
+						X:      tuReq.X,
+						Y:      tuReq.Y,
+					})
+				}
+			}
+
+			media.Items = append(media.Items, itemEntity)
+		}
+	}
+
+	return media
+}
+
+// --- 2. Update Request -> Existing Entity ---
+func UpdatePostMediaEntityPostMedia(r *req.PostMediaReq, media *entity.PostMedia) {
+	if r == nil || media == nil {
+		return
+	}
+
+	// Bỏ qua Update ID, PostID, CreatedAt
+	media.UpdatedAt = r.UpdatedAt
+	media.DeletedAt = r.DeletedAt
+
+	// Cập nhật lại toàn bộ danh sách Items (Replace behavior)
+	if r.Items != nil {
+		media.Items = make([]*entity.MediaItem, 0, len(r.Items))
+		for _, itemReq := range r.Items {
+			if itemReq == nil {
+				continue
+			}
+
+			itemID := primitive.NewObjectID()
+			if itemReq.ID != "" {
+				if oid, err := primitive.ObjectIDFromHex(itemReq.ID); err == nil {
+					itemID = oid
+				}
+			}
+
+			itemEntity := &entity.MediaItem{
+				ID:           itemID,
+				MediaType:    itemReq.MediaType,
+				URL:          itemReq.URL,
+				ThumbnailURL: itemReq.ThumbnailURL,
+				Order:        itemReq.Order,
+				Metadata: entity.MediaMetadata{
+					Width:     itemReq.Metadata.Width,
+					Height:    itemReq.Metadata.Height,
+					Duration:  itemReq.Metadata.Duration,
+					SizeBytes: itemReq.Metadata.SizeBytes,
+					MimeType:  itemReq.Metadata.MimeType,
+				},
+			}
+
+			if len(itemReq.TaggedUsers) > 0 {
+				itemEntity.TaggedUsers = make([]entity.TaggedUser, 0, len(itemReq.TaggedUsers))
+				for _, tuReq := range itemReq.TaggedUsers {
+					itemEntity.TaggedUsers = append(itemEntity.TaggedUsers, entity.TaggedUser{
+						UserID: tuReq.UserID,
+						Name:   tuReq.Name,
+						X:      tuReq.X,
+						Y:      tuReq.Y,
+					})
+				}
+			}
+
+			media.Items = append(media.Items, itemEntity)
+		}
+	}
+}
+
+// --- 3. Entity -> Response ---
+func ToPostMediaResPostMedia(media *entity.PostMedia) *res.PostMediaRes {
+	if media == nil {
+		return nil
+	}
+
+	result := &res.PostMediaRes{
+		ID:        media.ID.Hex(),
+		PostID:    media.PostID.Hex(),
+		CreatedAt: media.CreatedAt,
+		UpdatedAt: media.UpdatedAt,
+		DeletedAt: media.DeletedAt,
+	}
+
+	if len(media.Items) > 0 {
+		result.Items = make([]*res.MediaItemRes, 0, len(media.Items))
+		for _, itemEntity := range media.Items {
+			if itemEntity == nil {
+				continue
+			}
+
+			itemRes := &res.MediaItemRes{
+				ID:           itemEntity.ID.Hex(),
+				MediaType:    itemEntity.MediaType,
+				URL:          itemEntity.URL,
+				ThumbnailURL: itemEntity.ThumbnailURL,
+				Order:        itemEntity.Order,
+				Metadata: res.MediaMetadataRes{
+					Width:     itemEntity.Metadata.Width,
+					Height:    itemEntity.Metadata.Height,
+					Duration:  itemEntity.Metadata.Duration,
+					SizeBytes: itemEntity.Metadata.SizeBytes,
+					MimeType:  itemEntity.Metadata.MimeType,
+				},
+			}
+
+			if len(itemEntity.TaggedUsers) > 0 {
+				itemRes.TaggedUsers = make([]res.TaggedUserRes, 0, len(itemEntity.TaggedUsers))
+				for _, tuEntity := range itemEntity.TaggedUsers {
+					itemRes.TaggedUsers = append(itemRes.TaggedUsers, res.TaggedUserRes{
+						UserID: tuEntity.UserID,
+						Name:   tuEntity.Name,
+						X:      tuEntity.X,
+						Y:      tuEntity.Y,
+					})
+				}
+			}
+
+			result.Items = append(result.Items, itemRes)
+		}
+	}
+
+	return result
+}
+
+// --- 4. Request -> Response ---
+func ReqToPostMediaResPostMedia(r *req.PostMediaReq) *res.PostMediaRes {
+	if r == nil {
+		return nil
+	}
+
+	result := &res.PostMediaRes{
+		ID:        r.ID,
+		PostID:    r.PostID,
+		CreatedAt: r.CreatedAt,
+		UpdatedAt: r.UpdatedAt,
+		DeletedAt: r.DeletedAt,
+	}
+
+	if len(r.Items) > 0 {
+		result.Items = make([]*res.MediaItemRes, 0, len(r.Items))
+		for _, itemReq := range r.Items {
+			if itemReq == nil {
+				continue
+			}
+
+			itemRes := &res.MediaItemRes{
+				ID:           itemReq.ID,
+				MediaType:    itemReq.MediaType,
+				URL:          itemReq.URL,
+				ThumbnailURL: itemReq.ThumbnailURL,
+				Order:        itemReq.Order,
+				Metadata: res.MediaMetadataRes{
+					Width:     itemReq.Metadata.Width,
+					Height:    itemReq.Metadata.Height,
+					Duration:  itemReq.Metadata.Duration,
+					SizeBytes: itemReq.Metadata.SizeBytes,
+					MimeType:  itemReq.Metadata.MimeType,
+				},
+			}
+
+			if len(itemReq.TaggedUsers) > 0 {
+				itemRes.TaggedUsers = make([]res.TaggedUserRes, 0, len(itemReq.TaggedUsers))
+				for _, tuReq := range itemReq.TaggedUsers {
+					itemRes.TaggedUsers = append(itemRes.TaggedUsers, res.TaggedUserRes{
+						UserID: tuReq.UserID,
+						Name:   tuReq.Name,
+						X:      tuReq.X,
+						Y:      tuReq.Y,
+					})
+				}
+			}
+
+			result.Items = append(result.Items, itemRes)
+		}
+	}
+
+	return result
 }

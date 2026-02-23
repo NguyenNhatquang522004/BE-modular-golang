@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/errors/cassandraErrors"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/IRepositoryShare"
-	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/content/delivery/dto/req"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/content/delivery/mapper"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/content/domain/entity"
 	"github.com/gocql/gocql"
@@ -20,45 +20,31 @@ type PostInsightsRepository struct {
 func NewPostInsightsRepository(session *gocql.Session, pool IRepositoryShare.IWorkerPool) *PostInsightsRepository {
 	return &PostInsightsRepository{session: session, pool: pool}
 }
-func (r *PostInsightsRepository) CreatePostInsightInitPost(ctx context.Context, PostID string) error {
-	// 1. Validate & Parse UUID từ string
-	postID, err := gocql.ParseUUID(PostID)
-	if err != nil {
-		return fmt.Errorf("invalid postID format: %w", err)
-	}
-
+func (r *PostInsightsRepository) CreatePostInsightInitPost(ctx context.Context, postinsight *entity.PostInsight) error {
 	tableName := entity.PostInsight{}.Collectionnamepostinsight()
-	query := fmt.Sprintf(`
-		INSERT INTO %s (
-			post_id, reach, impressions, engagement_rate, 
-			reactions_total, comments_total, shares_total, 
-			clicks_total, video_views_3s, updated_at
-		) VALUES (?, 0, 0, 0.0, 0, 0, 0, 0, 0, ?)
-	`, tableName)
-
-	// 2. Thực thi query với tham số mặc định (0) và thời gian hiện tại
-	err = r.session.Query(query, postID, time.Now()).WithContext(ctx).Exec()
-	if err != nil {
-		return fmt.Errorf("failed to init post insight for post %s: %w", PostID, err)
+	if postinsight.PostID == (gocql.UUID{}) {
+		postinsight.PostID = gocql.TimeUUID() // Tạo UUID mới nếu chưa có (Thường thì nên có sẵn từ bên ngoài, nhưng đây là biện pháp phòng ngừa)
 	}
-
-	return nil
+	query := fmt.Sprintf(`insert into %s ( post_id, reach, impressions, engagement_rate, reactions_total, comments_total, shares_total, clicks_total, video_views_3s, updated_at) values (?, 0, 0, 0.0, 0, 0, 0, 0, 0, ?)`, tableName)
+	return r.session.Query(query, postinsight.PostID, time.Now()).WithContext(ctx).Exec()
 }
-func (r *PostInsightsRepository) CreatePostInsightInitPostBulk(ctx context.Context, PostIDs []string) error {
-	if len(PostIDs) == 0 {
-		return nil
+func (r *PostInsightsRepository) CreatePostInsightInitPostBulk(ctx context.Context, postinsights []*entity.PostInsight) (int64, []*cassandraErrors.InsightBulkError, error) {
+	if len(postinsights) == 0 {
+		return 0, nil, nil
 	}
-
+	type taskResult struct {
+		message *entity.PostInsight
+		err     error
+	}
 	// 1. Parse toàn bộ UUID trước. Fail-fast: Nếu có 1 ID lỗi, dừng luôn không insert gì cả.
-	uuids := make([]gocql.UUID, 0, len(PostIDs))
-	for _, idStr := range PostIDs {
-		id, err := gocql.ParseUUID(idStr)
-		if err != nil {
-			return fmt.Errorf("invalid postID format '%s': %w", idStr, err)
+	uuids := make([]*entity.PostInsight, 0, len(postinsights))
+	for _, postInsight := range postinsights {
+		if postInsight.PostID == (gocql.UUID{}) {
+			postInsight.PostID = gocql.TimeUUID() // Tạo UUID mới nếu chưa có (Thường thì nên có sẵn từ bên ngoài, nhưng đây là biện pháp phòng ngừa)
 		}
-		uuids = append(uuids, id)
+		uuids = append(uuids, postInsight)
 	}
-
+	var faildocs []*cassandraErrors.InsightBulkError
 	tableName := entity.PostInsight{}.Collectionnamepostinsight()
 	query := fmt.Sprintf(`
 		INSERT INTO %s (
@@ -72,23 +58,27 @@ func (r *PostInsightsRepository) CreatePostInsightInitPostBulk(ctx context.Conte
 
 	// 2. Tích hợp Worker Pool
 
-	errCh := make(chan error, len(uuids))
+	errCh := make(chan taskResult, len(uuids))
 
 	for _, id := range uuids {
-		postID := id
-
+		item := id
 		err := r.pool.Run(ctx, func() {
 			// TÁCH CONTEXT Ở ĐÂY: Quyết tâm insert cho xong dù HTTP request đã bị ngắt!
 			safeCtx := context.WithoutCancel(ctx)
-
-			if err := r.session.Query(query, postID, now).WithContext(safeCtx).Exec(); err != nil {
-				errCh <- err
+			err := r.session.Query(
+				query,
+				item.PostID,
+				item.Impressions, item.Reach, item.EngagementRate,
+				item.ReactionsTotal, item.CommentsTotal, item.SharesTotal,
+				item.ClicksTotal, item.VideoViews3s,
+				now,
+			).WithContext(safeCtx).Exec()
+			if err != nil {
+				errCh <- taskResult{message: nil, err: err}
 			}
 		})
-
 		if err != nil {
-			errCh <- fmt.Errorf("hủy bỏ việc lập lịch insert cho post_id %s: %w", postID.String(), err)
-
+			errCh <- taskResult{message: nil, err: err}
 			// 2. BREAK NGAY LẬP TỨC! Không loop tiếp để tiết kiệm tài nguyên.
 			break
 		}
@@ -96,16 +86,23 @@ func (r *PostInsightsRepository) CreatePostInsightInitPostBulk(ctx context.Conte
 
 	r.pool.Wait()
 	close(errCh)
-
 	// 3. Kiểm tra xem có lỗi nào xảy ra trong quá trình insert không
 	// Trả về lỗi đầu tiên gặp phải
-	for err := range errCh {
-		if err != nil {
-			return err
+	for res := range errCh {
+		if res.err != nil {
+			PostID := ""
+			if res.message != nil {
+				PostID = res.message.PostID.String()
+			}
+			faildocs = append(faildocs, &cassandraErrors.InsightBulkError{
+				PostID: PostID,
+				Error:  res.err.Error(),
+			})
 		}
+
 	}
 
-	return nil
+	return int64(len(postinsights)), faildocs, nil
 }
 func (r *PostInsightsRepository) doUpdateInteraction(ctx context.Context, postID gocql.UUID, interactionType string, countDelta int) error {
 	colName, err := mapper.MapInteractionTypeToColumn(interactionType)
@@ -150,73 +147,66 @@ func (r *PostInsightsRepository) UpdatePostInsightInteraction(ctx context.Contex
 	// 2. Gọi logic dùng chung
 	return r.doUpdateInteraction(ctx, id, interactionType, count)
 }
-func (r *PostInsightsRepository) UpdatePostInsightInteractionBulk(ctx context.Context, reqs []*req.UpdatePostInsightsInteractionReq) error {
-	if len(reqs) == 0 {
-		return nil
-	}
 
-	// 1. Giai đoạn tiền xử lý (Fail-fast): Validate toàn bộ dữ liệu trước khi đụng vào DB
-	type validTask struct {
-		PostID          gocql.UUID
-		InteractionType string
-		Count           int
-	}
+// func (r *PostInsightsRepository) UpdatePostInsightInteractionBulk(ctx context.Context, reqs []*req.UpdatePostInsightsInteractionReq) (int64, []*cassandraErrors.InsightBulkError, error) {
+// 	if len(reqs) == 0 {
+// 		return 0, nil, nil
+// 	}
 
-	tasks := make([]validTask, 0, len(reqs))
-	for _, item := range reqs {
-		if item == nil || item.PostInsightsReq == nil {
-			continue // Bỏ qua nếu payload nil
-		}
+// 	// 1. Giai đoạn tiền xử lý (Fail-fast): Validate toàn bộ dữ liệu trước khi đụng vào DB
+// 	type taskResult struct {
+// 		message *entity.PostInsight
+// 		err     error
+// 	}
 
-		id, err := gocql.ParseUUID(item.PostID) // Giả định item.PostID nằm trong PostInsightsReq
-		if err != nil {
-			return fmt.Errorf("bulk aborted - invalid postID '%s': %w", item.PostID, err)
-		}
+// 	tasks := make([]taskResult, 0, len(reqs))
+// 	for _, item := range reqs {
+// 		if item == nil || item.PostInsightsReq == nil {
+// 			continue // Bỏ qua nếu payload nil
+// 		}
+// 		id, err := gocql.ParseUUID(item.PostID) // Giả định item.PostID nằm trong PostInsightsReq
+// 		if err != nil {
+// 			return 0, nil, fmt.Errorf("bulk aborted - invalid postID '%s': %w", item.PostID, err)
+// 		}
+// 	}
 
-		tasks = append(tasks, validTask{
-			PostID:          id,
-			InteractionType: item.InteractionType,
-			Count:           item.Count,
-		})
-	}
+// 	// 2. Chuẩn bị Worker Pool & Error Channel
+// 	errCh := make(chan taskResult, len(tasks))
 
-	// 2. Chuẩn bị Worker Pool & Error Channel
-	errCh := make(chan error, len(tasks))
+// 	// 3. Phân phối công việc vào Pool
+// 	for _, t := range tasks {
+// 		payload := t // Copy biến (An toàn cho Go < 1.22)
 
-	// 3. Phân phối công việc vào Pool
-	for _, t := range tasks {
-		payload := t // Copy biến (An toàn cho Go < 1.22)
+// 		err := r.pool.Run(ctx, func() {
+// 			// BEST PRACTICE: Tách context để đảm bảo DB query chạy xong dù HTTP Request bị cancel
+// 			safeCtx := context.WithoutCancel(ctx)
 
-		err := r.pool.Run(ctx, func() {
-			// BEST PRACTICE: Tách context để đảm bảo DB query chạy xong dù HTTP Request bị cancel
-			safeCtx := context.WithoutCancel(ctx)
+// 			// Thực thi logic Read-Modify-Write
+// 			if err := r.doUpdateInteraction(safeCtx, payload.PostID, payload.InteractionType, payload.Count); err != nil {
+// 				errCh <- taskResult{message: nil, err: err}
+// 			}
+// 		})
 
-			// Thực thi logic Read-Modify-Write
-			if err := r.doUpdateInteraction(safeCtx, payload.PostID, payload.InteractionType, payload.Count); err != nil {
-				errCh <- err
-			}
-		})
+// 		// Nếu Pool từ chối task (vì Context gốc đã bị cancel hoặc timeout)
+// 		if err != nil {
+// 			errCh <- taskResult{message: nil, err: fmt.Errorf("worker pool rejected task for post %s: %w", payload.PostID, err)}
+// 			break // Dừng việc nhồi thêm task, nhưng vẫn phải Wait() các task đang chạy
+// 		}
+// 	}
 
-		// Nếu Pool từ chối task (vì Context gốc đã bị cancel hoặc timeout)
-		if err != nil {
-			errCh <- fmt.Errorf("worker pool rejected task for post %s: %w", payload.PostID, err)
-			break // Dừng việc nhồi thêm task, nhưng vẫn phải Wait() các task đang chạy
-		}
-	}
+// 	// 4. Dọn dẹp & Đồng bộ
+// 	r.pool.Wait()
+// 	close(errCh)
 
-	// 4. Dọn dẹp & Đồng bộ
-	r.pool.Wait()
-	close(errCh)
+// 	// 5. Gom lỗi (Chỉ trả về lỗi đầu tiên hoặc dùng errors.Join nếu dùng Go 1.20+)
+// 	for err := range errCh {
+// 		if err.err != nil {
+// 			return 0, nil, err.err
+// 		}
+// 	}
 
-	// 5. Gom lỗi (Chỉ trả về lỗi đầu tiên hoặc dùng errors.Join nếu dùng Go 1.20+)
-	for err := range errCh {
-		if err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
+//		return int64(len(reqs)), nil, nil
+//	}
 func (r *PostInsightsRepository) doUpdateLifeTime(ctx context.Context, postID gocql.UUID, metricType string, value float64) error {
 	colName, err := mapper.MapMetricTypeToColumn(metricType)
 	if err != nil {
@@ -258,73 +248,74 @@ func (r *PostInsightsRepository) UpdatePostInsightLifeTime(ctx context.Context, 
 
 	return r.doUpdateLifeTime(ctx, id, metricType, value)
 }
-func (r *PostInsightsRepository) UpdatePostInsightLifeTimeBulk(ctx context.Context, reqs []*req.UpdatePostInsightsLifeTimeReq) error {
-	if len(reqs) == 0 {
-		return nil
-	}
 
-	// 1. FAIL-FAST: Validate toàn bộ dữ liệu trước khi đẩy vào WorkerPool
-	type validTask struct {
-		PostID     gocql.UUID
-		MetricType string
-		Value      float64
-	}
+// func (r *PostInsightsRepository) UpdatePostInsightLifeTimeBulk(ctx context.Context, reqs []*req.UpdatePostInsightsLifeTimeReq) error {
+// 	if len(reqs) == 0 {
+// 		return nil
+// 	}
 
-	tasks := make([]validTask, 0, len(reqs))
-	for _, item := range reqs {
-		if item == nil || item.PostInsightsReq == nil {
-			continue // Bỏ qua payload rỗng để tránh panic nil pointer
-		}
+// 	// 1. FAIL-FAST: Validate toàn bộ dữ liệu trước khi đẩy vào WorkerPool
+// 	type validTask struct {
+// 		PostID     gocql.UUID
+// 		MetricType string
+// 		Value      float64
+// 	}
 
-		id, err := gocql.ParseUUID(item.PostID)
-		if err != nil {
-			// Sai 1 cái là từ chối toàn bộ mảng (Fail-fast)
-			return fmt.Errorf("bulk aborted - invalid postID '%s': %w", item.PostID, err)
-		}
+// 	tasks := make([]validTask, 0, len(reqs))
+// 	for _, item := range reqs {
+// 		if item == nil || item.PostInsightsReq == nil {
+// 			continue // Bỏ qua payload rỗng để tránh panic nil pointer
+// 		}
 
-		tasks = append(tasks, validTask{
-			PostID:     id,
-			MetricType: item.MetricType,
-			Value:      item.Value,
-		})
-	}
+// 		id, err := gocql.ParseUUID(item.PostID)
+// 		if err != nil {
+// 			// Sai 1 cái là từ chối toàn bộ mảng (Fail-fast)
+// 			return fmt.Errorf("bulk aborted - invalid postID '%s': %w", item.PostID, err)
+// 		}
 
-	// 2. Chạy Async với Worker Pool
-	errCh := make(chan error, len(tasks))
+// 		tasks = append(tasks, validTask{
+// 			PostID:     id,
+// 			MetricType: item.MetricType,
+// 			Value:      item.Value,
+// 		})
+// 	}
 
-	for _, t := range tasks {
-		payload := t // Copy biến an toàn cho Goroutine (Bắt buộc với Go < 1.22)
+// 	// 2. Chạy Async với Worker Pool
+// 	errCh := make(chan error, len(tasks))
 
-		err := r.pool.Run(ctx, func() {
-			// BẢO VỆ CONTEXT: Ngăn việc HTTP bị ngắt làm hỏng dữ liệu Bulk Insert
-			safeCtx := context.WithoutCancel(ctx)
+// 	for _, t := range tasks {
+// 		payload := t // Copy biến an toàn cho Goroutine (Bắt buộc với Go < 1.22)
 
-			// Gọi lại hàm doUpdateLifeTime dùng chung
-			if err := r.doUpdateLifeTime(safeCtx, payload.PostID, payload.MetricType, payload.Value); err != nil {
-				errCh <- err
-			}
-		})
+// 		err := r.pool.Run(ctx, func() {
+// 			// BẢO VỆ CONTEXT: Ngăn việc HTTP bị ngắt làm hỏng dữ liệu Bulk Insert
+// 			safeCtx := context.WithoutCancel(ctx)
 
-		// 3. XỬ LÝ LỖI WORKER POOL
-		if err != nil {
-			errCh <- fmt.Errorf("worker pool rejected task for post %s (Context canceled/Timeout): %w", payload.PostID, err)
-			break // Cắt đứt vòng lặp ngay lập tức
-		}
-	}
+// 			// Gọi lại hàm doUpdateLifeTime dùng chung
+// 			if err := r.doUpdateLifeTime(safeCtx, payload.PostID, payload.MetricType, payload.Value); err != nil {
+// 				errCh <- err
+// 			}
+// 		})
 
-	// 4. CHỜ VÀ DỌN DẸP SẠCH SẼ
-	r.pool.Wait() // Đợi các task đã xin được slot chạy xong
-	close(errCh)
+// 		// 3. XỬ LÝ LỖI WORKER POOL
+// 		if err != nil {
+// 			errCh <- fmt.Errorf("worker pool rejected task for post %s (Context canceled/Timeout): %w", payload.PostID, err)
+// 			break // Cắt đứt vòng lặp ngay lập tức
+// 		}
+// 	}
 
-	// 5. Gom lỗi trả về (Trả về lỗi đầu tiên tìm thấy)
-	for err := range errCh {
-		if err != nil {
-			return err
-		}
-	}
+// 	// 4. CHỜ VÀ DỌN DẸP SẠCH SẼ
+// 	r.pool.Wait() // Đợi các task đã xin được slot chạy xong
+// 	close(errCh)
 
-	return nil
-}
+// 	// 5. Gom lỗi trả về (Trả về lỗi đầu tiên tìm thấy)
+// 	for err := range errCh {
+// 		if err != nil {
+// 			return err
+// 		}
+// 	}
+
+//		return nil
+//	}
 func (r *PostInsightsRepository) doGetInsight(ctx context.Context, postID gocql.UUID) (*entity.PostInsight, error) {
 	tableName := entity.PostInsight{}.Collectionnamepostinsight()
 
@@ -457,23 +448,27 @@ func (r *PostInsightsRepository) DeletePostInsightByPostID(ctx context.Context, 
 	// 3. Gọi hàm Core
 	return r.doDeleteInsight(safeCtx, id)
 }
-func (r *PostInsightsRepository) DeletePostInsightsByPostIDBulk(ctx context.Context, PostIDs []string) error {
+func (r *PostInsightsRepository) DeletePostInsightsByPostIDBulk(ctx context.Context, PostIDs []string) (int64, []*cassandraErrors.InsightBulkError, error) {
 	if len(PostIDs) == 0 {
-		return nil
+		return 0, nil, nil
 	}
-
+	type taskResult struct {
+		message *entity.PostInsight
+		err     error
+	}
+	var faildocs []*cassandraErrors.InsightBulkError
 	// 1. FAIL-FAST VALIDATION: Đảm bảo toàn bộ mảng ID hợp lệ trước khi chạm vào DB
-	uuids := make([]gocql.UUID, 0, len(PostIDs))
+	uuids := make([]*gocql.UUID, 0, len(PostIDs))
 	for _, idStr := range PostIDs {
 		id, err := gocql.ParseUUID(idStr)
 		if err != nil {
-			return fmt.Errorf("bulk delete aborted - invalid postID format '%s': %w", idStr, err)
+			return 0, nil, fmt.Errorf("bulk delete aborted - invalid postID format '%s': %w", idStr, err)
 		}
-		uuids = append(uuids, id)
+		uuids = append(uuids, &id)
 	}
 
 	// 2. Chuẩn bị kênh chứa lỗi
-	errCh := make(chan error, len(uuids))
+	errCh := make(chan taskResult, len(uuids))
 
 	// 3. Phân phối task Xóa vào Worker Pool
 	for _, id := range uuids {
@@ -482,15 +477,17 @@ func (r *PostInsightsRepository) DeletePostInsightsByPostIDBulk(ctx context.Cont
 		err := r.pool.Run(ctx, func() {
 			// BẢO VỆ CONTEXT: Không để thao tác bulk delete bị ngắt giữa chừng
 			safeCtx := context.WithoutCancel(ctx)
-
-			if err := r.doDeleteInsight(safeCtx, postID); err != nil {
-				errCh <- err
+			err := r.doDeleteInsight(safeCtx, *postID)
+			if err != nil {
+				errCh <- taskResult{message: nil, err: err}
+				return
 			}
+			errCh <- taskResult{message: nil, err: nil}
 		})
 
 		// 4. XỬ LÝ LỖI POOL (Context gốc bị cancel trước khi xin được slot)
 		if err != nil {
-			errCh <- fmt.Errorf("worker pool rejected delete task for post %s: %w", postID.String(), err)
+			errCh <- taskResult{message: nil, err: fmt.Errorf("worker pool rejected delete task for post %s: %w", postID.String(), err)}
 			break // Cắt đứt vòng lặp để không cố đẩy thêm task
 		}
 	}
@@ -501,10 +498,17 @@ func (r *PostInsightsRepository) DeletePostInsightsByPostIDBulk(ctx context.Cont
 
 	// 6. Gom lỗi: Trả về lỗi đầu tiên (nếu có)
 	for err := range errCh {
-		if err != nil {
-			return err
+		if err.err != nil {
+			postid := ""
+			if err.message != nil {
+				postid = err.message.PostID.String()
+			}
+			faildocs = append(faildocs, &cassandraErrors.InsightBulkError{
+				PostID: postid,
+				Error:  err.err.Error(),
+			})
+			// return 0, nil, err.err // Nếu muốn fail-fast ngay khi gặp lỗi, bỏ comment dòng này và bỏ qua việc gom lỗi vào faildocs
 		}
 	}
-
-	return nil
+	return int64(len(PostIDs)), faildocs, nil
 }

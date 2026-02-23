@@ -1,37 +1,30 @@
 package req
 
 import (
+	"time"
+
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/content/enum"
 )
 
-// CreatePostEntityEditLogReq: Dùng để ghi lại một hành động sửa đổi
-type CreatePostEntityEditLogReq struct {
-	TargetCollection enum.TargetCollection `json:"target_collection" binding:"required"` // 'posts' or 'comments'
-	TargetID         string                `json:"target_id" binding:"required,mongoId"` // ID của bài viết bị sửa
-	
-	Version          int                   `json:"version" binding:"required,min=1"`     // Version mới là số mấy
-	EditorID         string                `json:"editor_id" binding:"required,uuid"`    // Ai là người sửa
-
-	Diff             LogDiffReq            `json:"diff" binding:"required"`              // Chi tiết thay đổi
-
-	// Thông tin audit thường được lấy từ Context (Middleware), nhưng DTO vẫn cần để truyền vào
-	IPAddress        string                `json:"ip_address,omitempty"`
-	UserAgent        string                `json:"user_agent,omitempty"`
-}
-
-// UpdatePostEntityEditLogReq: (Ít dùng) Dùng để patch lại log nếu ghi sai
-type UpdatePostEntityEditLogReq struct {
-	// Các field này cho phép sửa nếu cần thiết
-	Version   *int        `json:"version,omitempty" binding:"omitempty,min=1"`
-	Diff      *LogDiffReq `json:"diff,omitempty"`
-	IPAddress string      `json:"ip_address,omitempty"`
-	UserAgent string      `json:"user_agent,omitempty"`
-}
-
-// --- Nested Struct ---
-
+// --- SUB DTO ---
 type LogDiffReq struct {
 	OldContent    string   `json:"old_content"`
 	NewContent    string   `json:"new_content"`
-	ChangedFields []string `json:"changed_fields" binding:"required,dive,min=1"` // Ít nhất phải có tên 1 trường bị thay đổi
+	ChangedFields []string `json:"changed_fields"`
+}
+
+// --- MAIN DTO ---
+type PostEntityEditLogReq struct {
+	ID               string                `json:"id,omitempty"` // Trình bày dưới dạng string
+	TargetCollection enum.TargetCollection `json:"target_collection" validate:"required"`
+	TargetID         string                `json:"target_id" validate:"required"` // String của ObjectID
+	Version          int                   `json:"version" validate:"required"`
+	EditedAt         time.Time             `json:"edited_at" validate:"required"`
+	EditorID         string                `json:"editor_id" validate:"required"`
+	Diff             LogDiffReq            `json:"diff" validate:"required"` // Value struct vì bắt buộc có
+	IPAddress        string                `json:"ip_address,omitempty"`
+	UserAgent        string                `json:"user_agent,omitempty"`
+	CreatedAt        time.Time             `json:"created_at"`
+	UpdatedAt        time.Time             `json:"updated_at"`
+	DeletedAt        *time.Time            `json:"deleted_at,omitempty"`
 }

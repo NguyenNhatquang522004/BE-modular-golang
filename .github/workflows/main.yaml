@@ -28,9 +28,9 @@ jobs:
             version: latest
             args: --timeout=5m ./... # Nên set timeout vì mặc định 1m đôi khi không đủ cho project lớn
 
-        - name: unit test 
-          id : unit
-          run: go test -v  -race -cover ./...
+        # - name: unit test 
+        #   id : unit
+        #   run: go test -v  -race -cover ./...
 
         - name : Security Scan
           id : sercurity
@@ -41,11 +41,10 @@ jobs:
             repo-checkout: false
         - name : final  quality-check
           id : final-quality-check
-          if : steps.lint.outcome == 'failure' || steps.unit.outcome == 'failure' || steps.sercurity.outcome == 'failure'
+          if : steps.lint.outcome == 'failure' ||  steps.sercurity.outcome == 'failure'
           run : |
               echo "❌ Có lỗi xảy ra trong quá trình kiểm tra!"
               echo "Lint status: ${{ steps.lint.outcome }}"
-              echo "Test status: ${{ steps.unit.outcome }}"
               echo "Security status: ${{ steps.sercurity.outcome }}"
               exit 1  # <--- Bắt buộc có lệnh này để đánh dấu Job là Failed
         

@@ -7,7 +7,6 @@ type UserNode struct {
 	IsVerified   bool      `json:"is_verified"`
 	Embedding    []float32 `json:"embedding"`  // Vector 128D
 	RiskScore    float64   `json:"risk_score"` // 0.0 - 1.0 (Bot detection)
-
 	// Analytics Fields (Tính toán từ GDS)
 	PageRankScore float64 `json:"page_rank_score,omitempty"` // Độ uy tín
 	CommunityID   int64   `json:"community_id,omitempty"`    // ID cụm cộng đồng

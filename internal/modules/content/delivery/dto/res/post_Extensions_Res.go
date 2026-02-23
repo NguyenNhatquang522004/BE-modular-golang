@@ -6,25 +6,7 @@ import (
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/content/enum"
 )
 
-type PostExtensionRes struct {
-	ID     string `json:"id"`
-	PostID string `json:"post_id"`
-
-	ShareData      *ShareDataRes      `json:"share_data,omitempty"`
-	BackgroundData *BackgroundDataRes `json:"background_data,omitempty"`
-	QnAData        *QnADataRes        `json:"qna_data,omitempty"`
-	ActivityData   *ActivityDataRes   `json:"activity_data,omitempty"`
-	LocationDetail *LocationDetailRes `json:"location_detail,omitempty"`
-}
-
-// --- Nested Structs ---
-
-type ShareDataRes struct {
-	OriginalPostID string           `json:"original_post_id"`
-	ParentPostID   string           `json:"parent_post_id"`
-	Snapshot       ShareSnapshotRes `json:"snapshot"`
-}
-
+// --- SUB DTOs ---
 type ShareSnapshotRes struct {
 	AuthorID       string    `json:"author_id"`
 	AuthorName     string    `json:"author_name"`
@@ -32,6 +14,12 @@ type ShareSnapshotRes struct {
 	ContentExcerpt string    `json:"content_excerpt"`
 	MediaThumb     string    `json:"media_thumb,omitempty"`
 	CreatedAt      time.Time `json:"created_at"`
+}
+
+type ShareDataRes struct {
+	OriginalPostID string           `json:"original_post_id"`
+	ParentPostID   string           `json:"parent_post_id"`
+	Snapshot       ShareSnapshotRes `json:"snapshot"`
 }
 
 type BackgroundDataRes struct {
@@ -51,8 +39,23 @@ type ActivityDataRes struct {
 }
 
 type LocationDetailRes struct {
-	Type        string    `json:"type"` // "Point"
+	Type        string    `json:"type"`
 	Coordinates []float64 `json:"coordinates"`
 	Address     string    `json:"address"`
 	MapURL      string    `json:"map_url,omitempty"`
+}
+
+// --- MAIN DTO ---
+type PostExtensionRes struct {
+	ID             string             `json:"id"`
+	PostID         string             `json:"post_id"`
+	ShareData      *ShareDataRes      `json:"share_data,omitempty"`
+	BackgroundData *BackgroundDataRes `json:"background_data,omitempty"`
+	QnAData        *QnADataRes        `json:"qna_data,omitempty"`
+	ActivityData   *ActivityDataRes   `json:"activity_data,omitempty"`
+	LocationDetail *LocationDetailRes `json:"location_detail,omitempty"`
+
+	CreatedAt time.Time  `json:"created_at"`
+	UpdatedAt time.Time  `json:"updated_at"`
+	DeletedAt *time.Time `json:"deleted_at,omitempty"`
 }

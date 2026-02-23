@@ -9,7 +9,7 @@ import (
 )
 
 type IPostSettingRepository interface {
-	CreatePostSetting(ctx context.Context, Postid string, postSetting *entity.PostSetting) (*entity.PostSetting, error)
+	CreatePostSetting(ctx context.Context, postSetting *entity.PostSetting) (*entity.PostSetting, error)
 	CreateBulkPostSetting(ctx context.Context, postSettings []*entity.PostSetting) (int64, []*mongodbErrors.BulkError, error)
 	GetPostSettingByPostID(ctx context.Context, Postid string) (*entity.PostSetting, error)
 	GetPostSettingBulkByPostID(ctx context.Context, Postids []string) ([]*entity.PostSetting, error)

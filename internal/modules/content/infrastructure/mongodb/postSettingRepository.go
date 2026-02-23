@@ -24,11 +24,11 @@ type PostSettingRepository struct {
 func NewPostSettingRepository(client *mongo.Database, redisRepo IRepositoryShare.IRedis) *PostSettingRepository {
 	return &PostSettingRepository{client: client, redisRepo: redisRepo}
 }
-func (r *PostSettingRepository) CreatePostSetting(ctx context.Context, Postid string, postSetting *entity.PostSetting) (*entity.PostSetting, error) {
+func (r *PostSettingRepository) CreatePostSetting(ctx context.Context, postSetting *entity.PostSetting) (*entity.PostSetting, error) {
 	collection := r.client.Collection(entity.PostSetting{}.CollectionNamePostsetting())
-	finalid := primitive.NewObjectID()
-	postSetting.ID = finalid
-	postSetting.PostID, _ = primitive.ObjectIDFromHex(Postid)
+	if postSetting.ID.IsZero() {
+		postSetting.ID = primitive.NewObjectID()
+	}
 	_, err := collection.InsertOne(ctx, postSetting)
 	if err != nil {
 		return nil, err

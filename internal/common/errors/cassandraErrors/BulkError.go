@@ -7,7 +7,10 @@ type ReactionBulkError struct {
 	UserID   string `json:"user_id"`   // User bị lỗi
 	Error    string `json:"error"`     // Chi tiết lỗi
 }
-
+type InsightBulkError struct {
+	PostID string `json:"post_id"` // PostID bị lỗi
+	Error  string `json:"error"`   // Chi tiết lỗi
+}
 type StoryViewBulkError struct {
 	StoryID string `json:"story_id"` // StoryID bị lỗi
 	UserID  string `json:"user_id"`  // User bị lỗi

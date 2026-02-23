@@ -1,7 +1,7 @@
 package response
 
 type Response struct {
-	Status  string      `json:"status"`
+	Status  any         `json:"status"`
 	Message string      `json:"message"`
 	Data    interface{} `json:"data,omitempty"`
 }
@@ -17,24 +17,9 @@ func WithMessage(message string) OptionalResponse {
 		r.Message = message
 	}
 }
-func WithStatus(status string) OptionalResponse {
+func WithStatus(status any) OptionalResponse {
 	return func(r *Response) {
 		r.Status = status
-	}
-}
-
-func SuccessResponse(message string, data interface{}) Response {
-	return Response{
-		Status:  "success",
-		Message: message,
-		Data:    data,
-	}
-}
-
-func ErrorResponse(message string) Response {
-	return Response{
-		Status:  "error",
-		Message: message,
 	}
 }
 func NewResponse(opts ...OptionalResponse) *Response {

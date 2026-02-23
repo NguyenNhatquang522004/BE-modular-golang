@@ -3,7 +3,7 @@ package postgresErrors
 type BulkError struct {
 	ID     string `json:"id"`
 	Reason string `json:"reason"`
-}
+}	
 type AdsBulkError struct {
 	ID           string `json:"id"`
 	CampaignID   string `json:"campaign_id"`

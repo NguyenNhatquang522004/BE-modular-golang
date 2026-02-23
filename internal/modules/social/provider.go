@@ -9,6 +9,7 @@ import (
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/social/infrastructure/producer/graph"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/social/usecase"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/social/usecase/Strategy/blockStrategy"
+	 "github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/social/usecase/Strategy/friendshipStrategy"
 	"github.com/google/wire"
 )
 
@@ -36,11 +37,11 @@ var UseCaseSet = wire.NewSet(
 	usecase.NewUseCase,
 )
 var FriendshipStrategySet = wire.NewSet(
-	blockStrategy.NewBlockFull,
-	blockStrategy.NewBlockProfile,
-	blockStrategy.NewBlockChat,
-	blockStrategy.NewBlockNone,
-	blockStrategy.NewProviderBlockStrategy,
+	friendshipstrategy.NewFriendShipAccepted,
+	friendshipstrategy.NewFriendshipBlocked,
+	friendshipstrategy.NewFriendshipDeclined,
+	friendshipstrategy.NewFriendshipPending,
+	friendshipstrategy.NewProviderfriendshipAccepted,
 )
 var BlockStrategySet = wire.NewSet(
 	blockStrategy.NewBlockFull,

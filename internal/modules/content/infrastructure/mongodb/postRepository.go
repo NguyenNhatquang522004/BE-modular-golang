@@ -26,8 +26,8 @@ func NewPostRepository(client *mongo.Database, redisRepo IRepositoryShare.IRedis
 	return &PostRepository{client: client, redisRepo: redisRepo}
 }
 
-func (r *PostRepository) CreatePost(post *entity.Post) (*entity.Post, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+func (r *PostRepository) CreatePost(ctx context.Context, post *entity.Post) (*entity.Post, error) {
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
 
 	collection := r.client.Collection(entity.Post{}.CollectionNamePost())
@@ -39,8 +39,8 @@ func (r *PostRepository) CreatePost(post *entity.Post) (*entity.Post, error) {
 	return post, nil
 }
 
-func (r *PostRepository) CreateBulkPosts(posts []*entity.Post) ([]*entity.Post, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+func (r *PostRepository) CreateBulkPosts(ctx context.Context, posts []*entity.Post) (int64, []*mongodbErrors.BulkError, error) {
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
 	collection := r.client.Collection(entity.Post{}.CollectionNamePost())
 	for _, post := range posts {
@@ -51,7 +51,11 @@ func (r *PostRepository) CreateBulkPosts(posts []*entity.Post) ([]*entity.Post, 
 	}
 	opts := options.InsertMany().SetOrdered(false)
 	docs := utils.ToInterfaceSlice(posts)
-	_, err := collection.InsertMany(ctx, docs, opts)
+	result, err := collection.InsertMany(ctx, docs, opts)
+	if result == nil && err != nil {
+		return 0, nil, fmt.Errorf("bulk insert system error: %w", err)
+	}
+	var failedDocs []*mongodbErrors.BulkError
 	if err != nil {
 		// Kiểm tra xem có phải lỗi BulkWriteException không
 		var bulkErr mongo.BulkWriteException
@@ -60,23 +64,24 @@ func (r *PostRepository) CreateBulkPosts(posts []*entity.Post) ([]*entity.Post, 
 			// (Ví dụ: báo cho user biết bài nào trùng slug)
 
 			// Tạo map index bị lỗi để tra cứu nhanh
-			failedIndexes := make(map[int]string)
 			for _, we := range bulkErr.WriteErrors {
-				failedIndexes[we.Index] = we.Message
-			}
+				failedDocs = append(failedDocs, &mongodbErrors.BulkError{
+					ID:     posts[we.Index].ID.Hex(), // Hoặc posts[we.Index].ID.String()
+					Reason: we.Message,
+				})
 
+			}
 			// In log hoặc xử lý tùy nghiệp vụ
 			// Ở đây mình ví dụ: vẫn return nil error (vì đã có cái thành công),
 			// nhưng in log những cái thất bại.
 			// Hoặc bạn có thể return custom error chứa danh sách failed.
-			return posts, fmt.Errorf("inserted with failures: %d docs failed", len(failedIndexes))
+			return int64(len(result.InsertedIDs)), failedDocs, nil
 		}
-
 		// Lỗi hệ thống nghiêm trọng (Network, Auth...) -> Return lỗi luôn
-		return nil, err
+		return 0, nil, err
 	}
 
-	return posts, nil
+	return int64(len(result.InsertedIDs)), failedDocs, nil
 }
 func (r *PostRepository) GetPostByID(postID string) (*entity.Post, error) {
 	// Implement the logic to retrieve a post by its ID from MongoDB
