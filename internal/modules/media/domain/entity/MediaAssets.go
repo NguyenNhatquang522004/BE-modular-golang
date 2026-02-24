@@ -3,6 +3,7 @@ package entity
 import (
 	"time"
 
+	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/sharedEnums"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/media/enum"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -37,7 +38,7 @@ type MediaAsset struct {
 	OriginalURL  string `bson:"original_url" json:"original_url"`   // Link full HD
 	ThumbnailURL string `bson:"thumbnail_url" json:"thumbnail_url"` // Link ảnh nhỏ
 
-	AssetType enum.AssetType `bson:"asset_type" json:"asset_type"`
+	AssetType sharedEnums.MediaType `bson:"asset_type" json:"asset_type"`
 
 	// 3. METADATA & CONTENT
 	Metadata MediaMetadata `bson:"metadata" json:"metadata"`

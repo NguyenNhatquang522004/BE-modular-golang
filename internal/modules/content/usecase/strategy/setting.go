@@ -40,3 +40,15 @@ func (s *SettingStrategy) HandlePublishPost(ctx context.Context, request any, po
 func (s *SettingStrategy) GetType() reflect.Type {
 	return reflect.TypeOf(req.PostSettingReq{})
 }
+func (s *SettingStrategy) HandlePublishDelete(ctx context.Context, request *req.DeletePostRequest) error {
+	// Implement the logic to handle post deletion
+	err := s.settingRepo.DeletePostSetting(ctx, request.PostID.PostID)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (s *SettingStrategy) GetDeleteType() reflect.Type {
+	return reflect.TypeOf(s.settingRepo)
+}

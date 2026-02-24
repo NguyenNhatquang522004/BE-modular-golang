@@ -3,7 +3,7 @@ package res
 import (
 	"time"
 
-	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/content/enum"
+	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/sharedEnums"
 )
 
 // --- SUB DTOs ---
@@ -23,13 +23,13 @@ type TaggedUserRes struct {
 }
 
 type MediaItemRes struct {
-	ID           string           `json:"id"`
-	MediaType    enum.MediaType   `json:"media_type"`
-	URL          string           `json:"url"`
-	ThumbnailURL string           `json:"thumbnail_url"`
-	Metadata     MediaMetadataRes `json:"metadata"`
-	Order        int              `json:"order"`
-	TaggedUsers  []TaggedUserRes  `json:"tagged_users,omitempty"`
+	ID           string                `json:"id"`
+	MediaType    sharedEnums.MediaType `json:"media_type"`
+	URL          string                `json:"url"`
+	ThumbnailURL string                `json:"thumbnail_url"`
+	Metadata     MediaMetadataRes      `json:"metadata"`
+	Order        int                   `json:"order"`
+	TaggedUsers  []TaggedUserRes       `json:"tagged_users,omitempty"`
 }
 
 // --- MAIN DTO ---

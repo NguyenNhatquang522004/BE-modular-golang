@@ -3,6 +3,7 @@ package res
 import (
 	"time"
 
+	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/sharedEnums"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/media/enum"
 )
 
@@ -50,7 +51,7 @@ type MediaAssetRes struct {
 	StorageFileID  string                `json:"url"` // Map với "url"
 	OriginalURL    string                `json:"original_url"`
 	ThumbnailURL   string                `json:"thumbnail_url"`
-	AssetType      enum.AssetType        `json:"asset_type"`
+	AssetType      sharedEnums.MediaType `json:"asset_type"`
 	Metadata       MediaMetadataRes      `json:"metadata"`
 	Caption        string                `json:"caption,omitempty"`
 	Hashtags       []string              `json:"hashtags,omitempty"`

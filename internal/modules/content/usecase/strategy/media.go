@@ -39,3 +39,16 @@ func (m *MediaStrategy) HandlePublishPost(ctx context.Context, request any, post
 func (m *MediaStrategy) GetType() reflect.Type {
 	return reflect.TypeOf(req.PostMediaReq{})
 }
+
+func (m *MediaStrategy) HandlePublishDelete(ctx context.Context, request *req.DeletePostRequest) error {
+	// Implement the logic to handle post deletion
+	err := m.mediaRepo.DeleteByPostID(ctx, request.PostID.PostID)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (m *MediaStrategy) GetDeleteType() reflect.Type {
+	return reflect.TypeOf(m.mediaRepo)
+}

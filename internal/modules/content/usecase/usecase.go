@@ -9,7 +9,6 @@ import (
 
 type IPublishPostUseCase interface {
 	Execute(ctx context.Context, req *req.PublishPostRequest) (*response.Response, error)
-	ExecuteBulk(ctx context.Context, req []*req.PublishPostRequest) (*response.Response, error)
 }
 
 type IEditPostUseCase interface {
@@ -23,30 +22,29 @@ type IHideOrUnhidePostUseCase interface {
 type IDeletePostUseCase interface {
 	Execute(ctx context.Context, req *req.DeletePostRequest) (*response.Response, error)
 }
-
 type IGetPostByUserIDUseCase interface {
 	Execute(ctx context.Context, req *req.GetPostByUserIDRequest) (*response.Response, error)
 }
-
-type IGetPostDetailUseCase interface {
-	Execute(ctx context.Context, req *req.GetPostDetailRequest) (*response.Response, error)
+type IGetEnumUseCase interface {
+	Execute(ctx context.Context) (*response.Response, error)
 }
+
 type UsecaseContent struct {
 	pulishPostUseCase       IPublishPostUseCase
 	editPostUseCase         IEditPostUseCase
 	hideOrUnhidePostUseCase IHideOrUnhidePostUseCase
 	deletePostUseCase       IDeletePostUseCase
 	getPostByUserIDUseCase  IGetPostByUserIDUseCase
-	getPostDetailUseCase    IGetPostDetailUseCase
+	enumUseCase             IGetEnumUseCase
 }
 
-func NewUsecaseContent(publishPostUC IPublishPostUseCase, editPostUC IEditPostUseCase, hideOrUnhidePostUC IHideOrUnhidePostUseCase, deletePostUC IDeletePostUseCase, getPostByUserIDUC IGetPostByUserIDUseCase, getPostDetailUC IGetPostDetailUseCase) *UsecaseContent {
+func NewUsecaseContent(publishPostUC IPublishPostUseCase, editPostUC IEditPostUseCase, hideOrUnhidePostUC IHideOrUnhidePostUseCase, deletePostUC IDeletePostUseCase, getPostByUserIDUC IGetPostByUserIDUseCase, enumUC IGetEnumUseCase) *UsecaseContent {
 	return &UsecaseContent{
 		pulishPostUseCase:       publishPostUC,
 		editPostUseCase:         editPostUC,
 		hideOrUnhidePostUseCase: hideOrUnhidePostUC,
 		deletePostUseCase:       deletePostUC,
 		getPostByUserIDUseCase:  getPostByUserIDUC,
-		getPostDetailUseCase:    getPostDetailUC,
+		enumUseCase:             enumUC,
 	}
 }

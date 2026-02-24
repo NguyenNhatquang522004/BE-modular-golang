@@ -83,9 +83,9 @@ func (r *PostRepository) CreateBulkPosts(ctx context.Context, posts []*entity.Po
 
 	return int64(len(result.InsertedIDs)), failedDocs, nil
 }
-func (r *PostRepository) GetPostByID(postID string) (*entity.Post, error) {
+func (r *PostRepository) GetPostByID(ctx context.Context, postID string) (*entity.Post, error) {
 	// Implement the logic to retrieve a post by its ID from MongoDB
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
 
 	collection := r.client.Collection(entity.Post{}.CollectionNamePost())
@@ -97,9 +97,9 @@ func (r *PostRepository) GetPostByID(postID string) (*entity.Post, error) {
 	}
 	return &post, nil
 }
-func (r *PostRepository) GetPostsBulkByIDs(postIDs []string) ([]*entity.Post, error) {
+func (r *PostRepository) GetPostsBulkByIDs(ctx context.Context, postIDs []string) ([]*entity.Post, error) {
 	// Implement the logic to retrieve multiple posts by their IDs from MongoDB
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
 	var objIDs []primitive.ObjectID
 	for _, id := range postIDs {
@@ -122,9 +122,9 @@ func (r *PostRepository) GetPostsBulkByIDs(postIDs []string) ([]*entity.Post, er
 	}
 	return posts, nil
 }
-func (r *PostRepository) GetPostsByUserID(userID string) ([]*entity.Post, error) {
+func (r *PostRepository) GetPostsByUserID(ctx context.Context, userID string) ([]*entity.Post, error) {
 	// Implement the logic to retrieve posts by user ID from MongoDB
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
 	userObjID, err := primitive.ObjectIDFromHex(userID)
 	if err != nil {
@@ -145,9 +145,9 @@ func (r *PostRepository) GetPostsByUserID(userID string) ([]*entity.Post, error)
 	return posts, nil
 }
 
-func (r *PostRepository) UpdatePost(post *entity.Post) (*entity.Post, error) {
+func (r *PostRepository) UpdatePost(ctx context.Context, post *entity.Post) (*entity.Post, error) {
 	// Implement the logic to update a post in MongoDB
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
 
 	collection := r.client.Collection(entity.Post{}.CollectionNamePost())
@@ -162,12 +162,12 @@ func (r *PostRepository) UpdatePost(post *entity.Post) (*entity.Post, error) {
 
 	return post, nil
 }
-func (r *PostRepository) UpdateBulkPosts(posts []*entity.Post) (int64, []*mongodbErrors.BulkError, error) {
+func (r *PostRepository) UpdateBulkPosts(ctx context.Context, posts []*entity.Post) (int64, []*mongodbErrors.BulkError, error) {
 	// Implement the logic to update multiple posts in MongoDB
 	if len(posts) == 0 {
 		return 0, nil, nil // Return early if there are no posts to update
 	}
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	collection := r.client.Collection(entity.Post{}.CollectionNamePost())
 	defer cancel()
 	models := make([]mongo.WriteModel, len(posts))
@@ -220,9 +220,9 @@ func (r *PostRepository) UpdateBulkPosts(posts []*entity.Post) (int64, []*mongod
 	}
 	return result.ModifiedCount, nil, nil
 }
-func (r *PostRepository) DeletePost(postID string) error {
+func (r *PostRepository) DeletePost(ctx context.Context, postID string) error {
 	// Implement the logic to delete a post by its ID from MongoDB
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
 
 	collection := r.client.Collection(entity.Post{}.CollectionNamePost())
@@ -234,12 +234,12 @@ func (r *PostRepository) DeletePost(postID string) error {
 	return nil
 }
 
-func (r *PostRepository) DeleteBulkPosts(postIDs []string) (int64, []*mongodbErrors.BulkError, error) {
+func (r *PostRepository) DeleteBulkPosts(ctx context.Context, postIDs []string) (int64, []*mongodbErrors.BulkError, error) {
 	// Implement the logic to delete multiple posts by their IDs from MongoDB
 	if len(postIDs) == 0 {
 		return 0, nil, nil // Return early if there are no post IDs to delete
 	}
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
 	collection := r.client.Collection(entity.Post{}.CollectionNamePost())
 	var objIDs []primitive.ObjectID
@@ -274,13 +274,16 @@ func (r *PostRepository) DeleteBulkPosts(postIDs []string) (int64, []*mongodbErr
 	}
 	return result.DeletedCount, nil, nil
 }
-func (r *PostRepository) PanigationPosts(userID string, cursor string, limit int) (*dto.PaginationRes, error) {
+func (r *PostRepository) PanigationPostsByUserID(ctx context.Context, userID string, cursor string, limit int) (*dto.PaginationRes, error) {
 	// Implement the logic to paginate posts for a user from MongoDB
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
 	collection := r.client.Collection(entity.Post{}.CollectionNamePost())
 	querylimit := limit + 1
-	filter := bson.M{"user_id": userID}
+	filter := bson.M{"$or": []bson.M{
+		{"user_id": userID},  // Điều kiện 1: Bài do chính user này đăng
+		{"mentions": userID}, // Điều kiện 2: Trong mảng mentions có chứa userID này
+	}} // Lọc cả bài có tag user đó
 	if cursor == "" {
 		dataCache, nextcursor, hasnext, limitcache, err := r.redisRepo.CustomizeGetCache(ctx, []string{
 			"post_cache_user_" + userID,

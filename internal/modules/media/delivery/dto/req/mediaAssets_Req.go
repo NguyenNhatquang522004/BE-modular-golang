@@ -3,6 +3,7 @@ package req
 import (
 	"time"
 
+	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/sharedEnums"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/media/enum"
 )
 
@@ -51,7 +52,7 @@ type MediaAssetReq struct {
 	StorageFileID  string                `json:"url" validate:"required"` // Map chuẩn JSON "url"
 	OriginalURL    string                `json:"original_url"`
 	ThumbnailURL   string                `json:"thumbnail_url"`
-	AssetType      enum.AssetType        `json:"asset_type"`
+	AssetType      sharedEnums.MediaType `json:"asset_type"`
 	Metadata       MediaMetadataReq      `json:"metadata"`
 	Caption        string                `json:"caption,omitempty"`
 	Hashtags       []string              `json:"hashtags,omitempty"`
@@ -73,7 +74,7 @@ type UpdateMediaAssetReq struct {
 	StorageFileID  *string                `json:"url,omitempty"`
 	OriginalURL    *string                `json:"original_url,omitempty"`
 	ThumbnailURL   *string                `json:"thumbnail_url,omitempty"`
-	AssetType      *enum.AssetType        `json:"asset_type,omitempty"`
+	AssetType      *sharedEnums.MediaType `json:"asset_type,omitempty"`
 	Metadata       *MediaMetadataReq      `json:"metadata,omitempty"`
 	Caption        *string                `json:"caption,omitempty"`
 	Hashtags       []string               `json:"hashtags,omitempty"`

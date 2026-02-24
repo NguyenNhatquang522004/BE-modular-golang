@@ -5,15 +5,24 @@ type EventType string
 const (
 	Updated EventType = "UPDATED"
 	Deleted EventType = "DELETED"
+	Created EventType = "CREATED"
 )
 
 type TopicName string
 
 const (
+	//socials
 	TopicFriendship TopicName = "social.friendship.events"
 	TopicBlock      TopicName = "social.block.events"
 	TopicFollow     TopicName = "social.follow.events"
-	TopicContent    TopicName = "content.events"
+
+	//content
+	TopicContentPostPublish              TopicName = "content.post.publish.events"
+	TopicContentPostPublishMediaAssets   TopicName = "content.post.publish_media_assets.events"
+	ContentPostPublishNotificationFriend TopicName = "content.post.publish_notification_friend.events"
+	ContentPostPublishNotificationTag    TopicName = "content.post.publish_notification_tag.events"
+
+	// notification
 )
 
 type TopicConfig struct {
@@ -33,6 +42,7 @@ var SocialTopics = []TopicConfig{
 	{Name: TopicFriendship, Partitions: 6}, // Gom 3 cái Create/Update/Delete vào 1
 	{Name: TopicBlock, Partitions: 6},
 	{Name: TopicFollow, Partitions: 3},
-	{Name: TopicContent, Partitions: 3},
+	{Name: TopicContentPostPublish, Partitions: 3},
+	{Name: TopicContentPostPublishMediaAssets, Partitions: 3},
 	// Thêm các topic khác vào đây
 }

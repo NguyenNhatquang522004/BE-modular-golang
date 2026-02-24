@@ -39,3 +39,17 @@ func (p *PostInsightStrategy) HandlePublishPost(ctx context.Context, request any
 func (p *PostInsightStrategy) GetType() reflect.Type {
 	return reflect.TypeOf(req.PostInsightReqv1{})
 }
+
+func (p *PostInsightStrategy) HandlePublishDelete(ctx context.Context, request *req.DeletePostRequest) error {
+	// Implement the logic to handle post deletion
+	err := p.postInsightRepo.DeletePostInsightByPostID(ctx, request.PostID.PostID)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (p *PostInsightStrategy) GetDeleteType() reflect.Type {
+	return reflect.TypeOf(p.postInsightRepo)
+}

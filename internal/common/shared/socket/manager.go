@@ -24,6 +24,7 @@ type Manager interface {
 	Unregister(client ClientOps)
 	// Hàm quan trọng nhất để các module khác gọi
 	SendToUser(userID string, msg Message) error
+	SendBulkToDirect(userIDs []string, msg Message) error
 	Broadcast(msg Message)
 }
 

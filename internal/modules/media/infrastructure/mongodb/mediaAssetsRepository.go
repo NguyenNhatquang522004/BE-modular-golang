@@ -515,3 +515,16 @@ func (r *MediaAssetsRepository) DeleteBulkMediaAssets(ctx context.Context, ids [
 	}
 	return result.DeletedCount, nil, nil
 }
+func (r *MediaAssetsRepository) DeleteMediaAssetsByPostIDAndUserID(ctx context.Context, postID string, userID string) error {
+	collection := r.client.Collection(entity.MediaAsset{}.CollectionName())
+	finalPostID, err := primitive.ObjectIDFromHex(postID)
+	if err != nil {
+		return fmt.Errorf("invalid post ID format: %w", err)
+	}
+	filter := bson.M{"post_id": finalPostID, "user_id": userID}
+	_, err = collection.DeleteMany(ctx, filter)
+	if err != nil {
+		return err
+	}
+	return nil
+}

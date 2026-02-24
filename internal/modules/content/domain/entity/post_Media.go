@@ -3,7 +3,7 @@ package entity
 import (
 	"time"
 
-	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/content/enum"
+	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/sharedEnums"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -28,9 +28,9 @@ type PostMedia struct {
 type MediaItem struct {
 	ID primitive.ObjectID `bson:"_id" json:"id"`
 
-	MediaType    enum.MediaType `bson:"media_type" json:"media_type"`
-	URL          string         `bson:"url" json:"url"`                     // Ảnh gốc / Video gốc
-	ThumbnailURL string         `bson:"thumbnail_url" json:"thumbnail_url"` // Ảnh nhỏ load cho nhanh
+	MediaType    sharedEnums.MediaType `bson:"media_type" json:"media_type"`
+	URL          string                `bson:"url" json:"url"`                     // Ảnh gốc / Video gốc
+	ThumbnailURL string                `bson:"thumbnail_url" json:"thumbnail_url"` // Ảnh nhỏ load cho nhanh
 
 	Metadata MediaMetadata `bson:"metadata" json:"metadata"`
 	Order    int           `bson:"order" json:"order"` // 1, 2, 3...

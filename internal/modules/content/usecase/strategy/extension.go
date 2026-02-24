@@ -38,3 +38,15 @@ func (p *PostExtensionStrategy) HandlePublishPost(ctx context.Context, request a
 func (p *PostExtensionStrategy) GetType() reflect.Type {
 	return reflect.TypeOf(req.PostExtensionReq{})
 }
+func (p *PostExtensionStrategy) HandlePublishDelete(ctx context.Context, request *req.DeletePostRequest) error {
+	// Implement the logic to handle post deletion
+	err := p.postExtensionRepo.DeleteByPostID(ctx, request.PostID.PostID)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (p *PostExtensionStrategy) GetDeleteType() reflect.Type {
+	return reflect.TypeOf(p.postExtensionRepo)
+}

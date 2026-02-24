@@ -1,4 +1,4 @@
-package content
+package producercontent
 
 import (
 	"context"
@@ -21,7 +21,7 @@ func NewContentProducer(eventBus events.EventBus) *ContentProducer {
 // Implement các phương thức của IProducerContent tại đây
 func (p *ContentProducer) PublishContentPostStats(ctx context.Context, payload ...*contentEvent.PostStatsPayload) error {
 	for _, items := range payload {
-		err := p.eventBus.Publish(ctx, constants.TopicContent.String(), items.PostID, constants.Updated.String(), items)
+		err := p.eventBus.Publish(ctx, constants.TopicContentPostPublish.String(), items.PostID, constants.Updated.String(), items)
 		if err != nil {
 			return err
 		}
@@ -30,7 +30,7 @@ func (p *ContentProducer) PublishContentPostStats(ctx context.Context, payload .
 }
 func (p *ContentProducer) PublishContentDeletePublishPost(ctx context.Context, payload ...*contentEvent.PostDeletePayload) error {
 	for _, items := range payload {
-		err := p.eventBus.Publish(ctx, constants.TopicContent.String(), items.PostID, constants.Deleted.String(), items)
+		err := p.eventBus.Publish(ctx, constants.TopicContentPostPublish.String(), items.PostID, constants.Deleted.String(), items)
 		if err != nil {
 			return err
 		}

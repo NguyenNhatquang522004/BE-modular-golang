@@ -20,4 +20,8 @@ type IPostEditLogsRepository interface {
 	UpdatePostEditLog(ctx context.Context, postEditLog *entity.PostEntityEditLog) error
 	UpdateBulkPostEditLog(ctx context.Context, postEditLogs []*entity.PostEntityEditLog) (int64, []*mongodbErrors.EditLogsBulkError, error)
 	PaginationPostEditLog(ctx context.Context, targetID string, cursor string, limit int) (*dto.PaginationRes, error)
+	DeleteByID(ctx context.Context, id string) error
+	DeleteBulkByID(ctx context.Context, ids []string) (int64, []*mongodbErrors.EditLogsBulkError, error)
+	DeleteByTargetID(ctx context.Context, targetID string) error
+	DeleteBulkByTargetID(ctx context.Context, targetIDs []string) (int64, []*mongodbErrors.EditLogsBulkError, error)
 }

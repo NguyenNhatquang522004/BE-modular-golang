@@ -339,3 +339,93 @@ func (r *PostEditLogsRepository) PaginationPostEditLog(ctx context.Context, targ
 		Limit:      limit,
 	}, nil
 }
+func (r *PostEditLogsRepository) DeleteByID(ctx context.Context, id string) error {
+	collection := r.client.Collection(entity.PostEntityEditLog{}.Collectionnameposteditlog())
+	objID, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		return err
+	}
+	filter := bson.M{"_id": objID}
+	_, err = collection.DeleteOne(ctx, filter)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+func (r *PostEditLogsRepository) DeleteBulkByID(ctx context.Context, ids []string) (int64, []*mongodbErrors.EditLogsBulkError, error) {
+	collection := r.client.Collection(entity.PostEntityEditLog{}.Collectionnameposteditlog())
+	objectIDs := make([]primitive.ObjectID, 0, len(ids))
+	for _, id := range ids {
+		objID, err := primitive.ObjectIDFromHex(id)
+		if err != nil {
+			return 0, nil, err
+		}
+		objectIDs = append(objectIDs, objID)
+	}
+	filter := bson.M{"_id": bson.M{"$in": objectIDs}}
+	result, err := collection.DeleteMany(ctx, filter)
+	if result == nil && err != nil {
+		return 0, nil, err
+	}
+
+	var failedDocs []*mongodbErrors.EditLogsBulkError
+	if err != nil {
+		var bulkErr mongo.BulkWriteException
+		if errors.As(err, &bulkErr) {
+			for _, we := range bulkErr.WriteErrors {
+				failedDocs = append(failedDocs, &mongodbErrors.EditLogsBulkError{
+					ID:     ids[we.Index],
+					Reason: we.Message,
+				})
+			}
+			return result.DeletedCount, failedDocs, nil
+		}
+		return 0, nil, err
+	}
+	return result.DeletedCount, failedDocs, nil
+}
+func (r *PostEditLogsRepository) DeleteByTargetID(ctx context.Context, targetID string) error {
+	collection := r.client.Collection(entity.PostEntityEditLog{}.Collectionnameposteditlog())
+	finalid, err := primitive.ObjectIDFromHex(targetID)
+	if err != nil {
+		return err
+	}
+	filter := bson.M{"target_id": finalid}
+	_, err = collection.DeleteMany(ctx, filter)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+func (r *PostEditLogsRepository) DeleteBulkByTargetID(ctx context.Context, targetIDs []string) (int64, []*mongodbErrors.EditLogsBulkError, error) {
+	collection := r.client.Collection(entity.PostEntityEditLog{}.Collectionnameposteditlog())
+	objectIDs := make([]primitive.ObjectID, 0, len(targetIDs))
+	for _, id := range targetIDs {
+		objID, err := primitive.ObjectIDFromHex(id)
+		if err != nil {
+			return 0, nil, err
+		}
+		objectIDs = append(objectIDs, objID)
+	}
+	filter := bson.M{"target_id": bson.M{"$in": objectIDs}}
+	result, err := collection.DeleteMany(ctx, filter)
+	if result == nil && err != nil {
+		return 0, nil, err
+	}
+
+	var failedDocs []*mongodbErrors.EditLogsBulkError
+	if err != nil {
+		var bulkErr mongo.BulkWriteException
+		if errors.As(err, &bulkErr) {
+			for _, we := range bulkErr.WriteErrors {
+				failedDocs = append(failedDocs, &mongodbErrors.EditLogsBulkError{
+					ID:     targetIDs[we.Index],
+					Reason: we.Message,
+				})
+			}
+			return result.DeletedCount, failedDocs, nil
+		}
+		return 0, nil, err
+	}
+	return result.DeletedCount, failedDocs, nil
+}

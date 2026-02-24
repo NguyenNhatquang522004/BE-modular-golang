@@ -294,3 +294,87 @@ func (r *PostMediaRepository) PanigationPostMedia(ctx context.Context, postID st
 		Limit:      limit,
 	}, nil
 }
+func (r *PostMediaRepository) PanigationPostMediaByUserid(ctx context.Context, userID string, cursor string, limit int) (*dto.PaginationRes, error) {
+	collection := r.client.Collection(entity.PostMedia{}.CollectionNamePostMedia())
+	var postMedia []*entity.PostMedia
+	querylimit := int64(limit + 1)
+	// Check cache first
+	if cursor == "" {
+		datacache, nextcursor, hasnext, limitcache, err := r.redisRepo.CustomizeGetCache(ctx, []string{
+			"postMedia_cache_userid_" + userID,
+			"postMedia_cache_nextcursor_userid_" + userID,
+			"postMedia_cache_hasnext_userid_" + userID,
+			"postMedia_cache_limit_userid_" + userID,
+		})
+		if err == nil && datacache != nil {
+			if psList, ok := datacache.([]*entity.PostMedia); ok {
+				return &dto.PaginationRes{
+					Data:       psList,
+					NextCursor: nextcursor,
+					HasNext:    hasnext,
+					Limit:      limitcache,
+				}, nil
+			}
+		}
+	}
+
+	query := bson.M{"$or": []bson.M{
+		{"user_id": userID},
+		{"tagged_users": userID},
+	}}
+
+	if cursor != "" {
+		decodedCursor, err := utils.DecodeCursorMongodb(cursor)
+		if err != nil {
+			return nil, fmt.Errorf("invalid cursor: %w", err)
+		}
+		query["$or"] = []bson.M{
+			{"created_at": bson.M{"$lt": decodedCursor.CreatedAt}},
+			{"created_at": decodedCursor.CreatedAt, "_id": bson.M{"$lt": decodedCursor.PostID}},
+		}
+	}
+
+	opts := options.Find().
+		SetSort(bson.D{
+			{Key: "created_at", Value: -1},
+			{Key: "_id", Value: -1}, // Tie-breaker
+		}).
+		SetLimit(int64(querylimit))
+	cursorDB, err := collection.Find(ctx, query, opts)
+	if err != nil {
+		return nil, fmt.Errorf("database error: %w", err)
+	}
+	defer cursorDB.Close(ctx)
+	if err = cursorDB.All(ctx, &postMedia); err != nil {
+		return nil, fmt.Errorf("error decoding results: %w", err)
+	}
+
+	var nextCursor string
+	hasNext := false
+	if len(postMedia) > limit {
+		hasNext = true
+		postMedia = postMedia[:limit] // Lấy đúng số lượng cần thiết
+		lastPost := postMedia[len(postMedia)-1]
+		nextCursor = utils.EncodeCursorMongodb(lastPost.CreatedAt, lastPost.ID)
+	}
+	// Cache kết quả nếu là trang đầu tiên
+	if cursor == "" {
+		items := map[string]any{
+			"postMedia_cache_userid_" + userID:            postMedia,
+			"postMedia_cache_nextcursor_userid_" + userID: nextCursor,
+			"postMedia_cache_hasnext_userid_" + userID:    hasNext,
+			"postMedia_cache_limit_userid_" + userID:      limit,
+		}
+		err = r.redisRepo.CustomizeSetCache(ctx, items)
+		if err != nil {
+			fmt.Printf("Failed to set cache for pagination: %v\n", err)
+		}
+	}
+
+	return &dto.PaginationRes{
+		Data:       postMedia,
+		NextCursor: nextCursor,
+		HasNext:    hasNext,
+		Limit:      limit,
+	}, nil
+}

@@ -3,7 +3,7 @@ package req
 import (
 	"time"
 
-	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/content/enum"
+	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/sharedEnums"
 )
 
 // --- SUB DTOs ---
@@ -23,13 +23,13 @@ type TaggedUserReq struct {
 }
 
 type MediaItemReq struct {
-	ID           string           `json:"id,omitempty"` // ID của item (nếu có để update)
-	MediaType    enum.MediaType   `json:"media_type" validate:"required"`
-	URL          string           `json:"url" validate:"required"`
-	ThumbnailURL string           `json:"thumbnail_url"`
-	Metadata     MediaMetadataReq `json:"metadata"`
-	Order        int              `json:"order"`
-	TaggedUsers  []TaggedUserReq  `json:"tagged_users,omitempty"`
+	ID           string                `json:"id,omitempty"` // ID của item (nếu có để update)
+	MediaType    sharedEnums.MediaType `json:"media_type" validate:"required"`
+	URL          string                `json:"url" validate:"required"`
+	ThumbnailURL string                `json:"thumbnail_url"`
+	Metadata     MediaMetadataReq      `json:"metadata"`
+	Order        int                   `json:"order"`
+	TaggedUsers  []TaggedUserReq       `json:"tagged_users,omitempty"`
 }
 
 // --- MAIN DTO ---
