@@ -3,33 +3,10 @@ syntax = "proto3";
 package api.proto.v1;
 
 option go_package = "github.com/quang/social-network/pkg/pb/v1;pb";
-
+import "google/protobuf/empty.proto";
 service IdentityService {
-  rpc Register (RegisterRequest) returns (RegisterResponse);
-  rpc Login (LoginRequest) returns (LoginResponse);
-  rpc GetProtectUser (GetProtectUserRequest) returns (GetProtectUserResponse);
+  rpc GetUserOTP (google.protobuf.Empty) returns (UserIDResponse);
 }
-message GetProtectUserRequest {
+message UserIDResponse {
   string user_id = 1;
-}
-message GetProtectUserResponse {
-  bool is_protected = 1;
-}
-message RegisterRequest {
-  string email = 1;
-  string password = 2;
-  string full_name = 3;
-}
-
-message RegisterResponse {
-  string user_id = 1;
-}
-
-message LoginRequest {
-  string email = 1;
-  string password = 2;
-}
-
-message LoginResponse {
-  string access_token = 1;
 }

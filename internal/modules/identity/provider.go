@@ -1,6 +1,7 @@
 package identity
 
 import (
+	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/identity/delivery/grpc"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/identity/delivery/http"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/identity/domain/IRepository/IRepositoryKeyCloak"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/identity/domain/IRepository/IRepositoryMongodb"
@@ -58,6 +59,9 @@ var HandlerSet = wire.NewSet(
 	http.NewHandler,
 
 // Add handler providers here
+)
+var GrpcHandlerSet = wire.NewSet(
+	grpc.NewIdentityHandlerGRPC,
 )
 
 var ModuleIndentitySet = wire.NewSet(

@@ -11,6 +11,7 @@ import (
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
+	emptypb "google.golang.org/protobuf/types/known/emptypb"
 )
 
 // This is a compile-time assertion to ensure that this generated file
@@ -19,16 +20,14 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	IdentityService_Register_FullMethodName = "/api.proto.v1.IdentityService/Register"
-	IdentityService_Login_FullMethodName    = "/api.proto.v1.IdentityService/Login"
+	IdentityService_GetUserOTP_FullMethodName = "/api.proto.v1.IdentityService/GetUserOTP"
 )
 
 // IdentityServiceClient is the client API for IdentityService service.
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type IdentityServiceClient interface {
-	Register(ctx context.Context, in *RegisterRequest, opts ...grpc.CallOption) (*RegisterResponse, error)
-	Login(ctx context.Context, in *LoginRequest, opts ...grpc.CallOption) (*LoginResponse, error)
+	GetUserOTP(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*UserIDResponse, error)
 }
 
 type identityServiceClient struct {
@@ -39,20 +38,10 @@ func NewIdentityServiceClient(cc grpc.ClientConnInterface) IdentityServiceClient
 	return &identityServiceClient{cc}
 }
 
-func (c *identityServiceClient) Register(ctx context.Context, in *RegisterRequest, opts ...grpc.CallOption) (*RegisterResponse, error) {
+func (c *identityServiceClient) GetUserOTP(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*UserIDResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(RegisterResponse)
-	err := c.cc.Invoke(ctx, IdentityService_Register_FullMethodName, in, out, cOpts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *identityServiceClient) Login(ctx context.Context, in *LoginRequest, opts ...grpc.CallOption) (*LoginResponse, error) {
-	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(LoginResponse)
-	err := c.cc.Invoke(ctx, IdentityService_Login_FullMethodName, in, out, cOpts...)
+	out := new(UserIDResponse)
+	err := c.cc.Invoke(ctx, IdentityService_GetUserOTP_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -63,8 +52,7 @@ func (c *identityServiceClient) Login(ctx context.Context, in *LoginRequest, opt
 // All implementations must embed UnimplementedIdentityServiceServer
 // for forward compatibility.
 type IdentityServiceServer interface {
-	Register(context.Context, *RegisterRequest) (*RegisterResponse, error)
-	Login(context.Context, *LoginRequest) (*LoginResponse, error)
+	GetUserOTP(context.Context, *emptypb.Empty) (*UserIDResponse, error)
 	mustEmbedUnimplementedIdentityServiceServer()
 }
 
@@ -75,11 +63,8 @@ type IdentityServiceServer interface {
 // pointer dereference when methods are called.
 type UnimplementedIdentityServiceServer struct{}
 
-func (UnimplementedIdentityServiceServer) Register(context.Context, *RegisterRequest) (*RegisterResponse, error) {
-	return nil, status.Error(codes.Unimplemented, "method Register not implemented")
-}
-func (UnimplementedIdentityServiceServer) Login(context.Context, *LoginRequest) (*LoginResponse, error) {
-	return nil, status.Error(codes.Unimplemented, "method Login not implemented")
+func (UnimplementedIdentityServiceServer) GetUserOTP(context.Context, *emptypb.Empty) (*UserIDResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method GetUserOTP not implemented")
 }
 func (UnimplementedIdentityServiceServer) mustEmbedUnimplementedIdentityServiceServer() {}
 func (UnimplementedIdentityServiceServer) testEmbeddedByValue()                         {}
@@ -102,38 +87,20 @@ func RegisterIdentityServiceServer(s grpc.ServiceRegistrar, srv IdentityServiceS
 	s.RegisterService(&IdentityService_ServiceDesc, srv)
 }
 
-func _IdentityService_Register_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(RegisterRequest)
+func _IdentityService_GetUserOTP_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(emptypb.Empty)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(IdentityServiceServer).Register(ctx, in)
+		return srv.(IdentityServiceServer).GetUserOTP(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: IdentityService_Register_FullMethodName,
+		FullMethod: IdentityService_GetUserOTP_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(IdentityServiceServer).Register(ctx, req.(*RegisterRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _IdentityService_Login_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(LoginRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(IdentityServiceServer).Login(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: IdentityService_Login_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(IdentityServiceServer).Login(ctx, req.(*LoginRequest))
+		return srv.(IdentityServiceServer).GetUserOTP(ctx, req.(*emptypb.Empty))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -146,12 +113,8 @@ var IdentityService_ServiceDesc = grpc.ServiceDesc{
 	HandlerType: (*IdentityServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
-			MethodName: "Register",
-			Handler:    _IdentityService_Register_Handler,
-		},
-		{
-			MethodName: "Login",
-			Handler:    _IdentityService_Login_Handler,
+			MethodName: "GetUserOTP",
+			Handler:    _IdentityService_GetUserOTP_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

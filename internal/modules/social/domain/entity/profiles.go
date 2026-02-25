@@ -50,7 +50,6 @@ type Profiles struct {
 	// 4. META & SETTINGS
 	// Settings nên khởi tạo mặc định, không nên để nil pointer
 	Settings      ProfileSettings      `bson:"settings" json:"settings"`
-	Notifications ProfileNotifications `bson:"notifications" json:"notifications"`
 
 	// 5. TIMESTAMPS
 	CreatedAt time.Time  `bson:"created_at" json:"created_at"`
@@ -124,10 +123,6 @@ type ProfileSettings struct {
 	AllowSearchEngine bool `bson:"allow_search_engine" json:"allow_search_engine"`
 }
 
-type ProfileNotifications struct {
-	EmailFrequency string   `bson:"email_frequency" json:"email_frequency"` // 'weekly', 'daily'
-	PushTypes      []string `bson:"push_types" json:"push_types"`           // ['comment', 'friend_request']
-}
 
 func (Profiles) CollectionNameProfiles() string {
 	return collectionProfiles

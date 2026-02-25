@@ -26,15 +26,17 @@ func NewConsumerContent(pool IRepositoryShare.IWorkerPool, mediaAssetsRepo IRepo
 	}
 }
 
+// payload *mediaInContent.CreateMediaAssetsPayload
 // Implement các phương thức của IConsumerContent tại đây
-func (c *ConsumerContent) ConsumerPublishPostCreateMediaAssets(ctx context.Context, payload []*mediaInContent.CreateMediaAssetsPayload) error {
+func (c *ConsumerContent) ConsumerPublishPostCreateDeleteMediaAssets(ctx context.Context) error {
 	// Logic để xử lý sự kiện tạo media assets cho một post
 	err := c.eventBus.Subscribe(ctx, string(constants.TopicContentPostPublishMediaAssets), func(ctx context.Context, event events.IntegrationEvent) error {
-		for _, item := range payload {
-			entity, ok := mediaInContent.CreateMediaAssetsPayloadtoEntityMediaAssets(item)
+		payload := event.Payload.(*mediaInContent.CreateMediaAssetsPayload) // Ép kiểu payload về đúng dạng
+		switch event.Type {
+		case constants.Created.String():
+			entity, ok := mediaInContent.CreateMediaAssetsPayloadtoEntityMediaAssets(payload)
 			if ok != nil {
 				// Xử lý lỗi khi chuyển đổi payload sang entity nếu cần thiết
-				continue
 			}
 			err := c.pool.Run(ctx, func() {
 				safectx := context.WithoutCancel(ctx)
@@ -54,25 +56,16 @@ func (c *ConsumerContent) ConsumerPublishPostCreateMediaAssets(ctx context.Conte
 			if err != nil && err != context.Canceled {
 				// Xử lý lỗi khi chạy công việc trong pool nếu cần thiết
 			}
-			log.Printf("✅ Đã xử lý xong media asset với MediaID: %s", item.Items[0].MediaID) // Log thông tin media asset đã xử lý
-		}
-		c.pool.Wait() // Đợi tất cả công việc trong pool hoàn thành trước khi tiếp tục
+			log.Printf("✅ Đã xử lý xong media asset với MediaID: %s", payload.Items[0].MediaID) // Log thông tin media asset đã xử lý
 
-		return nil
-	})
-	if err != nil && err != context.Canceled {
-		// Xử lý lỗi nếu cần thiết
-		return err
-	}
-	return nil
-}
-func (c *ConsumerContent) ConsumerPublishPostDeleteMediaAssets(ctx context.Context, payload []*mediaInContent.DeleteMediaAssetsPayload) error {
-	err := c.eventBus.Subscribe(ctx, string(constants.TopicContentPostPublishMediaAssets), func(ctx context.Context, event events.IntegrationEvent) error {
-		for _, item := range payload {
+			c.pool.Wait() // Đợi tất cả công việc trong pool hoàn thành trước khi tiếp tục
+
+			return nil
+		case constants.Deleted.String():
 			err := c.pool.Run(ctx, func() {
 				safectx := context.WithoutCancel(ctx)
 				// Giả sử CreateBulkMediaAssets là một phương thức để tạo nhiều media assets cùng lúc
-				err := c.mediaAssetsRepo.DeleteMediaAssetsByPostIDAndUserID(safectx, item.PostID, item.UserID)
+				err := c.mediaAssetsRepo.DeleteMediaAssetsByPostIDAndUserID(safectx, payload.PostID, payload.UserID)
 				if err != nil {
 					log.Printf("❌ Lỗi khi xóa media assets: %v", err)
 				}
@@ -80,10 +73,13 @@ func (c *ConsumerContent) ConsumerPublishPostDeleteMediaAssets(ctx context.Conte
 			if err != nil && err != context.Canceled {
 
 			}
-			log.Printf("postid %s userid : %s", item.PostID, item.UserID) // Log thông tin media asset đã xử lý
+			log.Printf("postid %s userid : %s", payload.PostID, payload.UserID) // Log thông tin media asset đã xử lý
+			c.pool.Wait()
+			return nil
+		default:
+			log.Printf("⚠️ Không xử lý được loại sự kiện: %s", event.Type)
+			return nil
 		}
-		c.pool.Wait()
-		return nil
 	})
 	if err != nil && err != context.Canceled {
 		// Xử lý lỗi nếu cần thiết

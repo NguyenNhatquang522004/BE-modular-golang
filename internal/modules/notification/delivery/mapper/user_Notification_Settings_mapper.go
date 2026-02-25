@@ -4,6 +4,7 @@ import (
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/notification/delivery/dto/req"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/notification/delivery/dto/res"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/notification/domain/entity"
+	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/notification/enum"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -57,13 +58,13 @@ func mapGeneralSettingsReqToEntity(s *req.GeneralSettingsReq) *entity.GeneralSet
 		return nil
 	}
 	return &entity.GeneralSettings{
-		PushEnabled:      s.PushEnabled,
-		EmailFrequency:   *s.EmailFrequency,
-		PushInteractions: s.PushInteractions,
-		PushFriends:      s.PushFriends,
-		PushGroups:       s.PushGroups,
-		PushEvents:       s.PushEvents,
-		PushBirthdays:    s.PushBirthdays,
+		PushEnabled:      true,
+		EmailFrequency:   enum.EmailFreqInstant,
+		PushInteractions: true,
+		PushFriends:      true,
+		PushGroups:       true,
+		PushEvents:       true,
+		PushBirthdays:    true,
 	}
 }
 

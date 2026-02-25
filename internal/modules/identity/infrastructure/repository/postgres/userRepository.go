@@ -25,7 +25,6 @@ func NewUserRepository(db *gorm.DB, redisRepo irepositoryshare.IRedis) *UserRepo
 }
 
 func (r *UserRepository) CreateUser(user *entity.User) (*entity.User, error) {
-	user.ID = uuid.New()
 	err := r.DB.Create(user).Error
 	if err != nil {
 		return nil, err

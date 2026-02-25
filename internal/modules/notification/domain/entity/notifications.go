@@ -3,12 +3,14 @@ package entity
 import (
 	"time"
 
-	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/notification/enum"
+	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/sharedEnums"
 	"github.com/gocql/gocql"
 )
+
 const (
 	TableNotifications = "notifications"
 )
+
 // Notification đại diện cho bảng 'notifications' trong Cassandra.
 // Thiết kế Write-Heavy, tối ưu cho việc load danh sách thông báo theo user.
 type Notification struct {
@@ -30,7 +32,7 @@ type Notification struct {
 	// =========================================================================
 
 	// Enum: post_like, friend_request...
-	Type enum.NotificationType `cql:"type" json:"type"`
+	Type sharedEnums.NotificationType `cql:"type" json:"type"`
 
 	// =========================================================================
 	// 3. ACTOR (Người gây ra hành động - Denormalization)

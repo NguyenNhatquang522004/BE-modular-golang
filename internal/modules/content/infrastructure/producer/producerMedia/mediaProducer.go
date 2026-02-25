@@ -19,13 +19,11 @@ func NewMediaProducer(eventBus events.EventBus) *MediaProducer {
 }
 
 // Implement các phương thức của IProducerMedia tại đây
-func (p *MediaProducer) ProducerPublishPostCreateMediaAssets(ctx context.Context, postID string, items []*mediaInContent.CreateMediaAssetsPayload) error {
+func (p *MediaProducer) ProducerPublishPostCreateMediaAssets(ctx context.Context, postID string, items *mediaInContent.CreateMediaAssetsPayload) error {
 	// Logic để publish sự kiện tạo media assets cho một post
-	for _, item := range items {
-		err := p.eventBus.Publish(ctx, constants.TopicContentPostPublishMediaAssets.String(), postID, constants.Created.String(), item)
-		if err != nil {
-			return err
-		}
+	err := p.eventBus.Publish(ctx, constants.TopicContentPostPublishMediaAssets.String(), postID, constants.Created.String(), items)
+	if err != nil {
+		return err
 	}
 	return nil
 }

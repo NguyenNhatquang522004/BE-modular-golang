@@ -3,14 +3,19 @@ package usecase
 import (
 	"context"
 	"errors"
+	"fmt"
 	"time"
 
 	"github.com/Nerzal/gocloak/v13"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/server/http/response"
+	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/IRepositoryShare"
 	irepositoryshare "github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/IRepositoryShare"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/events"
-	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/identity/domain/IRepository/IRepositoryKeyCloak"
+	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/events/identityEvent/notificationEvent"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/identity/delivery/dto/res"
+
+	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/identity/domain/IRepository/IProducer/IProducerNotification"
+	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/identity/domain/IRepository/IRepositoryKeyCloak"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/identity/domain/IRepository/IRepositoryPostgres"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/identity/domain/entity"
 
@@ -19,28 +24,27 @@ import (
 )
 
 type UserAuthUseCase struct {
-	eventBus       events.EventBus
-	userRepo       IRepositoryPostgres.IUserRepository
-	keycloakClient IRepositoryKeyCloak.IKeycloakRepository
-	redisRepo      irepositoryshare.IRedis
+	eventBus             events.EventBus
+	userRepo             IRepositoryPostgres.IUserRepository
+	keycloakClient       IRepositoryKeyCloak.IKeycloakRepository
+	redisRepo            irepositoryshare.IRedis
+	notificationProducer IProducerNotification.IProducerNotification
+	emailRepo            IRepositoryShare.IEmail
 }
 
-func NewUserAuthUseCase(userRepo IRepositoryPostgres.IUserRepository, keycloakClient IRepositoryKeyCloak.IKeycloakRepository, redisRepo irepositoryshare.IRedis) *UserAuthUseCase {
+func NewUserAuthUseCase(userRepo IRepositoryPostgres.IUserRepository,
+	keycloakClient IRepositoryKeyCloak.IKeycloakRepository,
+	redisRepo irepositoryshare.IRedis, notificationProducer IProducerNotification.IProducerNotification, emailRepo IRepositoryShare.IEmail) *UserAuthUseCase {
 	return &UserAuthUseCase{
-		userRepo:       userRepo,
-		keycloakClient: keycloakClient,
-		redisRepo:      redisRepo,
+		userRepo:             userRepo,
+		keycloakClient:       keycloakClient,
+		redisRepo:            redisRepo,
+		notificationProducer: notificationProducer,
+		emailRepo:            emailRepo,
 	}
 }
 
 func (u *UserAuthUseCase) Login(email string, password string) (*response.Response, error) {
-	// err = u.eventBus.Publish(ctx, "user.registered", map[string]string{
-	// 	"user_id": email,
-	// 	"email":   email,
-	// }).Error()
-	// if err != nil {
-	// 	return nil, err
-	// }
 	if email == "" || password == "" {
 		return response.NewResponse(
 			response.WithMessage("Email and password must not be empty"),
@@ -126,6 +130,7 @@ func (u *UserAuthUseCase) Login(email string, password string) (*response.Respon
 	), nil
 }
 func (u *UserAuthUseCase) RegisterOne(email string) (*response.Response, error) {
+
 	checkEmail, checkEmailErr := u.userRepo.GetUserByEmail(email)
 	if checkEmailErr != nil {
 		return response.NewResponse(
@@ -139,13 +144,34 @@ func (u *UserAuthUseCase) RegisterOne(email string) (*response.Response, error) 
 			response.WithStatus("400"),
 		), errors.New("email already exists")
 	}
+	id := uuid.New()
 	user := &entity.User{
+		ID:           id,
 		Email:        email,
 		StepRegister: 1,
 		OTPCode:      uuid.NewString()[:10],
 		OTPExpiry:    time.Now().Add(30 * time.Minute),
 	}
 	_, createUserErr := u.userRepo.CreateUser(user)
+	callNotification := func() error {
+		// Gọi API của module notification để gửi OTP
+		err := u.SendOTP(email, user.OTPCode)
+		if err != nil {
+			return err
+		}
+		//tạo CreateUserNotificationSettingsPayload với UserID và gửi qua event bus
+		payload := &notificationEvent.CreateUserNotificationSettingsPayload{
+			UserID: user.ID.String(),
+		}
+		return u.notificationProducer.CreateUserNotificationSettings(context.Background(), payload)
+	}
+	err := callNotification()
+	if err != nil {
+		return response.NewResponse(
+			response.WithMessage("Error sending OTP notification"),
+			response.WithStatus("500"),
+		), errors.New("error sending OTP notification")
+	}
 	if createUserErr != nil {
 		return response.NewResponse(
 			response.WithMessage("Error creating user"),
@@ -317,12 +343,34 @@ func (u *UserAuthUseCase) ReSendOTP(email string) (*response.Response, error) {
 			response.WithStatus("500"),
 		), errors.New("error updating user with new OTP")
 	}
-	// call API to send OTP here notification  module
+
 	return response.NewResponse(
 		response.WithMessage("OTP sent successfully"),
 		response.WithStatus("200"),
 	), nil
 }
+
+// Hàm gửi OTP (Tiện ích cụ thể)
+func (u *UserAuthUseCase) SendOTP(toEmail string, otpCode string) error {
+	subject := "Mã xác thực OTP của bạn"
+	// Nội dung HTML đơn giản
+	body := fmt.Sprintf(`
+        <div style="font-family: Helvetica,Arial,sans-serif;min-width:1000px;overflow:auto;line-height:2">
+            <div style="margin:50px auto;width:70%;padding:20px 0">
+                <div style="border-bottom:1px solid #eee">
+                    <a href="" style="font-size:1.4em;color: #00466a;text-decoration:none;font-weight:600">My App</a>
+                </div>
+                <p style="font-size:1.1em">Xin chào,</p>
+                <p>Đây là mã xác thực OTP của bạn. Mã này sẽ hết hạn trong 15 phút.</p>
+                <h2 style="background: #00466a;margin: 0 auto;width: max-content;padding: 0 10px;color: #fff;border-radius: 4px;">%s</h2>
+                <p style="font-size:0.9em;">Xin cảm ơn,<br />My App Team</p>
+            </div>
+        </div>
+    `, otpCode)
+
+	return u.emailRepo.SendEmail(toEmail, subject, body)
+}
+
 func (u *UserAuthUseCase) SendLinkResetPassword(email string) (*response.Response, error) {
 	checkEmail, checkEmailErr := u.userRepo.GetUserByEmail(email)
 	if checkEmailErr != nil {

@@ -1,6 +1,6 @@
 version: v2
 modules:
-  - path: ../../api/proto                # Trỏ vào thư mục cha của v1
+  - path: api/proto                # Trỏ vào thư mục cha của v1
     name: buf.build/quang/social   # Tên định danh (bắt buộc trong v2)
 lint:
   use:
@@ -8,3 +8,5 @@ lint:
 breaking:
   use:
     - FILE
+
+    #  buf generate

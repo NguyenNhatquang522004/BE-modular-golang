@@ -6,6 +6,7 @@ import (
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/IRepositoryShare"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/events"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/infrastructure/concurrency"
+	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/infrastructure/email"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/infrastructure/kafka"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/infrastructure/redis"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/infrastructure/seaweedfs"
@@ -14,7 +15,7 @@ import (
 	"github.com/google/wire"
 )
 
-var providerDatabase = wire.NewSet(
+var ProviderDatabase = wire.NewSet(
 	database.NewMongoDatabase,
 	database.NewRedisClient,
 	database.NewPostgresDB,
@@ -24,33 +25,33 @@ var providerDatabase = wire.NewSet(
 	database.NewSeaweedFSClient,
 )
 
-var providerGRPC = wire.NewSet(
+var ProviderGRPC = wire.NewSet(
 
 	ProvideIdentityClient,
 	ProvideGRPCConnection,
 )
-var prodviderMiddleware = wire.NewSet(
+var ProviderMiddleware = wire.NewSet(
 	middleware.NewAuthMiddleware,
 )
-var providerSocket = wire.NewSet(
+var ProviderSocket = wire.NewSet(
 	socket.NewHub,
 	wire.Bind(new(socket.Manager), new(*socket.Hub)),
 )
-var providerSeaweedfs = wire.NewSet(
+var ProviderSeaweedfs = wire.NewSet(
 	seaweedfs.NewSeaweedfsAdapter,
 )
-var providerKafka = wire.NewSet(
+var ProviderKafka = wire.NewSet(
 	kafka.NewKafkaEventBus,
 	wire.Bind(new(events.EventBus), new(*kafka.KafkaEventBus)),
 )
-var providerResilience = wire.NewSet(
+var ProviderResilience = wire.NewSet(
 
 	resilience.NewBreakerProvider,
 )
-var prodviderCache = wire.NewSet(
+var ProviderCache = wire.NewSet(
 	redis.NewRedisAdapter,
 )
-var providerLifecycle = wire.NewSet(
+var ProviderLifecycle = wire.NewSet(
 	concurrency.NewManager,
 	// wire.Bind(new(concurrency.Service), new(*concurrency.Manager)),
 	ProvideLifecycleManager,
@@ -59,15 +60,20 @@ var WorkerPoolProvider = wire.NewSet(
 	concurrency.NewWorkerPool,
 	wire.Bind(new(IRepositoryShare.IWorkerPool), new(IRepositoryShare.IWorkerPool)),
 )
+var EmailProvider = wire.NewSet(
+	email.NewEmailAdapter,
+	wire.Bind(new(IRepositoryShare.IEmail), new(*email.EmailAdapter)),
+)
 var ProviderSet = wire.NewSet(
-	providerDatabase,
-	providerGRPC,
-	prodviderMiddleware,
-	providerSocket,
-	providerSeaweedfs,
-	providerResilience,
-	prodviderCache,
-	providerKafka,
-	providerLifecycle,
+	ProviderDatabase,
+	ProviderGRPC,
+	ProviderMiddleware,
+	ProviderSocket,
+	ProviderSeaweedfs,
+	ProviderResilience,
+	ProviderCache,
+	ProviderKafka,
+	ProviderLifecycle,
 	WorkerPoolProvider,
+	EmailProvider,
 )

@@ -36,10 +36,6 @@ func ToEntityProfile(req *req.ProfileReq) (*entity.Profiles, error) {
 			IsPrivate:         false,
 			AllowSearchEngine: true,
 		},
-		Notifications: entity.ProfileNotifications{
-			EmailFrequency: "daily",
-			PushTypes:      []string{},
-		},
 	}
 
 	// 3. Map Sub-structs (Single Objects)
@@ -68,10 +64,6 @@ func ToEntityProfile(req *req.ProfileReq) (*entity.Profiles, error) {
 	if req.Settings != nil {
 		profile.Settings.IsPrivate = req.Settings.IsPrivate
 		profile.Settings.AllowSearchEngine = req.Settings.AllowSearchEngine
-	}
-	if req.Notifications != nil {
-		profile.Notifications.EmailFrequency = req.Notifications.EmailFrequency
-		profile.Notifications.PushTypes = req.Notifications.PushTypes
 	}
 
 	return profile, nil
@@ -139,12 +131,6 @@ func ToEntityUpdateProfile(current *entity.Profiles, req *req.ProfileReq) (*enti
 			AllowSearchEngine: req.Settings.AllowSearchEngine,
 		}
 	}
-	if req.Notifications != nil {
-		current.Notifications = entity.ProfileNotifications{
-			EmailFrequency: req.Notifications.EmailFrequency,
-			PushTypes:      req.Notifications.PushTypes,
-		}
-	}
 
 	return current, nil
 }
@@ -162,7 +148,6 @@ func mapAvatar(req *req.AvatarReq) *entity.ProfileAvatar {
 		UpdatedAt: time.Now(),
 	}
 }
-
 func mapCoverPhoto(req *req.CoverPhotoReq) *entity.ProfileCover {
 	if req == nil {
 		return nil
@@ -172,7 +157,6 @@ func mapCoverPhoto(req *req.CoverPhotoReq) *entity.ProfileCover {
 		PositionY: req.PositionY,
 	}
 }
-
 func mapAddress(req *req.AddressReq) *entity.ProfileAddress {
 	if req == nil {
 		return nil

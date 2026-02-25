@@ -39,7 +39,6 @@ type ProfileReq struct {
 
 	// Settings
 	Settings      *ProfileSettingsReq      `json:"settings"`
-	Notifications *ProfileNotificationsReq `json:"notifications"`
 }
 
 // --- SUB-DTOs ---
@@ -98,7 +97,3 @@ type ProfileSettingsReq struct {
 	AllowSearchEngine bool `json:"allow_search_engine"`
 }
 
-type ProfileNotificationsReq struct {
-	EmailFrequency string   `json:"email_frequency"`
-	PushTypes      []string `json:"push_types"`
-}

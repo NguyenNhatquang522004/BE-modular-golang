@@ -7,9 +7,9 @@ import (
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/errors/mongodbErrors"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/IRepositoryShare"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/dto"
+	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/sharedEnums"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/utils"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/notification/domain/entity"
-	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/notification/enum"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -61,7 +61,7 @@ func (r *NotificationTemplatesRepository) CreateBulkTemplates(ctx context.Contex
 	}
 	return int64(len(result.InsertedIDs)), nil, nil
 }
-func (r *NotificationTemplatesRepository) GetTemplateByType(ctx context.Context, notificationType enum.NotificationType, cursor string, limit int) (*dto.PaginationRes, error) {
+func (r *NotificationTemplatesRepository) GetTemplateByType(ctx context.Context, notificationType sharedEnums.NotificationType, cursor string, limit int) (*dto.PaginationRes, error) {
 	collection := r.client.Collection(entity.NotificationTemplate{}.CollectionName())
 	var template []*entity.NotificationTemplate
 	querylimit := int64(limit + 1)

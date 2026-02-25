@@ -32,7 +32,6 @@ type FCMToken struct {
 	DeviceID  string    `bson:"device_id" json:"device_id"` // UUID của thiết bị (để replace token cũ của máy đó)
 	UpdatedAt time.Time `bson:"updated_at" json:"updated_at"`
 }
-
 // --- GENERAL SETTINGS ---
 type GeneralSettings struct {
 	PushEnabled      bool                `bson:"push_enabled" json:"push_enabled"` // Master switch (Tắt tất cả push)
@@ -42,7 +41,6 @@ type GeneralSettings struct {
 	PushGroups       bool                `bson:"push_groups" json:"push_groups"`
 	PushEvents       bool                `bson:"push_events" json:"push_events"`
 	PushBirthdays    bool                `bson:"push_birthdays" json:"push_birthdays"`
-	// Chi tiết từng loại
 }
 
 func (UserNotificationSetting) CollectionName() string {

@@ -6,6 +6,7 @@ const (
 	Updated EventType = "UPDATED"
 	Deleted EventType = "DELETED"
 	Created EventType = "CREATED"
+	None    EventType = "NONE"
 )
 
 type TopicName string
@@ -23,6 +24,8 @@ const (
 	ContentPostPublishNotificationTag    TopicName = "content.post.publish_notification_tag.events"
 
 	// notification
+	TopicCreateUserNotificationSettings TopicName = "notification.create_user_notification_settings.events"
+	TopicSendNotificationType           TopicName = "notification.send_notification.events"
 )
 
 type TopicConfig struct {
@@ -44,5 +47,7 @@ var SocialTopics = []TopicConfig{
 	{Name: TopicFollow, Partitions: 3},
 	{Name: TopicContentPostPublish, Partitions: 3},
 	{Name: TopicContentPostPublishMediaAssets, Partitions: 3},
+	{Name: TopicCreateUserNotificationSettings, Partitions: 3},
+	{Name: TopicSendNotificationType, Partitions: 3},
 	// Thêm các topic khác vào đây
 }
