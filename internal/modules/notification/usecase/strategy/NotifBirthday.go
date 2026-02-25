@@ -17,7 +17,7 @@ import (
 	"github.com/gocql/gocql"
 )
 
-type NotifGroupInvite struct {
+type NotifBirthday struct {
 	notificationRepo             IRepositoryCassandra.INotificationsRepository
 	notificationTemplateRepo     IRepositoryMongodb.INotificationTemplatesRepository
 	userNotificationSettingsRepo IRepositoryMongodb.IUserNotificationSettingsRepository
@@ -25,11 +25,11 @@ type NotifGroupInvite struct {
 	socket                       socket.Manager
 }
 
-func NewNotifGroupInvite(notificationRepo IRepositoryCassandra.INotificationsRepository,
+func NewNotifBirthday(notificationRepo IRepositoryCassandra.INotificationsRepository,
 	notificationTemplateRepo IRepositoryMongodb.INotificationTemplatesRepository,
 	userNotificationSettingsRepo IRepositoryMongodb.IUserNotificationSettingsRepository,
-	pool IRepositoryShare.IWorkerPool, socketManager socket.Manager) *NotifGroupInvite {
-	return &NotifGroupInvite{
+	pool IRepositoryShare.IWorkerPool, socketManager socket.Manager) *NotifBirthday {
+	return &NotifBirthday{
 		notificationRepo:             notificationRepo,
 		notificationTemplateRepo:     notificationTemplateRepo,
 		userNotificationSettingsRepo: userNotificationSettingsRepo,
@@ -37,13 +37,12 @@ func NewNotifGroupInvite(notificationRepo IRepositoryCassandra.INotificationsRep
 		socket:                       socketManager,
 	}
 }
-func (r *NotifGroupInvite) Execute(ctx context.Context, req *notificationEvent.NotificationPayload) error {
-	// Implement the logic for executing the notification strategy
+func (r *NotifBirthday) Execute(ctx context.Context, req *notificationEvent.NotificationPayload) error {
 	// Implement the logic for executing the notification strategy
 	thisEnum := r.GetType()
 	isExist := slices.Contains(req.TypeNotification, &thisEnum)
 	if !isExist {
-		return errors.New(" notificati on type is not valid for this strategy")
+		return errors.New(" notification type is not valid for this strategy")
 	}
 	dataActor, err := r.userNotificationSettingsRepo.GetUserNotificationSettingsByUserID(ctx, req.UserID)
 	if err != nil {
@@ -53,6 +52,7 @@ func (r *NotifGroupInvite) Execute(ctx context.Context, req *notificationEvent.N
 	if err != nil {
 		return err
 	}
+
 	for _, userID := range req.SendUser {
 		err := r.pool.Run(ctx, func() {
 			datauser, err := r.userNotificationSettingsRepo.GetUserNotificationSettingsByUserID(ctx, userID)
@@ -61,8 +61,8 @@ func (r *NotifGroupInvite) Execute(ctx context.Context, req *notificationEvent.N
 				// Handle the error appropriately, e.g., log it or return an error
 				return
 			}
-			if datauser.Settings.PushEnabled == false || datauser.Settings.PushGroups == false {
-				// User has muted all notifications or friend request notifications, skip sending
+			if datauser.Settings.PushEnabled == false || datauser.Settings.PushBirthdays == false {
+				// User has muted all notifications or birthday notifications, skip sending
 				return
 			}
 			safectx := context.WithoutCancel(ctx)
@@ -71,7 +71,7 @@ func (r *NotifGroupInvite) Execute(ctx context.Context, req *notificationEvent.N
 				// Handle the error appropriately, e.g., log it or return an error
 				return
 			}
-			ActorID, ok := gocql.ParseUUID(req.UserID)
+			ActorID, ok := gocql.ParseUUID(req.BirthdayID)
 			if ok != nil {
 				// Handle the error appropriately, e.g., log it or return an error
 				return
@@ -80,11 +80,11 @@ func (r *NotifGroupInvite) Execute(ctx context.Context, req *notificationEvent.N
 				UserID:         UserIDfinal,
 				CreatedAt:      time.Now(),
 				NotificationID: gocql.TimeUUID(),
-				Type:           sharedEnums.NotifGroupInvite,
+				Type:           sharedEnums.NotifBirthday,
 				ActorID:        ActorID,
 				ActorName:      dataActor.Name,
 				ActorAvatar:    dataActor.Avatar,
-				TargetID:       req.GroupID,
+				TargetID:       req.BirthdayID,
 				TargetPreview:  "",
 				IsRead:         false,
 				IsClicked:      false,
@@ -109,10 +109,11 @@ func (r *NotifGroupInvite) Execute(ctx context.Context, req *notificationEvent.N
 			// Handle the error appropriately, e.g., log it or return an error
 			return err
 		}
+
 	}
 	r.pool.Wait() // Wait for all goroutines to finish
 	return nil
 }
-func (r *NotifGroupInvite) GetType() sharedEnums.NotificationType {
-	return sharedEnums.NotifGroupInvite
+func (r *NotifBirthday) GetType() sharedEnums.NotificationType {
+	return sharedEnums.NotifBirthday
 }

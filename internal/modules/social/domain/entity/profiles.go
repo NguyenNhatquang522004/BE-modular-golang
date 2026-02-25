@@ -26,10 +26,10 @@ type Profiles struct {
 	FullName string `bson:"full_name" json:"full_name"`
 
 	// Index: Unique. Dùng để tạo URL đẹp: facebook.com/nguyen-van-a
-	Slug string `bson:"slug" json:"slug"`
+	Slug string `bson:"slug" json:"slug"`		
 
 	Bio         string      `bson:"bio" json:"bio"`
-	DateOfBirth time.Time   `bson:"date_of_birth" json:"date_of_birth"`
+	DateOfBirth string      `bson:"date_of_birth" json:"date_of_birth"`
 	Gender      enum.Gender `bson:"gender" json:"gender"` // Enum Int -> Lưu String trong DB
 
 	// 2. MEDIA & LIÊN HỆ
@@ -49,7 +49,7 @@ type Profiles struct {
 
 	// 4. META & SETTINGS
 	// Settings nên khởi tạo mặc định, không nên để nil pointer
-	Settings      ProfileSettings      `bson:"settings" json:"settings"`
+	Settings ProfileSettings `bson:"settings" json:"settings"`
 
 	// 5. TIMESTAMPS
 	CreatedAt time.Time  `bson:"created_at" json:"created_at"`
@@ -122,7 +122,6 @@ type ProfileSettings struct {
 	IsPrivate         bool `bson:"is_private" json:"is_private"` // Không dùng omitempty cho bool
 	AllowSearchEngine bool `bson:"allow_search_engine" json:"allow_search_engine"`
 }
-
 
 func (Profiles) CollectionNameProfiles() string {
 	return collectionProfiles

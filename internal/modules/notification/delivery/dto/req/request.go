@@ -26,3 +26,7 @@ type SendOTPRequest struct {
 type SendPublishPostNotificationRequest struct {
 	PostID string `json:"post_id" binding:"required,uuid"`
 }
+type SendSystemAlertRequest struct {
+	AlertID string `json:"alert_id" binding:"required,uuid"`
+	Preview string `json:"preview" binding:"required"`
+}

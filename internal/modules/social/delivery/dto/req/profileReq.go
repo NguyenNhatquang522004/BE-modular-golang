@@ -22,7 +22,7 @@ type ProfileReq struct {
 	FirstName   string      `json:"first_name" binding:"required"`
 	LastName    string      `json:"last_name" binding:"required"`
 	Bio         string      `json:"bio"`
-	DateOfBirth time.Time   `json:"date_of_birth"`
+	DateOfBirth string      `json:"date_of_birth"`
 	Gender      enum.Gender `json:"gender"` // Sử dụng Enum như yêu cầu
 
 	// Các thông tin bổ sung (Optional)

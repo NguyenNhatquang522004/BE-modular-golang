@@ -11,6 +11,7 @@ import (
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/infrastructure/redis"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/infrastructure/seaweedfs"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/resilience"
+	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/scheduler"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/socket"
 	"github.com/google/wire"
 )
@@ -63,6 +64,10 @@ var WorkerPoolProvider = wire.NewSet(
 var EmailProvider = wire.NewSet(
 	email.NewEmailAdapter,
 	wire.Bind(new(IRepositoryShare.IEmail), new(*email.EmailAdapter)),
+)
+var SchedulerProvider = wire.NewSet(
+	scheduler.NewCronScheduler,
+	wire.Bind(new(IRepositoryShare.IScheduler), new(*scheduler.CronScheduler)),
 )
 var ProviderSet = wire.NewSet(
 	ProviderDatabase,

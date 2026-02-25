@@ -26,13 +26,19 @@ type GeneralSettingsReq struct {
 
 // --- CREATE REQ ---
 type CreateUserNotificationSettingReq struct {
-	UserID    string              `json:"user_id" binding:"required,uuid"`
-	Settings  *GeneralSettingsReq `json:"settings" binding:"required"`
-	FCMTokens []*FCMTokenReq      `json:"fcm_tokens"`
+	UserID      string              `json:"user_id" binding:"required,uuid"`
+	Settings    *GeneralSettingsReq `json:"settings" binding:"required"`
+	Name        string              `json:"name" binding:"required"`
+	Avatar      string              `bson:"avatar" json:"avatar"`
+	DateOfBirth string              `json:"date_of_birth"`
+	FCMTokens   []*FCMTokenReq      `json:"fcm_tokens"`
 }
 
 // --- UPDATE REQ ---
 type UpdateUserNotificationSettingReq struct {
-	Settings  *GeneralSettingsReq `json:"settings,omitempty"`
-	FCMTokens []*FCMTokenReq      `json:"fcm_tokens,omitempty"`
+	DateOfBirth string              `json:"date_of_birth,omitempty"`
+	Name        string              `json:"name,omitempty"`
+	Avatar      string              `bson:"avatar,omitempty" json:"avatar,omitempty"`
+	Settings    *GeneralSettingsReq `json:"settings,omitempty"`
+	FCMTokens   []*FCMTokenReq      `json:"fcm_tokens,omitempty"`
 }

@@ -18,12 +18,19 @@ type UserNotificationSetting struct {
 	// Index: Unique { user_id: 1 } -> Mỗi user chỉ có 1 bản ghi settings
 	UserID string `bson:"user_id" json:"user_id"`
 
+	Name        string `bson:"name" json:"name"` // Tên người dùng (để hiển thị trong noti nếu cần)
+	Avatar      string `bson:"avatar" json:"avatar"`
+	DateOfBirth string `bson:"date_of_birth" json:"date_of_birth"`
+
 	// Cấu hình
 	Settings *GeneralSettings `bson:"settings" json:"settings"`
 
 	// Danh sách FCM Token (Array)
 	// Index: Multikey { "fcm_tokens.token": 1 } -> Để tìm và xóa token chết (invalid)da
 	FCMTokens []*FCMToken `bson:"fcm_tokens,omitempty" json:"fcm_tokens,omitempty"`
+	CreatedAt time.Time   `bson:"created_at" json:"created_at"`
+	UpdatedAt time.Time   `bson:"updated_at" json:"updated_at"`
+	DeletedAt *time.Time  `bson:"deleted_at,omitempty" json:"deleted_at,omitempty"`
 }
 
 // --- FCM TOKEN (Mobile Push) ---
@@ -32,6 +39,7 @@ type FCMToken struct {
 	DeviceID  string    `bson:"device_id" json:"device_id"` // UUID của thiết bị (để replace token cũ của máy đó)
 	UpdatedAt time.Time `bson:"updated_at" json:"updated_at"`
 }
+
 // --- GENERAL SETTINGS ---
 type GeneralSettings struct {
 	PushEnabled      bool                `bson:"push_enabled" json:"push_enabled"` // Master switch (Tắt tất cả push)

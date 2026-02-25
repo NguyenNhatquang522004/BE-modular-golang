@@ -73,7 +73,7 @@ func ToElasticProfile(m *entity.Profiles) *entityES.ProfileES {
 		LastName:       m.LastName,
 		Bio:            m.Bio,
 		Slug:           m.Slug,
-		DateOfBirth:    &m.DateOfBirth,
+		DateOfBirth:    m.DateOfBirth,
 		Gender:         genderStr,
 		AvatarURL:      avatarURL,
 		AddressCity:    city,

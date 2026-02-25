@@ -15,7 +15,7 @@ type ProfileES struct {
 	Slug      string `json:"slug"`       // Keyword
 
 	// Filters
-	DateOfBirth *time.Time `json:"date_of_birth,omitempty"`
+	DateOfBirth string `json:"date_of_birth,omitempty"`
 	Gender      string     `json:"gender"` // Lưu String ("Male", "Female") thay vì Int để dễ filter/aggs
 
 	// Media (Chỉ cần URL để hiển thị kết quả search, không cần nested object phức tạp)

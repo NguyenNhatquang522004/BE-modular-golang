@@ -97,3 +97,25 @@ func EntityToResNotificationTemplate(ent *entity.NotificationTemplate) *res.Noti
 		UpdatedAt:  ent.UpdatedAt,
 	}
 }
+
+// ToNotificationTemplateRes chuyển đổi 1 entity sang response DTO
+func ToNotificationTemplateRes(e entity.NotificationTemplate) res.NotificationTemplateRes {
+	return res.NotificationTemplateRes{
+		ID:         e.ID.Hex(), // Chuyển ObjectID sang string
+		Type:       e.Type,
+		Template:   e.Template,
+		IconURL:    e.IconURL,
+		ActionLink: e.ActionLink,
+		CreatedAt:  e.CreatedAt,
+		UpdatedAt:  e.UpdatedAt,
+	}
+}
+
+// ToNotificationTemplateResList chuyển đổi một danh sách entity sang danh sách response DTO (rất tiện khi viết hàm GET list)
+func ToNotificationTemplateResList(entities []entity.NotificationTemplate) []res.NotificationTemplateRes {
+	result := make([]res.NotificationTemplateRes, len(entities))
+	for i, e := range entities {
+		result[i] = ToNotificationTemplateRes(e)
+	}
+	return result
+}

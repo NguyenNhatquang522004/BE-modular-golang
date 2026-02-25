@@ -3,9 +3,11 @@ package mongodb
 import (
 	"context"
 	"errors"
+	"fmt"
 
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/errors/mongodbErrors"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/IRepositoryShare"
+	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/dto"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/utils"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/notification/domain/entity"
 	"go.mongodb.org/mongo-driver/bson"
@@ -160,4 +162,59 @@ func (r *UserNotificationSettingsRepository) DeleteBulkUserNotificationSettings(
 		}
 	}
 	return result.DeletedCount, faildocs, nil
+}
+func (r *UserNotificationSettingsRepository) GetUserNotificationSettingsByDateOfBirth(ctx context.Context, month int, day int, cursor string, limit int) (*dto.PaginationRes, error) {
+	collection := r.client.Collection(entity.UserNotificationSetting{}.CollectionName())
+	var settings []*entity.UserNotificationSetting
+	querylimit := int64(limit + 1)
+	// Check cache first
+	query := bson.M{"$expr": bson.M{
+		"$and": []bson.M{
+			{"$eq": []interface{}{bson.M{"$month": "$birthday"}, month}},
+			{"$eq": []interface{}{bson.M{"$dayOfMonth": "$birthday"}, day}},
+		},
+	}}
+
+	if cursor != "" {
+		decodedCursor, err := utils.DecodeCursorMongodb(cursor)
+		if err != nil {
+			return nil, fmt.Errorf("invalid cursor: %w", err)
+		}
+		query["$or"] = []bson.M{
+			{"created_at": bson.M{"$lt": decodedCursor.CreatedAt}},
+			{"created_at": decodedCursor.CreatedAt, "_id": bson.M{"$lt": decodedCursor.PostID}},
+		}
+	}
+
+	opts := options.Find().
+		SetSort(bson.D{
+			{Key: "created_at", Value: -1},
+			{Key: "_id", Value: -1}, // Tie-breaker
+		}).
+		SetLimit(int64(querylimit))
+	cursorDB, err := collection.Find(ctx, query, opts)
+	if err != nil {
+		return nil, fmt.Errorf("database error: %w", err)
+	}
+	defer cursorDB.Close(ctx)
+	if err = cursorDB.All(ctx, &settings); err != nil {
+		return nil, fmt.Errorf("error decoding results: %w", err)
+	}
+
+	var nextCursor string
+	hasNext := false
+	if len(settings) > limit {
+		hasNext = true
+		settings = settings[:limit] // Lấy đúng số lượng cần thiết
+		lastSetting := settings[len(settings)-1]
+		nextCursor = utils.EncodeCursorMongodb(lastSetting.CreatedAt, lastSetting.ID)
+	}
+	// Cache kết quả nếu là trang đầu tiên
+	return &dto.PaginationRes{
+		Data:       settings,
+		NextCursor: nextCursor,
+		HasNext:    hasNext,
+		Limit:      limit,
+	}, nil
+
 }

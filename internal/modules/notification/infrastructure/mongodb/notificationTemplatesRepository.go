@@ -317,3 +317,15 @@ func (r *NotificationTemplatesRepository) DeleteBulkTemplates(ctx context.Contex
 	}
 	return result.DeletedCount, nil, nil
 }
+func (r *NotificationTemplatesRepository) GetOneTemplateByType(ctx context.Context, notificationType sharedEnums.NotificationType) (*entity.NotificationTemplate, error) {
+	collection := r.client.Collection(entity.NotificationTemplate{}.CollectionName())
+	var template *entity.NotificationTemplate
+	err := collection.FindOne(ctx, bson.M{"type": notificationType.String()}).Decode(&template)
+	if err != nil {
+		if err == mongo.ErrNoDocuments {
+			return nil, nil // Không tìm thấy template
+		}
+		return nil, fmt.Errorf("database error: %w", err)
+	}
+	return template, nil
+}

@@ -21,7 +21,11 @@ type IUpdateNotificationTemplateUseCase interface {
 	Execute(ctx context.Context, req *req.UpdateNotificationTemplateRequest) (*response.Response, error)
 }
 type ISendNotificationTypeUseCase interface {
-	Execute(ctx context.Context) (*response.Response, error)
+	Execute(ctx context.Context) error
+}
+
+type IScheduleSendUseCase interface {
+	Execute(ctx context.Context) error
 }
 
 type UseCase struct {
@@ -29,8 +33,8 @@ type UseCase struct {
 	UpdateUserNotificationSettings IUpdateUserNotificationSettingsUseCase
 	CreateNotificationTemplate     ICreateDeleteNotificationTemplateUseCase
 	UpdateNotificationTemplate     IUpdateNotificationTemplateUseCase
-
 	SendNotificationType           ISendNotificationTypeUseCase
+	ScheduleSend                   IScheduleSendUseCase
 }
 
 func NewUseCase(CreateNotificationSettings ICreateDeleteUserNotificationSettingsUseCase,

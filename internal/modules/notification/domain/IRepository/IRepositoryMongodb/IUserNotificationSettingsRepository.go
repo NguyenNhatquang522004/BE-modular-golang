@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/errors/mongodbErrors"
+	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/dto"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/notification/domain/entity"
 )
 
@@ -16,4 +17,5 @@ type IUserNotificationSettingsRepository interface {
 	UpdateBulkUserNotificationSettings(ctx context.Context, settings []*entity.UserNotificationSetting) (int64, []*mongodbErrors.BulkError, error)
 	DeleteUserNotificationSettings(ctx context.Context, userID string) error
 	DeleteBulkUserNotificationSettings(ctx context.Context, userIDs []string) (int64, []*mongodbErrors.BulkError, error)
+	GetUserNotificationSettingsByDateOfBirth(ctx context.Context, month int, day int, cursor string, limit int) (*dto.PaginationRes, error)
 }

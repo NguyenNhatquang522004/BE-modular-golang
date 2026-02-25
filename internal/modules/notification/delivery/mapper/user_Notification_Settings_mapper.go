@@ -15,10 +15,13 @@ func ToEntityUserNotificationSetting(r *req.CreateUserNotificationSettingReq) *e
 	}
 
 	return &entity.UserNotificationSetting{
-		ID:        primitive.NewObjectID(), // Tự động generate ObjectID cho bản ghi mới
-		UserID:    r.UserID,
-		Settings:  mapGeneralSettingsReqToEntity(r.Settings),
-		FCMTokens: mapFCMTokensReqToEntity(r.FCMTokens),
+		ID:          primitive.NewObjectID(), // Tự động generate ObjectID cho bản ghi mới
+		Name:        r.Name,
+		UserID:      r.UserID,
+		Avatar:      r.Avatar,
+		DateOfBirth: r.DateOfBirth,
+		Settings:    mapGeneralSettingsReqToEntity(r.Settings),
+		FCMTokens:   mapFCMTokensReqToEntity(r.FCMTokens),
 	}
 }
 
@@ -35,6 +38,16 @@ func UpdateToEntityUserNotificationSetting(r *req.UpdateUserNotificationSettingR
 	if r.FCMTokens != nil {
 		ent.FCMTokens = mapFCMTokensReqToEntity(r.FCMTokens)
 	}
+
+	if r.DateOfBirth != "" {
+		ent.DateOfBirth = r.DateOfBirth
+	}
+	if r.Name != "" {
+		ent.Name = r.Name
+	}
+	if r.Avatar != "" {
+		ent.Avatar = r.Avatar
+	}
 }
 
 // EntityToResUserNotificationSetting: Ánh xạ từ Entity sang Response DTO
@@ -44,10 +57,13 @@ func EntityToResUserNotificationSetting(ent *entity.UserNotificationSetting) *re
 	}
 
 	return &res.UserNotificationSettingRes{
-		ID:        ent.ID.Hex(), // Convert ObjectID sang dạng chuỗi Hex
-		UserID:    ent.UserID,
-		Settings:  mapGeneralSettingsEntityToRes(ent.Settings),
-		FCMTokens: mapFCMTokensEntityToRes(ent.FCMTokens),
+		ID:          ent.ID.Hex(), // Convert ObjectID sang dạng chuỗi Hex
+		UserID:      ent.UserID,
+		Name:        ent.Name,
+		Avatar:      ent.Avatar,
+		DateOfBirth: ent.DateOfBirth,
+		Settings:    mapGeneralSettingsEntityToRes(ent.Settings),
+		FCMTokens:   mapFCMTokensEntityToRes(ent.FCMTokens),
 	}
 }
 

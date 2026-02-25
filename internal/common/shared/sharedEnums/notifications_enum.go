@@ -12,5 +12,6 @@ const (
 	NotifSystemAlert                           // 'system_alert'
 	NotifMention                               // 'mention' (Được tag)
 	NotifFollower                              // 'follow'
-	NotifFriend                          // 'friend_request_accept'
+	NotifFriend                                // 'friend_request_accept'
+	NotifBirthday                              // 'birthday'
 )

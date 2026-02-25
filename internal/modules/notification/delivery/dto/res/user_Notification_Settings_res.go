@@ -15,19 +15,22 @@ type FCMTokenRes struct {
 
 // --- GENERAL SETTINGS RES ---
 type GeneralSettingsRes struct {
-	PushEnabled      bool                `json:"push_enabled"`
+	PushEnabled      bool                 `json:"push_enabled"`
 	EmailFrequency   *enum.EmailFrequency `json:"email_frequency"`
-	PushInteractions bool                `json:"push_interactions"`
-	PushFriends      bool                `json:"push_friends"`
-	PushGroups       bool                `json:"push_groups"`
-	PushEvents       bool                `json:"push_events"`
-	PushBirthdays    bool                `json:"push_birthdays"`
+	PushInteractions bool                 `json:"push_interactions"`
+	PushFriends      bool                 `json:"push_friends"`
+	PushGroups       bool                 `json:"push_groups"`
+	PushEvents       bool                 `json:"push_events"`
+	PushBirthdays    bool                 `json:"push_birthdays"`
 }
 
 // --- MAIN RESPONSE ---
 type UserNotificationSettingRes struct {
-	ID        string             `json:"id"`
-	UserID    string             `json:"user_id"`
-	Settings  *GeneralSettingsRes `json:"settings"`
-	FCMTokens []*FCMTokenRes      `json:"fcm_tokens,omitempty"`
+	ID          string              `json:"id"`
+	UserID      string              `json:"user_id"`
+	Name        string              `json:"name"`
+	Avatar      string              `bson:"avatar" json:"avatar"`
+	DateOfBirth string              `json:"date_of_birth"`
+	Settings    *GeneralSettingsRes `json:"settings"`
+	FCMTokens   []*FCMTokenRes      `json:"fcm_tokens,omitempty"`
 }
