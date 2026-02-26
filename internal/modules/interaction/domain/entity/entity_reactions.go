@@ -3,7 +3,7 @@ package entity
 import (
 	"time"
 
-	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/interaction/enum"
+	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/sharedEnums"
 	"github.com/gocql/gocql"
 )
 
@@ -24,10 +24,10 @@ type EntityReaction struct {
 
 	// 3. DATA FIELDS
 	// Enum xác định loại target ('post' hay 'comment')
-	TargetType enum.ReactionTarget `cql:"target_type" json:"target_type"`
+	TargetType sharedEnums.ReactionTarget `cql:"target_type" json:"target_type"`
 
 	// Enum xác định loại cảm xúc ('like', 'love',...)
-	ReactionCode enum.ReactionCode `cql:"reaction_code" json:"reaction_code"`
+	ReactionCode sharedEnums.ReactionCode `cql:"reaction_code" json:"reaction_code"`
 
 	CreatedAt time.Time `cql:"created_at" json:"created_at"`
 }

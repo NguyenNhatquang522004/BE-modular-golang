@@ -13,14 +13,8 @@ import (
 // REQUEST MAPPER
 // =============================================================================
 
-type CommentEditLogReqMapper struct{}
-
-func NewCommentEditLogReqMapper() *CommentEditLogReqMapper {
-	return &CommentEditLogReqMapper{}
-}
-
 // ToEntity: Chuyển từ Request DTO sang Entity (Dùng cho Create)
-func (m *CommentEditLogReqMapper) ToEntity(req *req.CommentEditLogReq) (*entity.CommentEntityEditLog, error) {
+func ToEntityCommentEditLogs(req *req.CommentEditLogReq) (*entity.CommentEntityEditLog, error) {
 	if req == nil {
 		return nil, errors.New("request cannot be nil")
 	}
@@ -54,7 +48,7 @@ func (m *CommentEditLogReqMapper) ToEntity(req *req.CommentEditLogReq) (*entity.
 }
 
 // UpdateToEntity: Cập nhật các trường từ Request vào một Entity đang có sẵn (Dùng cho Update)
-func (m *CommentEditLogReqMapper) UpdateToEntity(req *req.CommentEditLogReq, ent *entity.CommentEntityEditLog) error {
+func UpdateToEntityCommentEditLogs(req *req.CommentEditLogReq, ent *entity.CommentEntityEditLog) error {
 	if req == nil || ent == nil {
 		return errors.New("request and entity cannot be nil")
 	}
@@ -107,14 +101,8 @@ func mapDiffReqToEntity(diffReq *req.LogDiffReq) entity.LogDiff {
 // RESPONSE MAPPER
 // =============================================================================
 
-type CommentEditLogResMapper struct{}
-
-func NewCommentEditLogResMapper() *CommentEditLogResMapper {
-	return &CommentEditLogResMapper{}
-}
-
 // ToRes: Chuyển từ Entity trả về Response DTO cho Client
-func (m *CommentEditLogResMapper) ToRes(ent *entity.CommentEntityEditLog) *res.CommentEditLogRes {
+func ToResCommentEditLogs(ent *entity.CommentEntityEditLog) *res.CommentEditLogRes {
 	if ent == nil {
 		return nil
 	}

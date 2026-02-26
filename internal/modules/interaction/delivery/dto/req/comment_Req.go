@@ -16,7 +16,7 @@ type CreateCommentReq struct {
 	ParentCommentID *string          `json:"parent_comment_id,omitempty"`
 	RootCommentID   *string          `json:"root_comment_id,omitempty"`
 
-	Status          *enum.CommentStatus   `json:"status,omitempty"`
+	Status          *enum.CommentStatus  `json:"status,omitempty"`
 	HiddenMetadata  *HiddenMetadataReq   `json:"hidden_metadata,omitempty"`
 	DeletedMetadata *DeletedMetadataReq  `json:"deleted_metadata,omitempty"`
 	ReportCount     int                  `json:"report_count,omitempty"`
@@ -27,7 +27,6 @@ type CreateCommentReq struct {
 	LastEditedAt    *time.Time           `json:"last_edited_at,omitempty"`
 	CreatedAt       *time.Time           `json:"created_at,omitempty"`
 	UpdatedAt       *time.Time           `json:"updated_at,omitempty"`
-	DeletedAt       *time.Time           `json:"deleted_at,omitempty"`
 }
 
 type UpdateCommentReq struct {
@@ -43,13 +42,12 @@ type UpdateCommentReq struct {
 	MentionCount    *int                 `json:"mention_count,omitempty"`
 	IsEdited        *bool                `json:"is_edited,omitempty"`
 	LastEditedAt    *time.Time           `json:"last_edited_at,omitempty"`
-	DeletedAt       *time.Time           `json:"deleted_at,omitempty"`
 }
 
 type CommentMediaReq struct {
 	Type        *enum.CommentMediaType `json:"type" binding:"required"`
-	URL         string                `json:"url" binding:"required,url"`
-	DisplayMeta DisplayMetaReq        `json:"display_meta"`
+	URL         string                 `json:"url" binding:"required,url"`
+	DisplayMeta DisplayMetaReq         `json:"display_meta"`
 }
 
 type DisplayMetaReq struct {
@@ -65,7 +63,7 @@ type HiddenMetadataReq struct {
 	IsGhostBanned  bool      `json:"is_ghost_banned"`
 }
 
-type DeletedMetadataReq struct {	
+type DeletedMetadataReq struct {
 	DeletedAt       time.Time `json:"deleted_at"`
 	DeletedByUserID string    `json:"deleted_by_user_id"`
 }

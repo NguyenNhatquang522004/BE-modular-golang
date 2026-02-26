@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"time"
 
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/errors/mongodbErrors"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/IRepositoryShare"
@@ -136,6 +137,20 @@ func (r *CommentEditLogsRepository) GetVersionBulkEditLogsByTargetIDs(ctx contex
 	collection := r.client.Collection(entity.CommentEntityEditLog{}.CollectionnamCommentEditLog())
 	var editLogs []*entity.CommentEntityEditLog
 	cursor, err := collection.Find(ctx, bson.M{"target_id": bson.M{"$in": targetIDs}})
+	if err != nil {
+		return nil, err
+	}
+	defer cursor.Close(ctx)
+
+	if err = cursor.All(ctx, &editLogs); err != nil {
+		return nil, err
+	}
+	return editLogs, nil
+}
+func (r *CommentEditLogsRepository) GetVersionBulkEditLogsByTargetID(ctx context.Context, targetID string) ([]*entity.CommentEntityEditLog, error) {
+	collection := r.client.Collection(entity.CommentEntityEditLog{}.CollectionnamCommentEditLog())
+	var editLogs []*entity.CommentEntityEditLog
+	cursor, err := collection.Find(ctx, bson.M{"target_id": targetID})
 	if err != nil {
 		return nil, err
 	}
@@ -334,4 +349,14 @@ func (r *CommentEditLogsRepository) PaginationEditLogs(ctx context.Context, targ
 		HasNext:    hasNext,
 		Limit:      limit,
 	}, nil
+}
+func (r *CommentEditLogsRepository) DeleteEditLogsByTargetID(ctx context.Context, targetID string) error {
+	collection := r.client.Collection(entity.CommentEntityEditLog{}.CollectionnamCommentEditLog())
+	filter := bson.M{"target_id": targetID}
+	update := bson.M{"$set": bson.M{"deleted_at": time.Now()}}
+	_, err := collection.UpdateMany(ctx, filter, update)
+	if err != nil {
+		return err
+	}
+	return nil
 }

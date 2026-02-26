@@ -120,6 +120,7 @@ func (uc *GetPostByUserIDUseCase) Execute(ctx context.Context, req *req.GetPostB
 			}
 		}
 	}
+	uc.pool.Wait() // Đợi tất cả goroutine hoàn thành
 	return response.NewResponse(response.WithData(reultResponse),
 		response.WithMessage(""),
 		response.WithStatus("")), nil

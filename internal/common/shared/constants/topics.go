@@ -26,6 +26,12 @@ const (
 	// notification
 	TopicCreateUserNotificationSettings TopicName = "notification.create_user_notification_settings.events"
 	TopicSendNotificationType           TopicName = "notification.send_notification.events"
+
+	//interaction
+	TopicReactComment TopicName = "interaction.react_comment.events"
+	TopicReactPost    TopicName = "interaction.react_post.events"
+	TopicCommentPost  TopicName = "interaction.comment_post.events"
+	TopicCounterPost  TopicName = "interaction.counter_post.events"
 )
 
 type TopicConfig struct {

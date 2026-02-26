@@ -3,7 +3,7 @@ package entity
 import (
 	"time"
 
-	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/interaction/enum"
+	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/sharedEnums"
 	"github.com/gocql/gocql"
 )
 
@@ -28,10 +28,10 @@ type UserReactionHistory struct {
 	TargetID string `cql:"target_id" json:"target_id"`
 
 	// Enum tái sử dụng từ package enum (Post/Comment)
-	TargetType enum.ReactionTarget `cql:"target_type" json:"target_type"`
+	TargetType sharedEnums.ReactionTarget `cql:"target_type" json:"target_type"`
 
 	// Enum tái sử dụng từ package enum (Like/Love/Haha...)
-	ReactionCode enum.ReactionCode `cql:"reaction_code" json:"reaction_code"`
+	ReactionCode sharedEnums.ReactionCode `cql:"reaction_code" json:"reaction_code"`
 }
 
 // TableName trả về tên bảng trong Cassandra

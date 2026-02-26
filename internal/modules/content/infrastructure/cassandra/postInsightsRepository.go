@@ -512,3 +512,20 @@ func (r *PostInsightsRepository) DeletePostInsightsByPostIDBulk(ctx context.Cont
 	}
 	return int64(len(PostIDs)), faildocs, nil
 }
+func (r *PostInsightsRepository) UpdateEntityPostInsight(ctx context.Context, postinsight *entity.PostInsight) error {
+	// Implement the logic to update the post insight entity in Cassandra
+	tableName := entity.PostInsight{}.Collectionnamepostinsight()
+	query := fmt.Sprintf(`
+		UPDATE %s SET 
+			reach = ?, impressions = ?, engagement_rate = ?, 
+			reactions_total = ?, comments_total = ?, shares_total = ?, 
+			clicks_total = ?, video_views_3s = ?, updated_at = ?
+		WHERE post_id = ?`, tableName)
+
+	return r.session.Query(query,
+		postinsight.Reach, postinsight.Impressions, postinsight.EngagementRate,
+		postinsight.ReactionsTotal, postinsight.CommentsTotal, postinsight.SharesTotal,
+		postinsight.ClicksTotal, postinsight.VideoViews3s, time.Now(),
+		postinsight.PostID,
+	).WithContext(ctx).Exec()
+}

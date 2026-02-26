@@ -19,10 +19,11 @@ import (
 type CommentRepository struct {
 	client    *mongo.Database
 	redisRepo IRepositoryShare.IRedis
+	seaweedfs IRepositoryShare.ISeaweedfs
 }
 
-func NewCommentRepository(client *mongo.Database, redisRepo IRepositoryShare.IRedis) *CommentRepository {
-	return &CommentRepository{client: client, redisRepo: redisRepo}
+func NewCommentRepository(client *mongo.Database, redisRepo IRepositoryShare.IRedis, seaweedfs IRepositoryShare.ISeaweedfs) *CommentRepository {
+	return &CommentRepository{client: client, redisRepo: redisRepo, seaweedfs: seaweedfs}
 }
 func (r *CommentRepository) CreateComment(ctx context.Context, comment *entity.Comment) error {
 	collection := r.client.Collection(entity.Comment{}.CollectionnamComment())
@@ -180,6 +181,7 @@ func (r *CommentRepository) UpdateBulkComments(ctx context.Context, comments []*
 	}
 	return result.ModifiedCount, nil, nil
 }
+
 func (r *CommentRepository) DeleteComment(ctx context.Context, commentID string) error {
 	collection := r.client.Collection(entity.Comment{}.CollectionnamComment())
 	finalid, _ := primitive.ObjectIDFromHex(commentID)

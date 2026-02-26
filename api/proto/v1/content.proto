@@ -1,0 +1,13 @@
+syntax = "proto3";
+package api.proto.v1;
+option go_package = "github.com/quang/social-network/pkg/pb/v1;pb";
+
+service ContentService {
+  rpc GetOwnerPost (GetOwnerPostRequest) returns (GetOwnerPostResponse);
+}
+message GetOwnerPostRequest {
+  string post_id = 1;
+}
+message GetOwnerPostResponse {
+  string owner_id = 1;
+}

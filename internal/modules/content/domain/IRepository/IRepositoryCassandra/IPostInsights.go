@@ -15,6 +15,7 @@ type IPostInsights interface {
 	UpdatePostInsightLifeTime(ctx context.Context, PostID string, metricType string, value float64) error
 	// UpdatePostInsightLifeTimeBulk(ctx context.Context, reqs []*req.UpdatePostInsightsLifeTimeReq) (int64, []*cassandraErrors.InsightBulkError, error)
 	GetPostInsightByPostID(ctx context.Context, PostID string) (*entity.PostInsight, error)
+	UpdateEntityPostInsight(ctx context.Context, postinsight *entity.PostInsight) error
 	GetPostInsightsByPostIDs(ctx context.Context, PostIDs []string) ([]*entity.PostInsight, error)
 	DeletePostInsightByPostID(ctx context.Context, PostID string) error
 	DeletePostInsightsByPostIDBulk(ctx context.Context, PostIDs []string) (int64, []*cassandraErrors.InsightBulkError, error)

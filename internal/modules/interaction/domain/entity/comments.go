@@ -6,9 +6,11 @@ import (
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/interaction/enum"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
+
 const (
 	collectionnamComment = "Comment"
 )
+
 type Comment struct {
 	ID primitive.ObjectID `bson:"_id,omitempty" json:"id"`
 
@@ -54,9 +56,8 @@ type Comment struct {
 	LastEditedAt *time.Time `bson:"last_edited_at,omitempty" json:"last_edited_at,omitempty"`
 
 	// 7. TIMESTAMPS
-	CreatedAt time.Time  `bson:"created_at" json:"created_at"`
-	UpdatedAt time.Time  `bson:"updated_at" json:"updated_at"`
-	DeletedAt *time.Time `bson:"deleted_at,omitempty" json:"deleted_at,omitempty"`
+	CreatedAt time.Time `bson:"created_at" json:"created_at"`
+	UpdatedAt time.Time `bson:"updated_at" json:"updated_at"`
 }
 
 // --- MEDIA ---

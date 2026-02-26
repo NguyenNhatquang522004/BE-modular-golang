@@ -8,6 +8,14 @@ type PublishPostRequest struct {
 	PostMedia     *PostMediaReq
 	PostExtension *PostExtensionReq
 }
+type SharePostRequest struct {
+	UserID string `json:"user_id" validate:"required"`
+	PostID string `json:"post_id" validate:"required"`
+}
+type SharePostToGroupRequest struct {
+	PostID  string `json:"post_id" validate:"required"`
+	GroupID string `json:"group_id" validate:"required"`
+}
 type PostIDRequest struct {
 	PostID string `json:"post_id"`
 }

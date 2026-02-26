@@ -10,7 +10,18 @@ import (
 type IPublishPostUseCase interface {
 	Execute(ctx context.Context, req *req.PublishPostRequest) (*response.Response, error)
 }
-
+type ISharePostUseCase interface {
+	Execute(ctx context.Context, req *req.SharePostRequest) (*response.Response, error)
+}
+type IDeleteSharePostUseCase interface {
+	Execute(ctx context.Context, req *req.SharePostRequest) (*response.Response, error)
+}
+type IDeleteSharePostToGroupUseCase interface { // IGNORE --- đợi làm tới community
+	Execute(ctx context.Context, req *req.SharePostToGroupRequest) (*response.Response, error)
+}
+type ISharePostToGroupUseCase interface { // IGNORE --- đợi làm tới community
+	Execute(ctx context.Context, req *req.SharePostToGroupRequest) (*response.Response, error)
+}
 type IEditPostUseCase interface {
 	Execute(ctx context.Context, req *req.EditPostRequest) (*response.Response, error)
 }

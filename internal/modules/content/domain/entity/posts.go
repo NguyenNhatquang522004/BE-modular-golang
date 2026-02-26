@@ -87,6 +87,13 @@ type PostStats struct {
 	Shares         int `bson:"shares" json:"shares"`
 	Views          int `bson:"views" json:"views"`
 
+	Like  int `bson:"like" json:"like"`
+	Love  int `bson:"love" json:"love"`
+	Haha  int `bson:"haha" json:"haha"`
+	Wow   int `bson:"wow" json:"wow"`
+	Sad   int `bson:"sad" json:"sad"`
+	Angry int `bson:"angry" json:"angry"`
+
 	// Cache top 2 reaction icon nhiều nhất để hiển thị (VD: ["👍", "❤️"])
 	TopReactionTypes []string `bson:"top_reaction_types" json:"top_reaction_types"`
 }

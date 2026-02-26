@@ -34,6 +34,12 @@ type PostStatsReq struct {
 	Shares           int      `json:"shares"`
 	Views            int      `json:"views"`
 	TopReactionTypes []string `json:"top_reaction_types"`
+	Like             int      `json:"like"`
+	Love             int      `json:"love"`
+	Haha             int      `json:"haha"`
+	Wow              int      `json:"wow"`
+	Sad              int      `json:"sad"`
+	Angry            int      `json:"angry"`
 }
 
 // --- MAIN DTO ---

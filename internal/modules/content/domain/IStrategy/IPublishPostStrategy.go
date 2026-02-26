@@ -16,3 +16,5 @@ type IPublishDeleteStrategy interface {
 	HandlePublishDelete(ctx context.Context, request *req.DeletePostRequest) error
 	GetDeleteType() reflect.Type
 }
+
+

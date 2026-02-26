@@ -38,7 +38,6 @@ func ToEntityComment(req *req.CreateCommentReq) (*entity.Comment, error) {
 		MentionCount: req.MentionCount,
 		IsEdited:     req.IsEdited,
 		LastEditedAt: req.LastEditedAt,
-		DeletedAt:    req.DeletedAt,
 		CreatedAt:    now,
 		UpdatedAt:    now,
 	}
@@ -168,10 +167,7 @@ func UpdateToEntityComment(req *req.UpdateCommentReq, comment *entity.Comment) {
 		isModified = true
 	}
 
-	if req.DeletedAt != nil {
-		comment.DeletedAt = req.DeletedAt
-		isModified = true
-	}
+	
 
 	// Cập nhật Reactions nếu có truyền lên
 	if req.Reactions != nil {
@@ -230,8 +226,10 @@ func UpdateToEntityComment(req *req.UpdateCommentReq, comment *entity.Comment) {
 // ==========================
 // RESPONSE MAPPERS
 // ==========================
+// RESPONSE MAPPERS
+// ==========================
 
-func ToResponse(ent *entity.Comment) *res.CommentRes {
+func ToResponseComment(ent *entity.Comment) *res.CommentRes {
 	if ent == nil {
 		return nil
 	}
@@ -250,7 +248,6 @@ func ToResponse(ent *entity.Comment) *res.CommentRes {
 		LastEditedAt: ent.LastEditedAt,
 		CreatedAt:    ent.CreatedAt,
 		UpdatedAt:    ent.UpdatedAt,
-		DeletedAt:    ent.DeletedAt,
 		// Map Entity -> CommentReactionsRes
 		Reactions: &res.CommentReactionsRes{
 			Total: ent.Reactions.Total,
@@ -326,7 +323,6 @@ func ReqToResponse(req *req.CreateCommentReq, genID string) *res.CommentRes {
 		LastEditedAt:    req.LastEditedAt,
 		CreatedAt:       now,
 		UpdatedAt:       now,
-		DeletedAt:       req.DeletedAt,
 	}
 
 	if req.CreatedAt != nil {

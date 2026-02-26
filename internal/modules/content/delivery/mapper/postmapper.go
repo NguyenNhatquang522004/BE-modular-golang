@@ -22,16 +22,34 @@ func ToEntityPost(r *req.PostReq) *entity.Post {
 	}
 
 	post := &entity.Post{
-		ID:          objectID,
-		UserID:      r.UserID,
-		Type:        r.Type,
-		Content:     r.Content,
-		Slug:        r.Slug,
-		Privacy:     entity.PostPrivacy(r.Privacy),
-		Status:      r.Status,
-		IsPinned:    r.IsPinned,
-		IsEdited:    r.IsEdited,
-		Stats:       entity.PostStats(r.Stats),
+		ID:      objectID,
+		UserID:  r.UserID,
+		Type:    r.Type,
+		Content: r.Content,
+		Slug:    r.Slug,
+		// Map explicitly to avoid conversion errors
+		Privacy: entity.PostPrivacy{
+			Scope:        r.Privacy.Scope,
+			AllowComment: r.Privacy.AllowComment,
+			AllowShare:   r.Privacy.AllowShare,
+		},
+		Status:   r.Status,
+		IsPinned: r.IsPinned,
+		IsEdited: r.IsEdited,
+		// Map explicitly to avoid conversion errors
+		Stats: entity.PostStats{
+			TotalReactions:   r.Stats.TotalReactions,
+			Comments:         r.Stats.Comments,
+			Shares:           r.Stats.Shares,
+			Views:            r.Stats.Views,
+			TopReactionTypes: r.Stats.TopReactionTypes,
+			Like:             r.Stats.Like,
+			Love:             r.Stats.Love,
+			Haha:             r.Stats.Haha,
+			Wow:              r.Stats.Wow,
+			Sad:              r.Stats.Sad,
+			Angry:            r.Stats.Angry,
+		},
 		Hashtags:    r.Hashtags,
 		Mentions:    r.Mentions,
 		PublishedAt: r.PublishedAt,
@@ -72,11 +90,29 @@ func UpdateToEntityPost(r *req.PostReq, post *entity.Post) {
 	post.Type = r.Type
 	post.Content = r.Content
 	post.Slug = r.Slug
-	post.Privacy = entity.PostPrivacy(r.Privacy)
+
+	// Map Privacy explicitly
+	post.Privacy.Scope = r.Privacy.Scope
+	post.Privacy.AllowComment = r.Privacy.AllowComment
+	post.Privacy.AllowShare = r.Privacy.AllowShare
+
 	post.Status = r.Status
 	post.IsPinned = r.IsPinned
 	post.IsEdited = true // Đã update thì thường cờ IsEdited sẽ là true
-	post.Stats = entity.PostStats(r.Stats)
+
+	// Map Stats explicitly
+	post.Stats.TotalReactions = r.Stats.TotalReactions
+	post.Stats.Comments = r.Stats.Comments
+	post.Stats.Shares = r.Stats.Shares
+	post.Stats.Views = r.Stats.Views
+	post.Stats.TopReactionTypes = r.Stats.TopReactionTypes
+	post.Stats.Like = r.Stats.Like
+	post.Stats.Love = r.Stats.Love
+	post.Stats.Haha = r.Stats.Haha
+	post.Stats.Wow = r.Stats.Wow
+	post.Stats.Sad = r.Stats.Sad
+	post.Stats.Angry = r.Stats.Angry
+
 	post.Hashtags = r.Hashtags
 	post.Mentions = r.Mentions
 	post.PublishedAt = r.PublishedAt
@@ -112,16 +148,34 @@ func ToResPost(post *entity.Post) *res.PostRes {
 	}
 
 	result := &res.PostRes{
-		ID:          post.ID.Hex(),
-		UserID:      post.UserID,
-		Type:        post.Type,
-		Content:     post.Content,
-		Slug:        post.Slug,
-		Privacy:     res.PostPrivacyRes(post.Privacy),
-		Status:      post.Status,
-		IsPinned:    post.IsPinned,
-		IsEdited:    post.IsEdited,
-		Stats:       res.PostStatsRes(post.Stats),
+		ID:      post.ID.Hex(),
+		UserID:  post.UserID,
+		Type:    post.Type,
+		Content: post.Content,
+		Slug:    post.Slug,
+		// Map explicitly
+		Privacy: res.PostPrivacyRes{
+			Scope:        post.Privacy.Scope,
+			AllowComment: post.Privacy.AllowComment,
+			AllowShare:   post.Privacy.AllowShare,
+		},
+		Status:   post.Status,
+		IsPinned: post.IsPinned,
+		IsEdited: post.IsEdited,
+		// Map explicitly
+		Stats: res.PostStatsRes{
+			TotalReactions:   post.Stats.TotalReactions,
+			Comments:         post.Stats.Comments,
+			Shares:           post.Stats.Shares,
+			Views:            post.Stats.Views,
+			TopReactionTypes: post.Stats.TopReactionTypes,
+			Like:             post.Stats.Like,
+			Love:             post.Stats.Love,
+			Haha:             post.Stats.Haha,
+			Wow:              post.Stats.Wow,
+			Sad:              post.Stats.Sad,
+			Angry:            post.Stats.Angry,
+		},
 		Hashtags:    post.Hashtags,
 		Mentions:    post.Mentions,
 		PublishedAt: post.PublishedAt,

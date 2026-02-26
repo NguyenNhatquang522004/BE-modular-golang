@@ -1,4 +1,4 @@
-package enum
+package sharedEnums
 
 // =============================================================================
 // 1. TARGET TYPE (Post / Comment)
