@@ -3,6 +3,7 @@ package req
 import (
 	"time"
 
+	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/sharedEnums"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/content/enum"
 )
 
@@ -23,9 +24,9 @@ type PostSummaryReq struct {
 }
 
 type PostPrivacyReq struct {
-	Scope        enum.PrivacyScope `json:"scope" validate:"required"`
-	AllowComment bool              `json:"allow_comment"`
-	AllowShare   bool              `json:"allow_share"`
+	Scope        sharedEnums.PrivacyScope `json:"scope" validate:"required"`
+	AllowComment bool                     `json:"allow_comment"`
+	AllowShare   bool                     `json:"allow_share"`
 }
 
 type PostStatsReq struct {

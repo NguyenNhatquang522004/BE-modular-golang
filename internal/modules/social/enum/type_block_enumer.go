@@ -9,11 +9,11 @@ import (
 	"strings"
 )
 
-const _Type_BlockName = "fullpartial"
+const _Type_BlockName = "fullpartialchatprofilenone"
 
-var _Type_BlockIndex = [...]uint8{0, 4, 11}
+var _Type_BlockIndex = [...]uint8{0, 4, 11, 15, 22, 26}
 
-const _Type_BlockLowerName = "fullpartial"
+const _Type_BlockLowerName = "fullpartialchatprofilenone"
 
 func (i Type_Block) String() string {
 	if i < 0 || i >= Type_Block(len(_Type_BlockIndex)-1) {
@@ -28,20 +28,32 @@ func _Type_BlockNoOp() {
 	var x [1]struct{}
 	_ = x[Type_Block_Full-(0)]
 	_ = x[Type_Block_Partial-(1)]
+	_ = x[Type_Block_Chat-(2)]
+	_ = x[Type_Block_Profile-(3)]
+	_ = x[Type_Block_None-(4)]
 }
 
-var _Type_BlockValues = []Type_Block{Type_Block_Full, Type_Block_Partial}
+var _Type_BlockValues = []Type_Block{Type_Block_Full, Type_Block_Partial, Type_Block_Chat, Type_Block_Profile, Type_Block_None}
 
 var _Type_BlockNameToValueMap = map[string]Type_Block{
-	_Type_BlockName[0:4]:       Type_Block_Full,
-	_Type_BlockLowerName[0:4]:  Type_Block_Full,
-	_Type_BlockName[4:11]:      Type_Block_Partial,
-	_Type_BlockLowerName[4:11]: Type_Block_Partial,
+	_Type_BlockName[0:4]:        Type_Block_Full,
+	_Type_BlockLowerName[0:4]:   Type_Block_Full,
+	_Type_BlockName[4:11]:       Type_Block_Partial,
+	_Type_BlockLowerName[4:11]:  Type_Block_Partial,
+	_Type_BlockName[11:15]:      Type_Block_Chat,
+	_Type_BlockLowerName[11:15]: Type_Block_Chat,
+	_Type_BlockName[15:22]:      Type_Block_Profile,
+	_Type_BlockLowerName[15:22]: Type_Block_Profile,
+	_Type_BlockName[22:26]:      Type_Block_None,
+	_Type_BlockLowerName[22:26]: Type_Block_None,
 }
 
 var _Type_BlockNames = []string{
 	_Type_BlockName[0:4],
 	_Type_BlockName[4:11],
+	_Type_BlockName[11:15],
+	_Type_BlockName[15:22],
+	_Type_BlockName[22:26],
 }
 
 // Type_BlockString retrieves an enum value from the enum constants string name.

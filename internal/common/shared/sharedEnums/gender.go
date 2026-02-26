@@ -1,4 +1,4 @@
-package enum
+package sharedEnums
 //go:generate enumer -type=Gender -json -transform=snake -trimprefix=Gender
 type Gender int
 

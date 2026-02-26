@@ -22,20 +22,6 @@ const (
 	FontLarge
 )
 
-// =============================================================================
-// 2. PRIVACY LEVELS
-// =============================================================================
-
-//go:generate enumer -type=PrivacyLevel -json -transform=snake -trimprefix=Privacy
-type PrivacyLevel int
-
-const (
-	PrivacyPublic PrivacyLevel = iota
-	PrivacyFriends
-	PrivacyCloseFriends
-	PrivacyOnlyMe
-	PrivacyFriendsOfFriends
-)
 
 // =============================================================================
 // 3. LANGUAGE & REGION

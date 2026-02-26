@@ -1,4 +1,4 @@
-package enum
+package sharedEnums
 
 import (
 	"fmt"

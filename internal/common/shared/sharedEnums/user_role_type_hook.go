@@ -1,4 +1,4 @@
-package enum
+package sharedEnums
 
 import (
 	"database/sql/driver"

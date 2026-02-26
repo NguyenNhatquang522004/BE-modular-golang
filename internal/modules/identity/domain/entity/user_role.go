@@ -3,7 +3,7 @@ package entity
 import (
 	"time"
 
-	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/identity/enum"
+	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/sharedEnums"
 	"github.com/google/uuid"
 )
 
@@ -12,8 +12,8 @@ type UserRole struct {
 	ID uuid.UUID `gorm:"type:uuid;primaryKey;default:gen_random_uuid()"`
 	// 2. UserID và Role tạo thành cặp Unique để tránh trùng lặp
 	// index:idx_user_role_unique,unique -> Đảm bảo 1 user chỉ có 1 role "admin" duy nhất
-	Role        enum.RoleType `gorm:"type:varchar(20);not null;index:idx_user_role_unique,unique"`
-	Description string        `gorm:"type:varchar(255);"`
+	Role        sharedEnums.RoleType `gorm:"type:varchar(20);not null;index:idx_user_role_unique,unique"`
+	Description string               `gorm:"type:varchar(255);"`
 
 	CreatedAt time.Time
 	UpdatedAt time.Time

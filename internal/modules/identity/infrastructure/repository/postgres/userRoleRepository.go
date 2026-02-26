@@ -2,9 +2,9 @@ package postgres
 
 import (
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/server/http/response"
+	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/sharedEnums"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/identity/delivery/dto/res"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/identity/domain/entity"
-	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/identity/enum"
 	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
@@ -19,7 +19,7 @@ func NewUserRoleRepository(db *gorm.DB) *UserRoleRepository {
 	}
 }
 
-func (u *UserRoleRepository) CreateRole(role enum.RoleType, description string) (*response.Response, error) {
+func (u *UserRoleRepository) CreateRole(role sharedEnums.RoleType, description string) (*response.Response, error) {
 	err := u.db.Create(&entity.UserRole{
 		Role:        role,
 		Description: description,
@@ -56,7 +56,7 @@ func (u *UserRoleRepository) GetAllUserRoles(RoleID string) (*response.Response,
 
 }
 
-func (u *UserRoleRepository) FindUserwithRole(userID string, role enum.RoleType) (*response.Response, error) {
+func (u *UserRoleRepository) FindUserwithRole(userID string, role sharedEnums.RoleType) (*response.Response, error) {
 	var user = &entity.User{}
 	err := u.db.Joins("JOIN user_roles on user_roles.user_id = users.id").
 		Joins("JOIN roles on roles.id = user_roles.role_id").
@@ -76,7 +76,7 @@ func (u *UserRoleRepository) FindRoleWithID(roleID string) (*response.Response, 
 	}
 	return response.NewResponse(response.WithData(role), response.WithMessage(""), response.WithStatus("200")), nil
 }
-func (u *UserRoleRepository) FindRoleWithName(role enum.RoleType) (*response.Response, error) {
+func (u *UserRoleRepository) FindRoleWithName(role sharedEnums.RoleType) (*response.Response, error) {
 	var userRole = &entity.UserRole{}
 	err := u.db.Where("role = ?", role).First(userRole).Error
 	if err != nil {

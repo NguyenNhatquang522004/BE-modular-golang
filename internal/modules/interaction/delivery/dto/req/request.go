@@ -33,3 +33,8 @@ type GetCommentPostRequest struct {
 type GetCommentDetailRequest struct {
 	CommentID string `json:"comment_id" validate:"required"`
 }
+
+type GetBookMarkPostRequest struct {
+	UserID string `json:"user_id" validate:"required"`
+	*dto.PaginationReq
+}

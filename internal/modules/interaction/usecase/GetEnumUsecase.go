@@ -5,31 +5,35 @@ import (
 
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/server/http/response"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/sharedEnums"
-	res "github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/content/delivery/dto/res"
-	enumcontent "github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/content/enum"
+	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/interaction/delivery/dto/res"
+	interactionEnum "github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/interaction/enum"
 )
 
-type GetEnumUseCase struct{}
-
-func NewGetEnumUseCase() *GetEnumUseCase {
-	return &GetEnumUseCase{}
+type GetEnumUsecase struct {
 }
 
-func (uc *GetEnumUseCase) Execute(ctx context.Context) (*response.Response, error) {
+func NewGetEnumUsecase() *GetEnumUsecase {
+	return &GetEnumUsecase{}
+}
+
+func (u *GetEnumUsecase) Execute(ctx context.Context) (*response.Response, error) {
 	data := map[string][]*res.EnumReponse{
-		"MediaType":        toEnumReponse(toAny(sharedEnums.MediaTypeValues())),
-		"PostType":         toEnumReponse(toAny(enumcontent.PostTypeValues())),
-		"ContextType":      toEnumReponse(toAny(enumcontent.ContextTypeValues())),
-		"PrivacyScope":     toEnumReponse(toAny(sharedEnums.PrivacyScopeValues())),
-		"PostStatus":       toEnumReponse(toAny(enumcontent.PostStatusValues())),
-		"ActivityType":     toEnumReponse(toAny(enumcontent.ActivityTypeValues())),
-		"PublisherRole":    toEnumReponse(toAny(sharedEnums.PublisherRoleValues())),
+		// interaction/enum - Comment
+		"CommentStatus": toEnumReponse(toAny(interactionEnum.CommentStatusValues())),
+
+		// sharedEnums - dùng trong entity_reactions, reaction_history
+		"ReactionTarget": toEnumReponse(toAny(sharedEnums.ReactionTargetValues())),
+		"ReactionCode":   toEnumReponse(toAny(sharedEnums.ReactionCodeValues())),
+
+		// sharedEnums - dùng trong comment_Edit_Logs
 		"TargetCollection": toEnumReponse(toAny(sharedEnums.TargetCollectionValues())),
+
+		// sharedEnums - dùng trong user_Saved_Items
+		"SavedTargetType": toEnumReponse(toAny(sharedEnums.SavedTargetTypeValues())),
 	}
 	return response.NewResponse(response.WithData(data)), nil
 }
 
-// enumValuer is satisfied by all enumer-generated types (they all have String() and an int underlying type)
 type enumValuer interface {
 	String() string
 	int() int

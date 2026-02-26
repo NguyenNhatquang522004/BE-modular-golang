@@ -19,11 +19,3 @@ const (
 // =============================================================================
 
 //go:generate enumer -type=CommentMediaType -json -transform=snake -trimprefix=CommentMedia
-type CommentMediaType int
-
-const (
-	CommentMediaImage   CommentMediaType = iota // 'image'
-	CommentMediaGif                             // 'gif'
-	CommentMediaSticker                         // 'sticker'
-	CommentMediaVideo                           // 'video'
-)

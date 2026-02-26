@@ -3,7 +3,7 @@ package entity
 import (
 	"time"
 
-	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/content/enum"
+	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/sharedEnums"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -37,7 +37,7 @@ type PostSchedule struct {
 	PublisherUserID string `bson:"publisher_user_id" json:"publisher_user_id"`
 
 	// Vai trò của người đó tại thời điểm đăng (Snapshot lại để audit log)
-	AuthorRoleSnapshot enum.PublisherRole `bson:"author_role_snapshot" json:"author_role_snapshot"`
+	AuthorRoleSnapshot sharedEnums.PublisherRole `bson:"author_role_snapshot" json:"author_role_snapshot"`
 }
 
 // --- 2. ADS INFO (Quản lý quảng cáo) ---

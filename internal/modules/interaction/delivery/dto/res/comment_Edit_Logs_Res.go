@@ -3,19 +3,19 @@ package res
 import (
 	"time"
 
-	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/interaction/enum"
+	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/sharedEnums"
 )
 
 type CommentEditLogRes struct {
-	ID               string                 `json:"id"`
-	TargetCollection *enum.TargetCollection `json:"target_collection"`
-	TargetID         string                 `json:"target_id"`
-	Version          int                    `json:"version"`
-	EditedAt         time.Time              `json:"edited_at"`
-	EditorID         string                 `json:"editor_id"`
-	Diff             LogDiffRes             `json:"diff"`
-	IPAddress        string                 `json:"ip_address"`
-	UserAgent        string                 `json:"user_agent"`
+	ID               string                        `json:"id"`
+	TargetCollection *sharedEnums.TargetCollection `json:"target_collection"`
+	TargetID         string                        `json:"target_id"`
+	Version          int                           `json:"version"`
+	EditedAt         time.Time                     `json:"edited_at"`
+	EditorID         string                        `json:"editor_id"`
+	Diff             LogDiffRes                    `json:"diff"`
+	IPAddress        string                        `json:"ip_address"`
+	UserAgent        string                        `json:"user_agent"`
 }
 
 type LogDiffRes struct {

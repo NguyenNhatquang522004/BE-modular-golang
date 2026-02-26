@@ -1,4 +1,4 @@
-package enum
+package sharedEnums
 
 //go:generate enumer -type=PublisherRole -json -transform=snake -trimprefix=Role
 type PublisherRole int

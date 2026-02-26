@@ -3,7 +3,7 @@ package entity
 import (
 	"time"
 
-	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/social/enum"
+	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/sharedEnums"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -26,11 +26,11 @@ type Profiles struct {
 	FullName string `bson:"full_name" json:"full_name"`
 
 	// Index: Unique. Dùng để tạo URL đẹp: facebook.com/nguyen-van-a
-	Slug string `bson:"slug" json:"slug"`		
+	Slug string `bson:"slug" json:"slug"`
 
-	Bio         string      `bson:"bio" json:"bio"`
-	DateOfBirth string      `bson:"date_of_birth" json:"date_of_birth"`
-	Gender      enum.Gender `bson:"gender" json:"gender"` // Enum Int -> Lưu String trong DB
+	Bio         string             `bson:"bio" json:"bio"`
+	DateOfBirth string             `bson:"date_of_birth" json:"date_of_birth"`
+	Gender      sharedEnums.Gender `bson:"gender" json:"gender"` // Enum Int -> Lưu String trong DB
 
 	// 2. MEDIA & LIÊN HỆ
 	// Dùng pointer (*) cho các object con.

@@ -4,7 +4,7 @@ import (
 	"context"
 
 	"github.com/Nerzal/gocloak/v13"
-	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/identity/enum"
+	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/sharedEnums"
 	"github.com/golang-jwt/jwt/v5"
 )
 
@@ -65,15 +65,15 @@ type IKeycloakRepository interface {
 	// ==========================================
 	// 4. NHÓM ROLE MANAGEMENT (Phân quyền RBAC)
 	// ==========================================
-	UpdateRealmRole(ctx context.Context, rolename enum.RoleType, updatedRole gocloak.Role) error
+	UpdateRealmRole(ctx context.Context, rolename sharedEnums.RoleType, updatedRole gocloak.Role) error
 	// Lấy danh sách tất cả Role có trong Realm
 	GetRealmRoles(ctx context.Context) ([]*gocloak.Role, error)
 
 	// Gán quyền (Role) cho User (Ví dụ: gán làm Admin)
-	AddRealmRoleToUser(ctx context.Context, userID string, roleName enum.RoleType) error
-	UpdateListRealmRole(ctx context.Context, userID string, roleName []enum.RoleType) error
+	AddRealmRoleToUser(ctx context.Context, userID string, roleName sharedEnums.RoleType) error
+	UpdateListRealmRole(ctx context.Context, userID string, roleName []sharedEnums.RoleType) error
 	// Gỡ quyền (Role) khỏi User
-	DeleteRealmRoleFromUser(ctx context.Context, userID string, roleName enum.RoleType) error
+	DeleteRealmRoleFromUser(ctx context.Context, userID string, roleName sharedEnums.RoleType) error
 
 	// Kiểm tra xem User đang có những quyền gì
 	GetRealmRolesByUserID(ctx context.Context, userID string) ([]*gocloak.Role, error)

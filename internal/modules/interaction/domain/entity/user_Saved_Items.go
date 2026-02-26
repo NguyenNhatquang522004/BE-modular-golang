@@ -3,7 +3,7 @@ package entity
 import (
 	"time"
 
-	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/interaction/enum"
+	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/sharedEnums"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -26,8 +26,8 @@ type UserSavedItem struct {
 	// ID của Post/Reel/Video (ObjectId vì nằm trong Mongo)
 	// Index: Compound Unique { user_id: 1, target_id: 1, target_type: 1 }
 	// -> Mục đích: Ngăn chặn user lưu trùng 1 bài 2 lần.
-	TargetID   primitive.ObjectID   `bson:"target_id" json:"target_id"`
-	TargetType enum.SavedTargetType `bson:"target_type" json:"target_type"`
+	TargetID   primitive.ObjectID          `bson:"target_id" json:"target_id"`
+	TargetType sharedEnums.SavedTargetType `bson:"target_type" json:"target_type"`
 
 	// 3. HIỂN THỊ NHANH (Denormalization)
 	// Lưu snapshot để khi list ra không cần query ngược lại bảng Post
@@ -39,9 +39,9 @@ type UserSavedItem struct {
 	CollectionName string `bson:"collection_name" json:"collection_name"`
 
 	// 5. META
-	CreatedAt   time.Time  `bson:"created_at" json:"created_at"`
-	UpdatedAt   time.Time  `bson:"updated_at" json:"updated_at"`
-	DeletedAt   *time.Time `bson:"deleted_at,omitempty" json:"deleted_at,omitempty"`
+	CreatedAt time.Time  `bson:"created_at" json:"created_at"`
+	UpdatedAt time.Time  `bson:"updated_at" json:"updated_at"`
+	DeletedAt *time.Time `bson:"deleted_at,omitempty" json:"deleted_at,omitempty"`
 }
 
 // =============================================================================

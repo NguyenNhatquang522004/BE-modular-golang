@@ -39,6 +39,9 @@ type IGetCommentDetailUsecase interface {
 	Execute(ctx context.Context, req *req.GetCommentDetailRequest) (*response.Response, error)
 }
 type IGetBookMarkPostUsecase interface {
+	Execute(ctx context.Context, req *req.GetBookMarkPostRequest) (*response.Response, error)
+}
+type IGetEnumUsecase interface {
 	Execute(ctx context.Context) (*response.Response, error)
 }
 type Usecase struct {

@@ -4,7 +4,7 @@ import (
 	"time"
 
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/dto"
-	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/social/enum"
+	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/sharedEnums"
 )
 
 type ProfileIDRequest struct {
@@ -18,12 +18,12 @@ type CreateAndUpdateProfileRequest struct {
 
 // CreateProfileReq dùng cho việc tạo mới Profile
 type ProfileReq struct {
-	UserID      string      `json:"user_id" binding:"required"`
-	FirstName   string      `json:"first_name" binding:"required"`
-	LastName    string      `json:"last_name" binding:"required"`
-	Bio         string      `json:"bio"`
-	DateOfBirth string      `json:"date_of_birth"`
-	Gender      enum.Gender `json:"gender"` // Sử dụng Enum như yêu cầu
+	UserID      string             `json:"user_id" binding:"required"`
+	FirstName   string             `json:"first_name" binding:"required"`
+	LastName    string             `json:"last_name" binding:"required"`
+	Bio         string             `json:"bio"`
+	DateOfBirth string             `json:"date_of_birth"`
+	Gender      sharedEnums.Gender `json:"gender"` // Sử dụng Enum như yêu cầu
 
 	// Các thông tin bổ sung (Optional)
 	Avatar      *AvatarReq      `json:"avatar"`
@@ -38,7 +38,7 @@ type ProfileReq struct {
 	Education      []*EducationReq      `json:"education"`
 
 	// Settings
-	Settings      *ProfileSettingsReq      `json:"settings"`
+	Settings *ProfileSettingsReq `json:"settings"`
 }
 
 // --- SUB-DTOs ---
@@ -96,4 +96,3 @@ type ProfileSettingsReq struct {
 	IsPrivate         bool `json:"is_private"`
 	AllowSearchEngine bool `json:"allow_search_engine"`
 }
-

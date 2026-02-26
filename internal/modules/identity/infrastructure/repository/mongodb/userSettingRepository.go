@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/server/http/response"
+	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/sharedEnums"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/identity/domain/entity"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/identity/enum"
 	"go.mongodb.org/mongo-driver/bson"
@@ -97,14 +98,14 @@ func (r *UserSettingRepository) CreateUserSettingDefault(userID string) (*respon
 		Lang_Code:                     enum.LangCode(0),
 		Timezone:                      enum.Timezone(0),
 		Auto_Translate:                false,
-		Default_Post_Audience:         enum.PrivacyLevel(0),
-		Default_Story_Audience:        enum.PrivacyLevel(0),
-		Allow_Friend_Request_From:     enum.PrivacyLevel(0),
-		Allow_Friend_List_View_From:   enum.PrivacyLevel(0),
-		Allow_Email_Lookup_From:       enum.PrivacyLevel(0),
-		Allow_Phone_Lookup_From:       enum.PrivacyLevel(0),
+		Default_Post_Audience:         sharedEnums.ScopePublic,
+		Default_Story_Audience:        sharedEnums.ScopePublic,
+		Allow_Friend_Request_From:     sharedEnums.ScopePublic,
+		Allow_Friend_List_View_From:   sharedEnums.ScopePublic,
+		Allow_Email_Lookup_From:       sharedEnums.ScopePublic,
+		Allow_Phone_Lookup_From:       sharedEnums.ScopePublic,
 		Allow_Search_Engine_Indexing:  false,
-		Allow_Timeline_Posting_From:   enum.PrivacyLevel(0),
+		Allow_Timeline_Posting_From:   sharedEnums.ScopePublic,
 		Review_Tags_Enabled:           false,
 		Review_Timeline_Posts_Enabled: false,
 		Notifications: &entity.NotificationSettings{

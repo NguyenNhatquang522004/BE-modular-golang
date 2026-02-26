@@ -5,11 +5,11 @@ import (
 
 	"github.com/Nerzal/gocloak/v13"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/server/http/response"
+	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/sharedEnums"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/identity/delivery/dto/req"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/identity/domain/IRepository/IRepositoryKeyCloak"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/identity/domain/IRepository/IRepositoryPostgres"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/identity/domain/entity"
-	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/identity/enum"
 )
 
 type AdminUseCase struct {
@@ -68,7 +68,7 @@ func (a *AdminUseCase) DeleteUser(userID string) (*response.Response, error) {
 	return response.NewResponse(response.WithData(data),
 		response.WithMessage("delete user successful"), response.WithStatus("200")), nil
 }
-func (a *AdminUseCase) CreateUser(rolename []enum.RoleType, roleID []string, req *req.CreateUserReq) (*response.Response, error) {
+func (a *AdminUseCase) CreateUser(rolename []sharedEnums.RoleType, roleID []string, req *req.CreateUserReq) (*response.Response, error) {
 	data, err := a.userUseCase.CreateUser(req)
 
 	if err != nil {
@@ -103,7 +103,7 @@ func (a *AdminUseCase) CreateUser(rolename []enum.RoleType, roleID []string, req
 	}
 	return data, nil
 }
-func (a *AdminUseCase) AssignRoleToUser(userID string, rolename []enum.RoleType, roleID []string) (*response.Response, error) {
+func (a *AdminUseCase) AssignRoleToUser(userID string, rolename []sharedEnums.RoleType, roleID []string) (*response.Response, error) {
 	ctx := context.Background()
 	err := a.keycloakClient.UpdateListRealmRole(ctx, userID, rolename)
 	if err != nil {

@@ -3,7 +3,7 @@ package entity
 import (
 	"time"
 
-	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/content/enum"
+	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/sharedEnums"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -19,7 +19,7 @@ type PostEntityEditLog struct {
 
 	// 1. Target (Mục tiêu chỉnh sửa)
 	// Enum xác định sửa cái gì: 'posts' hay 'comments'
-	TargetCollection enum.TargetCollection `bson:"target_collection" json:"target_collection"`
+	TargetCollection sharedEnums.TargetCollection `bson:"target_collection" json:"target_collection"`
 
 	// ID của bài viết hoặc comment bị sửa (ObjectId vì nằm trong Mongo)
 	// Index: Compound { target_id: 1, target_collection: 1, version: -1 }

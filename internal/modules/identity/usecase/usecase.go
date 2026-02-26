@@ -2,8 +2,8 @@ package usecase
 
 import (
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/server/http/response"
+	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/sharedEnums"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/identity/delivery/dto/req"
-	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/identity/enum"
 	"github.com/golang-jwt/jwt/v5"
 )
 
@@ -13,7 +13,7 @@ type IUserRoleUseCase interface {
 	UpdateRoleOfUser(userID string, roleIDs []string) (*response.Response, error)
 	GetUserRoles(userID string, roleName string) (*response.Response, error)
 	UpdateRoleDescription(roleID string, description string) (*response.Response, error)
-	CreateRole(role enum.RoleType, description string) (*response.Response, error)
+	CreateRole(role sharedEnums.RoleType, description string) (*response.Response, error)
 	DeleteRole(roleID string) (*response.Response, error)
 	GetAllUserRoles(RoleID string) (*response.Response, error)
 	GetAllRoles() (*response.Response, error)
@@ -23,8 +23,8 @@ type IAdminUseCase interface {
 	GetUserByID(userID string) (*response.Response, error)
 	UpdateUser(req *req.UpdateUserReq) (*response.Response, error)
 	DeleteUser(userID string) (*response.Response, error)
-	CreateUser(rolename []enum.RoleType, roleID []string, req *req.CreateUserReq) (*response.Response, error)
-	AssignRoleToUser(userID string, rolename []enum.RoleType, roleID []string) (*response.Response, error)
+	CreateUser(rolename []sharedEnums.RoleType, roleID []string, req *req.CreateUserReq) (*response.Response, error)
+	AssignRoleToUser(userID string, rolename []sharedEnums.RoleType, roleID []string) (*response.Response, error)
 }
 type IGoogleAuthUseCase interface {
 	//Token Exchange

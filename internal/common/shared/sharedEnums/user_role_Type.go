@@ -1,4 +1,4 @@
-package enum
+package sharedEnums
 
 //go:generate enumer -type=RoleType -json -transform=snake -trimprefix=RoleType
 type RoleType int

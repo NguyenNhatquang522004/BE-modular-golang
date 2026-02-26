@@ -28,18 +28,3 @@ func (e *CommentStatus) UnmarshalBSONValue(t bsontype.Type, data []byte) error {
 // -----------------------------------------------------------------------------
 // CommentMediaType
 // -----------------------------------------------------------------------------
-func (e CommentMediaType) MarshalBSONValue() (bsontype.Type, []byte, error) {
-	return bsontype.String, []byte(e.String()), nil
-}
-
-func (e *CommentMediaType) UnmarshalBSONValue(t bsontype.Type, data []byte) error {
-	if t != bsontype.String {
-		return fmt.Errorf("expected string for CommentMediaType, got %v", t)
-	}
-	val, err := CommentMediaTypeString(string(data))
-	if err != nil {
-		return err
-	}
-	*e = val
-	return nil
-}

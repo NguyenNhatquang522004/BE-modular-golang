@@ -3,10 +3,10 @@ package mapper
 import (
 	"errors"
 
+	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/sharedEnums"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/interaction/delivery/dto/req"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/interaction/delivery/dto/res"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/interaction/domain/entity"
-	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/interaction/enum"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -21,7 +21,7 @@ func ToEntityUserSavedItem(reqPayload *req.UserSavedItemReq) (*entity.UserSavedI
 	}
 
 	// Xử lý an toàn Enum con trỏ
-	var targetType enum.SavedTargetType
+	var targetType sharedEnums.SavedTargetType
 	if reqPayload.TargetType != nil {
 		targetType = *reqPayload.TargetType
 	}

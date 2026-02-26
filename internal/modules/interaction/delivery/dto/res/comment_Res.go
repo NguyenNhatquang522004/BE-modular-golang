@@ -3,6 +3,7 @@ package res
 import (
 	"time"
 
+	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/sharedEnums"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/interaction/enum"
 )
 
@@ -32,7 +33,7 @@ type CommentRes struct {
 }
 
 type CommentMediaRes struct {
-	Type        enum.CommentMediaType `json:"type"`
+	Type        sharedEnums.MediaType `json:"type"`
 	URL         string                `json:"url"`
 	DisplayMeta DisplayMetaRes        `json:"display_meta"`
 }

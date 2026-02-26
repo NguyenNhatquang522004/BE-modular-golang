@@ -3,6 +3,7 @@ package entity
 import (
 	"time"
 
+	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/sharedEnums"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/content/enum"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -75,9 +76,9 @@ type PostSummary struct {
 
 // --- 3. PRIVACY (Quyền riêng tư) ---
 type PostPrivacy struct {
-	Scope        enum.PrivacyScope `bson:"scope" json:"scope"`
-	AllowComment bool              `bson:"allow_comment" json:"allow_comment"`
-	AllowShare   bool              `bson:"allow_share" json:"allow_share"`
+	Scope        sharedEnums.PrivacyScope `bson:"scope" json:"scope"`
+	AllowComment bool                     `bson:"allow_comment" json:"allow_comment"`
+	AllowShare   bool                     `bson:"allow_share" json:"allow_share"`
 }
 
 // --- 4. STATS (Counters - Cache) ---

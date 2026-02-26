@@ -1,4 +1,4 @@
-package enum
+package sharedEnums
 
 //go:generate enumer -type=SavedTargetType -json -transform=snake -trimprefix=SavedTarget
 type SavedTargetType int

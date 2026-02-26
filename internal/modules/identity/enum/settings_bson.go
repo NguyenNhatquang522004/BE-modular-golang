@@ -46,21 +46,6 @@ func (e *FontSize) UnmarshalBSONValue(t bsontype.Type, data []byte) error {
 // -----------------------------------------------------------------------------
 // PrivacyLevel
 // -----------------------------------------------------------------------------
-func (e PrivacyLevel) MarshalBSONValue() (bsontype.Type, []byte, error) {
-	return bsontype.String, []byte(e.String()), nil
-}
-
-func (e *PrivacyLevel) UnmarshalBSONValue(t bsontype.Type, data []byte) error {
-	if t != bsontype.String {
-		return fmt.Errorf("expected string for PrivacyLevel, got %v", t)
-	}
-	val, err := PrivacyLevelString(string(data))
-	if err != nil {
-		return err
-	}
-	*e = val
-	return nil
-}
 
 // -----------------------------------------------------------------------------
 // LangCode

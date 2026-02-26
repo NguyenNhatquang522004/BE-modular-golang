@@ -3,6 +3,7 @@ package entity
 import (
 	"time"
 
+	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/sharedEnums"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/interaction/enum"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -62,7 +63,7 @@ type Comment struct {
 
 // --- MEDIA ---
 type CommentMedia struct {
-	Type        enum.CommentMediaType `bson:"type" json:"type"`
+	Type        sharedEnums.MediaType `bson:"type" json:"type"`
 	URL         string                `bson:"url" json:"url"`
 	DisplayMeta DisplayMeta           `bson:"display_meta" json:"display_meta"`
 }

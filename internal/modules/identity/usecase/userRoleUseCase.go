@@ -4,9 +4,9 @@ import (
 	"strings"
 
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/server/http/response"
+	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/sharedEnums"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/identity/domain/IRepository/IRepositoryPostgres"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/identity/domain/entity"
-	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/identity/enum"
 )
 
 type UserRoleUseCase struct {
@@ -22,7 +22,7 @@ func NewUserRoleUseCase(userRoleRepo IRepositoryPostgres.IUserRoleRepository, us
 }
 func (u *UserRoleUseCase) convertEnum(roleName string) (*response.Response, error) {
 	normalizedRole := strings.ToLower(strings.TrimSpace(roleName))
-	convert, err := enum.RoleTypeString(normalizedRole)
+	convert, err := sharedEnums.RoleTypeString(normalizedRole)
 	if err != nil {
 		return response.NewResponse(response.WithData(""),
 			response.WithMessage("invalid role name"), response.WithStatus("400")), err
@@ -36,7 +36,7 @@ func (u *UserRoleUseCase) AssignRoleToUserWithName(userID string, roleName strin
 		return response.NewResponse(response.WithData(""),
 			response.WithMessage("invalid role name"), response.WithStatus("400")), err
 	}
-	Role, err := u.userRoleRepo.FindRoleWithName(convertResp.Data.(enum.RoleType))
+	Role, err := u.userRoleRepo.FindRoleWithName(convertResp.Data.(sharedEnums.RoleType))
 	if err != nil {
 		return response.NewResponse(response.WithData(""),
 			response.WithMessage("role not found"), response.WithStatus("404")), err
@@ -68,14 +68,14 @@ func (u *UserRoleUseCase) GetUserRoles(userID string, roleName string) (*respons
 	if err != nil {
 		return convertResp, err
 	}
-	return u.userRoleRepo.FindUserwithRole(userID, convertResp.Data.(enum.RoleType))
+	return u.userRoleRepo.FindUserwithRole(userID, convertResp.Data.(sharedEnums.RoleType))
 }
 
 func (u *UserRoleUseCase) UpdateRoleDescription(roleID string, description string) (*response.Response, error) {
 	return u.userRoleRepo.UpdateRoleDescription(roleID, description)
 }
 
-func (u *UserRoleUseCase) CreateRole(role enum.RoleType, description string) (*response.Response, error) {
+func (u *UserRoleUseCase) CreateRole(role sharedEnums.RoleType, description string) (*response.Response, error) {
 	return u.userRoleRepo.CreateRole(role, description)
 }
 

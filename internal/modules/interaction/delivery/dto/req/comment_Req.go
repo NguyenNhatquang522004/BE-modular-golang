@@ -3,6 +3,7 @@ package req
 import (
 	"time"
 
+	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/sharedEnums"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/interaction/enum"
 )
 
@@ -45,7 +46,7 @@ type UpdateCommentReq struct {
 }
 
 type CommentMediaReq struct {
-	Type        *enum.CommentMediaType `json:"type" binding:"required"`
+	Type        *sharedEnums.MediaType `json:"type" binding:"required"`
 	URL         string                 `json:"url" binding:"required,url"`
 	DisplayMeta DisplayMetaReq         `json:"display_meta"`
 }

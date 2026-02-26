@@ -3,7 +3,7 @@ package entity
 import (
 	"time"
 
-	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/interaction/enum"
+	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/sharedEnums"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -19,7 +19,7 @@ type CommentEntityEditLog struct {
 
 	// 1. ĐỊNH DANH & MAPPING
 	// Enum: 'comments' hoặc 'posts'
-	TargetCollection enum.TargetCollection `bson:"target_collection" json:"target_collection"`
+	TargetCollection sharedEnums.TargetCollection `bson:"target_collection" json:"target_collection"`
 
 	// ID của Comment/Post gốc (ObjectId vì nằm trong Mongo)
 	// Index: Compound { target_id: 1, target_collection: 1, version: -1 }
@@ -36,11 +36,11 @@ type CommentEntityEditLog struct {
 	Diff LogDiff `bson:"diff" json:"diff"`
 
 	// 4. AUDIT INFO
-	IPAddress string `bson:"ip_address" json:"ip_address"`
-	UserAgent string `bson:"user_agent" json:"user_agent"`
-	CreatedAt   time.Time  `bson:"created_at" json:"created_at"`
-	UpdatedAt   time.Time  `bson:"updated_at" json:"updated_at"`
-	DeletedAt   *time.Time `bson:"deleted_at,omitempty" json:"deleted_at,omitempty"`
+	IPAddress string     `bson:"ip_address" json:"ip_address"`
+	UserAgent string     `bson:"user_agent" json:"user_agent"`
+	CreatedAt time.Time  `bson:"created_at" json:"created_at"`
+	UpdatedAt time.Time  `bson:"updated_at" json:"updated_at"`
+	DeletedAt *time.Time `bson:"deleted_at,omitempty" json:"deleted_at,omitempty"`
 }
 
 // =============================================================================

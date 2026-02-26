@@ -7,7 +7,7 @@ import (
 
 	"github.com/Nerzal/gocloak/v13"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/configs"
-	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/identity/enum"
+	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/sharedEnums"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/identity/infrastructure/repository/postgres"
 	"github.com/golang-jwt/jwt/v5"
 )
@@ -225,7 +225,7 @@ func (k *KeycloakRepository) SendUpdatePasswordEmail(ctx context.Context, userID
 // 4. NHÓM ROLE MANAGEMENT (Phân quyền RBAC)
 // ==========================================
 // update role
-func (k *KeycloakRepository) UpdateRealmRole(ctx context.Context, rolename enum.RoleType, updatedRole gocloak.Role) error {
+func (k *KeycloakRepository) UpdateRealmRole(ctx context.Context, rolename sharedEnums.RoleType, updatedRole gocloak.Role) error {
 	token, err := k.GetAdminToken(ctx)
 	if err != nil {
 		return err
@@ -244,7 +244,7 @@ func (k *KeycloakRepository) GetRealmRoles(ctx context.Context) ([]*gocloak.Role
 }
 
 // 16. Add Role To User (SỬA LỖI: Phải tìm Role Object trước)
-func (k *KeycloakRepository) AddRealmRoleToUser(ctx context.Context, userID string, roleName enum.RoleType) error {
+func (k *KeycloakRepository) AddRealmRoleToUser(ctx context.Context, userID string, roleName sharedEnums.RoleType) error {
 	token, err := k.GetAdminToken(ctx)
 	if err != nil {
 		return err
@@ -259,7 +259,7 @@ func (k *KeycloakRepository) AddRealmRoleToUser(ctx context.Context, userID stri
 	// Bước 2: Truyền Role object vào hàm Add
 	return k.Client.AddRealmRoleToUser(ctx, token.AccessToken, k.Realm, userID, []gocloak.Role{*role})
 }
-func (k *KeycloakRepository) UpdateListRealmRole(ctx context.Context, userID string, roleName []enum.RoleType) error {
+func (k *KeycloakRepository) UpdateListRealmRole(ctx context.Context, userID string, roleName []sharedEnums.RoleType) error {
 	token, err := k.GetAdminToken(ctx)
 	if err != nil {
 		return err
@@ -279,7 +279,7 @@ func (k *KeycloakRepository) UpdateListRealmRole(ctx context.Context, userID str
 }
 
 // 17. Delete Role From User (SỬA LỖI: Tương tự như Add)
-func (k *KeycloakRepository) DeleteRealmRoleFromUser(ctx context.Context, userID string, roleName enum.RoleType) error {
+func (k *KeycloakRepository) DeleteRealmRoleFromUser(ctx context.Context, userID string, roleName sharedEnums.RoleType) error {
 	token, err := k.GetAdminToken(ctx)
 	if err != nil {
 		return err

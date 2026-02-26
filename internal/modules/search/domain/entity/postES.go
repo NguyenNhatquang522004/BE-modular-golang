@@ -3,7 +3,7 @@ package entity
 import (
 	"time"
 
-	contentEnum "github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/content/enum"
+	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/sharedEnums"
 )
 
 type PostES struct {
@@ -28,11 +28,11 @@ type PostES struct {
 
 	// 4. PHÂN LOẠI (FILTERS)
 	// Tái sử dụng Enum của Content.
-	// Nhờ 'enumer -json', nó sẽ tự lưu là ["image", "video"] thay vì [0, 1]
-	MediaTypes []contentEnum.MediaType `json:"media_types"`
+	// Nhờ 'enumer -json', nó sẽ tự lưu là ["image", "video"] thay vì [0, 1].
+	MediaTypes []sharedEnums.MediaType `json:"media_types"`
 
 	// Chỉ index bài public. Nhưng vẫn lưu field này để double-check nếu cần.
-	Privacy contentEnum.PrivacyScope `json:"privacy"`
+	Privacy sharedEnums.PrivacyScope `json:"privacy"`
 
 	// 5. TIMESTAMPS
 	CreatedAt time.Time `json:"created_at"`

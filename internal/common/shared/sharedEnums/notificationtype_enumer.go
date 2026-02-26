@@ -8,11 +8,11 @@ import (
 	"strings"
 )
 
-const _NotificationTypeName = "post_likecomment_replyfriend_requestfriend_acceptgroup_invitesystem_alertmention"
+const _NotificationTypeName = "post_likecomment_replyfriend_requestfriend_acceptgroup_invitesystem_alertmentionfollowerfriendbirthday"
 
-var _NotificationTypeIndex = [...]uint8{0, 9, 22, 36, 49, 61, 73, 80}
+var _NotificationTypeIndex = [...]uint8{0, 9, 22, 36, 49, 61, 73, 80, 88, 94, 102}
 
-const _NotificationTypeLowerName = "post_likecomment_replyfriend_requestfriend_acceptgroup_invitesystem_alertmention"
+const _NotificationTypeLowerName = "post_likecomment_replyfriend_requestfriend_acceptgroup_invitesystem_alertmentionfollowerfriendbirthday"
 
 func (i NotificationType) String() string {
 	if i < 0 || i >= NotificationType(len(_NotificationTypeIndex)-1) {
@@ -32,25 +32,34 @@ func _NotificationTypeNoOp() {
 	_ = x[NotifGroupInvite-(4)]
 	_ = x[NotifSystemAlert-(5)]
 	_ = x[NotifMention-(6)]
+	_ = x[NotifFollower-(7)]
+	_ = x[NotifFriend-(8)]
+	_ = x[NotifBirthday-(9)]
 }
 
-var _NotificationTypeValues = []NotificationType{NotifPostLike, NotifCommentReply, NotifFriendRequest, NotifFriendAccept, NotifGroupInvite, NotifSystemAlert, NotifMention}
+var _NotificationTypeValues = []NotificationType{NotifPostLike, NotifCommentReply, NotifFriendRequest, NotifFriendAccept, NotifGroupInvite, NotifSystemAlert, NotifMention, NotifFollower, NotifFriend, NotifBirthday}
 
 var _NotificationTypeNameToValueMap = map[string]NotificationType{
-	_NotificationTypeName[0:9]:        NotifPostLike,
-	_NotificationTypeLowerName[0:9]:   NotifPostLike,
-	_NotificationTypeName[9:22]:       NotifCommentReply,
-	_NotificationTypeLowerName[9:22]:  NotifCommentReply,
-	_NotificationTypeName[22:36]:      NotifFriendRequest,
-	_NotificationTypeLowerName[22:36]: NotifFriendRequest,
-	_NotificationTypeName[36:49]:      NotifFriendAccept,
-	_NotificationTypeLowerName[36:49]: NotifFriendAccept,
-	_NotificationTypeName[49:61]:      NotifGroupInvite,
-	_NotificationTypeLowerName[49:61]: NotifGroupInvite,
-	_NotificationTypeName[61:73]:      NotifSystemAlert,
-	_NotificationTypeLowerName[61:73]: NotifSystemAlert,
-	_NotificationTypeName[73:80]:      NotifMention,
-	_NotificationTypeLowerName[73:80]: NotifMention,
+	_NotificationTypeName[0:9]:         NotifPostLike,
+	_NotificationTypeLowerName[0:9]:    NotifPostLike,
+	_NotificationTypeName[9:22]:        NotifCommentReply,
+	_NotificationTypeLowerName[9:22]:   NotifCommentReply,
+	_NotificationTypeName[22:36]:       NotifFriendRequest,
+	_NotificationTypeLowerName[22:36]:  NotifFriendRequest,
+	_NotificationTypeName[36:49]:       NotifFriendAccept,
+	_NotificationTypeLowerName[36:49]:  NotifFriendAccept,
+	_NotificationTypeName[49:61]:       NotifGroupInvite,
+	_NotificationTypeLowerName[49:61]:  NotifGroupInvite,
+	_NotificationTypeName[61:73]:       NotifSystemAlert,
+	_NotificationTypeLowerName[61:73]:  NotifSystemAlert,
+	_NotificationTypeName[73:80]:       NotifMention,
+	_NotificationTypeLowerName[73:80]:  NotifMention,
+	_NotificationTypeName[80:88]:       NotifFollower,
+	_NotificationTypeLowerName[80:88]:  NotifFollower,
+	_NotificationTypeName[88:94]:       NotifFriend,
+	_NotificationTypeLowerName[88:94]:  NotifFriend,
+	_NotificationTypeName[94:102]:      NotifBirthday,
+	_NotificationTypeLowerName[94:102]: NotifBirthday,
 }
 
 var _NotificationTypeNames = []string{
@@ -61,6 +70,9 @@ var _NotificationTypeNames = []string{
 	_NotificationTypeName[49:61],
 	_NotificationTypeName[61:73],
 	_NotificationTypeName[73:80],
+	_NotificationTypeName[80:88],
+	_NotificationTypeName[88:94],
+	_NotificationTypeName[94:102],
 }
 
 // NotificationTypeString retrieves an enum value from the enum constants string name.
