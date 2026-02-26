@@ -3,23 +3,24 @@ package req
 import (
 	"time"
 
+	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/sharedEnums"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/media/enum"
 )
 
 // --- SUB-STRUCTS ---
 
 type StoryMediaReq struct {
-	URL          string             `json:"url" validate:"required"`
-	Type         enum.StoryMediaType `json:"type"`
-	Duration     float64            `json:"duration"`
-	ThumbnailURL string             `json:"thumbnail_url"`
-	SizeBytes    int64              `json:"size_bytes"`
+	URL          string                `json:"url" validate:"required"`
+	Type         sharedEnums.MediaType `json:"type"`
+	Duration     float64               `json:"duration"`
+	ThumbnailURL string                `json:"thumbnail_url"`
+	SizeBytes    int64                 `json:"size_bytes"`
 }
 
 type StoryPrivacyReq struct {
-	Type      enum.StoryPrivacyType `json:"type"`
-	AllowList []string              `json:"allow_list,omitempty"`
-	BlockList []string              `json:"block_list,omitempty"`
+	Type      sharedEnums.PrivacyScope `json:"type"`
+	AllowList []string                 `json:"allow_list,omitempty"`
+	BlockList []string                 `json:"block_list,omitempty"`
 }
 
 type StorySettingsReq struct {
@@ -47,9 +48,14 @@ type StoryOverlayReq struct {
 }
 
 type StoryStatsReq struct {
-	ViewsCount int `json:"views_count"`
-	LikesCount int `json:"likes_count"`
-	ReplyCount int `json:"reply_count"`
+	ViewsCount int `bson:"views_count" json:"views_count"`
+	Likes      int `bson:"likes_count" json:"likes_count"`
+	Love       int `bson:"love" json:"love"`
+	Haha       int `bson:"haha" json:"haha"`
+	Wow        int `bson:"wow" json:"wow"`
+	Sad        int `bson:"sad" json:"sad"`
+	Angry      int `bson:"angry" json:"angry"`
+	ReplyCount int `bson:"reply_count" json:"reply_count"`
 }
 
 // --- MAIN REQUEST DTO ---
@@ -71,12 +77,12 @@ type StoryReq struct {
 
 // UpdateStoryReq: Áp dụng 100% pointer để hỗ trợ Partial Update
 type UpdateStoryReq struct {
-	Media          *StoryMediaReq      `json:"media,omitempty"`
-	Overlays       []*StoryOverlayReq  `json:"overlays,omitempty"`
-	Privacy        *StoryPrivacyReq    `json:"privacy,omitempty"`
-	Settings       *StorySettingsReq   `json:"settings,omitempty"`
-	PreviewViewers []ViewerPreviewReq  `json:"preview_viewers,omitempty"`
-	Stats          *StoryStatsReq      `json:"stats,omitempty"`
-	ExpiresAt      *time.Time          `json:"expires_at,omitempty"`
-	IsArchived     *bool               `json:"is_archived,omitempty"`
+	Media          *StoryMediaReq     `json:"media,omitempty"`
+	Overlays       []*StoryOverlayReq `json:"overlays,omitempty"`
+	Privacy        *StoryPrivacyReq   `json:"privacy,omitempty"`
+	Settings       *StorySettingsReq  `json:"settings,omitempty"`
+	PreviewViewers []ViewerPreviewReq `json:"preview_viewers,omitempty"`
+	Stats          *StoryStatsReq     `json:"stats,omitempty"`
+	ExpiresAt      *time.Time         `json:"expires_at,omitempty"`
+	IsArchived     *bool              `json:"is_archived,omitempty"`
 }

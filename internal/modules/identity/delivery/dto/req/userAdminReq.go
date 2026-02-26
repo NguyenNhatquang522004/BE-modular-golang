@@ -1,10 +1,10 @@
 package req
 
-import "github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/identity/enum"
+import "github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/sharedEnums"
 
 type RoleReq struct {
-	RoleName []enum.RoleType `json:"role_name" binding:"required"`
-	RoleID   []string        `json:"role_id" binding:"required"`
+	RoleName []sharedEnums.RoleType `json:"role_name" binding:"required"`
+	RoleID   []string               `json:"role_id" binding:"required"`
 }
 type IDFusionRoleReq struct {
 	UserID string `json:"user_id" binding:"required"`

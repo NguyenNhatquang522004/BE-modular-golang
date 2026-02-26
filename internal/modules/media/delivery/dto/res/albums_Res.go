@@ -3,19 +3,24 @@ package res
 import (
 	"time"
 
+	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/sharedEnums"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/media/enum"
 )
 
 type AlbumPrivacyRes struct {
-	Level     string   `json:"level"`
-	AllowList []string `json:"allow_list"`
-	BlockList []string `json:"block_list"`
+	Level     sharedEnums.PrivacyScope `json:"level"`
+	AllowList []string                 `json:"allow_list"`
+	BlockList []string                 `json:"block_list"`
 }
 
 type AlbumReactionStatsRes struct {
-	Total int `json:"total"`
-	Like  int `json:"like"`
-	Love  int `json:"love"`
+	Total int `bson:"total" json:"total"`
+	Like  int `bson:"like" json:"like"`
+	Love  int `bson:"love" json:"love"`
+	Haha  int `bson:"haha" json:"haha"`
+	Wow   int `bson:"wow" json:"wow"`
+	Sad   int `bson:"sad" json:"sad"`
+	Angry int `bson:"angry" json:"angry"`
 }
 
 // AlbumRes: Trả về cho client, mọi ObjectID đã được biến thành chuỗi Hex.

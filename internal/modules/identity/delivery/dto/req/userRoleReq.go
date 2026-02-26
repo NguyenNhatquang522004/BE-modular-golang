@@ -1,6 +1,6 @@
 package req
 
-import "github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/identity/enum"
+import "github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/sharedEnums"
 
 type UpdateRoleofUserReq struct {
 	UserID string   `json:"user_id" binding:"required,uuid"`
@@ -12,8 +12,8 @@ type GetAllRoleReq struct {
 }
 
 type CreateRoleReq struct {
-	Role        enum.RoleType `json:"role" binding:"required,max=100"`
-	Description string        `json:"description" binding:"omitempty,max=255"`
+	Role        sharedEnums.RoleType `json:"role" binding:"required,max=100"`
+	Description string               `json:"description" binding:"omitempty,max=255"`
 }
 
 type DeleteRoleReq struct {

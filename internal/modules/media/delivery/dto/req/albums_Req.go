@@ -3,21 +3,26 @@ package req
 import (
 	"time"
 
+	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/sharedEnums"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/media/enum"
 )
 
 // --- REQUEST DTO ---
 
 type AlbumPrivacyReq struct {
-	Level     string   `json:"level" validate:"required"`
-	AllowList []string `json:"allow_list,omitempty"`
-	BlockList []string `json:"block_list,omitempty"`
+	Level     sharedEnums.PrivacyScope `json:"level" validate:"required"`
+	AllowList []string                 `json:"allow_list,omitempty"`
+	BlockList []string                 `json:"block_list,omitempty"`
 }
 
 type AlbumReactionStatsReq struct {
-	Total int `json:"total"`
-	Like  int `json:"like"`
-	Love  int `json:"love"`
+	Total int `bson:"total" json:"total"`
+	Like  int `bson:"like" json:"like"`
+	Love  int `bson:"love" json:"love"`
+	Haha  int `bson:"haha" json:"haha"`
+	Wow   int `bson:"wow" json:"wow"`
+	Sad   int `bson:"sad" json:"sad"`
+	Angry int `bson:"angry" json:"angry"`
 }
 
 // AlbumReq: Ánh xạ đủ 100% các trường của Entity.

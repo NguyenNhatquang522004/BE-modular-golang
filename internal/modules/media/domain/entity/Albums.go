@@ -3,12 +3,15 @@ package entity
 import (
 	"time"
 
+	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/sharedEnums"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/media/enum"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
+
 const (
-    CollectionAlbums = "Albums"
+	CollectionAlbums = "Albums"
 )
+
 type Album struct {
 	ID primitive.ObjectID `bson:"_id,omitempty" json:"id"`
 
@@ -53,7 +56,7 @@ type Album struct {
 type AlbumPrivacy struct {
 	// Level: 'public', 'friends', 'only_me', 'custom'
 	// Có thể dùng string hoặc tái sử dụng Enum PrivacyScope
-	Level string `bson:"level" json:"level"`
+	Level sharedEnums.PrivacyScope `bson:"level" json:"level"`
 
 	// Danh sách User ID được phép xem (UUID String)
 	AllowList []string `bson:"allow_list,omitempty" json:"allow_list,omitempty"`
@@ -68,7 +71,12 @@ type AlbumReactionStats struct {
 	Total int `bson:"total" json:"total"`
 	Like  int `bson:"like" json:"like"`
 	Love  int `bson:"love" json:"love"`
+	Haha  int `bson:"haha" json:"haha"`
+	Wow   int `bson:"wow" json:"wow"`
+	Sad   int `bson:"sad" json:"sad"`
+	Angry int `bson:"angry" json:"angry"`
 }
+
 func (Album) CollectionName() string {
-    return CollectionAlbums
+	return CollectionAlbums
 }

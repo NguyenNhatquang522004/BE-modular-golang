@@ -35,8 +35,13 @@ func ToEntityStory(r *req.StoryReq) (*entity.Story, error) {
 		},
 		Stats: entity.StoryStats{
 			ViewsCount: r.Stats.ViewsCount,
-			LikesCount: r.Stats.LikesCount,
+			Likes:      r.Stats.Likes,
 			ReplyCount: r.Stats.ReplyCount,
+			Love:       r.Stats.Love,
+			Haha:       r.Stats.Haha,
+			Wow:        r.Stats.Wow,
+			Sad:        r.Stats.Sad,
+			Angry:      r.Stats.Angry,
 		},
 		IsArchived: r.IsArchived,
 	}
@@ -156,8 +161,13 @@ func UpdateToEntityStory(r *req.UpdateStoryReq, e *entity.Story) {
 
 	if r.Stats != nil {
 		e.Stats.ViewsCount = r.Stats.ViewsCount
-		e.Stats.LikesCount = r.Stats.LikesCount
+		e.Stats.Likes = r.Stats.Likes
 		e.Stats.ReplyCount = r.Stats.ReplyCount
+		e.Stats.Love = r.Stats.Love
+		e.Stats.Haha = r.Stats.Haha
+		e.Stats.Wow = r.Stats.Wow
+		e.Stats.Sad = r.Stats.Sad
+		e.Stats.Angry = r.Stats.Angry
 	}
 
 	if r.ExpiresAt != nil {
@@ -195,8 +205,13 @@ func ReqToResStory(r *req.StoryReq) *res.StoryRes {
 		},
 		Stats: res.StoryStatsRes{
 			ViewsCount: r.Stats.ViewsCount,
-			LikesCount: r.Stats.LikesCount,
+			Likes:      r.Stats.Likes,
 			ReplyCount: r.Stats.ReplyCount,
+			Love:       r.Stats.Love,
+			Haha:       r.Stats.Haha,
+			Wow:        r.Stats.Wow,
+			Sad:        r.Stats.Sad,
+			Angry:      r.Stats.Angry,
 		},
 		IsArchived: r.IsArchived,
 	}
@@ -273,8 +288,13 @@ func EntityToResStory(e *entity.Story) *res.StoryRes {
 		},
 		Stats: res.StoryStatsRes{
 			ViewsCount: e.Stats.ViewsCount,
-			LikesCount: e.Stats.LikesCount,
+			Likes:      e.Stats.Likes,
 			ReplyCount: e.Stats.ReplyCount,
+			Love:       e.Stats.Love,
+			Haha:       e.Stats.Haha,
+			Wow:        e.Stats.Wow,
+			Sad:        e.Stats.Sad,
+			Angry:      e.Stats.Angry,
 		},
 		CreatedAt:  e.CreatedAt,
 		ExpiresAt:  e.ExpiresAt,

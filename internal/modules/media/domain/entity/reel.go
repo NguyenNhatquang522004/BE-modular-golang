@@ -1,13 +1,17 @@
 package entity
+
 import (
 	"time"
 
+	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/sharedEnums"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/media/enum"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
+
 const (
-    CollectionReels = "Reels"
+	CollectionReels = "Reels"
 )
+
 type Reel struct {
 	ID primitive.ObjectID `bson:"_id,omitempty" json:"id"`
 
@@ -18,7 +22,7 @@ type Reel struct {
 
 	// 2. PROCESSING FLOW
 	// Worker sẽ update field này. Client chỉ load các reel có status = 'active'
-	ProcessingStatus enum.ProcessingStatus `bson:"processing_status" json:"processing_status"`
+	ProcessingStatus sharedEnums.ProcessingStatus `bson:"processing_status" json:"processing_status"`
 
 	// 3. CONTENT
 	Video   ReelVideo `bson:"video" json:"video"`
@@ -37,8 +41,8 @@ type Reel struct {
 	RemixInfo *RemixInfo `bson:"remix_info,omitempty" json:"remix_info,omitempty"`
 
 	// 5. METADATA
-	Stats   ReelStats        `bson:"stats" json:"stats"`
-	Privacy enum.ReelPrivacy `bson:"privacy" json:"privacy"`
+	Stats   ReelStats                `bson:"stats" json:"stats"`
+	Privacy sharedEnums.PrivacyScope `bson:"privacy" json:"privacy"`
 
 	// 6. TIMESTAMPS
 	CreatedAt time.Time `bson:"created_at" json:"created_at"`
@@ -80,11 +84,18 @@ type RemixInfo struct {
 // --- STATS ---
 type ReelStats struct {
 	Views    int `bson:"views" json:"views"`
-	Likes    int `bson:"likes" json:"likes"`
+	Total    int `bson:"total" json:"total"`
+	Like     int `bson:"like" json:"like"`
+	Love     int `bson:"love" json:"love"`
+	Haha     int `bson:"haha" json:"haha"`
+	Wow      int `bson:"wow" json:"wow"`
+	Sad      int `bson:"sad" json:"sad"`
+	Angry    int `bson:"angry" json:"angry"`
 	Shares   int `bson:"shares" json:"shares"`
 	Saves    int `bson:"saves" json:"saves"`
 	Comments int `bson:"comments" json:"comments"`
 }
+
 func (Reel) CollectionName() string {
-    return CollectionReels
+	return CollectionReels
 }

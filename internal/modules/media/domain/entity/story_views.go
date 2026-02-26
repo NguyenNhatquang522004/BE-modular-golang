@@ -3,6 +3,7 @@ package entity
 import (
 	"time"
 
+	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/sharedEnums"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/media/enum"
 	"github.com/gocql/gocql"
 )
@@ -35,7 +36,7 @@ type StoryView struct {
 	InteractionType enum.StoryInteractionType `cql:"interaction_type" json:"interaction_type"`
 
 	// Reaction Code: "❤️", "😂" hoặc ID sticker
-	ReactionCode string `cql:"reaction_code" json:"reaction_code"`
+	ReactionCode sharedEnums.ReactionCode `cql:"reaction_code" json:"reaction_code"`
 
 	// Poll Vote: Dùng pointer (*int)
 	// - nil: Không vote

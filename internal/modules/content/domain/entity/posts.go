@@ -32,7 +32,7 @@ type Post struct {
 	// 4. LOGIC & TRẠNG THÁI
 	// Privacy nên khởi tạo mặc định, không để null
 	Privacy  PostPrivacy     `bson:"privacy" json:"privacy"`
-	Status   enum.PostStatus `bson:"status" json:"status"`
+	Status   sharedEnums.ProcessingStatus `bson:"status" json:"status"`
 	IsPinned bool            `bson:"is_pinned" json:"is_pinned"`
 	IsEdited bool            `bson:"is_edited" json:"is_edited"`
 

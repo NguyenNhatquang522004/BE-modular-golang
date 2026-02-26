@@ -37,7 +37,12 @@ func ToEntityReel(r *req.ReelReq) (*entity.Reel, error) {
 		},
 		Stats: entity.ReelStats{
 			Views:    r.Stats.Views,
-			Likes:    r.Stats.Likes,
+			Like:     r.Stats.Like,
+			Love:     r.Stats.Love,
+			Haha:     r.Stats.Haha,
+			Wow:      r.Stats.Wow,
+			Sad:      r.Stats.Sad,
+			Angry:    r.Stats.Angry,
 			Shares:   r.Stats.Shares,
 			Saves:    r.Stats.Saves,
 			Comments: r.Stats.Comments,
@@ -151,7 +156,12 @@ func UpdateToEntityReel(r *req.UpdateReelReq, e *entity.Reel) {
 	// Update Stats
 	if r.Stats != nil {
 		e.Stats.Views = r.Stats.Views
-		e.Stats.Likes = r.Stats.Likes
+		e.Stats.Like = r.Stats.Like
+		e.Stats.Love = r.Stats.Love
+		e.Stats.Haha = r.Stats.Haha
+		e.Stats.Wow = r.Stats.Wow
+		e.Stats.Sad = r.Stats.Sad
+		e.Stats.Angry = r.Stats.Angry
 		e.Stats.Shares = r.Stats.Shares
 		e.Stats.Saves = r.Stats.Saves
 		e.Stats.Comments = r.Stats.Comments
@@ -188,7 +198,12 @@ func ReqToResReel(r *req.ReelReq) *res.ReelRes {
 		},
 		Stats: res.ReelStatsRes{
 			Views:    r.Stats.Views,
-			Likes:    r.Stats.Likes,
+			Like:     r.Stats.Like,
+			Love:     r.Stats.Love,
+			Haha:     r.Stats.Haha,
+			Wow:      r.Stats.Wow,
+			Sad:      r.Stats.Sad,
+			Angry:    r.Stats.Angry,
 			Shares:   r.Stats.Shares,
 			Saves:    r.Stats.Saves,
 			Comments: r.Stats.Comments,
@@ -242,7 +257,12 @@ func EntityToResReel(e *entity.Reel) *res.ReelRes {
 		},
 		Stats: res.ReelStatsRes{
 			Views:    e.Stats.Views,
-			Likes:    e.Stats.Likes,
+			Like:     e.Stats.Like,
+			Love:     e.Stats.Love,
+			Haha:     e.Stats.Haha,
+			Wow:      e.Stats.Wow,
+			Sad:      e.Stats.Sad,
+			Angry:    e.Stats.Angry,
 			Shares:   e.Stats.Shares,
 			Saves:    e.Stats.Saves,
 			Comments: e.Stats.Comments,

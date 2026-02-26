@@ -3,12 +3,15 @@ package entity
 import (
 	"time"
 
+	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/sharedEnums"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/media/enum"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
+
 const (
-    CollectionStories = "Stories"
+	CollectionStories = "Stories"
 )
+
 type Story struct {
 	ID primitive.ObjectID `bson:"_id,omitempty" json:"id"`
 
@@ -46,16 +49,16 @@ type Story struct {
 
 // --- MEDIA ---
 type StoryMedia struct {
-	URL          string              `bson:"url" json:"url"` // Link SeaweedFS
-	Type         enum.StoryMediaType `bson:"type" json:"type"`
-	Duration     float64             `bson:"duration" json:"duration"` // Seconds
-	ThumbnailURL string              `bson:"thumbnail_url" json:"thumbnail_url"`
-	SizeBytes    int64               `bson:"size_bytes" json:"size_bytes"`
+	URL          string                `bson:"url" json:"url"` // Link SeaweedFS
+	Type         sharedEnums.MediaType `bson:"type" json:"type"`
+	Duration     float64               `bson:"duration" json:"duration"` // Seconds
+	ThumbnailURL string                `bson:"thumbnail_url" json:"thumbnail_url"`
+	SizeBytes    int64                 `bson:"size_bytes" json:"size_bytes"`
 }
 
 // --- PRIVACY ---
 type StoryPrivacy struct {
-	Type enum.StoryPrivacyType `bson:"type" json:"type"`
+	Type sharedEnums.PrivacyScope `bson:"type" json:"type"`
 
 	// Danh sách UserID (Postgres UUID -> String)
 	AllowList []string `bson:"allow_list,omitempty" json:"allow_list,omitempty"`
@@ -96,9 +99,15 @@ type OverlayPosition struct {
 // --- STATS ---
 type StoryStats struct {
 	ViewsCount int `bson:"views_count" json:"views_count"`
-	LikesCount int `bson:"likes_count" json:"likes_count"`
+	Likes      int `bson:"likes_count" json:"likes_count"`
+	Love       int `bson:"love" json:"love"`
+	Haha       int `bson:"haha" json:"haha"`
+	Wow        int `bson:"wow" json:"wow"`
+	Sad        int `bson:"sad" json:"sad"`
+	Angry      int `bson:"angry" json:"angry"`
 	ReplyCount int `bson:"reply_count" json:"reply_count"`
 }
+
 func (Story) CollectionName() string {
-    return CollectionStories
+	return CollectionStories
 }

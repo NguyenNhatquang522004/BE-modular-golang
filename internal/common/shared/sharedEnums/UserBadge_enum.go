@@ -1,4 +1,4 @@
-package enum
+package sharedEnums
 
 //go:generate enumer -type=UserBadge -json -transform=snake -trimprefix=Badge
 type UserBadge int

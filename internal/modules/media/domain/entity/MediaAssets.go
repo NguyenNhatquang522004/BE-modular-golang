@@ -4,7 +4,6 @@ import (
 	"time"
 
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/sharedEnums"
-	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/media/enum"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -83,7 +82,7 @@ type MediaTag struct {
 	// Tọa độ gắn thẻ (0.0 -> 1.0)
 	Position TagPosition `bson:"position" json:"position"`
 
-	Status enum.TagStatus `bson:"status" json:"status"`
+	Status sharedEnums.ProcessingStatus `bson:"status" json:"status"`
 }
 
 type TagPosition struct {
@@ -96,14 +95,17 @@ type MediaReactionStats struct {
 	Total int `bson:"total" json:"total"`
 	Like  int `bson:"like" json:"like"`
 	Love  int `bson:"love" json:"love"`
-	// Có thể thêm các loại khác nếu cần
+	Haha  int `bson:"haha" json:"haha"`
+	Wow   int `bson:"wow" json:"wow"`
+	Sad   int `bson:"sad" json:"sad"`
+	Angry int `bson:"angry" json:"angry"`
 }
 
 // --- PRIVACY SETTINGS ---
 type MediaPrivacy struct {
 	// Level string hoặc dùng Enum PrivacyScope tái sử dụng
-	Level            string `bson:"level" json:"level"`
-	InheritFromAlbum bool   `bson:"inherit_from_album" json:"inherit_from_album"`
+	Level            sharedEnums.PrivacyScope `bson:"level" json:"level"`
+	InheritFromAlbum bool                     `bson:"inherit_from_album" json:"inherit_from_album"`
 }
 
 func (MediaAsset) CollectionName() string {

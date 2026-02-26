@@ -3,6 +3,7 @@ package res
 import (
 	"time"
 
+	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/sharedEnums"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/media/enum"
 )
 
@@ -31,27 +32,33 @@ type RemixInfoRes struct {
 }
 
 type ReelStatsRes struct {
-	Views    int `json:"views"`
-	Likes    int `json:"likes"`
-	Shares   int `json:"shares"`
-	Saves    int `json:"saves"`
-	Comments int `json:"comments"`
+	Views    int `bson:"views" json:"views"`
+	Total    int `bson:"total" json:"total"`
+	Like     int `bson:"like" json:"like"`
+	Love     int `bson:"love" json:"love"`
+	Haha     int `bson:"haha" json:"haha"`
+	Wow      int `bson:"wow" json:"wow"`
+	Sad      int `bson:"sad" json:"sad"`
+	Angry    int `bson:"angry" json:"angry"`
+	Shares   int `bson:"shares" json:"shares"`
+	Saves    int `bson:"saves" json:"saves"`
+	Comments int `bson:"comments" json:"comments"`
 }
 
 // --- MAIN RESPONSE DTO ---
 
 type ReelRes struct {
-	ID               string                `json:"id"`
-	UserID           string                `json:"user_id"`
-	ProcessingStatus enum.ProcessingStatus `json:"processing_status"`
-	Video            ReelVideoRes          `json:"video"`
-	Caption          string                `json:"caption"`
-	Hashtags         []string              `json:"hashtags,omitempty"`
-	Mentions         []string              `json:"mentions,omitempty"`
-	AudioMeta        AudioMetaRes          `json:"audio_meta"`
-	RemixInfo        *RemixInfoRes         `json:"remix_info,omitempty"`
-	Stats            ReelStatsRes          `json:"stats"`
-	Privacy          enum.ReelPrivacy      `json:"privacy"`
-	CreatedAt        time.Time             `json:"created_at"`
-	DeletedAt        *time.Time            `json:"deleted_at,omitempty"`
+	ID               string                       `json:"id"`
+	UserID           string                       `json:"user_id"`
+	ProcessingStatus sharedEnums.ProcessingStatus `json:"processing_status"`
+	Video            ReelVideoRes                 `json:"video"`
+	Caption          string                       `json:"caption"`
+	Hashtags         []string                     `json:"hashtags,omitempty"`
+	Mentions         []string                     `json:"mentions,omitempty"`
+	AudioMeta        AudioMetaRes                 `json:"audio_meta"`
+	RemixInfo        *RemixInfoRes                `json:"remix_info,omitempty"`
+	Stats            ReelStatsRes                 `json:"stats"`
+	Privacy          sharedEnums.PrivacyScope     `json:"privacy"`
+	CreatedAt        time.Time                    `json:"created_at"`
+	DeletedAt        *time.Time                   `json:"deleted_at,omitempty"`
 }

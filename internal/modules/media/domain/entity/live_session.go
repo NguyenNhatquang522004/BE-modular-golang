@@ -3,12 +3,14 @@ package entity
 import (
 	"time"
 
-	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/media/enum"
+	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/sharedEnums"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
+
 const (
-    CollectionLiveSessions = "LiveSessions"
+	CollectionLiveSessions = "LiveSessions"
 )
+
 type LiveSession struct {
 	ID primitive.ObjectID `bson:"_id,omitempty" json:"id"`
 
@@ -24,7 +26,7 @@ type LiveSession struct {
 	// ID danh mục (Game, Music...). Index: { category_id: 1, status: 1 }
 	CategoryID string `bson:"category_id" json:"category_id"`
 
-	Status enum.LiveStatus `bson:"status" json:"status"`
+	Status sharedEnums.ProcessingStatus `bson:"status" json:"status"`
 
 	// 3. TECHNICAL INFO
 	// StreamKey: Tuyệt đối không expose ra public API list
@@ -68,6 +70,7 @@ type LiveStats struct {
 	TotalLikes    int `bson:"total_likes" json:"total_likes"`
 	TotalComments int `bson:"total_comments" json:"total_comments"`
 }
+
 func (LiveSession) CollectionName() string {
-    return CollectionLiveSessions
+	return CollectionLiveSessions
 }

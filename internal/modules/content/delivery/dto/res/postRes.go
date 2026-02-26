@@ -45,22 +45,22 @@ type PostStatsRes struct {
 
 // --- MAIN DTO ---
 type PostRes struct {
-	ID          string          `json:"id"` // Trả về dạng string cho client
-	UserID      string          `json:"user_id"`
-	Type        enum.PostType   `json:"type"`
-	Context     *PostContextRes `json:"context,omitempty"`
-	Content     string          `json:"content"`
-	Slug        string          `json:"slug"`
-	Summary     *PostSummaryRes `json:"summary,omitempty"`
-	Privacy     PostPrivacyRes  `json:"privacy"`
-	Status      enum.PostStatus `json:"status"`
-	IsPinned    bool            `json:"is_pinned"`
-	IsEdited    bool            `json:"is_edited"`
-	Stats       PostStatsRes    `json:"stats"`
-	Hashtags    []string        `json:"hashtags,omitempty"`
-	Mentions    []string        `json:"mentions,omitempty"`
-	PublishedAt *time.Time      `json:"published_at,omitempty"`
-	CreatedAt   time.Time       `json:"created_at"`
-	UpdatedAt   time.Time       `json:"updated_at"`
-	DeletedAt   *time.Time      `json:"deleted_at,omitempty"`
+	ID          string                       `json:"id"` // Trả về dạng string cho client
+	UserID      string                       `json:"user_id"`
+	Type        enum.PostType                `json:"type"`
+	Context     *PostContextRes              `json:"context,omitempty"`
+	Content     string                       `json:"content"`
+	Slug        string                       `json:"slug"`
+	Summary     *PostSummaryRes              `json:"summary,omitempty"`
+	Privacy     PostPrivacyRes               `json:"privacy"`
+	Status      sharedEnums.ProcessingStatus `json:"status"`
+	IsPinned    bool                         `json:"is_pinned"`
+	IsEdited    bool                         `json:"is_edited"`
+	Stats       PostStatsRes                 `json:"stats"`
+	Hashtags    []string                     `json:"hashtags,omitempty"`
+	Mentions    []string                     `json:"mentions,omitempty"`
+	PublishedAt *time.Time                   `json:"published_at,omitempty"`
+	CreatedAt   time.Time                    `json:"created_at"`
+	UpdatedAt   time.Time                    `json:"updated_at"`
+	DeletedAt   *time.Time                   `json:"deleted_at,omitempty"`
 }

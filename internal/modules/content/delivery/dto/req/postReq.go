@@ -53,7 +53,7 @@ type PostReq struct {
 	Slug        string          `json:"slug"`
 	Summary     *PostSummaryReq `json:"summary,omitempty"`
 	Privacy     PostPrivacyReq  `json:"privacy"`
-	Status      enum.PostStatus `json:"status" validate:"required"`
+	Status      sharedEnums.ProcessingStatus `json:"status" validate:"required"`
 	IsPinned    bool            `json:"is_pinned"`
 	IsEdited    bool            `json:"is_edited"`
 	Stats       PostStatsReq    `json:"stats"`

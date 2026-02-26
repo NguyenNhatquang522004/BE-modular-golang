@@ -3,6 +3,7 @@ package req
 import (
 	"time"
 
+	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/sharedEnums"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/identity/domain/entity"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/identity/enum"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -25,19 +26,19 @@ type UserSettingReq struct {
 	Auto_Translate bool          `bson:"auto_translate" json:"auto_translate"` //
 
 	// --- 2. PRIVACY DEFAULTS ---
-	Default_Post_Audience  enum.PrivacyLevel `bson:"default_post_audience" json:"default_post_audience"`   // 'public', 'friends', 'only_me'
-	Default_Story_Audience enum.PrivacyLevel `bson:"default_story_audience" json:"default_story_audience"` // 'friends', 'close_friends'
+	Default_Post_Audience  sharedEnums.PrivacyScope `bson:"default_post_audience" json:"default_post_audience"`   // 'public', 'friends', 'only_me'
+	Default_Story_Audience sharedEnums.PrivacyScope `bson:"default_story_audience" json:"default_story_audience"` // 'friends', 'close_friends'
 
 	// --- 3. ACCESS CONTROL ---
-	Allow_Friend_Request_From    enum.PrivacyLevel `bson:"allow_friend_request_from" json:"allow_friend_request_from"`       // 'everyone', 'friends_of_friends'
-	Allow_Friend_List_View_From  enum.PrivacyLevel `bson:"allow_friend_list_view_from" json:"allow_friend_list_view_from"`   // 'public', 'friends', 'only_me'
-	Allow_Email_Lookup_From      enum.PrivacyLevel `bson:"allow_email_lookup_from" json:"allow_email_lookup_from"`           // 'everyone', 'friends'
-	Allow_Phone_Lookup_From      enum.PrivacyLevel `bson:"allow_phone_lookup_from" json:"allow_phone_lookup_from"`           // 'everyone', 'friends'
-	Allow_Search_Engine_Indexing bool              `bson:"allow_search_engine_indexing" json:"allow_search_engine_indexing"` //
+	Allow_Friend_Request_From    sharedEnums.PrivacyScope `bson:"allow_friend_request_from" json:"allow_friend_request_from"`       // 'everyone', 'friends_of_friends'
+	Allow_Friend_List_View_From  sharedEnums.PrivacyScope `bson:"allow_friend_list_view_from" json:"allow_friend_list_view_from"`   // 'public', 'friends', 'only_me'
+	Allow_Email_Lookup_From      sharedEnums.PrivacyScope `bson:"allow_email_lookup_from" json:"allow_email_lookup_from"`           // 'everyone', 'friends'
+	Allow_Phone_Lookup_From      sharedEnums.PrivacyScope `bson:"allow_phone_lookup_from" json:"allow_phone_lookup_from"`           // 'everyone', 'friends'
+	Allow_Search_Engine_Indexing bool                     `bson:"allow_search_engine_indexing" json:"allow_search_engine_indexing"` //
 	// --- 4. TIMELINE & TAGGING ---
-	Allow_Timeline_Posting_From   enum.PrivacyLevel `bson:"allow_timeline_posting_from" json:"allow_timeline_posting_from"`     // 'friends', 'only_me'
-	Review_Tags_Enabled           bool              `bson:"review_tags_enabled" json:"review_tags_enabled"`                     //
-	Review_Timeline_Posts_Enabled bool              `bson:"review_timeline_posts_enabled" json:"review_timeline_posts_enabled"` //
+	Allow_Timeline_Posting_From   sharedEnums.PrivacyScope `bson:"allow_timeline_posting_from" json:"allow_timeline_posting_from"`     // 'friends', 'only_me'
+	Review_Tags_Enabled           bool                     `bson:"review_tags_enabled" json:"review_tags_enabled"`                     //
+	Review_Timeline_Posts_Enabled bool                     `bson:"review_timeline_posts_enabled" json:"review_timeline_posts_enabled"` //
 
 	// --- 5. NOTIFICATIONS ---
 	Notifications *NotificationSettings `bson:"notifications" json:"notifications"`

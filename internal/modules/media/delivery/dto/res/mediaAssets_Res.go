@@ -4,7 +4,6 @@ import (
 	"time"
 
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/sharedEnums"
-	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/media/enum"
 )
 
 // --- SUB-STRUCTS ---
@@ -23,21 +22,25 @@ type TagPositionRes struct {
 }
 
 type MediaTagRes struct {
-	UserID   string         `json:"user_id"`
-	Name     string         `json:"name"`
-	Position TagPositionRes `json:"position"`
-	Status   enum.TagStatus `json:"status"`
+	UserID   string                       `json:"user_id"`
+	Name     string                       `json:"name"`
+	Position TagPositionRes               `json:"position"`
+	Status   sharedEnums.ProcessingStatus `json:"status"`
 }
 
 type MediaReactionStatsRes struct {
-	Total int `json:"total"`
-	Like  int `json:"like"`
-	Love  int `json:"love"`
+	Total int `bson:"total" json:"total"`
+	Like  int `bson:"like" json:"like"`
+	Love  int `bson:"love" json:"love"`
+	Haha  int `bson:"haha" json:"haha"`
+	Wow   int `bson:"wow" json:"wow"`
+	Sad   int `bson:"sad" json:"sad"`
+	Angry int `bson:"angry" json:"angry"`
 }
 
 type MediaPrivacyRes struct {
-	Level            string `json:"level"`
-	InheritFromAlbum bool   `json:"inherit_from_album"`
+	Level            sharedEnums.PrivacyScope `json:"level"`
+	InheritFromAlbum bool                     `json:"inherit_from_album"`
 }
 
 // --- MAIN RESPONSE DTO ---

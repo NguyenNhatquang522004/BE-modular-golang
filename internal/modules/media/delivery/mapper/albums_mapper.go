@@ -115,6 +115,10 @@ func UpdateToEntityAlbum(req *req.UpdateAlbumReq, album *entity.Album) {
 		album.Reactions.Total = req.Reactions.Total
 		album.Reactions.Like = req.Reactions.Like
 		album.Reactions.Love = req.Reactions.Love
+		album.Reactions.Haha = req.Reactions.Haha
+		album.Reactions.Wow = req.Reactions.Wow
+		album.Reactions.Sad = req.Reactions.Sad
+		album.Reactions.Angry = req.Reactions.Angry
 	}
 
 	if req.Privacy != nil {

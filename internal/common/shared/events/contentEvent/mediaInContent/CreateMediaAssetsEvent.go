@@ -6,7 +6,6 @@ import (
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/sharedEnums"
 	reqcontent "github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/content/delivery/dto/req"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/media/domain/entity"
-	mediaEnum "github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/media/enum"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -181,7 +180,7 @@ func mapTaggedUsers(payloadTags []TaggedUserPayload) []entity.MediaTag {
 				X: t.X,
 				Y: t.Y,
 			},
-			Status: mediaEnum.TagStatusApproved, // Best practice: Mặc định là Active
+			Status: sharedEnums.ProcessingActive, // Best practice: Mặc định là Active
 		}
 	}
 	return tags
