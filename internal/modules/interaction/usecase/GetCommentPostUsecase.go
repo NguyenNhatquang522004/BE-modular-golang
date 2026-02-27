@@ -21,7 +21,7 @@ func NewGetCommentPostUsecase(commentRepo IRepositoryMongoDB.ICommentRepository)
 
 func (u *GetCommentPostUsecase) Execute(ctx context.Context, req *req.GetCommentPostRequest) (*response.Response, error) {
 	// Implement the logic for getting comments of a post here
-	comments, err := u.commentRepo.PaginationComments(ctx, req.PostID, req.Cursor, req.Limit)
+	comments, err := u.commentRepo.PaginationComments(ctx, req.TargetID, req.Cursor, req.Limit)
 	if err != nil {
 		return response.NewResponse(response.WithData(""), response.WithMessage(err.Error()), response.WithStatus(http.StatusBadRequest)), err
 	}

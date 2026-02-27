@@ -12,6 +12,8 @@ import (
 type IReactionHistoryRepository interface {
 	CreateReactionHistory(ctx context.Context, reaction *entity.UserReactionHistory) error
 	CreateBulkReactionHistory(ctx context.Context, reactions []*entity.UserReactionHistory) (int64, []*cassandraErrors.ReactionBulkError, error)
+	UpdateReactionHistory(ctx context.Context, reaction *entity.UserReactionHistory) error
 	GetReactionHistoryByUserID(ctx context.Context, userID gocql.UUID) ([]*entity.UserReactionHistory, error)
+	GetReactionHistoryByUserIDAndTargetID(ctx context.Context, userID gocql.UUID, targetID gocql.UUID) (*entity.UserReactionHistory, error)
 	PanigationReactionHistoryByUserID(ctx context.Context, userID gocql.UUID, cursor string, limit int) (*dto.PaginationRes, error)
 }

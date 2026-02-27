@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"log"
+	"math"
 
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/IRepositoryShare"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/constants"
@@ -24,16 +25,30 @@ type ConsumerReact struct {
 	mediaAssetsRepo IRepositoryMongodb.IMediaAssetsRepository
 	storyRepo       IRepositoryMongodb.IStoryRepository
 	storyview       IRepositoryCassandra.IStoryViewRepository
+	reelRepo        IRepositoryMongodb.IReelRepository
+	livesessionRepo IRepositoryMongodb.ILiveSessionRepository
+	liveCommentRepo IRepositoryCassandra.ILiveCommentsRepository
 	pool            IRepositoryShare.IWorkerPool
 	eventbus        events.EventBus
 }
 
-func NewConsumerReact(ablumRepo IRepositoryMongodb.IAlbumsRepository, mediaAssetsRepo IRepositoryMongodb.IMediaAssetsRepository, storyRepo IRepositoryMongodb.IStoryRepository, storyview IRepositoryCassandra.IStoryViewRepository, pool IRepositoryShare.IWorkerPool, eventbus events.EventBus) *ConsumerReact {
+func NewConsumerReact(ablumRepo IRepositoryMongodb.IAlbumsRepository,
+	mediaAssetsRepo IRepositoryMongodb.IMediaAssetsRepository,
+	storyRepo IRepositoryMongodb.IStoryRepository,
+	storyview IRepositoryCassandra.IStoryViewRepository,
+	livesessionRepo IRepositoryMongodb.ILiveSessionRepository,
+	liveCommentRepo IRepositoryCassandra.ILiveCommentsRepository,
+	pool IRepositoryShare.IWorkerPool,
+	eventbus events.EventBus,
+	reelRepo IRepositoryMongodb.IReelRepository) *ConsumerReact {
 	return &ConsumerReact{
 		ablumRepo:       ablumRepo,
 		mediaAssetsRepo: mediaAssetsRepo,
 		storyRepo:       storyRepo,
 		storyview:       storyview,
+		reelRepo:        reelRepo,
+		livesessionRepo: livesessionRepo,
+		liveCommentRepo: liveCommentRepo,
 		pool:            pool,
 		eventbus:        eventbus,
 	}
@@ -311,3 +326,152 @@ func (c *ConsumerReact) ConsumerFailedReactStory(ctx context.Context) {
 		return
 	}
 }
+func (c *ConsumerReact) ConsumerReactReel(ctx context.Context) {
+	// Implement the logic for consuming react reel events here
+	err := c.eventbus.Subscribe(ctx, constants.TopicReactReel.String(), func(ctx context.Context, event events.IntegrationEvent) error {
+		data, ok := event.Payload.(*req.ReactReelRequest)
+		if !ok {
+			// Handle type assertion error
+			return errors.New("invalid event payload")
+		}
+		switch event.Type {
+		case constants.Created.String():
+			datareel, err := c.reelRepo.GetReelByID(ctx, data.ReelID)
+			if err != nil {
+				// Handle error
+				return nil
+			}
+			datareel.Stats.Total = data.Total + 1
+			utils.CreateReactReelRequestToReelReactionStats(datareel, data.ReactionCode)
+			err = c.reelRepo.UpdateReel(ctx, datareel)
+			if err != nil {
+				// Handle error
+				return nil
+			}
+		case constants.Deleted.String():
+		}
+		return nil
+	})
+	if err != nil {
+		// Handle subscription error
+		log.Printf("Error subscribing to topic: %v", err)
+		return
+	}
+}
+func (c *ConsumerReact) ConsumerFailedReactReel(ctx context.Context)
+
+func (c *ConsumerReact) ConsumerFailedCounterReel(ctx context.Context) {
+
+}
+func (c *ConsumerReact) ConsumerCounterReel(ctx context.Context) {
+	err := c.eventbus.Subscribe(ctx, constants.TopicCounterReel.String(), func(ctx context.Context, event events.IntegrationEvent) error {
+		data, ok := event.Payload.(*req.ReactCounterReelRequest)
+		if !ok {
+			// Handle type assertion error
+			return errors.New("invalid event payload")
+		}
+		switch event.Type {
+		case constants.Created.String():
+			datareel, err := c.reelRepo.GetReelByID(ctx, data.ReelID)
+			if err != nil {
+				// Handle error
+				return nil
+			}
+			datareel.Stats.Comments = data.Comments + datareel.Stats.Comments
+			datareel.Stats.Saves = data.Saves + datareel.Stats.Saves
+			datareel.Stats.Shares = data.Shares + datareel.Stats.Shares
+			err = c.reelRepo.UpdateReel(ctx, datareel)
+			if err != nil {
+				// Handle error
+				return nil
+			}
+			return nil
+		}
+		return nil
+	})
+	if err != nil {
+		log.Printf("Error subscribing to topic: %v", err)
+		return
+	}
+	return
+}
+func (c *ConsumerReact) ConsumerReactLive(ctx context.Context) {
+	err := c.eventbus.Subscribe(ctx, constants.TopicReactLive.String(), func(ctx context.Context, event events.IntegrationEvent) error {
+		data, ok := event.Payload.(*req.ReactLiveStreamRequest)
+		if !ok {
+			// Handle type assertion error
+			return errors.New("invalid event payload")
+		}
+		switch event.Type {
+		case constants.Created.String():
+			// Process the react live stream request here
+			// You can implement the logic to update the live stream's reaction count or perform other actions based on the request data
+			dataLive, err := c.livesessionRepo.GetLiveSessionByID(ctx, data.LiveSessionID)
+			if err != nil {
+				// Handle error
+				return nil
+			}
+			utils.CreateReactLiveSessionRequestToLiveSessionReactionStats(dataLive, data.ReactionCode)
+			err = c.livesessionRepo.UpdateLiveSession(ctx, dataLive)
+			if err != nil {
+				// Handle error
+				return nil
+			}
+			// You can also choose to publish an event or perform other actions as needed
+			err = c.eventbus.Publish(ctx, constants.TopicEntityReaction.String(), data.LiveSessionID, constants.Created.String(), data)
+			if err != nil {
+				// Handle publish error
+				log.Printf("Error publishing entity reaction event: %v", err)
+			}
+		case constants.Deleted.String():
+			// Process the react live stream request here for deleted event type
+		default:
+			// Handle unknown event type
+		}
+		return nil
+	})
+	if err != nil {
+		log.Printf("Error subscribing to topic: %v", err)
+		return
+	}
+
+}
+func (c *ConsumerReact) ConsumerFailedReactLive(ctx context.Context)
+
+func (c *ConsumerReact) ConsumerCounterLive(ctx context.Context) {
+	err := c.eventbus.Subscribe(ctx, constants.TopicCounterLive.String(), func(ctx context.Context, event events.IntegrationEvent) error {
+		data, ok := event.Payload.(*req.CounterLiveStreamRequest)
+		if !ok {
+			// Handle type assertion error
+			return errors.New("invalid event payload")
+		}
+		switch event.Type {
+		case constants.Created.String():
+			dataLive, err := c.livesessionRepo.GetLiveSessionByID(ctx, data.LiveSessionID)
+			if err != nil {
+				// Handle error
+				return nil
+			}
+			pek := math.Max(float64(data.Views+dataLive.Stats.PeakViewers), float64(dataLive.Stats.PeakViewers))
+			dataLive.Stats.PeakViewers = int(pek)
+			dataLive.Stats.TotalComments = data.Comments + dataLive.Stats.TotalComments
+			dataLive.Stats.TotalViews = data.Views + dataLive.Stats.TotalViews
+			err = c.livesessionRepo.UpdateLiveSession(ctx, dataLive)
+			if err != nil {
+				// Handle error
+				return nil
+			}
+			return nil
+		default:
+			// Handle unknown event type
+		}
+
+		return nil
+	})
+
+	if err != nil {
+		log.Printf("Error subscribing to topic: %v", err)
+		return
+	}
+}
+func (c *ConsumerReact) ConsumerFailedCounterLive(ctx context.Context)

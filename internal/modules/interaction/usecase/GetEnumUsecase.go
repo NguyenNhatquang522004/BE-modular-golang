@@ -6,7 +6,6 @@ import (
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/server/http/response"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/sharedEnums"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/interaction/delivery/dto/res"
-	interactionEnum "github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/interaction/enum"
 )
 
 type GetEnumUsecase struct {
@@ -19,7 +18,7 @@ func NewGetEnumUsecase() *GetEnumUsecase {
 func (u *GetEnumUsecase) Execute(ctx context.Context) (*response.Response, error) {
 	data := map[string][]*res.EnumReponse{
 		// interaction/enum - Comment
-		"CommentStatus": toEnumReponse(toAny(interactionEnum.CommentStatusValues())),
+		"CommentStatus": toEnumReponse(toAny(sharedEnums.ProcessingStatusValues())),
 
 		// sharedEnums - dùng trong entity_reactions, reaction_history
 		"ReactionTarget": toEnumReponse(toAny(sharedEnums.ReactionTargetValues())),

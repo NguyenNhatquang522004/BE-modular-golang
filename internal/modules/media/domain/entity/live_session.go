@@ -66,9 +66,14 @@ type RecordingSetting struct {
 // (Ví dụ: Mỗi 30s worker sync 1 lần để giảm tải DB)
 type LiveStats struct {
 	PeakViewers   int `bson:"peak_viewers" json:"peak_viewers"` // Mắt xem đỉnh điểm
-	TotalViews    int `bson:"total_views" json:"total_views"`   // Tổng lượt click vào xem
-	TotalLikes    int `bson:"total_likes" json:"total_likes"`
+	TotalViews    int `bson:"total_views" json:"total_views"`   // Tổng số lượt xem (có thể tính bằng Redis)
 	TotalComments int `bson:"total_comments" json:"total_comments"`
+	Like      int `bson:"likes_count" json:"likes_count"`
+	Love       int `bson:"love" json:"love"`
+	Haha       int `bson:"haha" json:"haha"`
+	Wow        int `bson:"wow" json:"wow"`
+	Sad        int `bson:"sad" json:"sad"`
+	Angry      int `bson:"angry" json:"angry"`
 }
 
 func (LiveSession) CollectionName() string {

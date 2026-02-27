@@ -4,7 +4,6 @@ import (
 	"time"
 
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/sharedEnums"
-	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/interaction/enum"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -17,7 +16,7 @@ type Comment struct {
 
 	// Reference bài viết gốc (Mongo ID)
 	// Index: { post_id: 1, created_at: 1 } -> Load comment của bài viết
-	PostID primitive.ObjectID `bson:"post_id" json:"post_id"`
+	TargetID primitive.ObjectID `bson:"target_id" json:"target_id"`
 
 	// Người comment (Postgres UUID) -> String
 	UserID string `bson:"user_id" json:"user_id"`
@@ -39,7 +38,7 @@ type Comment struct {
 	RootCommentID   *primitive.ObjectID `bson:"root_comment_id,omitempty" json:"root_comment_id,omitempty"`
 
 	// 4. TRẠNG THÁI & MODERATION
-	Status enum.CommentStatus `bson:"status" json:"status"`
+	Status sharedEnums.ProcessingStatus `bson:"status" json:"status"`
 
 	// Pointer struct: Nếu không bị ẩn/xóa thì field này null -> Tiết kiệm data
 	HiddenMetadata  *HiddenMetadata  `bson:"hidden_metadata,omitempty" json:"hidden_metadata,omitempty"`
@@ -69,8 +68,11 @@ type CommentMedia struct {
 }
 
 type DisplayMeta struct {
-	Width  int `bson:"width" json:"width"`
-	Height int `bson:"height" json:"height"`
+	Width     int     `bson:"width" json:"width"`
+	Height    int     `bson:"height" json:"height"`
+	Duration  float64 `bson:"duration,omitempty" json:"duration,omitempty"`     // Dành cho video/audio
+	SizeBytes int64   `bson:"size_bytes,omitempty" json:"size_bytes,omitempty"` // Dành cho tất cả loại media
+	MimeType  string  `bson:"mime_type,omitempty" json:"mime_type,omitempty"`   // Dành cho tất cả loại media
 }
 
 // --- METADATA (Hidden/Deleted) ---

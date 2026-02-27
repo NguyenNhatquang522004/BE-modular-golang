@@ -85,3 +85,81 @@ func DeleteReactStoryRequestToStoryReactionStats(data *entity.Story, enum shared
 		// Handle unknown reaction type
 	}
 }
+func CreateReactReelRequestToReelReactionStats(data *entity.Reel, enum sharedEnums.ReactionCode) {
+	// Implement the logic to map ReactReelRequest to ReelReactionStats here
+	switch enum {
+	case sharedEnums.ReactionLike:
+		data.Stats.Like = +1
+	case sharedEnums.ReactionLove:
+		data.Stats.Love = +1
+	case sharedEnums.ReactionHaha:
+		data.Stats.Haha = +1
+	case sharedEnums.ReactionWow:
+		data.Stats.Wow = +1
+	case sharedEnums.ReactionSad:
+		data.Stats.Sad = +1
+	case sharedEnums.ReactionAngry:
+		data.Stats.Angry = +1
+	default:
+		// Handle unknown reaction type
+	}
+}
+
+func DeleteReactReelRequestToReelReactionStats(data *entity.Reel, enum sharedEnums.ReactionCode) {
+	// Implement the logic to map ReactReelRequest to ReelReactionStats here
+	switch enum {
+	case sharedEnums.ReactionLike:
+		data.Stats.Like = -1
+	case sharedEnums.ReactionLove:
+		data.Stats.Love = -1
+	case sharedEnums.ReactionHaha:
+		data.Stats.Haha = -1
+	case sharedEnums.ReactionWow:
+		data.Stats.Wow = -1
+	case sharedEnums.ReactionSad:
+		data.Stats.Sad = -1
+	case sharedEnums.ReactionAngry:
+		data.Stats.Angry = -1
+	default:
+		// Handle unknown reaction type
+	}
+}
+func CreateReactLiveSessionRequestToLiveSessionReactionStats(data *entity.LiveSession, enum sharedEnums.ReactionCode) {
+	// Implement the logic to map ReactLiveSessionRequest to LiveSessionReactionStats here
+	switch enum {
+	case sharedEnums.ReactionLike:
+		data.Stats.Like = +1
+	case sharedEnums.ReactionLove:
+		data.Stats.Love = +1
+	case sharedEnums.ReactionHaha:
+		data.Stats.Haha = +1
+	case sharedEnums.ReactionWow:
+		data.Stats.Wow = +1
+	case sharedEnums.ReactionSad:
+		data.Stats.Sad = +1
+	case sharedEnums.ReactionAngry:
+		data.Stats.Angry = +1
+	default:
+		// Handle unknown reaction type
+	}
+}
+
+func DeleteReactLiveSessionRequestToLiveSessionReactionStats(data *entity.LiveSession, enum sharedEnums.ReactionCode) {
+	// Implement the logic to map ReactLiveSessionRequest to LiveSessionReactionStats here
+	switch enum {
+	case sharedEnums.ReactionLike:
+		data.Stats.Like = -1
+	case sharedEnums.ReactionLove:
+		data.Stats.Love = -1
+	case sharedEnums.ReactionHaha:
+		data.Stats.Haha = -1
+	case sharedEnums.ReactionWow:
+		data.Stats.Wow = -1
+	case sharedEnums.ReactionSad:
+		data.Stats.Sad = -1
+	case sharedEnums.ReactionAngry:
+		data.Stats.Angry = -1
+	default:
+		// Handle unknown reaction type
+	}
+}

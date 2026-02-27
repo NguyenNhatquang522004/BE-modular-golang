@@ -7,6 +7,7 @@ type IContentConsumer interface {
 
 	ConsumerReactionPost(ctx context.Context) error
 	ConsumerCommentPost(ctx context.Context) error
-	ConsumeContentDeletePublishPost(ctx context.Context) error
+	ConsumerContentDeletePublishPost(ctx context.Context) error
+	ConsumerSharePost(ctx context.Context) error
 	// Các phương thức khác tùy theo yêu cầu nghiệp vụ
 }

@@ -16,8 +16,13 @@ type RecordingSettingRes struct {
 type LiveStatsRes struct {
 	PeakViewers   int `json:"peak_viewers"`
 	TotalViews    int `json:"total_views"`
-	TotalLikes    int `json:"total_likes"`
 	TotalComments int `json:"total_comments"`
+	Like          int `bson:"likes_count" json:"likes_count"`
+	Love          int `bson:"love" json:"love"`
+	Haha          int `bson:"haha" json:"haha"`
+	Wow           int `bson:"wow" json:"wow"`
+	Sad           int `bson:"sad" json:"sad"`
+	Angry         int `bson:"angry" json:"angry"`
 }
 
 // --- MAIN RESPONSE DTO ---

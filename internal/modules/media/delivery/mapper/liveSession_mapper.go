@@ -34,8 +34,13 @@ func ToEntityLiveSession(r *req.LiveSessionReq) (*entity.LiveSession, error) {
 		Stats: entity.LiveStats{
 			PeakViewers:   r.Stats.PeakViewers,
 			TotalViews:    r.Stats.TotalViews,
-			TotalLikes:    r.Stats.TotalLikes,
 			TotalComments: r.Stats.TotalComments,
+			Like:          r.Stats.Like,
+			Love:          r.Stats.Love,
+			Haha:          r.Stats.Haha,
+			Wow:           r.Stats.Wow,
+			Sad:           r.Stats.Sad,
+			Angry:         r.Stats.Angry,
 		},
 	}
 
@@ -112,7 +117,12 @@ func UpdateToEntityLiveSession(r *req.UpdateLiveSessionReq, e *entity.LiveSessio
 	if r.Stats != nil {
 		e.Stats.PeakViewers = r.Stats.PeakViewers
 		e.Stats.TotalViews = r.Stats.TotalViews
-		e.Stats.TotalLikes = r.Stats.TotalLikes
+		e.Stats.Like = r.Stats.Like
+		e.Stats.Love = r.Stats.Love
+		e.Stats.Haha = r.Stats.Haha
+		e.Stats.Wow = r.Stats.Wow
+		e.Stats.Sad = r.Stats.Sad
+		e.Stats.Angry = r.Stats.Angry
 		e.Stats.TotalComments = r.Stats.TotalComments
 	}
 
@@ -145,8 +155,13 @@ func ReqToResLiveSession(r *req.LiveSessionReq) *res.LiveSessionRes {
 		Stats: res.LiveStatsRes{
 			PeakViewers:   r.Stats.PeakViewers,
 			TotalViews:    r.Stats.TotalViews,
-			TotalLikes:    r.Stats.TotalLikes,
 			TotalComments: r.Stats.TotalComments,
+			Like:          r.Stats.Like,
+			Love:          r.Stats.Love,
+			Haha:          r.Stats.Haha,
+			Wow:           r.Stats.Wow,
+			Sad:           r.Stats.Sad,
+			Angry:         r.Stats.Angry,
 		},
 	}
 
@@ -192,8 +207,13 @@ func EntityToResLiveSession(e *entity.LiveSession) *res.LiveSessionRes {
 		Stats: res.LiveStatsRes{
 			PeakViewers:   e.Stats.PeakViewers,
 			TotalViews:    e.Stats.TotalViews,
-			TotalLikes:    e.Stats.TotalLikes,
 			TotalComments: e.Stats.TotalComments,
+			Like:          e.Stats.Like,
+			Love:          e.Stats.Love,
+			Haha:          e.Stats.Haha,
+			Wow:           e.Stats.Wow,
+			Sad:           e.Stats.Sad,
+			Angry:         e.Stats.Angry,
 		},
 		CreatedAt: e.CreatedAt,
 		UpdatedAt: e.UpdatedAt,

@@ -5,6 +5,7 @@ import (
 
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/server/http/response"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/content/delivery/dto/req"
+	res "github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/content/delivery/dto/res"
 )
 
 type IPublishPostUseCase interface {
@@ -14,7 +15,7 @@ type ISharePostUseCase interface {
 	Execute(ctx context.Context, req *req.SharePostRequest) (*response.Response, error)
 }
 type IDeleteSharePostUseCase interface {
-	Execute(ctx context.Context, req *req.SharePostRequest) (*response.Response, error)
+	Execute(ctx context.Context, req *req.SharePostRequest) (*res.FailSharePostResponse, error)
 }
 type IDeleteSharePostToGroupUseCase interface { // IGNORE --- đợi làm tới community
 	Execute(ctx context.Context, req *req.SharePostToGroupRequest) (*response.Response, error)

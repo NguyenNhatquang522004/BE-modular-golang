@@ -102,3 +102,70 @@ type DeleteReelRequest struct {
 	ReelID string `json:"reel_id"`
 	UserID string `json:"user_id"`
 }
+type ReactReelRequest struct {
+	ReelID       string                     `json:"reel_id"`
+	UserID       string                     `json:"user_id"`
+	Total        int                        `json:"total"`
+	TargetType   sharedEnums.ReactionTarget `json:"target_type" validate:"required"`
+	ReactionCode sharedEnums.ReactionCode   `json:"reaction_code"` // "❤️", "😂" hoặc ID sticker
+	CreatedAt    time.Time                  `json:"created_at"`
+	EventType    constants.EventType        `json:"event_type"` // "view" hoặc "unview"
+
+}
+
+type ReactCounterReelRequest struct {
+	ReelID    string              `json:"reel_id"`
+	UserID    string              `json:"user_id"`
+	Comments  int                 `json:"comments"`
+	Saves     int                 `json:"saves"`
+	Shares    int                 `json:"shares"`
+	EventType constants.EventType `json:"event_type"` // "view" hoặc "unview"
+
+}
+type ShareReelRequest struct {
+	ReelID string `json:"reel_id"`
+	UserID string `json:"user_id"`
+	*ReelReq
+}
+
+type CreateLiveStreamRequest struct {
+	// Define fields for creating a live stream here
+	*LiveSessionReq
+}
+
+type UpdateLiveStreamRequest struct {
+	// Define fields for updating a live stream here
+	LiveSessionID string `json:"live_session_id"`
+	*UpdateLiveSessionReq
+}
+type DeleteLiveStreamRequest struct {
+	LiveSessionID string `json:"live_session_id"`
+	UserID        string `json:"user_id"`
+}
+type ReactLiveStreamRequest struct {
+	LiveSessionID string                     `json:"live_session_id"`
+	UserID        string                     `json:"user_id"`
+	Total         int                        `json:"total"`
+	TargetType    sharedEnums.ReactionTarget `json:"target_type" validate:"required"`
+	ReactionCode  sharedEnums.ReactionCode   `json:"reaction_code"` // "❤️", "😂" hoặc ID sticker
+	CreatedAt     time.Time                  `json:"created_at"`
+	EventType     constants.EventType        `json:"event_type"` // "view" hoặc "unview"
+}
+
+type StartStopVideoLiveStreamRequest struct {
+	LiveSessionID string              `json:"live_session_id"`
+	SegmentLen    int                 `json:"segment_len"`
+	OwnerID       string              `json:"owner_id"`
+	Name          string              `json:"name"`
+	EventType     constants.EventType `json:"event_type"`
+}
+type CommentLiveStreamRequest struct {
+	*LiveCommentReq
+	EventType constants.EventType `json:"event_type"`
+}
+type CounterLiveStreamRequest struct {
+	LiveSessionID string              `json:"live_session_id"`
+	Comments      int                 `json:"comments"`
+	Views         int                 `json:"views"`
+	EventType     constants.EventType `json:"event_type"` // "increment" hoặc "decrement"
+}

@@ -4,11 +4,10 @@ import (
 	"time"
 
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/sharedEnums"
-	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/interaction/enum"
 )
 
 type CreateCommentReq struct {
-	PostID          string           `json:"post_id" binding:"required"`
+	TargetID        string           `json:"target_id" binding:"required"`
 	UserID          string           `json:"user_id" binding:"required"`
 	AssetID         *string          `json:"asset_id,omitempty"`
 	Content         string           `json:"content"`
@@ -17,32 +16,32 @@ type CreateCommentReq struct {
 	ParentCommentID *string          `json:"parent_comment_id,omitempty"`
 	RootCommentID   *string          `json:"root_comment_id,omitempty"`
 
-	Status          *enum.CommentStatus  `json:"status,omitempty"`
-	HiddenMetadata  *HiddenMetadataReq   `json:"hidden_metadata,omitempty"`
-	DeletedMetadata *DeletedMetadataReq  `json:"deleted_metadata,omitempty"`
-	ReportCount     int                  `json:"report_count,omitempty"`
-	Reactions       *CommentReactionsReq `json:"reactions,omitempty"` // Đã tách riêng Req
-	ReplyCount      int                  `json:"reply_count,omitempty"`
-	MentionCount    int                  `json:"mention_count,omitempty"`
-	IsEdited        bool                 `json:"is_edited,omitempty"`
-	LastEditedAt    *time.Time           `json:"last_edited_at,omitempty"`
-	CreatedAt       *time.Time           `json:"created_at,omitempty"`
-	UpdatedAt       *time.Time           `json:"updated_at,omitempty"`
+	Status          *sharedEnums.ProcessingStatus `json:"status,omitempty"`
+	HiddenMetadata  *HiddenMetadataReq            `json:"hidden_metadata,omitempty"`
+	DeletedMetadata *DeletedMetadataReq           `json:"deleted_metadata,omitempty"`
+	ReportCount     int                           `json:"report_count,omitempty"`
+	Reactions       *CommentReactionsReq          `json:"reactions,omitempty"` // Đã tách riêng Req
+	ReplyCount      int                           `json:"reply_count,omitempty"`
+	MentionCount    int                           `json:"mention_count,omitempty"`
+	IsEdited        bool                          `json:"is_edited,omitempty"`
+	LastEditedAt    *time.Time                    `json:"last_edited_at,omitempty"`
+	CreatedAt       *time.Time                    `json:"created_at,omitempty"`
+	UpdatedAt       *time.Time                    `json:"updated_at,omitempty"`
 }
 
 type UpdateCommentReq struct {
-	Content         *string              `json:"content,omitempty"`
-	Media           *CommentMediaReq     `json:"media,omitempty"`
-	Mentions        *[]string            `json:"mentions,omitempty"`
-	Status          *enum.CommentStatus  `json:"status,omitempty"`
-	HiddenMetadata  *HiddenMetadataReq   `json:"hidden_metadata,omitempty"`
-	DeletedMetadata *DeletedMetadataReq  `json:"deleted_metadata,omitempty"`
-	ReportCount     *int                 `json:"report_count,omitempty"`
-	Reactions       *CommentReactionsReq `json:"reactions,omitempty"` // Đã tách riêng Req
-	ReplyCount      *int                 `json:"reply_count,omitempty"`
-	MentionCount    *int                 `json:"mention_count,omitempty"`
-	IsEdited        *bool                `json:"is_edited,omitempty"`
-	LastEditedAt    *time.Time           `json:"last_edited_at,omitempty"`
+	Content         *string                       `json:"content,omitempty"`
+	Media           *CommentMediaReq              `json:"media,omitempty"`
+	Mentions        *[]string                     `json:"mentions,omitempty"`
+	Status          *sharedEnums.ProcessingStatus `json:"status,omitempty"`
+	HiddenMetadata  *HiddenMetadataReq            `json:"hidden_metadata,omitempty"`
+	DeletedMetadata *DeletedMetadataReq           `json:"deleted_metadata,omitempty"`
+	ReportCount     *int                          `json:"report_count,omitempty"`
+	Reactions       *CommentReactionsReq          `json:"reactions,omitempty"` // Đã tách riêng Req
+	ReplyCount      *int                          `json:"reply_count,omitempty"`
+	MentionCount    *int                          `json:"mention_count,omitempty"`
+	IsEdited        *bool                         `json:"is_edited,omitempty"`
+	LastEditedAt    *time.Time                    `json:"last_edited_at,omitempty"`
 }
 
 type CommentMediaReq struct {
@@ -52,8 +51,11 @@ type CommentMediaReq struct {
 }
 
 type DisplayMetaReq struct {
-	Width  int `json:"width"`
-	Height int `json:"height"`
+	Width     int     `json:"width"`
+	Height    int     `json:"height"`
+	Duration  float64 `bson:"duration,omitempty" json:"duration,omitempty"`     // Dành cho video/audio
+	SizeBytes int64   `bson:"size_bytes,omitempty" json:"size_bytes,omitempty"` // Dành cho tất cả loại media
+	MimeType  string  `bson:"mime_type,omitempty" json:"mime_type,omitempty"`   // Dành cho tất cả loại media
 }
 
 type HiddenMetadataReq struct {

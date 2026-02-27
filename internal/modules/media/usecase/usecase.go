@@ -48,25 +48,34 @@ type IDeleteReelUseCase interface {
 	Execute(ctx context.Context, req *req.DeleteReelRequest) (*res.FailedReelResponse, error)
 }
 type IReactReelUseCase interface {
-	Execute(ctx context.Context) (*response.Response, error)
+	Execute(ctx context.Context, req *req.ReactReelRequest) (*res.FailedReelResponse, error)
+}
+type IReactCounterReelUseCase interface {
+	Execute(ctx context.Context, req *req.ReactCounterReelRequest) (*res.FailedReelResponse, error)
+}
+type IShareReelUseCase interface {
+	Execute(ctx context.Context, req *req.ShareReelRequest) (*res.FailedReelResponse, error)
 }
 type ICreateLiveStreamUseCase interface {
-	Execute(ctx context.Context) (*response.Response, error)
+	Execute(ctx context.Context, req *req.CreateLiveStreamRequest) (*res.FailedLiveStreamResponse, error)
 }
 type IUpdateLiveStreamUseCase interface {
-	Execute(ctx context.Context) (*response.Response, error)
+	Execute(ctx context.Context, req *req.UpdateLiveStreamRequest) (*res.FailedLiveStreamResponse, error)
 }
 type IDeleteLiveStreamUseCase interface {
-	Execute(ctx context.Context) (*response.Response, error)
+	Execute(ctx context.Context, req *req.DeleteLiveStreamRequest) (*res.FailedLiveStreamResponse, error)
 }
 type IReactLiveStreamUseCase interface {
-	Execute(ctx context.Context) (*response.Response, error)
+	Execute(ctx context.Context, req *req.ReactLiveStreamRequest) (*res.FailedLiveStreamResponse, error)
+}
+type ICounterLiveStreamUseCase interface {
+	Execute(ctx context.Context, req *req.CounterLiveStreamRequest) (*res.FailedLiveStreamResponse, error)
+}
+type IStartStopVideoLiveStreamUseCase interface {
+	Execute(ctx context.Context, req *req.StartStopVideoLiveStreamRequest) (*res.FailedLiveStreamResponse, error)
 }
 type ICommentLiveStreamUseCase interface {
-	Execute(ctx context.Context) (*response.Response, error)
-}
-type IStoreVideoAfterLiveStreamUseCase interface {
-	Execute(ctx context.Context) (*response.Response, error)
+	Execute(ctx context.Context, req *req.CommentLiveStreamRequest) (*res.FailedLiveStreamResponse, error)
 }
 type ICreateArtistUseCase interface {
 	Execute(ctx context.Context) (*response.Response, error)

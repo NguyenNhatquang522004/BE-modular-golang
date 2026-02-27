@@ -65,7 +65,7 @@ func (uc *CreateAlbumUseCase) Execute(ctx context.Context, req *req.CreateAlbumR
 					resultChan <- taskResult{dataMedia.ID.Hex(), errors.New("Media asset already belongs to an album")}
 					return
 
-				}
+				}	
 				dataMedia.AlbumID = entityAlbum.ID
 				err = uc.mediaAssetsRepo.UpdateMediaAsset(ctx, dataMedia)
 				if err != nil {

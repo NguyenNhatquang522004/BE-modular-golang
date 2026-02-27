@@ -20,7 +20,7 @@ var (
 // ==========================
 
 func ToEntityComment(req *req.CreateCommentReq) (*entity.Comment, error) {
-	postID, err := primitive.ObjectIDFromHex(req.PostID)
+	targetID, err := primitive.ObjectIDFromHex(req.TargetID)
 	if err != nil {
 		return nil, ErrInvalidPostID
 	}
@@ -28,7 +28,7 @@ func ToEntityComment(req *req.CreateCommentReq) (*entity.Comment, error) {
 	now := time.Now()
 	comment := &entity.Comment{
 		ID:           primitive.NewObjectID(),
-		PostID:       postID,
+		TargetID:     targetID,
 		UserID:       req.UserID,
 		Content:      req.Content,
 		Mentions:     req.Mentions,
@@ -98,6 +98,9 @@ func ToEntityComment(req *req.CreateCommentReq) (*entity.Comment, error) {
 			DisplayMeta: entity.DisplayMeta{
 				Width:  req.Media.DisplayMeta.Width,
 				Height: req.Media.DisplayMeta.Height,
+				Duration:  req.Media.DisplayMeta.Duration,
+				SizeBytes: req.Media.DisplayMeta.SizeBytes,
+				MimeType:  req.Media.DisplayMeta.MimeType,
 			},
 		}
 	}
@@ -167,8 +170,6 @@ func UpdateToEntityComment(req *req.UpdateCommentReq, comment *entity.Comment) {
 		isModified = true
 	}
 
-	
-
 	// Cập nhật Reactions nếu có truyền lên
 	if req.Reactions != nil {
 		comment.Reactions = entity.CommentReactions{
@@ -190,6 +191,11 @@ func UpdateToEntityComment(req *req.UpdateCommentReq, comment *entity.Comment) {
 			DisplayMeta: entity.DisplayMeta{
 				Width:  req.Media.DisplayMeta.Width,
 				Height: req.Media.DisplayMeta.Height,
+				Duration:  req.Media.DisplayMeta.Duration,
+				SizeBytes: req.Media.DisplayMeta.SizeBytes,
+				MimeType:  req.Media.DisplayMeta.MimeType,
+				// Width:  req.Media.DisplayMeta.Width, --- IGNORE ---
+				// Height: req.Media.DisplayMeta.Height, --- IGNORE ---
 			},
 		}
 		isModified = true
@@ -236,7 +242,7 @@ func ToResponseComment(ent *entity.Comment) *res.CommentRes {
 
 	resa := &res.CommentRes{
 		ID:           ent.ID.Hex(),
-		PostID:       ent.PostID.Hex(),
+		TargetID:     ent.TargetID.Hex(),
 		UserID:       ent.UserID,
 		Content:      ent.Content,
 		Mentions:     ent.Mentions,
@@ -280,6 +286,11 @@ func ToResponseComment(ent *entity.Comment) *res.CommentRes {
 			DisplayMeta: res.DisplayMetaRes{
 				Width:  ent.Media.DisplayMeta.Width,
 				Height: ent.Media.DisplayMeta.Height,
+				Duration:  ent.Media.DisplayMeta.Duration,	
+				SizeBytes: ent.Media.DisplayMeta.SizeBytes,
+				MimeType:  ent.Media.DisplayMeta.MimeType,
+				// Width:  ent.Media.DisplayMeta.Width, --- IGNORE ---
+				// Height: ent.Media.DisplayMeta.Height, --- IGNORE ---
 			},
 		}
 	}
@@ -308,7 +319,7 @@ func ReqToResponse(req *req.CreateCommentReq, genID string) *res.CommentRes {
 	now := time.Now()
 	resa := &res.CommentRes{
 		ID:              genID,
-		PostID:          req.PostID,
+		TargetID:        req.TargetID,
 		UserID:          req.UserID,
 		AssetID:         req.AssetID,
 		Content:         req.Content,
@@ -360,6 +371,9 @@ func ReqToResponse(req *req.CreateCommentReq, genID string) *res.CommentRes {
 			DisplayMeta: res.DisplayMetaRes{
 				Width:  req.Media.DisplayMeta.Width,
 				Height: req.Media.DisplayMeta.Height,
+				Duration:  req.Media.DisplayMeta.Duration,
+				SizeBytes: req.Media.DisplayMeta.SizeBytes,
+				MimeType:  req.Media.DisplayMeta.MimeType,
 			},
 		}
 	}

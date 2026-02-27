@@ -34,16 +34,14 @@ type ISeaweedfs interface {
 	// UpdateStreamManifest: Cập nhật file chỉ mục (.m3u8 hoặc .mpd)
 	// Để trình phát (Player) biết segment nào mới nhất để load
 	UpdateStreamManifest(ctx context.Context, sessionID string, manifestContent []byte) error
-
+	GenerateVOD(ctx context.Context, sessionID string, ownerID string, name string) (*dto.FileUploadOutput, error)
 	// --- HELPER METHODS ---
 
 	// GetPublicURL: Trả về URL ảnh/video để hiển thị trên UI
 	GetPublicURL(filePath string) string
-
+	GetStreamURLDIR(sessionID string) string
 	// GetStreamURL: Trả về URL của file manifest để xem Live Stream
 	GetStreamURL(sessionID string) string
 	// GetUploadPresignedUrl: Lấy URL tạm thời để upload trực tiếp từ Frontend đến SeaweedFS
 	GetUploadPresignedUrl(ctx context.Context, input *dto.FileUploadInput) (*dto.PresignedURLResponse, error)
-
-	
 }

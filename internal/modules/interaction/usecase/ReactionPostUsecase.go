@@ -23,7 +23,7 @@ func NewReactionPostUsecase(pool IRepositoryShare.IWorkerPool, eventBus events.E
 	}
 }
 
-func (u *ReactionPostUsecase) Execute(ctx context.Context, req *interactionEvent.PostReactionPayload) (*response.Response, error) {
+func (u *ReactionPostUsecase) Execute(ctx context.Context, req *interactionEvent.EntityReactionPayload) (*response.Response, error) {
 	// Implement the logic for reacting to a post here
 	err := u.eventBus.Publish(ctx, constants.TopicReactPost.String(), req.UserID.String(), string(req.Topic), req)
 	if err != nil {

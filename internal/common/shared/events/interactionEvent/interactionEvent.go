@@ -8,17 +8,8 @@ import (
 	"github.com/gocql/gocql"
 )
 
-type CommentReactionPayload struct {
-	CommentID    string                     `json:"comment_id" validate:"required"`
-	UserID       gocql.UUID                 `json:"user_id" validate:"required"`
-	TargetType   sharedEnums.ReactionTarget `json:"target_type" validate:"required"`
-	ReactionCode sharedEnums.ReactionCode   `json:"reaction_code" validate:"required"`
-	CreatedAt    time.Time                  `json:"created_at"`
-	Topic        constants.EventType        `json:"topic" validate:"required"`
-}
-
-type PostReactionPayload struct {
-	PostID       string                     `json:"post_id" validate:"required"`
+type EntityReactionPayload struct {
+	TargetID     string                     `json:"target_id" validate:"required"`
 	UserID       gocql.UUID                 `json:"user_id" validate:"required"`
 	TargetType   sharedEnums.ReactionTarget `json:"target_type" validate:"required"`
 	ReactionCode sharedEnums.ReactionCode   `json:"reaction_code" validate:"required"`

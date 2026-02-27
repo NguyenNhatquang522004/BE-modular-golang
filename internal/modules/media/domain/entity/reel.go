@@ -90,10 +90,10 @@ type ReelStats struct {
 	Haha     int `bson:"haha" json:"haha"`
 	Wow      int `bson:"wow" json:"wow"`
 	Sad      int `bson:"sad" json:"sad"`
-	Angry    int `bson:"angry" json:"angry"`
-	Shares   int `bson:"shares" json:"shares"`
-	Saves    int `bson:"saves" json:"saves"`
-	Comments int `bson:"comments" json:"comments"`
+	Angry    int `bson:"angry" json:"angry"` 
+	Shares   int `bson:"shares" json:"shares"`     //chưa làm
+	Saves    int `bson:"saves" json:"saves"`       //chưa làm
+	Comments int `bson:"comments" json:"comments"` //chưa làm
 }
 
 func (Reel) CollectionName() string {

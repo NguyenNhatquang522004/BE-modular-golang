@@ -8,8 +8,12 @@ package sharedEnums
 type ReactionTarget int
 
 const (
-	ReactionTargetPost ReactionTarget = iota // 'post'
-	ReactionTargetComment                    // 'comment'
+	ReactionTargetPost    ReactionTarget = iota // 'post'
+	ReactionTargetComment                       // 'comment'
+	ReactionTargetAlbum                         // 'album'
+	ReactionTargetStory                         // 'story'
+	ReactionTargetReel                          // 'reel'
+	ReactionTargetUnknown                       // 'unknown
 )
 
 // =============================================================================
@@ -20,10 +24,11 @@ const (
 type ReactionCode int
 
 const (
-	ReactionLike  ReactionCode = iota // 'like'
-	ReactionLove                      // 'love'
-	ReactionHaha                      // 'haha'
-	ReactionSad                       // 'sad'
-	ReactionAngry                     // 'angry'
-	ReactionWow                       // 'wow'
+	ReactionLike    ReactionCode = iota // 'like'
+	ReactionLove                        // 'love'
+	ReactionHaha                        // 'haha'
+	ReactionSad                         // 'sad'
+	ReactionAngry                       // 'angry'
+	ReactionWow                         // 'wow'
+	ReactionUnknown                     // 'unknown'
 )

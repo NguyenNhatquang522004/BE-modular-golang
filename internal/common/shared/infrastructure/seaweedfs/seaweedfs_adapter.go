@@ -5,7 +5,10 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"log"
 	"net/url" // Bắt buộc phải có để tạo tham số xóa
+	"os"
+	"os/exec"
 	"path/filepath"
 	"strings"
 	"time"
@@ -203,9 +206,8 @@ func (r *SeaweedfsAdapter) Exists(ctx context.Context, filePath string) (bool, e
 func (r *SeaweedfsAdapter) UploadStreamSegment(ctx context.Context, sessionID string, segmentName string, content io.Reader) error {
 	// Quy hoạch folder: /lives/{sessionID}/{segmentName}
 	// Lưu ý: Stream segment thường nhỏ nên ta dùng TTL ngắn (ví dụ: 10 phút) để tự dọn rác
-	liveFolder := fmt.Sprintf("/lives/%s", sessionID)
-	fullPath := fmt.Sprintf("%s/%s", liveFolder, segmentName)
 
+	fullPath := r.GetStreamSegmentURL(sessionID, segmentName)
 	// Vì đây là stream realtime, ta không cần lưu Metadata phức tạp vào DB chính
 	// Dùng TTL "10m" để SeaweedFS tự xóa các segment cũ
 	// Lưu ý: Cần biết Size của segment. Nếu không có, bạn phải buffer hoặc dùng chunked upload.
@@ -213,17 +215,94 @@ func (r *SeaweedfsAdapter) UploadStreamSegment(ctx context.Context, sessionID st
 	_, err := r.client.Upload(content, 0, fullPath, "", "")
 	return err
 }
+func (r *SeaweedfsAdapter) GenerateVOD(ctx context.Context, sessionID string, ownerID string, name string) (*dto.FileUploadOutput, error) {
+	// 1. TẠO INTERNAL URL TRỎ VÀO SEAWEEDFS
+	// Mặc định Filer chạy ở port 8888 trên server.
+	// Nếu app Go và SeaweedFS chạy chung mạng Docker, dùng tên service (vd: http://seaweedfs-filer:8888)
+	// 2. TẠO FILE TẠM TRÊN SERVER BACKEND
+	localMP4Path := fmt.Sprintf("/tmp/lives/%s_vod.mp4", sessionID)
+
+	log.Printf("[VOD] Bắt đầu gộp video cho session: %s", sessionID)
+
+	// 3. GỌI FFMPEG GỘP VIDEO
+	// FFmpeg sẽ tự tải .m3u8 và .ts từ SeaweedFS về, gộp và lưu vào localMP4Path
+	err := r.MergeToMP4(ctx, sessionID, localMP4Path)
+	if err != nil {
+		log.Printf("[VOD Error] Không thể gộp video: %v", err)
+		return nil, fmt.Errorf("failed to merge video: %w", err)
+	}
+
+	log.Printf("[VOD] Đã tạo file MP4 tạm: %s", localMP4Path)
+
+	// 4. MỞ FILE MP4 TẠM ĐỂ UPLOAD NGƯỢC LÊN SEAWEEDFS
+	file, err := os.Open(localMP4Path)
+	if err != nil {
+		log.Printf("[VOD Error] Không thể mở file MP4 tạm: %v", err)
+		return nil, fmt.Errorf("failed to open temp MP4 file: %w", err)
+	}
+	defer file.Close()
+
+	fileInfo, _ := file.Stat()
+
+	// 5. SỬ DỤNG HÀM UPLOAD HIỆN CÓ CỦA BẠN (SeaweedfsAdapter.Upload)
+	uploadInput := &dto.FileUploadInput{
+		OwnerID:  ownerID,
+		Storage:  utils.BucketLive, // Tùy định nghĩa Storage của bạn
+		FileName: sessionID + name + ".mp4",
+		Content:  file,
+		Size:     fileInfo.Size(),
+	}
+
+	// Tận dụng lại đúng hàm Upload bạn đã viết!
+	uploadResult, err := r.Upload(ctx, uploadInput)
+	if err != nil {
+		log.Printf("[VOD Error] Upload lên SeaweedFS thất bại: %v", err)
+		return nil, fmt.Errorf("failed to upload VOD to SeaweedFS: %w", err)
+	}
+
+	log.Printf("[VOD Success] Video đã sẵn sàng: %s", uploadResult.PublicURL)
+
+	// 6. DỌN DẸP RÁC
+	// Xóa file mp4 tạm trên ổ cứng backend
+	os.Remove(localMP4Path)
+
+	// [Tùy chọn] Xóa folder chứa các file .ts trên SeaweedFS để tiết kiệm dung lượng
+	_ = r.DeleteFolder(ctx, r.GetStreamURLDIR(sessionID))
+	return uploadResult, nil
+}
 
 // UpdateStreamManifest: Cập nhật file danh sách phát .m3u8
 // manifestContent là nội dung mới của file manifest/index.m3u8
 // sessionID là định danh duy nhất cho buổi live hiện tại
 func (r *SeaweedfsAdapter) UpdateStreamManifest(ctx context.Context, sessionID string, manifestContent []byte) error {
-	manifestPath := fmt.Sprintf("/lives/%s/index.m3u8", sessionID)
+	manifestPath := r.GetStreamURL(sessionID) // Ví dụ: /lives/{sessionID}/index.m3u8
 
 	// Manifest phải luôn được ghi đè để người xem cập nhật được segment mới nhất
 	reader := bytes.NewReader(manifestContent)
 	_, err := r.client.Upload(reader, int64(len(manifestContent)), manifestPath, "", "")
 	return err
+}
+func (r *SeaweedfsAdapter) MergeToMP4(ctx context.Context, sessionID string, outputPath string) error {
+	// Gọi FFmpeg để merge HLS thành MP4
+	m3u8URL := r.GetStreamURL(sessionID)
+
+	args := []string{
+		"-y",          // Ghi đè file đầu ra nếu đã tồn tại
+		"-i", m3u8URL, // Link HTTP trỏ tới file m3u8 trên SeaweedFS Filer
+		"-c", "copy", // Copy y nguyên luồng video/audio, không tốn CPU encode
+		"-bsf:a", "aac_adtstoasc", // Fix lỗi định dạng âm thanh TS -> MP4
+		outputPath, // Lưu ra file tạm trên disk (VD: /tmp/lives/session_vod.mp4)
+	}
+	cmd := exec.CommandContext(ctx, "ffmpeg", args...)
+
+	// Lấy log lỗi của FFmpeg để dễ debug nếu ghép file thất bại
+	var stderr bytes.Buffer
+	cmd.Stderr = &stderr
+
+	if err := cmd.Run(); err != nil {
+		return fmt.Errorf("ffmpeg merge failed: %w, stderr: %s", err, stderr.String())
+	}
+	return nil
 }
 
 // --- HELPER METHODS ---
@@ -240,7 +319,18 @@ func (r *SeaweedfsAdapter) GetPublicURL(filePath string) string {
 	return base + path
 }
 
-// GetStreamURL: Trả về link file manifest để trình phát video (HLS Player) kết nối
+// GetStreamSegmentURL: Trả về link file segment để trình phát video (HLS Player) kết nối
+func (r *SeaweedfsAdapter) GetStreamSegmentURL(sessionID string, segmentName string) string {
+	// Đường dẫn chuẩn cho trình phát: http://filer:8888/lives/{sessionID}/{segmentName}
+	liveFolder := fmt.Sprintf("/lives/%s", sessionID)
+	fullPath := fmt.Sprintf("%s/%s", liveFolder, segmentName)
+	return r.GetPublicURL(fullPath)
+}
+func (r *SeaweedfsAdapter) GetStreamURLDIR(sessionID string) string {
+	// Đường dẫn chuẩn cho trình phát: http://filer:8888/lives/{sessionID}/index.m3u8
+	manifestPath := fmt.Sprintf("/lives/%s", sessionID)
+	return r.GetPublicURL(manifestPath)
+}
 func (r *SeaweedfsAdapter) GetStreamURL(sessionID string) string {
 	// Đường dẫn chuẩn cho trình phát: http://filer:8888/lives/{sessionID}/index.m3u8
 	manifestPath := fmt.Sprintf("/lives/%s/index.m3u8", sessionID)

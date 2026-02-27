@@ -4,20 +4,19 @@ import (
 	"time"
 
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/sharedEnums"
-	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/interaction/enum"
 )
 
 type CommentRes struct {
-	ID              string              `json:"id"`
-	PostID          string              `json:"post_id"`
-	UserID          string              `json:"user_id"`
-	AssetID         *string             `json:"asset_id,omitempty"`
-	Content         string              `json:"content"`
-	Media           *CommentMediaRes    `json:"media,omitempty"`
-	Mentions        []string            `json:"mentions,omitempty"`
-	ParentCommentID *string             `json:"parent_comment_id,omitempty"`
-	RootCommentID   *string             `json:"root_comment_id,omitempty"`
-	Status          *enum.CommentStatus `json:"status"`
+	ID              string                        `json:"id"`
+	TargetID        string                        `json:"target_id"`
+	UserID          string                        `json:"user_id"`
+	AssetID         *string                       `json:"asset_id,omitempty"`
+	Content         string                        `json:"content"`
+	Media           *CommentMediaRes              `json:"media,omitempty"`
+	Mentions        []string                      `json:"mentions,omitempty"`
+	ParentCommentID *string                       `json:"parent_comment_id,omitempty"`
+	RootCommentID   *string                       `json:"root_comment_id,omitempty"`
+	Status          *sharedEnums.ProcessingStatus `json:"status"`
 
 	HiddenMetadata  *HiddenMetadataRes   `json:"hidden_metadata,omitempty"`
 	DeletedMetadata *DeletedMetadataRes  `json:"deleted_metadata,omitempty"`
@@ -39,8 +38,11 @@ type CommentMediaRes struct {
 }
 
 type DisplayMetaRes struct {
-	Width  int `json:"width"`
-	Height int `json:"height"`
+	Width     int     `json:"width"`
+	Height    int     `json:"height"`
+	Duration  float64 `bson:"duration,omitempty" json:"duration,omitempty"`     // Dành cho video/audio
+	SizeBytes int64   `bson:"size_bytes,omitempty" json:"size_bytes,omitempty"` // Dành cho tất cả loại media
+	MimeType  string  `bson:"mime_type,omitempty" json:"mime_type,omitempty"`   // Dành cho tất cả loại media
 }
 
 type HiddenMetadataRes struct {

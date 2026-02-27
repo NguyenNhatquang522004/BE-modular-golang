@@ -23,22 +23,31 @@ const (
 	TopicContentPostPublishMediaAssets   TopicName = "content.post.publish_media_assets.events"
 	ContentPostPublishNotificationFriend TopicName = "content.post.publish_notification_friend.events"
 	ContentPostPublishNotificationTag    TopicName = "content.post.publish_notification_tag.events"
+	TopicSharePost                       TopicName = "content.post.share.events"
 
 	// notification
 	TopicCreateUserNotificationSettings TopicName = "notification.create_user_notification_settings.events"
 	TopicSendNotificationType           TopicName = "notification.send_notification.events"
 
 	//interaction
-	TopicReactComment TopicName = "interaction.react_comment.events"
-	TopicReactPost    TopicName = "interaction.react_post.events"
-	TopicCommentPost  TopicName = "interaction.comment_post.events"
-	TopicCounterPost  TopicName = "interaction.counter_post.events"
+	TopicReactComment   TopicName = "interaction.react_comment.events"
+	TopicReactPost      TopicName = "interaction.react_post.events"
+	TopicCommentPost    TopicName = "interaction.comment_post.events"
+	TopicCounterPost    TopicName = "interaction.counter_post.events"
+	TopicCounterComment TopicName = "interaction.counter_comment.events"
+	TopicEntityReaction TopicName = "interaction.entity_reaction.events"
 
 	// media
 	TopicReactAlbum     TopicName = "media.react_album.events"
 	TopicViewCountStory TopicName = "media.view_count_story.events"
 	TopicReactStory     TopicName = "media.react_story.events"
 	TopicRelyStory      TopicName = "media.rely_story.events"
+	TopicReactReel      TopicName = "media.react_reel.events"
+	TopicCounterReel    TopicName = "media.counter_reel.events"
+	TopicReactLive      TopicName = "media.react_live.events"
+	TopicStartStopLive  TopicName = "media.start_stop_live.events"
+	TopicCommentLive    TopicName = "media.comment_live.events"
+	TopicCounterLive    TopicName = "media.counter_live.events"
 )
 
 type TopicConfig struct {

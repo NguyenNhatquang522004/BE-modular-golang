@@ -6,6 +6,7 @@ import (
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/server/http/response"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/events/interactionEvent"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/interaction/delivery/dto/req"
+	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/interaction/delivery/dto/res"
 )
 
 type ICommentPostAndReplyUsecase interface {
@@ -16,10 +17,10 @@ type ICommentEditUsecase interface {
 	Execute(ctx context.Context, req *req.CommentEditUseRequest) (*response.Response, error)
 }
 type ICommentReactionUsecase interface {
-	Execute(ctx context.Context, req *interactionEvent.CommentReactionPayload) (*response.Response, error)
+	Execute(ctx context.Context, req *interactionEvent.EntityReactionPayload) (*response.Response, error)
 }
 type IReactionPostUsecase interface {
-	Execute(ctx context.Context, req *interactionEvent.PostReactionPayload) (*response.Response, error)
+	Execute(ctx context.Context, req *interactionEvent.EntityReactionPayload) (*response.Response, error)
 }
 
 type IDeleteCommentUsecase interface {
@@ -31,8 +32,12 @@ type IBookmarkPostUsecase interface {
 type IDeleteBookmarkUsecase interface {
 	Execute(ctx context.Context, req *req.DeleteBookmarkRequest) (*response.Response, error)
 }
+type ICommentCountUsecase interface {
+	Execute(ctx context.Context, req *req.CommentCountRequest) (*res.FailedCommentCountResponse, error)
+}
+
 type IGetCommentPostUsecase interface {
-	Execute(ctx context.Context, req *req.GetCommentPostRequest) (*response.Response, error)
+	Execute(ctx context.Context, req *req.CommentCountRequest) (*response.Response, error)
 }
 
 type IGetCommentDetailUsecase interface {

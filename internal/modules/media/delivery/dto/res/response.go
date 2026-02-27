@@ -39,3 +39,9 @@ type FailedReelResponse struct {
 	UserID       string `json:"user_id"`
 	ErrorMessage string `json:"error_message"`
 }
+
+type FailedLiveStreamResponse struct {
+	LiveSessionID string `json:"live_session_id"`
+	UserID        string `json:"user_id"`
+	ErrorMessage  string `json:"error_message"`
+}

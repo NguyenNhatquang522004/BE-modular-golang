@@ -20,7 +20,7 @@ func NewCommentReactionUsecase() *CommentReactionUsecase {
 	return &CommentReactionUsecase{}
 }
 
-func (u *CommentReactionUsecase) Execute(ctx context.Context, req *interactionEvent.CommentReactionPayload) (*response.Response, error) {
+func (u *CommentReactionUsecase) Execute(ctx context.Context, req *interactionEvent.EntityReactionPayload) (*response.Response, error) {
 	// Implement the logic for reacting to a comment here
 	err := u.eventBus.Publish(ctx, constants.TopicReactComment.String(), req.UserID.String(), string(req.Topic), req)
 	if err != nil {

@@ -2,6 +2,7 @@ package cassandra
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"time"
 
@@ -969,4 +970,36 @@ func (r *LiveCommentsRepository) DeleteBulkLiveCommentsByTimeRange(ctx context.C
 	}
 
 	return successCount, bulkErrors, finalErr
+}
+func (r *LiveCommentsRepository) GetLiveCommentByUserID(ctx context.Context, streamID string, userID string) (*entity.LiveComment, error) {
+	// Implement the method to fetch a live comment by user ID
+	tableName := entity.LiveComment{}.TableName()
+	query := fmt.Sprintf(`
+		SELECT stream_id, created_at, comment_id, user_id, user_nickname, 
+		       user_avatar_url, user_badges, content, is_pinned 
+		FROM %s WHERE stream_id = ? AND user_id = ? ALLOW FILTERING
+	`, tableName)
+
+	var c entity.LiveComment
+	err := r.session.Query(query, streamID, userID).WithContext(ctx).Scan(
+		&c.StreamID,
+		&c.CreatedAt,
+		&c.CommentID,
+		&c.UserID,
+		&c.UserNickname,
+		&c.UserAvatarURL,
+		&c.UserBadges,
+		&c.Content,
+		&c.IsPinned,
+	)
+
+	if err != nil {
+		if errors.Is(err, gocql.ErrNotFound) {
+			return nil, nil // Không tìm thấy comment nào cho user này trong stream
+		}
+		return nil, fmt.Errorf("failed to get live comment for user %s in stream %s: %w", userID, streamID, err)
+	}
+
+	// Trả về comment đã tìm thấy
+	return &c, nil
 }

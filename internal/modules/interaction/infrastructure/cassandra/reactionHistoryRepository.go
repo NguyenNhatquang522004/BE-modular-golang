@@ -267,3 +267,59 @@ func (r *ReactionsHistoryRepository) PanigationReactionHistoryByUserID(ctx conte
 		Limit:      limit,
 	}, nil
 }
+func (r *ReactionsHistoryRepository) GetReactionHistoryByUserIDAndTargetID(ctx context.Context, userID gocql.UUID, targetID gocql.UUID) (*entity.UserReactionHistory, error) {
+	// Kiểm tra UUID rỗng
+	var emptyUUID gocql.UUID
+	if userID == emptyUUID {
+		return nil, fmt.Errorf("userID cannot be empty")
+	}
+	if targetID == emptyUUID {
+		return nil, fmt.Errorf("targetID cannot be empty")
+	}
+
+	tableName := entity.UserReactionHistory{}.CassandratableUserReactionHistory()
+
+	// Truy vấn với cả user_id và target_id để tìm kiếm chính xác một bản ghi
+	query := fmt.Sprintf(`
+		SELECT user_id, created_at, target_id, target_type, reaction_code 
+		FROM %s WHERE user_id = ? AND target_id = ? LIMIT 1
+	`, tableName)
+
+	var history *entity.UserReactionHistory
+
+	err := r.session.Query(query, userID, targetID).WithContext(ctx).Scan(
+		&history.UserID,
+		&history.CreatedAt,
+		&history.TargetID,
+		&history.TargetType,
+		&history.ReactionCode,
+	)
+
+	if err != nil {
+		if err == gocql.ErrNotFound {
+			return nil, nil // Không tìm thấy bản ghi nào
+		}
+		return nil, fmt.Errorf("failed to query reaction history for user %s and target %s: %w", userID.String(), targetID.String(), err)
+	}
+
+	return history, nil
+}
+func (r *ReactionsHistoryRepository) UpdateReactionHistory(ctx context.Context, reaction *entity.UserReactionHistory) error {
+	if reaction == nil {
+		return fmt.Errorf("reaction cannot be nil")
+	}
+
+	tableName := entity.UserReactionHistory{}.CassandratableUserReactionHistory()
+
+	query := fmt.Sprintf(`
+		UPDATE %s SET reaction_code = ?, created_at = ?, target_type = ? 
+		WHERE user_id = ? AND target_id = ?
+	`, tableName)
+
+	err := r.session.Query(query, reaction.ReactionCode, reaction.CreatedAt, reaction.TargetType, reaction.UserID, reaction.TargetID).WithContext(ctx).Exec()
+	if err != nil {
+		return fmt.Errorf("failed to update reaction history for user %s and target %s: %w", reaction.UserID.String(), reaction.TargetID, err)
+	}
+
+	return nil
+}
