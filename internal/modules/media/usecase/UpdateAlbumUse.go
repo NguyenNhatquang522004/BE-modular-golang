@@ -8,16 +8,16 @@ import (
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/media/delivery/dto/req"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/media/delivery/dto/res"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/media/delivery/mapper"
-	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/media/domain/IRepository/IRepostitoryMongodb"
+	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/media/domain/IRepository/IRepositoryMongodb"
 )
 
 type UpdateAlbumUseCase struct {
-	ablumRepo       IRepostitoryMongodb.IAlbumsRepository
-	mediaAssetsRepo IRepostitoryMongodb.IMediaAssetsRepository
+	ablumRepo       IRepositoryMongodb.IAlbumsRepository
+	mediaAssetsRepo IRepositoryMongodb.IMediaAssetsRepository
 	pool            IRepositoryShare.IWorkerPool
 }
 
-func NewUpdateAlbumUseCase(ablumRepo IRepostitoryMongodb.IAlbumsRepository, mediaAssetsRepo IRepostitoryMongodb.IMediaAssetsRepository, pool IRepositoryShare.IWorkerPool) *UpdateAlbumUseCase {
+func NewUpdateAlbumUseCase(ablumRepo IRepositoryMongodb.IAlbumsRepository, mediaAssetsRepo IRepositoryMongodb.IMediaAssetsRepository, pool IRepositoryShare.IWorkerPool) *UpdateAlbumUseCase {
 	return &UpdateAlbumUseCase{
 		ablumRepo:       ablumRepo,
 		mediaAssetsRepo: mediaAssetsRepo,

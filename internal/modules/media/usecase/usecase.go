@@ -36,18 +36,36 @@ type IReactStoryUseCase interface {
 	Execute(ctx context.Context, req *req.ReactStoryRequest) (*res.FailedStoryResponse, error)
 }
 type IRelyStoryUseCase interface {
-	Execute(ctx context.Context) (*response.Response, error)
+	Execute(ctx context.Context, req *req.RelyStoryRequest) (*[]res.FailedStoryResponse, error)
 }
 type ICreateReelUseCase interface {
-	Execute(ctx context.Context) (*response.Response, error)
+	Execute(ctx context.Context, req *req.CreateReelRequest) (*res.FailedReelResponse, error)
 }
 type IUpdateReelUseCase interface {
-	Execute(ctx context.Context) (*response.Response, error)
+	Execute(ctx context.Context, req *req.UpdateReelRequest) (*res.FailedReelResponse, error)
 }
 type IDeleteReelUseCase interface {
-	Execute(ctx context.Context) (*response.Response, error)
+	Execute(ctx context.Context, req *req.DeleteReelRequest) (*res.FailedReelResponse, error)
 }
 type IReactReelUseCase interface {
+	Execute(ctx context.Context) (*response.Response, error)
+}
+type ICreateLiveStreamUseCase interface {
+	Execute(ctx context.Context) (*response.Response, error)
+}
+type IUpdateLiveStreamUseCase interface {
+	Execute(ctx context.Context) (*response.Response, error)
+}
+type IDeleteLiveStreamUseCase interface {
+	Execute(ctx context.Context) (*response.Response, error)
+}
+type IReactLiveStreamUseCase interface {
+	Execute(ctx context.Context) (*response.Response, error)
+}
+type ICommentLiveStreamUseCase interface {
+	Execute(ctx context.Context) (*response.Response, error)
+}
+type IStoreVideoAfterLiveStreamUseCase interface {
 	Execute(ctx context.Context) (*response.Response, error)
 }
 type ICreateArtistUseCase interface {
@@ -87,24 +105,6 @@ type IAddItemToPlaylistUseCase interface {
 	Execute(ctx context.Context) (*response.Response, error)
 }
 type IRemoveItemFromPlaylistUseCase interface {
-	Execute(ctx context.Context) (*response.Response, error)
-}
-type ICreateLiveStreamUseCase interface {
-	Execute(ctx context.Context) (*response.Response, error)
-}
-type IUpdateLiveStreamUseCase interface {
-	Execute(ctx context.Context) (*response.Response, error)
-}
-type IDeleteLiveStreamUseCase interface {
-	Execute(ctx context.Context) (*response.Response, error)
-}
-type IReactLiveStreamUseCase interface {
-	Execute(ctx context.Context) (*response.Response, error)
-}
-type ICommentLiveStreamUseCase interface {
-	Execute(ctx context.Context) (*response.Response, error)
-}
-type IStoreVideoAfterLiveStreamUseCase interface {
 	Execute(ctx context.Context) (*response.Response, error)
 }
 type usecase struct {

@@ -11,21 +11,24 @@ import (
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/media/delivery/dto/req"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/media/delivery/dto/res"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/media/domain/IRepository/IRepositoryCassandra"
-	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/media/domain/IRepository/IRepostitoryMongodb"
+	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/media/domain/IRepository/IRepositoryMongodb"
+
+	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/media/domain/entity"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/media/utils"
+	"github.com/gocql/gocql"
 )
 
 type ConsumerReact struct {
 	// Define any dependencies needed for consuming react events here
-	ablumRepo       IRepostitoryMongodb.IAlbumsRepository
-	mediaAssetsRepo IRepostitoryMongodb.IMediaAssetsRepository
-	storyRepo       IRepostitoryMongodb.IStoryRepository
+	ablumRepo       IRepositoryMongodb.IAlbumsRepository
+	mediaAssetsRepo IRepositoryMongodb.IMediaAssetsRepository
+	storyRepo       IRepositoryMongodb.IStoryRepository
 	storyview       IRepositoryCassandra.IStoryViewRepository
 	pool            IRepositoryShare.IWorkerPool
 	eventbus        events.EventBus
 }
 
-func NewConsumerReact(ablumRepo IRepostitoryMongodb.IAlbumsRepository, mediaAssetsRepo IRepostitoryMongodb.IMediaAssetsRepository, storyRepo IRepostitoryMongodb.IStoryRepository, storyview IRepositoryCassandra.IStoryViewRepository, pool IRepositoryShare.IWorkerPool, eventbus events.EventBus) *ConsumerReact {
+func NewConsumerReact(ablumRepo IRepositoryMongodb.IAlbumsRepository, mediaAssetsRepo IRepositoryMongodb.IMediaAssetsRepository, storyRepo IRepositoryMongodb.IStoryRepository, storyview IRepositoryCassandra.IStoryViewRepository, pool IRepositoryShare.IWorkerPool, eventbus events.EventBus) *ConsumerReact {
 	return &ConsumerReact{
 		ablumRepo:       ablumRepo,
 		mediaAssetsRepo: mediaAssetsRepo,
@@ -182,7 +185,7 @@ func (c *ConsumerReact) CosumerReactStory(ctx context.Context) {
 							ErrorMessage:    "",
 						}
 					case 1:
-						dataStoryView, err := c.storyview.GetStoryViewsByStoryIDAndUserID(ctx, data.StoryId, data.UserId)
+						storyid, err := gocql.ParseUUID(data.StoryId)
 						if err != nil {
 							// Handle error
 							resultChan <- res.FailedConsumerReactStoryResponse{
@@ -199,27 +202,9 @@ func (c *ConsumerReact) CosumerReactStory(ctx context.Context) {
 							}
 							return
 						}
-						if dataStoryView != nil {
-							dataStoryView.ReactionCode = data.ReactionCode
-							dataStoryView.InteractionType = data.InteractionType
-							dataStoryView.PollOptionIndex = data.PollOptionIndex
-							err = c.storyview.UpdateStoryView(ctx, dataStoryView)
-							if err != nil {
-								// Handle error
-								resultChan <- res.FailedConsumerReactStoryResponse{
-									StoryId:         data.StoryId,
-									UserId:          data.UserId,
-									Avatar:          data.Avatar,
-									Name:            data.Name,
-									ViewedAt:        data.ViewedAt,
-									InteractionType: data.InteractionType,
-									ReactionCode:    data.ReactionCode,
-									PollOptionIndex: data.PollOptionIndex,
-									EventType:       data.EventType,
-									ErrorMessage:    err.Error(),
-								}
-								return
-							}
+						viewerid, err := gocql.ParseUUID(data.UserId)
+						if err != nil {
+							// Handle error
 							resultChan <- res.FailedConsumerReactStoryResponse{
 								StoryId:         data.StoryId,
 								UserId:          data.UserId,
@@ -230,10 +215,54 @@ func (c *ConsumerReact) CosumerReactStory(ctx context.Context) {
 								ReactionCode:    data.ReactionCode,
 								PollOptionIndex: data.PollOptionIndex,
 								EventType:       data.EventType,
-								ErrorMessage:    "",
+								ErrorMessage:    err.Error(),
 							}
-
+							return
 						}
+						newStoryView := &entity.StoryView{
+							StoryID:         storyid,
+							ViewerID:        viewerid,
+							ViewerName:      data.Name,
+							ViewerAvatarURL: data.Avatar,
+							ViewedAt:        data.ViewedAt,
+							InteractionType: data.InteractionType,
+							ReactionCode:    data.ReactionCode,
+							PollOptionIndex: data.PollOptionIndex,
+							Content:         data.Content,
+						}
+						err = c.storyview.CreateStoryView(ctx, newStoryView)
+						if err != nil {
+							// Handle error
+							resultChan <- res.FailedConsumerReactStoryResponse{
+								StoryId:         data.StoryId,
+								UserId:          data.UserId,
+								Avatar:          data.Avatar,
+								Name:            data.Name,
+								ViewedAt:        data.ViewedAt,
+								InteractionType: data.InteractionType,
+								ReactionCode:    data.ReactionCode,
+								PollOptionIndex: data.PollOptionIndex,
+								EventType:       data.EventType,
+								ErrorMessage:    err.Error(),
+							}
+							return
+						}
+					default:
+						resultChan <- res.FailedConsumerReactStoryResponse{
+							StoryId:         data.StoryId,
+							UserId:          data.UserId,
+							Avatar:          data.Avatar,
+							Name:            data.Name,
+							ViewedAt:        data.ViewedAt,
+							InteractionType: data.InteractionType,
+							ReactionCode:    data.ReactionCode,
+							PollOptionIndex: data.PollOptionIndex,
+							EventType:       data.EventType,
+							ErrorMessage:    "invalid worker index",
+						}
+						return
+						// Handle unknown worker index
+						// You can choose to log this or return an error as needed
 					}
 				})
 			}

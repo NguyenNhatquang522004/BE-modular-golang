@@ -5,14 +5,14 @@ import (
 
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/media/delivery/dto/req"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/media/delivery/dto/res"
-	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/media/domain/IRepository/IRepostitoryMongodb"
+	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/media/domain/IRepository/IRepositoryMongodb"
 )
 
 type DeleteStoryUseCase struct {
-	storyRepo IRepostitoryMongodb.IStoryRepository
+	storyRepo IRepositoryMongodb.IStoryRepository
 }
 
-func NewDeleteStoryUseCase(storyRepo IRepostitoryMongodb.IStoryRepository) *DeleteStoryUseCase {
+func NewDeleteStoryUseCase(storyRepo IRepositoryMongodb.IStoryRepository) *DeleteStoryUseCase {
 	return &DeleteStoryUseCase{
 		storyRepo: storyRepo,
 	}

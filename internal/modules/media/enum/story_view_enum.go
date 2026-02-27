@@ -7,5 +7,5 @@ const (
 	InteractionView     StoryInteractionType = iota // 'view' (Chỉ xem)
 	InteractionReaction                             // 'reaction' (Thả tim/haha)
 	InteractionPollVote                             // 'poll_vote' (Bình chọn)
-	// Có thể mở rộng: InteractionReply, InteractionShare...
+	InteractionReply                                // 'reply' (Trả lời)
 )

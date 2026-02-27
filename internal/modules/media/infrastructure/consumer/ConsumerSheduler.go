@@ -5,15 +5,15 @@ import (
 	"log"
 
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/IRepositoryShare"
-	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/media/domain/IRepository/IRepostitoryMongodb"
+	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/media/domain/IRepository/IRepositoryMongodb"
 )
 
 type ConsumerSheduler struct {
 	cron            IRepositoryShare.IScheduler
-	storyRepository IRepostitoryMongodb.IStoryRepository
+	storyRepository IRepositoryMongodb.IStoryRepository
 }
 
-func NewConsumerSheduler(cron IRepositoryShare.IScheduler, storyRepository IRepostitoryMongodb.IStoryRepository) *ConsumerSheduler {
+func NewConsumerSheduler(cron IRepositoryShare.IScheduler, storyRepository IRepositoryMongodb.IStoryRepository) *ConsumerSheduler {
 	return &ConsumerSheduler{
 		cron:            cron,
 		storyRepository: storyRepository,

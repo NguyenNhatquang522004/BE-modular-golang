@@ -2,7 +2,8 @@ package media
 
 import (
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/media/domain/IRepository/IRepositoryCassandra"
-	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/media/domain/IRepository/IRepostitoryMongodb"
+	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/media/domain/IRepository/IRepositoryMongodb"
+
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/media/infrastructure/cassandra"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/media/infrastructure/mongodb"
 	"github.com/google/wire"
@@ -15,10 +16,10 @@ var RepositorySet = wire.NewSet(
 	mongodb.NewReelRepository,
 	cassandra.NewLiveCommentsRepository,
 	cassandra.NewStoryViewRepository,
-	wire.Bind(new(IRepostitoryMongodb.IMediaAssetsRepository), new(*mongodb.MediaAssetsRepository)),
-	wire.Bind(new(IRepostitoryMongodb.ILiveSessionRepository), new(*mongodb.LiveSessionRepository)),
-	wire.Bind(new(IRepostitoryMongodb.IStoryRepository), new(*mongodb.StoryRepository)),
-	wire.Bind(new(IRepostitoryMongodb.IReelRepository), new(*mongodb.ReelRepository)),
+	wire.Bind(new(IRepositoryMongodb.IMediaAssetsRepository), new(*mongodb.MediaAssetsRepository)),
+	wire.Bind(new(IRepositoryMongodb.ILiveSessionRepository), new(*mongodb.LiveSessionRepository)),
+	wire.Bind(new(IRepositoryMongodb.IStoryRepository), new(*mongodb.StoryRepository)),
+	wire.Bind(new(IRepositoryMongodb.IReelRepository), new(*mongodb.ReelRepository)),
 	wire.Bind(new(IRepositoryCassandra.ILiveCommentsRepository), new(*cassandra.LiveCommentsRepository)),
 	wire.Bind(new(IRepositoryCassandra.IStoryViewRepository), new(*cassandra.StoryViewRepository)),
 )

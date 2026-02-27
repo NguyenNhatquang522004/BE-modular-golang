@@ -6,14 +6,14 @@ import (
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/media/delivery/dto/req"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/media/delivery/dto/res"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/media/delivery/mapper"
-	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/media/domain/IRepository/IRepostitoryMongodb"
+	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/media/domain/IRepository/IRepositoryMongodb"
 )
 
 type UpdateStoryUseCase struct {
-	storyRepo IRepostitoryMongodb.IStoryRepository
+	storyRepo IRepositoryMongodb.IStoryRepository
 }
 
-func NewUpdateStoryUseCase(storyRepo IRepostitoryMongodb.IStoryRepository) *UpdateStoryUseCase {
+func NewUpdateStoryUseCase(storyRepo IRepositoryMongodb.IStoryRepository) *UpdateStoryUseCase {
 	return &UpdateStoryUseCase{
 		storyRepo: storyRepo,
 	}

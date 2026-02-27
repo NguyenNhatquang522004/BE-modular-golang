@@ -9,17 +9,18 @@ import (
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/media/delivery/dto/req"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/media/delivery/dto/res"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/media/delivery/mapper"
-	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/media/domain/IRepository/IRepostitoryMongodb"
+	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/media/domain/IRepository/IRepositoryMongodb"
+
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 type CreateAlbumUseCase struct {
-	ablumRepo       IRepostitoryMongodb.IAlbumsRepository
-	mediaAssetsRepo IRepostitoryMongodb.IMediaAssetsRepository
+	ablumRepo       IRepositoryMongodb.IAlbumsRepository
+	mediaAssetsRepo IRepositoryMongodb.IMediaAssetsRepository
 	pool            IRepositoryShare.IWorkerPool
 }
 
-func NewCreateAlbumUseCase(ablumRepo IRepostitoryMongodb.IAlbumsRepository, mediaAssetsRepo IRepostitoryMongodb.IMediaAssetsRepository, pool IRepositoryShare.IWorkerPool) *CreateAlbumUseCase {
+func NewCreateAlbumUseCase(ablumRepo IRepositoryMongodb.IAlbumsRepository, mediaAssetsRepo IRepositoryMongodb.IMediaAssetsRepository, pool IRepositoryShare.IWorkerPool) *CreateAlbumUseCase {
 	return &CreateAlbumUseCase{
 		ablumRepo:       ablumRepo,
 		mediaAssetsRepo: mediaAssetsRepo,

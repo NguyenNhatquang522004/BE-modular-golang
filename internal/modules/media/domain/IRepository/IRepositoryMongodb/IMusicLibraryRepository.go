@@ -1,4 +1,4 @@
-package IRepostitoryMongodb
+package IRepositoryMongodb
 
 import (
 	"context"

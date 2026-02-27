@@ -7,17 +7,18 @@ import (
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/IRepositoryShare"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/media/delivery/dto/req"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/media/delivery/dto/res"
-	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/media/domain/IRepository/IRepostitoryMongodb"
+	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/media/domain/IRepository/IRepositoryMongodb"
+
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 type DeleteAlbumUseCase struct {
-	ablumRepo       IRepostitoryMongodb.IAlbumsRepository
-	mediaAssetsRepo IRepostitoryMongodb.IMediaAssetsRepository
+	ablumRepo       IRepositoryMongodb.IAlbumsRepository
+	mediaAssetsRepo IRepositoryMongodb.IMediaAssetsRepository
 	pool            IRepositoryShare.IWorkerPool
 }
 
-func NewDeleteAlbumUseCase(ablumRepo IRepostitoryMongodb.IAlbumsRepository, mediaAssetsRepo IRepostitoryMongodb.IMediaAssetsRepository, pool IRepositoryShare.IWorkerPool) *DeleteAlbumUseCase {
+func NewDeleteAlbumUseCase(ablumRepo IRepositoryMongodb.IAlbumsRepository, mediaAssetsRepo IRepositoryMongodb.IMediaAssetsRepository, pool IRepositoryShare.IWorkerPool) *DeleteAlbumUseCase {
 	return &DeleteAlbumUseCase{
 		ablumRepo:       ablumRepo,
 		mediaAssetsRepo: mediaAssetsRepo,

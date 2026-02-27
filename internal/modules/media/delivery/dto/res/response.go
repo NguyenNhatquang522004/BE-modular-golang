@@ -33,3 +33,9 @@ type FailedStoryResponse struct {
 	UserID       string `json:"user_id"`
 	ErrorMessage string `json:"error_message"`
 }
+
+type FailedReelResponse struct {
+	ReelID       string `json:"reel_id"`
+	UserID       string `json:"user_id"`
+	ErrorMessage string `json:"error_message"`
+}

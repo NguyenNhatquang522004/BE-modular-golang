@@ -7,9 +7,11 @@ import (
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/media/enum"
 	"github.com/gocql/gocql"
 )
+
 const (
-    TableStoryViews = "story_views"
+	TableStoryViews = "story_views"
 )
+
 // StoryView đại diện cho bảng 'story_views' trong Cassandra.
 // Bảng này tối ưu cho việc ghi (Write Heavy) và đọc danh sách người xem (Read List).
 type StoryView struct {
@@ -38,6 +40,8 @@ type StoryView struct {
 	// Reaction Code: "❤️", "😂" hoặc ID sticker
 	ReactionCode sharedEnums.ReactionCode `cql:"reaction_code" json:"reaction_code"`
 
+	Content string `cql:"content" json:"content"`
+
 	// Poll Vote: Dùng pointer (*int)
 	// - nil: Không vote
 	// - 0: Vote option đầu tiên
@@ -47,5 +51,5 @@ type StoryView struct {
 
 // TableName trả về tên bảng trong Cassandra
 func (StoryView) TableName() string {
-    return TableStoryViews
+	return TableStoryViews
 }

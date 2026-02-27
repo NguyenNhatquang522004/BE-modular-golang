@@ -10,7 +10,8 @@ import (
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/media/delivery/dto/req"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/media/delivery/dto/res"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/media/domain/IRepository/IRepositoryCassandra"
-	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/media/domain/IRepository/IRepostitoryMongodb"
+	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/media/domain/IRepository/IRepositoryMongodb"
+
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/media/domain/entity"
 	"github.com/gocql/gocql"
 )
@@ -18,11 +19,11 @@ import (
 type ConsumerView struct {
 	events        events.EventBus
 	storyViewRepo IRepositoryCassandra.IStoryViewRepository
-	storyRepo     IRepostitoryMongodb.IStoryRepository
+	storyRepo     IRepositoryMongodb.IStoryRepository
 	pool          IRepositoryShare.IWorkerPool
 }
 
-func NewConsumerView(events events.EventBus, storyViewRepo IRepositoryCassandra.IStoryViewRepository, storyRepo IRepostitoryMongodb.IStoryRepository, pool IRepositoryShare.IWorkerPool) *ConsumerView {
+func NewConsumerView(events events.EventBus, storyViewRepo IRepositoryCassandra.IStoryViewRepository, storyRepo IRepositoryMongodb.IStoryRepository, pool IRepositoryShare.IWorkerPool) *ConsumerView {
 	return &ConsumerView{
 		events:        events,
 		storyViewRepo: storyViewRepo,
@@ -103,6 +104,7 @@ func (c *ConsumerView) ConsumerViewCountStory(ctx context.Context) {
 						InteractionType: data.InteractionType,
 						ReactionCode:    data.ReactionCode,
 						PollOptionIndex: data.PollOptionIndex,
+						Content:         data.Content,
 					})
 					if err != nil {
 						// Xử lý lỗi nếu cần thiết

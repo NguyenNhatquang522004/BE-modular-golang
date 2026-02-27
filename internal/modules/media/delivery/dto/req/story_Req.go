@@ -72,7 +72,7 @@ type StoryReq struct {
 	Stats          StoryStatsReq      `json:"stats"`
 	CreatedAt      *time.Time         `json:"created_at,omitempty"`
 	ExpiresAt      *time.Time         `json:"expires_at,omitempty"`
-	IsArchived     bool               `json:"is_archived"`
+	IsArchived     bool               `json:"is_archived"` 
 }
 
 // UpdateStoryReq: Áp dụng 100% pointer để hỗ trợ Partial Update

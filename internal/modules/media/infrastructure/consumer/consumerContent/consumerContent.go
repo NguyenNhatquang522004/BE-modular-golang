@@ -8,17 +8,17 @@ import (
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/constants"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/events"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/events/contentEvent/mediaInContent"
-	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/media/domain/IRepository/IRepostitoryMongodb"
+	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/media/domain/IRepository/IRepositoryMongodb"
 )
 
 type ConsumerContent struct {
 	// Thêm các trường cần thiết cho ConsumerContent tại đây
 	pool            IRepositoryShare.IWorkerPool
-	mediaAssetsRepo IRepostitoryMongodb.IMediaAssetsRepository
+	mediaAssetsRepo IRepositoryMongodb.IMediaAssetsRepository
 	eventBus        events.EventBus
 }
 
-func NewConsumerContent(pool IRepositoryShare.IWorkerPool, mediaAssetsRepo IRepostitoryMongodb.IMediaAssetsRepository, eventBus events.EventBus) *ConsumerContent {
+func NewConsumerContent(pool IRepositoryShare.IWorkerPool, mediaAssetsRepo IRepositoryMongodb.IMediaAssetsRepository, eventBus events.EventBus) *ConsumerContent {
 	return &ConsumerContent{
 		pool:            pool,
 		mediaAssetsRepo: mediaAssetsRepo,
