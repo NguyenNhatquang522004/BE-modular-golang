@@ -7,6 +7,7 @@ const (
 	Deleted EventType = "DELETED"
 	Created EventType = "CREATED"
 	None    EventType = "NONE"
+	Failed  EventType = "FAILED"
 )
 
 type TopicName string
@@ -32,6 +33,11 @@ const (
 	TopicReactPost    TopicName = "interaction.react_post.events"
 	TopicCommentPost  TopicName = "interaction.comment_post.events"
 	TopicCounterPost  TopicName = "interaction.counter_post.events"
+
+	// media
+	TopicReactAlbum     TopicName = "media.react_album.events"
+	TopicViewCountStory TopicName = "media.view_count_story.events"
+	TopicReactStory     TopicName = "media.react_story.events"
 )
 
 type TopicConfig struct {

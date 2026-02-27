@@ -528,3 +528,20 @@ func (r *MediaAssetsRepository) DeleteMediaAssetsByPostIDAndUserID(ctx context.C
 	}
 	return nil
 }
+func (r *MediaAssetsRepository) GetListMediaAssetsByAlbumID(ctx context.Context, albumID string) ([]*entity.MediaAsset, error) {
+	collection := r.client.Collection(entity.MediaAsset{}.CollectionName())
+	var mediaAssets []*entity.MediaAsset
+
+	finalid, _ := primitive.ObjectIDFromHex(albumID)
+	query := bson.M{"album_id": finalid}
+
+	cursorDB, err := collection.Find(ctx, query)
+	if err != nil {
+		return nil, fmt.Errorf("database error: %w", err)
+	}
+	defer cursorDB.Close(ctx)
+	if err = cursorDB.All(ctx, &mediaAssets); err != nil {
+		return nil, fmt.Errorf("error decoding results: %w", err)
+	}
+	return mediaAssets, nil
+}

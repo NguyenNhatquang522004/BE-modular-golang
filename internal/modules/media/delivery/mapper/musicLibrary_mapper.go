@@ -14,10 +14,13 @@ func ToEntityMusicLibrary(r *req.MusicLibraryReq) (*entity.MusicLibrary, error) 
 	if r == nil {
 		return nil, nil
 	}
-
+	ArtistID, err := primitive.ObjectIDFromHex(r.ArtistID)
+	if err != nil {
+		return nil, err
+	}
 	e := &entity.MusicLibrary{
 		Title:         r.Title,
-		Artist:        r.Artist,
+		ArtistID:      ArtistID,
 		Album:         r.Album,
 		CoverURL:      r.CoverURL,
 		StreamURL:     r.StreamURL,
@@ -68,8 +71,11 @@ func UpdateToEntityMusicLibrary(r *req.UpdateMusicLibraryReq, e *entity.MusicLib
 	if r.Title != nil {
 		e.Title = *r.Title
 	}
-	if r.Artist != nil {
-		e.Artist = *r.Artist
+	if r.ArtistID != nil {
+		ArtistID, err := primitive.ObjectIDFromHex(*r.ArtistID)
+		if err == nil {
+			e.ArtistID = ArtistID
+		}
 	}
 	if r.Album != nil {
 		e.Album = *r.Album
@@ -112,7 +118,7 @@ func ReqToResMusicLibrary(r *req.MusicLibraryReq) *res.MusicLibraryRes {
 	response := &res.MusicLibraryRes{
 		ID:            r.ID,
 		Title:         r.Title,
-		Artist:        r.Artist,
+		ArtistID:      r.ArtistID,
 		Album:         r.Album,
 		CoverURL:      r.CoverURL,
 		StreamURL:     r.StreamURL,
@@ -152,7 +158,7 @@ func EntityToResMusicLibrary(e *entity.MusicLibrary) *res.MusicLibraryRes {
 	return &res.MusicLibraryRes{
 		ID:            e.ID.Hex(),
 		Title:         e.Title,
-		Artist:        e.Artist,
+		ArtistID:      e.ArtistID.Hex(),
 		Album:         e.Album,
 		CoverURL:      e.CoverURL,
 		StreamURL:     e.StreamURL,

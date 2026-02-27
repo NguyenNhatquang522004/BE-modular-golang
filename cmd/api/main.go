@@ -75,7 +75,7 @@ func main() {
 	httpPort := fmt.Sprintf(":%v", cfg.Server.Port)
 	srv := &http.Server{
 		Addr:    httpPort,
-		Handler: app.Server, // Gán Gin Engine làm Handler
+		Handler: app.Server, // Gán Gin Engine làm Handler	
 	}
 	go func() {
 		log.Printf("🚀 Starting HTTP server on %s", httpPort)
@@ -92,7 +92,7 @@ func main() {
 	}
 
 	// --- 3. GRACEFUL SHUTDOWN ---
-	quit := make(chan os.Signal, 1)
+	quit := make(chan os.Signal, 1)	
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 	<-quit // Chờ tín hiệu tắt
 	log.Println("🛑 Shutting down system...")

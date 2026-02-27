@@ -15,6 +15,7 @@ type IStoryViewRepository interface {
 	CreateBulkStoryViews(ctx context.Context, storyViews []*entity.StoryView) (int64, []*cassandraErrors.StoryViewBulkError, error)
 	GetStoryViewsByStoryID(ctx context.Context, storyID string, cursor string, limit int) (*dto.PaginationRes, error)
 	GetStoryViewsByUserID(ctx context.Context, userID string, cursor string, limit int) (*dto.PaginationRes, error)
+	GetStoryViewsByStoryIDAndUserID(ctx context.Context, storyID string, userID string) (*entity.StoryView, error)
 	UpdateStoryView(ctx context.Context, storyView *entity.StoryView) error
 	UpdateBulkStoryViews(ctx context.Context, storyViews []*entity.StoryView) (int64, []*cassandraErrors.StoryViewBulkError, error)
 	DeleteStoryView(ctx context.Context, storyID string) error

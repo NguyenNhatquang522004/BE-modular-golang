@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"time"
 
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/errors/mongodbErrors"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/IRepositoryShare"
@@ -205,4 +206,16 @@ func (r *StoryRepository) DeleteStory(ctx context.Context, id string) error {
 func (r *StoryRepository) DeleteBulkStories(ctx context.Context, ids []string) (int64, []*mongodbErrors.BulkError, error) {
 	// Implement the logic to delete multiple stories by their IDs from MongoDB
 	return 0, nil, nil
+}
+func (r *StoryRepository) DeleteExpiredStories(ctx context.Context) (int64, error) {
+	collection := r.client.Collection(entity.Story{}.CollectionName())
+	filter := bson.M{
+		"expires_at":  bson.M{"$lte": time.Now()},
+		"is_archived": false,
+	}
+	result, err := collection.DeleteMany(ctx, filter)
+	if err != nil {
+		return 0, err
+	}
+	return result.DeletedCount, nil
 }

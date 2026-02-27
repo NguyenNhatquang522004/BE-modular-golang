@@ -19,7 +19,7 @@ type CopyrightInfoRes struct {
 type MusicLibraryRes struct {
 	ID            string            `json:"id"` // Trả về Hex string an toàn
 	Title         string            `json:"title"`
-	Artist        string            `json:"artist"`
+	ArtistID      string            `json:"artist_id"`
 	Album         string            `json:"album,omitempty"`
 	CoverURL      string            `json:"cover_url"`
 	StreamURL     string            `json:"stream_url"`

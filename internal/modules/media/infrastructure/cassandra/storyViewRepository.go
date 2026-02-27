@@ -2,6 +2,7 @@ package cassandra
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"time"
 
@@ -1139,4 +1140,45 @@ func (r *StoryViewRepository) DeleteBulkStoryViewsByViewedAt(ctx context.Context
 	}
 
 	return successCount, bulkErrors, finalErr
+}
+func (r *StoryViewRepository) GetStoryViewsByStoryIDAndUserID(ctx context.Context, storyID string, userID string) (*entity.StoryView, error) {
+	// Implement the logic to get story views by storyID and userID here
+	tableName := entity.StoryView{}.TableName()
+
+	sID, err := gocql.ParseUUID(storyID)
+	if err != nil {
+		return nil, fmt.Errorf("invalid storyID format: %w", err)
+	}
+
+	uID, err := gocql.ParseUUID(userID)
+	if err != nil {
+		return nil, fmt.Errorf("invalid userID format: %w", err)
+	}
+
+	query := fmt.Sprintf(`
+		SELECT story_id, viewed_at, viewer_id, viewer_name, viewer_avatar_url, 
+		       interaction_type, reaction_code, poll_option_index 
+		FROM %s WHERE story_id = ? AND viewer_id = ? ALLOW FILTERING
+	`, tableName)
+
+	var sv entity.StoryView
+	err = r.session.Query(query, sID, uID).WithContext(ctx).Scan(
+		&sv.StoryID,
+		&sv.ViewedAt,
+		&sv.ViewerID,
+		&sv.ViewerName,
+		&sv.ViewerAvatarURL,
+		&sv.InteractionType,
+		&sv.ReactionCode,
+		&sv.PollOptionIndex,
+	)
+
+	if err != nil {
+		if errors.Is(err, gocql.ErrNotFound) {
+			return nil, nil // Không tìm thấy bản ghi nào
+		}
+		return nil, fmt.Errorf("failed to get story view for story %s and user %s: %w", storyID, userID, err)
+	}
+
+	return &sv, nil
 }

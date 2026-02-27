@@ -19,4 +19,5 @@ type IStoryRepository interface {
 	UpdateBulkStories(ctx context.Context, stories []*entity.Story) (int64, []*mongodbErrors.BulkError, error)
 	DeleteStory(ctx context.Context, id string) error
 	DeleteBulkStories(ctx context.Context, ids []string) (int64, []*mongodbErrors.BulkError, error)
+	DeleteExpiredStories(ctx context.Context) (int64, error)
 }

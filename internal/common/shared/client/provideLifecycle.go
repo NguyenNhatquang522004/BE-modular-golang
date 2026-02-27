@@ -10,6 +10,6 @@ func ProvideLifecycleManager(
 	// Trả về Manager chứa danh sách service
 	return concurrency.NewManager(
 	// notifConsumer,
-	// paymentConsumer,
+	// paymentConsumer,	
 	)
 }

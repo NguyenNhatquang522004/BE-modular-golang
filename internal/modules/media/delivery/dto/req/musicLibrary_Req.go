@@ -19,7 +19,7 @@ type CopyrightInfoReq struct {
 type MusicLibraryReq struct {
 	ID            string            `json:"id,omitempty"` // Trình bày dưới dạng string để nhận Hex ObjectID
 	Title         string            `json:"title" validate:"required"`
-	Artist        string            `json:"artist" validate:"required"`
+	ArtistID      string            `json:"artist_id" validate:"required"`
 	Album         string            `json:"album,omitempty"`
 	CoverURL      string            `json:"cover_url"`
 	StreamURL     string            `json:"stream_url" validate:"required"`
@@ -36,7 +36,7 @@ type MusicLibraryReq struct {
 // UpdateMusicLibraryReq: Áp dụng 100% pointer để hỗ trợ Partial Update
 type UpdateMusicLibraryReq struct {
 	Title         *string           `json:"title,omitempty"`
-	Artist        *string           `json:"artist,omitempty"`
+	ArtistID      *string           `json:"artist_id,omitempty"`
 	Album         *string           `json:"album,omitempty"`
 	CoverURL      *string           `json:"cover_url,omitempty"`
 	StreamURL     *string           `json:"stream_url,omitempty"`

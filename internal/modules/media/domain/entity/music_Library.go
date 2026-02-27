@@ -6,18 +6,20 @@ import (
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/media/enum"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
+
 const (
-    CollectionMusicLibrary = "MusicLibrary"
+	CollectionMusicLibrary = "MusicLibrary"
 )
+
 type MusicLibrary struct {
 	ID primitive.ObjectID `bson:"_id,omitempty" json:"id"`
 
 	// 1. BASIC INFO
 	// Index: Text Index { title: "text", artist: "text", lyrics_snippet: "text" }
 	// Mục đích: Tìm kiếm bài hát
-	Title  string `bson:"title" json:"title"`
-	Artist string `bson:"artist" json:"artist"`
-	Album  string `bson:"album,omitempty" json:"album,omitempty"`
+	ArtistID primitive.ObjectID `bson:"artist_id" json:"artist_id"`
+	Title    string             `bson:"title" json:"title"`
+	Album    string             `bson:"album,omitempty" json:"album,omitempty"`
 
 	// 2. MEDIA FILES (SeaweedFS / CDN)
 	CoverURL string `bson:"cover_url" json:"cover_url"`
@@ -59,6 +61,7 @@ type CopyrightInfo struct {
 	// Nếu mảng rỗng hoặc nil -> Coi như Global (toàn cầu)
 	AllowedRegions []string `bson:"allowed_regions,omitempty" json:"allowed_regions,omitempty"`
 }
+
 func (MusicLibrary) CollectionName() string {
-    return CollectionMusicLibrary
+	return CollectionMusicLibrary
 }

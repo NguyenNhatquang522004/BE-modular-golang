@@ -14,6 +14,7 @@ type IMediaAssetsRepository interface {
 	CreateBulkMediaAssets(ctx context.Context, assets []*entity.MediaAsset) (int64, []*mongodbErrors.BulkError, error)
 	GetMediaAssetByID(ctx context.Context, id string) (*entity.MediaAsset, error)
 	GetMediaAssetsByUserID(ctx context.Context, userID string, cursor string, limit int) (*dto.PaginationRes, error)
+	GetListMediaAssetsByAlbumID(ctx context.Context, albumID string) ([]*entity.MediaAsset, error)
 	GetMediaAssetsByAlbumID(ctx context.Context, albumID string, cursor string, limit int) (*dto.PaginationRes, error)
 	GetMediaAssetsByPostID(ctx context.Context, postID string, cursor string, limit int) (*dto.PaginationRes, error)
 	GetMediaAssetsByGroupID(ctx context.Context, groupID string, cursor string, limit int) (*dto.PaginationRes, error)

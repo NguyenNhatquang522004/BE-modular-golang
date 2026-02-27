@@ -69,7 +69,10 @@ func (m *ModuleMedia) InitMongo(db *mongo.Database) error {
 	if err := m.initMediaAssetIndexes(ctx, db); err != nil {
 		return err
 	}
-
+	// 7. Collection: ARTISTS
+	if err := m.initArtistIndexes(ctx, db); err != nil {
+		return err
+	}
 	log.Println(">>> Media Module: MongoDB Indexes Initialized Successfully")
 	return nil
 }
@@ -142,6 +145,37 @@ func (m *ModuleMedia) initLiveSessionIndexes(ctx context.Context, db *mongo.Data
 	return nil
 }
 
+// --- Helper: Artist   Library ---
+func (m *ModuleMedia) initArtistIndexes(ctx context.Context, db *mongo.Database) error {
+	coll := db.Collection(entity.Artist{}.CollectionName())
+
+	models := []mongo.IndexModel{
+		// A. FULL-TEXT SEARCH: Tìm nghệ sĩ theo tên
+		{
+			Keys: bson.D{
+				{Key: "name", Value: "text"},
+			},
+		},
+		// B. SEO & ROUTING: Tìm nghệ sĩ theo slug (URL-friendly)
+		{
+			Keys:    bson.D{{Key: "slug", Value: 1}},
+			Options: options.Index().SetUnique(true),
+		},
+		// C. USER PROFILE LINK: Kiểm tra nghệ sĩ đã liên kết với user nào chưa
+		{
+			Keys: bson.D{{Key: "user_id", Value: 1}},
+			Options: options.Index().SetPartialFilterExpression(bson.M{
+				"user_id": bson.M{"$exists": true},
+			}),
+		},
+	}
+	_, err := coll.Indexes().CreateMany(ctx, models)
+	if err != nil {
+		return fmt.Errorf("failed to create indexes for Artists: %w", err)
+	}
+	return nil
+}
+
 // --- Helper: Music Library ---
 func (m *ModuleMedia) initMusicLibraryIndexes(ctx context.Context, db *mongo.Database) error {
 	coll := db.Collection(entity.MusicLibrary{}.CollectionName())
@@ -151,12 +185,12 @@ func (m *ModuleMedia) initMusicLibraryIndexes(ctx context.Context, db *mongo.Dat
 		{
 			Keys: bson.D{
 				{Key: "title", Value: "text"},
-				{Key: "artist", Value: "text"},
+				{Key: "artist_id", Value: "text"},
 				{Key: "lyrics_snippet", Value: "text"},
 			},
 			Options: options.Index().SetWeights(bson.M{
 				"title":          10, // Ưu tiên tìm theo tên bài hát nhất
-				"artist":         5,
+				"artist_id":      5,
 				"lyrics_snippet": 1,
 			}),
 		},
@@ -166,7 +200,7 @@ func (m *ModuleMedia) initMusicLibraryIndexes(ctx context.Context, db *mongo.Dat
 		},
 		// C. GENRE FILTER: Lọc theo thể loại (Multikey Index vì genres là array)
 		{
-			Keys: bson.D{{Key: "genre", Value: 1}}, // Lưu ý field json là "genre" nhưng bson struct là "genre"
+			Keys: bson.D{{Key: "genre", Value: 1}}, // Lưu ý field json là "genre" nhưng bson struct là "genres"
 		},
 	}
 
