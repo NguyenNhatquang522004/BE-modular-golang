@@ -7,4 +7,7 @@ type RoleType int
 const (
 	RoleTypeUser RoleType = iota
 	RoleTypeAdmin
+	RoleTypeSystemAdmin
+	RoleTypeModerator
+	RoleTypeMember
 )

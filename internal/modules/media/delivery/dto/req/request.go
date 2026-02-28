@@ -169,3 +169,4 @@ type CounterLiveStreamRequest struct {
 	Views         int                 `json:"views"`
 	EventType     constants.EventType `json:"event_type"` // "increment" hoặc "decrement"
 }
+

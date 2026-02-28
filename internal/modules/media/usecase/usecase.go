@@ -3,7 +3,6 @@ package usecase
 import (
 	"context"
 
-	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/server/http/response"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/media/delivery/dto/req"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/media/delivery/dto/res"
 )
@@ -77,45 +76,7 @@ type IStartStopVideoLiveStreamUseCase interface {
 type ICommentLiveStreamUseCase interface {
 	Execute(ctx context.Context, req *req.CommentLiveStreamRequest) (*res.FailedLiveStreamResponse, error)
 }
-type ICreateArtistUseCase interface {
-	Execute(ctx context.Context) (*response.Response, error)
-}
-type IUpdateArtistUseCase interface {
-	Execute(ctx context.Context) (*response.Response, error)
-}
-type IDeleteArtistUseCase interface {
-	Execute(ctx context.Context) (*response.Response, error)
-}
-type IReactArtistUseCase interface {
-	Execute(ctx context.Context) (*response.Response, error)
-}
-type ICreateItemMusicLibraryUseCase interface {
-	Execute(ctx context.Context) (*response.Response, error)
-}
-type IDeleteItemMusicLibraryUseCase interface {
-	Execute(ctx context.Context) (*response.Response, error)
-}
-type IReactItemMusicLibraryUseCase interface {
-	Execute(ctx context.Context) (*response.Response, error)
-}
-type ICreatePlaylistUseCase interface {
-	Execute(ctx context.Context) (*response.Response, error)
-}
-type IUpdatePlaylistUseCase interface {
-	Execute(ctx context.Context) (*response.Response, error)
-}
-type IDeletePlaylistUseCase interface {
-	Execute(ctx context.Context) (*response.Response, error)
-}
-type IReactPlaylistUseCase interface {
-	Execute(ctx context.Context) (*response.Response, error)
-}
-type IAddItemToPlaylistUseCase interface {
-	Execute(ctx context.Context) (*response.Response, error)
-}
-type IRemoveItemFromPlaylistUseCase interface {
-	Execute(ctx context.Context) (*response.Response, error)
-}
+
 type usecase struct {
 }
 

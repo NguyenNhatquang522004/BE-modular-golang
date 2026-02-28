@@ -3,7 +3,7 @@ package entity
 import (
 	"time"
 
-	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/communication/enum"
+	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/sharedEnums"
 	"github.com/gocql/gocql"
 )
 
@@ -37,7 +37,7 @@ type Message struct {
 	SenderID gocql.UUID `cql:"sender_id" json:"sender_id"`
 
 	// Enum Type: text, image, video...
-	Type enum.MessageType `cql:"type" json:"type"`
+	Type sharedEnums.MediaType `cql:"type" json:"type"`
 
 	Content     string   `cql:"content" json:"content"`
 	Attachments []string `cql:"attachments" json:"attachments"` // LIST<TEXT>

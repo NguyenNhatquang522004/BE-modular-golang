@@ -3,7 +3,7 @@ package entity
 import (
 	"time"
 
-	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/communication/enum"
+	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/sharedEnums"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -27,7 +27,7 @@ type ConversationParticipant struct {
 	UserID string `bson:"user_id" json:"user_id"`
 
 	// --- 2. VAI TRÒ & ĐỊNH DANH ---
-	Role     enum.ParticipantRole `bson:"role" json:"role"`         // 'admin', 'member'
+	Role     sharedEnums.RoleType `bson:"role" json:"role"`         // 'admin', 'member'
 	Nickname string               `bson:"nickname" json:"nickname"` // Biệt danh trong nhóm này
 
 	// --- 3. TRẠNG THÁI ĐỌC (READ STATUS) ---

@@ -3,6 +3,7 @@ package entity
 import (
 	"time"
 
+	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/sharedEnums"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/communication/enum"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -15,7 +16,7 @@ type Conversation struct {
 	// 1. CLASSIFICATION
 	Type   enum.ConversationType   `bson:"type" json:"type"`     // 'private', 'group'
 	Scope  enum.ConversationScope  `bson:"scope" json:"scope"`   // 'messenger', 'community_channel'
-	Status enum.ConversationStatus `bson:"status" json:"status"` // 'active', 'pending'
+	Status sharedEnums.ProcessingStatus `bson:"status" json:"status"` // 'active', 'pending'
 
 	// 2. GROUP INFO
 	// Tên nhóm (Null nếu là Private chat 1-1)
@@ -57,8 +58,8 @@ type ConversationAvatar struct {
 
 // --- PERMISSIONS ---
 type ConversationPermissions struct {
-	SendMessage enum.PermissionLevel `bson:"send_message" json:"send_message"` // 'everyone', 'admin_only'
-	AddMember   enum.PermissionLevel `bson:"add_member" json:"add_member"`
+	SendMessage sharedEnums.PrivacyScope `bson:"send_message" json:"send_message"` // 'everyone', 'admin_only'
+	AddMember   sharedEnums.PrivacyScope `bson:"add_member" json:"add_member"`
 }
 
 // --- THEME ---
@@ -79,7 +80,7 @@ type LastMessageCache struct {
 	// SenderID từ Postgres (UUID) -> Lưu String
 	SenderID string `bson:"sender_id" json:"sender_id"`
 
-	Type enum.MessageType `bson:"type" json:"type"`
+	Type sharedEnums.MediaType`bson:"type" json:"type"`
 
 	CreatedAt time.Time `bson:"created_at" json:"created_at"`
 }

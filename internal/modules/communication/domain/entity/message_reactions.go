@@ -3,7 +3,7 @@ package entity
 import (
 	"time"
 
-	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/communication/enum"
+	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/sharedEnums"
 	"github.com/gocql/gocql"
 )
 
@@ -38,7 +38,7 @@ type MessageReaction struct {
 	// =========================================================================
 
 	// Enum Code: heart, haha, sad...
-	ReactionCode enum.MessageReactionCode `cql:"reaction_code" json:"reaction_code"`
+	ReactionCode sharedEnums.ReactionCode `cql:"reaction_code" json:"reaction_code"`
 
 	CreatedAt time.Time `cql:"created_at" json:"created_at"`
 }

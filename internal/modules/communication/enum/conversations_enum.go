@@ -24,25 +24,4 @@ const (
 // 2. STATUS
 // =============================================================================
 
-//go:generate enumer -type=ConversationStatus -json -transform=snake -trimprefix=Status
-type ConversationStatus int
-
-const (
-	StatusActive  ConversationStatus = iota // 'active'
-	StatusPending                           // 'pending' (Tin nhắn chờ)
-	StatusSpam                              // 'spam'
-	StatusArchived                          // 'archived' (Lưu trữ)
-)
-
-// =============================================================================
-// 3. PERMISSIONS LEVEL
-// =============================================================================
-
-//go:generate enumer -type=PermissionLevel -json -transform=snake -trimprefix=Perm
-type PermissionLevel int
-
-const (
-	PermEveryone  PermissionLevel = iota // 'everyone'
-	PermAdminOnly                        // 'admin_only'
-)
 
