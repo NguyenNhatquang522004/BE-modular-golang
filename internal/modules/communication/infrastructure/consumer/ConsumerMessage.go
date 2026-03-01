@@ -77,7 +77,6 @@ func (c *ConsumerMessage) ConsumerMessage(ctx context.Context) error {
 					log.Printf("Error updating conversation: %v", err)
 					return
 				}
-
 			})
 			if err != nil {
 				log.Printf("Error running task in worker pool: %v", err)

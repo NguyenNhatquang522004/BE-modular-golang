@@ -12,7 +12,7 @@ import (
 // =========================================================================
 // MAPPER REQ
 // =========================================================================
-func generateBucket(t time.Time) int {
+func GenerateBucket(t time.Time) int {
 	// Ép về UTC để đảm bảo tính nhất quán của dữ liệu trên toàn hệ thống
 	tUTC := t.UTC()
 	return tUTC.Year()*100 + int(tUTC.Month())
@@ -26,7 +26,7 @@ func ToEntityMessage(r *req.MessageReq, conversationID string) *entity.Message {
 	now := time.Now().UTC()
 	return &entity.Message{
 		ConversationID:   conversationID,
-		Bucket:           generateBucket(now),
+		Bucket:           GenerateBucket(now),
 		MessageID:        r.MessageID,
 		SenderID:         r.SenderID,
 		Type:             r.Type,

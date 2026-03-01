@@ -81,6 +81,11 @@ type ReactMessageRequest struct {
 	*MessageReactionReq
 	EventType constants.EventType `json:"event_type"`
 }
-
+type MessageRelyStoryRequest struct {
+	StoryID string    `json:"story_id"`
+	UserID  string    `json:"user_id"`
+	Bucket  time.Time `json:"bucket"`
+	Content string    `json:"content,omitempty"`
+}
 type GetCoversationListRequest struct {
 }

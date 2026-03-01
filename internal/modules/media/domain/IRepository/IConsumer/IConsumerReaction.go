@@ -19,4 +19,7 @@ type IConsumerReact interface {
 	ConsumerFailedReactLive(ctx context.Context)
 	ConsumerCounterLive(ctx context.Context)
 	ConsumerFailedCounterLive(ctx context.Context)
+	ConsumerCounterReplyStory(ctx context.Context)
+	ConsumerFailedCounterReplyStory(ctx context.Context)
+	
 }

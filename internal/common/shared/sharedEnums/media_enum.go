@@ -8,6 +8,8 @@ const (
 	MediaTypeVideo                    // 'video'
 	MediaTypeGif                      // 'gif'
 	MediaTypeSticker                  // 'sticker'
+	MediaTypeAudio                    // 'audio'
+	MediaTypeText                     // 'text'
 	MediaTypePDF                      // 'pdf'
 	MediaTypeDOCX                     // 'docx' (Word)
 	MediaTypeXLSX                     // 'xlsx' (Excel)

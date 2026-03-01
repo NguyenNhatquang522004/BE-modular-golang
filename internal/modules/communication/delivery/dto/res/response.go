@@ -33,3 +33,9 @@ type FailedReactMessageResponse struct {
 	ReactionCode   string `json:"reaction_code,omitempty"`
 	ErrorMessage   error  `json:"error_message"`
 }
+type FailedReplyStoryResponse struct {
+	TargetID     string `json:"target_id"`
+	UserID       string `json:"user_id,omitempty"`
+	Content      string `json:"content,omitempty"`
+	ErrorMessage error  `json:"error_message"`
+}

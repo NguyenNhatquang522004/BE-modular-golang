@@ -18,4 +18,5 @@ type IConversationsRepository interface {
 	UpdateBulkConversations(ctx context.Context, conversations []entity.Conversation) (int64, []*mongodbErrors.BulkError, error)
 	DeleteConversation(ctx context.Context, id string) error
 	DeleteBulkConversations(ctx context.Context, ids []string) (int64, []*mongodbErrors.BulkError, error)
+	CheckConversationExists(ctx context.Context, userIDOne string, userIDTwo string) (*entity.Conversation, error)
 }

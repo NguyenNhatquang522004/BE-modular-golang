@@ -1,0 +1,13 @@
+syntax = "proto3";
+package api.proto.v1;
+option go_package = "github.com/quang/social-network/pkg/pb/v1;pb";
+
+service MediaService {
+  rpc GetUserIDbyStoryID (GetUserIDbyStoryIDRequest) returns (GetUserIDbyStoryIDResponse);
+}
+message GetUserIDbyStoryIDRequest {
+  string story_id = 1;
+}
+message GetUserIDbyStoryIDResponse {
+  string user_id = 1;
+}

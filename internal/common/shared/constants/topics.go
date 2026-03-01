@@ -41,7 +41,7 @@ const (
 	TopicReactAlbum     TopicName = "media.react_album.events"
 	TopicViewCountStory TopicName = "media.view_count_story.events"
 	TopicReactStory     TopicName = "media.react_story.events"
-	TopicRelyStory      TopicName = "media.rely_story.events"
+	TopicReplyStory     TopicName = "media.rely_story.events"
 	TopicReactReel      TopicName = "media.react_reel.events"
 	TopicCounterReel    TopicName = "media.counter_reel.events"
 	TopicReactLive      TopicName = "media.react_live.events"

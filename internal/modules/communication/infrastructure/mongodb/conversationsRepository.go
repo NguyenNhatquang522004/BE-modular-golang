@@ -321,3 +321,22 @@ func (r *ConversationsRepository) DeleteBulkConversations(ctx context.Context, i
 	}
 	return result.DeletedCount, nil, nil
 }
+func (r *ConversationsRepository) CheckConversationExists(ctx context.Context, userIDOne string, userIDTwo string) (*entity.Conversation, error) {
+	collection := r.client.Collection(entity.Conversation{}.CollectionName())
+	query := bson.M{
+		"type": "private",
+		"$or": []bson.M{
+			{"creator_id": userIDOne, "owner_id": userIDTwo},
+			{"creator_id": userIDTwo, "owner_id": userIDOne},
+		},
+	}
+	var conversation entity.Conversation
+	err := collection.FindOne(ctx, query).Decode(&conversation)
+	if err != nil {
+		if errors.Is(err, mongo.ErrNoDocuments) {
+			return nil, nil // Không tìm thấy cuộc trò chuyện nào giữa hai người dùng
+		}
+		return nil, err // Lỗi khác xảy ra
+	}
+	return &conversation, nil // Trả về cuộc trò chuyện tìm thấy
+}

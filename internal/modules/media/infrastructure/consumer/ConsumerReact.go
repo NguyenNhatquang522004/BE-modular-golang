@@ -9,6 +9,7 @@ import (
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/IRepositoryShare"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/constants"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/events"
+	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/events/mediaEvent"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/media/delivery/dto/req"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/media/delivery/dto/res"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/media/domain/IRepository/IRepositoryCassandra"
@@ -475,3 +476,37 @@ func (c *ConsumerReact) ConsumerCounterLive(ctx context.Context) {
 	}
 }
 func (c *ConsumerReact) ConsumerFailedCounterLive(ctx context.Context)
+
+func (c *ConsumerReact) ConsumerCounterReplyStory(ctx context.Context) {
+	err := c.eventbus.Subscribe(ctx, constants.TopicReplyStory.String(), func(ctx context.Context, event events.IntegrationEvent) error {
+		data, ok := event.Payload.(*mediaEvent.ReplyStoryPayload)
+		if !ok {
+			// Handle type assertion error
+			return errors.New("invalid event payload")
+		}
+		switch event.Type {
+		case constants.Created.String():
+			dataStory, err := c.storyRepo.GetStoryByID(ctx, data.StoryID)
+			if err != nil {
+				// Handle error
+				return nil
+			}
+			dataStory.Stats.ReplyCount = dataStory.Stats.ReplyCount + 1
+			err = c.storyRepo.UpdateStory(ctx, dataStory)
+			if err != nil {
+				// Handle error
+				return nil
+			}
+		case constants.Deleted.String():
+		default:
+			// Handle unknown event type
+		}
+		return nil
+	})
+	if err != nil {
+		log.Printf("Error subscribing to topic: %v", err)
+		return
+	}
+}
+
+func (c *ConsumerReact) ConsumerFailedCounterReplyStory(ctx context.Context) 
