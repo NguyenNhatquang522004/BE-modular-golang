@@ -2,6 +2,8 @@
 package mapper
 
 import (
+	"time"
+
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/communication/delivery/dto/req"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/communication/delivery/dto/res"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/communication/domain/entity"
@@ -10,15 +12,21 @@ import (
 // =========================================================================
 // MAPPER REQ
 // =========================================================================
+func generateBucket(t time.Time) int {
+	// Ép về UTC để đảm bảo tính nhất quán của dữ liệu trên toàn hệ thống
+	tUTC := t.UTC()
+	return tUTC.Year()*100 + int(tUTC.Month())
+}
 
 // ToEntityMessage chuyển hoàn toàn từ Req sang Entity.
-func ToEntityMessage(r *req.MessageReq) *entity.Message {
+func ToEntityMessage(r *req.MessageReq, conversationID string) *entity.Message {
 	if r == nil {
 		return nil
 	}
+	now := time.Now().UTC()
 	return &entity.Message{
-		ConversationID:   r.ConversationID,
-		Bucket:           r.Bucket,
+		ConversationID:   conversationID,
+		Bucket:           generateBucket(now),
 		MessageID:        r.MessageID,
 		SenderID:         r.SenderID,
 		Type:             r.Type,

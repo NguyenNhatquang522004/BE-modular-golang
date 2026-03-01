@@ -48,6 +48,11 @@ const (
 	TopicStartStopLive  TopicName = "media.start_stop_live.events"
 	TopicCommentLive    TopicName = "media.comment_live.events"
 	TopicCounterLive    TopicName = "media.counter_live.events"
+
+	// communication
+	TopicMessage      TopicName = "communication.message.events"
+	TopicStateMessage TopicName = "communication.state_message.events"
+	TopicReactMessage TopicName = "communication.react_message.events"
 )
 
 type TopicConfig struct {

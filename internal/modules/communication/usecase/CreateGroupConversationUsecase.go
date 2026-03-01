@@ -24,12 +24,11 @@ func NewCreateGroupConversationUsecase(conversationRepo IRepositoryMongodb.IConv
 }
 
 func (u *CreateGroupConversationUsecase) Execute(ctx context.Context, req *req.CreateGroupConversationRequest) (*res.FailedChannelGroupConversationResponse, error) {
-	// Implement the logic to create a group conversation here
-	// This may involve validating the request, checking if the users exist, creating a conversation record in the database, etc.
-	// Implement the logic to create a group conversation here
-	// This may involve validating the request, checking if the users exist, creating a conversation record in the database, etc.
+
 	entityConversation := mapper.ToEntityConversation(req.ConversationReq)
 	entityConversation.Type = enum.TypeGroup
+	entity := mapper.ToEntityBulkConversationParticipant(req.User, entityConversation.ID.Hex())
+	entityConversation.ParticipantCount = len(entity)
 	err := u.conversationRepo.CreateConversation(ctx, entityConversation)
 	if err != nil {
 		return &res.FailedChannelGroupConversationResponse{
@@ -39,7 +38,6 @@ func (u *CreateGroupConversationUsecase) Execute(ctx context.Context, req *req.C
 			ErrorMessage:   errors.New("Failed to create group conversation"),
 		}, err
 	}
-	entity := mapper.ToEntityBulkConversationParticipant(req.User, entityConversation.ID.Hex())
 	_, _, err = u.conversationParticipantRepo.CreateBulkConversationParticipants(ctx, entity)
 	if err != nil {
 		return &res.FailedChannelGroupConversationResponse{

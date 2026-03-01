@@ -46,6 +46,7 @@ func (u *CreateGroupToChannelConversationUsecase) Execute(ctx context.Context, r
 	entityConversation := mapper.ToEntityConversation(req.ConversationReq)
 	entityConversation.Type = enum.TypeGroup
 	entityConversation.RelatedGroupID = &dataGetChannel.ID
+	entityConversation.ParticipantCount = len(req.User)
 	err = u.conversationRepo.CreateConversation(ctx, entityConversation)
 	if err != nil {
 		return &res.FailedChannelGroupConversationResponse{

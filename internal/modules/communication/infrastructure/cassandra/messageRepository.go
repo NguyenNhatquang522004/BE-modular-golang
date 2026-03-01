@@ -504,7 +504,7 @@ func (r *MessageRepository) DeleteBulkMessages(ctx context.Context, conversation
 // READ
 // =========================================================================
 
-func (r *MessageRepository) GetMessagesByConversationID(ctx context.Context, conversationID string, bucket int, cursor string, limit int) (*dto.PaginationRes, error) {
+func (r *MessageRepository) GetMessagesByConversationIDs(ctx context.Context, conversationID string, bucket int, cursor string, limit int) (*dto.PaginationRes, error) {
 	// 1. Fail-fast validation
 	if conversationID == "" {
 		return nil, fmt.Errorf("conversationID cannot be empty")
@@ -644,4 +644,47 @@ func (r *MessageRepository) DeleteMessagesByConversationID(ctx context.Context, 
 	}
 
 	return nil
+}
+func (r *MessageRepository) GetMessagesByConversationID(ctx context.Context, conversationID string, bucket int) (*entity.Message, error) {
+	// 1. Fail-fast validation
+	if conversationID == "" {
+		return nil, fmt.Errorf("conversationID cannot be empty")
+	}
+
+	// 2. Chuẩn bị Query cho Cassandra
+	tableName := entity.Message{}.TableName()
+
+	query := fmt.Sprintf(`
+		SELECT conversation_id, bucket, message_id,
+		       sender_id, type, content, attachments,
+		       is_edited, reply_to_message_id, story_ref_id,
+		       is_revoked, created_at
+		FROM %s WHERE conversation_id = ? AND bucket = ?
+	`, tableName)
+
+	var message entity.Message
+
+	err := r.session.Query(query, conversationID, bucket).WithContext(ctx).Scan(
+		&message.ConversationID,
+		&message.Bucket,
+		&message.MessageID,
+		&message.SenderID,
+		&message.Type,
+		&message.Content,
+		&message.Attachments,
+		&message.IsEdited,
+		&message.ReplyToMessageID,
+		&message.StoryRefID,
+		&message.IsRevoked,
+		&message.CreatedAt,
+	)
+
+	if err != nil {
+		if err == gocql.ErrNotFound {
+			return nil, nil // Không tìm thấy message nào
+		}
+		return nil, fmt.Errorf("failed to get messages for conversation %s bucket %d: %w", conversationID, bucket, err)
+	}
+
+	return &message, nil
 }

@@ -16,5 +16,6 @@ type IMessageRepository interface {
 	DeleteMessagesByConversationID(ctx context.Context, conversationID string) error
 	DeleteMessage(ctx context.Context, conversationID string, bucket int, messageID string) error
 	DeleteBulkMessages(ctx context.Context, conversationID string, bucket int, messageIDs []string) (int64, []*cassandraErrors.MessageBulkError, error)
-	GetMessagesByConversationID(ctx context.Context, conversationID string, bucket int, cursor string, limit int) (*dto.PaginationRes, error)
+	GetMessagesByConversationIDs(ctx context.Context, conversationID string, bucket int, cursor string, limit int) (*dto.PaginationRes, error)
+	GetMessagesByConversationID(ctx context.Context, conversationID string, bucket int) (*entity.Message, error)
 }

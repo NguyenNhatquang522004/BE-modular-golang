@@ -52,31 +52,18 @@ type IRemoveGroupParticipantUsecase interface {
 type IUpdateGroupParticipantUsecase interface {
 	Execute(ctx context.Context, req *req.UpdateGroupParticipantRequest) (*res.FailedParticipantResponse, error)
 }
-type ICreateMessageUsecase interface {
-	Execute(ctx context.Context) error
+type IMessageUsecase interface {
+	Execute(ctx context.Context, req *req.MessageRequest) (*res.FailedMessageResponse, error)
 }
-type IDeleteMessageUsecase interface {
-	Execute(ctx context.Context) error
-}
-type IUpdateMessageUsecase interface {
-	Execute(ctx context.Context) error
+type IMessageStatedUsecase interface {
+	Execute(ctx context.Context, req *req.MessageStateRequest) (*res.FailedMessageResponse, error)
 }
 type IReactMessageUsecase interface {
-	Execute(ctx context.Context) error
-}
-type IReadMessageUsecase interface {
-	Execute(ctx context.Context) error
-}
-type IUnreadMessageUsecase interface {
-	Execute(ctx context.Context) error
-}
-type IMessageReplyStoryUsecase interface {
-	Execute(ctx context.Context) error
+	Execute(ctx context.Context, req *req.ReactMessageRequest) (*res.FailedReactMessageResponse, error)
 }
 type IGetCoversationListUsecase interface {
 	Execute(ctx context.Context) error
 }
-
 type Usecase struct {
 }
 

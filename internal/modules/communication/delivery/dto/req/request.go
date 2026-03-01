@@ -1,5 +1,11 @@
 package req
 
+import (
+	"time"
+
+	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/constants"
+)
+
 type CreatePrivateConversationRequest struct {
 	*ConversationReq
 	UserSenderFirst   *ConversationParticipantReq `json:"user_sender_first,omitempty"`
@@ -59,19 +65,22 @@ type UpdateGroupParticipantRequest struct {
 	UserID  string `json:"user_id"`
 	*ConversationParticipantReq
 }
-type CreateMessageRequest struct {
+type MessageRequest struct {
+	ConversationID string `json:"conversation_id"`
+	*MessageReq
+	EventType constants.EventType `json:"event_type"`
 }
-type DeleteMessageRequest struct {
-}
-type UpdateMessageRequest struct {
+type MessageStateRequest struct {
+	ConversationID string              `json:"conversation_id"`
+	UserID         string              `json:"user_id"`
+	MessageID      string              `json:"message_id"`
+	LastReadAt     time.Time           `json:"last_read_at"`
+	EventType      constants.EventType `json:"event_type"`
 }
 type ReactMessageRequest struct {
+	*MessageReactionReq
+	EventType constants.EventType `json:"event_type"`
 }
-type ReadMessageRequest struct {
-}
-type UnreadMessageRequest struct {
-}
-type MessageReplyStoryRequest struct {
-}
+
 type GetCoversationListRequest struct {
 }

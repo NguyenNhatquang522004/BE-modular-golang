@@ -423,3 +423,24 @@ func (r *ConversationReadStateRepository) DeleteBulkConversationReadStatesByMany
 	}
 	return successCount, bulkErrors, finalErr
 }
+func (r *ConversationReadStateRepository) UpsertConversationReadState(ctx context.Context, readState *entity.ConversationReadState) error {
+	if readState == nil {
+		return nil
+	}
+	if readState.ConversationID == "" || readState.UserID == (gocql.UUID{}) {
+		return nil
+	}
+	safectx := context.WithoutCancel(ctx)
+	queryfind := fmt.Sprintf(`
+		SELECT conversation_id FROM %s WHERE conversation_id = ? AND user_id = ?
+	`, (&entity.ConversationReadState{}).TableName())
+	var existingConversationID string
+	err := r.session.Query(queryfind, readState.ConversationID, readState.UserID).WithContext(safectx).Scan(&existingConversationID)
+	if err != nil && err != gocql.ErrNotFound {
+		return fmt.Errorf("failed to check existing conversation read state: %w", err)
+	}
+	if existingConversationID != "" {
+		return r.UpdateConversationReadState(ctx, readState)
+	}
+	return r.CreateConversationReadState(ctx, readState)
+}

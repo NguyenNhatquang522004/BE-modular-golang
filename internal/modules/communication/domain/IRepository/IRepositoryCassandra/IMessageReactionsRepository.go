@@ -45,7 +45,7 @@ type IMessageReactionsRepository interface {
 	// UpdateBulkReactions cập nhật nhiều reaction song song qua Worker Pool.
 	// Trả về (số thành công, danh sách lỗi chi tiết, lỗi tổng hợp).
 	UpdateBulkReactions(ctx context.Context, reactions []*entity.MessageReaction) (int64, []*cassandraErrors.MessageReactionBulkError, error)
-
+	UpsertReaction(ctx context.Context, reaction *entity.MessageReaction) error
 	// =========================================================================
 	// DELETE
 	// =========================================================================

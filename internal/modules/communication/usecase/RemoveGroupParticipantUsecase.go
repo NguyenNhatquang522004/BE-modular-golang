@@ -35,6 +35,15 @@ func (u *RemoveGroupParticipantUsecase) Execute(ctx context.Context, req *req.Re
 			ErrorMessage:   nil,
 		}, nil
 	}
+	dataConversation.ParticipantCount -= 1
+	err = u.conversationRepo.UpdateConversation(ctx, dataConversation)
+	if err != nil {
+		return &res.FailedParticipantResponse{
+			ConversationID: req.GroupID,
+			UserID:         req.UserID,
+			ErrorMessage:   err,
+		}, err
+	}
 	err = u.conversationParticipantRepo.DeleteConversationParticipant(ctx, req.GroupID, req.UserID)
 	if err != nil {
 		return &res.FailedParticipantResponse{

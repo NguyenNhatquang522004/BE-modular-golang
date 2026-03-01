@@ -18,3 +18,18 @@ type FailedParticipantResponse struct {
 	UserID         string `json:"user_id,omitempty"`
 	ErrorMessage   error  `json:"error_message"`
 }
+
+type FailedMessageResponse struct {
+	ConversationID string `json:"conversation_id"`
+	UserID         string `json:"user_id,omitempty"`
+	MessageID      string `json:"message_id,omitempty"`
+	ErrorMessage   error  `json:"error_message"`
+}
+
+type FailedReactMessageResponse struct {
+	ConversationID string `json:"conversation_id"`
+	MessageID      string `json:"message_id"`
+	UserID         string `json:"user_id,omitempty"`
+	ReactionCode   string `json:"reaction_code,omitempty"`
+	ErrorMessage   error  `json:"error_message"`
+}
