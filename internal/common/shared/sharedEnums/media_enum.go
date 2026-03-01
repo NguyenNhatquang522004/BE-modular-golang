@@ -8,5 +8,12 @@ const (
 	MediaTypeVideo                    // 'video'
 	MediaTypeGif                      // 'gif'
 	MediaTypeSticker                  // 'sticker'
-
+	MediaTypePDF                      // 'pdf'
+	MediaTypeDOCX                     // 'docx' (Word)
+	MediaTypeXLSX                     // 'xlsx' (Excel)
+	MediaTypePPTX                     // 'pptx' (PowerPoint)
+	MediaTypeZIP                      // 'zip'  (Archive)
+	MediaTypeRAR                      // 'rar'
+	MediaTypeTXT                      // 'txt'
+	MediaTypeCSV                      // 'csv'
 )

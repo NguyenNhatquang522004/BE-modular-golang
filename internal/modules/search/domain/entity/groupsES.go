@@ -2,8 +2,6 @@ package entity
 
 import (
 	"time"
-
-	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/community/enum"
 )
 
 const (
@@ -34,7 +32,7 @@ type SearchGroup struct {
 
 	// Privacy: Enum quản lý quyền riêng tư.
 	// Nhờ thư viện enumer, field này sẽ serialize thành string ("public")
-	Privacy enum.PrivacySearch `json:"privacy" bson:"privacy"`
+	Privacy string `json:"privacy" bson:"privacy"`
 
 	// MemberCount: Số lượng thành viên
 	MemberCount int `json:"member_count" bson:"member_count"`

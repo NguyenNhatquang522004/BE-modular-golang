@@ -3,7 +3,7 @@ package entity
 import (
 	"time"
 
-	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/community/enum"
+	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/sharedEnums"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -22,8 +22,8 @@ type GroupMember struct {
 	UserID string `bson:"user_id" json:"user_id"`
 
 	// 2. VAI TRÒ & TRẠNG THÁI
-	Role   enum.MemberRole   `bson:"role" json:"role"`     // 'admin', 'member'
-	Status enum.MemberStatus `bson:"status" json:"status"` // 'active', 'pending', 'invited'
+	Role   sharedEnums.RoleType         `bson:"role" json:"role"`     // 'admin', 'member'
+	Status sharedEnums.ProcessingStatus `bson:"status" json:"status"` // 'active', 'pending', 'invited'
 
 	// 3. THÔNG TIN GIA NHẬP
 	// Người mời (Postgres UUID -> String)
@@ -38,7 +38,7 @@ type GroupMember struct {
 
 	// 5. GAMIFICATION
 	// Danh sách huy hiệu
-	Badges []enum.MemberBadge `bson:"badges,omitempty" json:"badges,omitempty"`
+	Badges []sharedEnums.UserBadge `bson:"badges,omitempty" json:"badges,omitempty"`
 
 	// 6. METADATA
 	JoinedAt time.Time `bson:"joined_at" json:"joined_at"`

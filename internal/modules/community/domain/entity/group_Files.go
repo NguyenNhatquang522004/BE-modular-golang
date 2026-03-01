@@ -3,12 +3,14 @@ package entity
 import (
 	"time"
 
-	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/community/enum"
+	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/sharedEnums"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
+
 const (
 	CollectionGroupFiles = "GroupFiles"
 )
+
 type GroupFile struct {
 	ID primitive.ObjectID `bson:"_id,omitempty" json:"id"`
 
@@ -21,8 +23,8 @@ type GroupFile struct {
 	UploaderID string `bson:"uploader_id" json:"uploader_id"`
 
 	// 2. FILE INFO
-	FileName string        `bson:"file_name" json:"file_name"` // "Bao_cao.xlsx"
-	FileType enum.FileType `bson:"file_type" json:"file_type"` // 'xlsx', 'pdf'...
+	FileName string                `bson:"file_name" json:"file_name"` // "Bao_cao.xlsx"
+	FileType sharedEnums.MediaType `bson:"file_type" json:"file_type"` // 'xlsx', 'pdf'...
 
 	// Kích thước file (Bytes). Dùng int64 để an toàn với file lớn > 2GB
 	FileSize int64 `bson:"file_size" json:"file_size"`
@@ -38,6 +40,7 @@ type GroupFile struct {
 	// 5. TIMESTAMPS
 	CreatedAt time.Time `bson:"created_at" json:"created_at"`
 }
+
 func (GroupFile) CollectionName() string {
 	return CollectionGroupFiles
 }
