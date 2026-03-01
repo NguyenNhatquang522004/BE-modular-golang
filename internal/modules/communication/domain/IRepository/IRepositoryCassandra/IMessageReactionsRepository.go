@@ -49,7 +49,7 @@ type IMessageReactionsRepository interface {
 	// =========================================================================
 	// DELETE
 	// =========================================================================
-
+	DeleteReactionByConversationID(ctx context.Context, conversationID string) error
 	// DeleteReaction xóa chính xác 1 reaction theo đủ Primary Key.
 	// (conversation_id, message_id) → Partition | user_id → Clustering Key.
 	DeleteReaction(ctx context.Context, conversationID string, messageID string, userID string) error

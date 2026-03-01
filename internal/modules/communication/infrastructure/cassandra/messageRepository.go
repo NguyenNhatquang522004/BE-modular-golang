@@ -629,3 +629,19 @@ func (r *MessageRepository) GetMessagesByConversationID(ctx context.Context, con
 		Limit:      limit,
 	}, nil
 }
+func (r *MessageRepository) DeleteMessagesByConversationID(ctx context.Context, conversationID string) error {
+	safeCtx := context.WithoutCancel(ctx)
+	tableName := entity.Message{}.TableName()
+
+	// 3. Partition Delete: Xóa toàn bộ message của 1 conversation.
+	// Đây là thao tác O(1) trong Cassandra — cực kỳ nhanh.
+	query := fmt.Sprintf("DELETE FROM %s WHERE conversation_id = ?", tableName)
+
+	// 4. Thực thi
+	if err := r.session.Query(query, conversationID).WithContext(safeCtx).Exec(); err != nil {
+		return fmt.Errorf("failed to delete all messages of conversation %s: %w",
+			conversationID, err)
+	}
+
+	return nil
+}

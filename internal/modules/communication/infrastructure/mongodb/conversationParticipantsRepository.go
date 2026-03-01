@@ -319,3 +319,33 @@ func (r *ConversationParticipantsRepository) DeleteBulkConversationParticipants(
 
 	return result.DeletedCount, faildocs, nil
 }
+func (r *ConversationParticipantsRepository) DeleteConversationParticipantByConversationID(ctx context.Context, conversationID string) error {
+	collection := r.client.Collection(entity.ConversationParticipant{}.CollectionName())
+	query := bson.M{
+		"conversation_id": conversationID,
+	}
+	result, err := collection.DeleteMany(ctx, query)
+	if err != nil {
+		return err
+	}
+	if result.DeletedCount == 0 {
+		return mongo.ErrNoDocuments
+	}
+	return nil
+}
+func (r *ConversationParticipantsRepository) GetConversationParticipant(ctx context.Context, conversationID string, userID string) (*entity.ConversationParticipant, error) {
+	collection := r.client.Collection(entity.ConversationParticipant{}.CollectionName())
+	query := bson.M{
+		"conversation_id": conversationID,
+		"user_id":         userID,
+	}
+	var participant entity.ConversationParticipant
+	err := collection.FindOne(ctx, query).Decode(&participant)
+	if err != nil {
+		if err == mongo.ErrNoDocuments {
+			return nil, nil
+		}
+		return nil, err
+	}
+	return &participant, nil
+}

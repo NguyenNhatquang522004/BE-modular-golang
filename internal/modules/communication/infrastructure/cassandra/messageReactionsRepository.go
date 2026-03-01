@@ -764,3 +764,26 @@ func (r *MessageReactionsRepository) GetReactionByUser(ctx context.Context, conv
 
 	return &rx, nil
 }
+func (r *MessageReactionsRepository) DeleteReactionByConversationID(ctx context.Context, conversationID string) error {
+	// 1. Fail-fast validation
+	if conversationID == "" {
+		return fmt.Errorf("conversationID cannot be empty")
+	}
+
+	// 2. Bảo vệ Context: Partition Delete vẫn là thao tác ghi Tombstone
+	safeCtx := context.WithoutCancel(ctx)
+
+	tableName := entity.MessageReaction{}.TableName()
+
+	// 3. Partition Delete: Xóa toàn bộ reaction của 1 conversation.
+	// Đây là thao tác O(1) trong Cassandra — cực kỳ nhanh.
+	query := fmt.Sprintf("DELETE FROM %s WHERE conversation_id = ?", tableName)
+
+	// 4. Thực thi
+	if err := r.session.Query(query, conversationID).WithContext(safeCtx).Exec(); err != nil {
+		return fmt.Errorf("failed to delete all reactions of conversation %s: %w",
+			conversationID, err)
+	}
+
+	return nil
+}

@@ -39,7 +39,11 @@ func (c *ConsumerView) ConsumerViewCountStory(ctx context.Context) {
 	}
 	worker := 2
 	err := c.events.Subscribe(ctx, constants.TopicViewCountStory.String(), func(ctx context.Context, event events.IntegrationEvent) error {
-		data := event.Payload.(*req.ViewCountStoryRequest)
+		data, ok := event.Payload.(*req.ViewCountStoryRequest)
+		if !ok {
+			log.Println("Invalid payload type for ViewCountStoryRequest")
+			return nil
+		}
 		dataStory, err := c.storyRepo.GetStoryByID(ctx, data.StoryId)
 		if err != nil {
 			return err
@@ -74,6 +78,12 @@ func (c *ConsumerView) ConsumerViewCountStory(ctx context.Context) {
 						}
 						return
 					}
+					resultChan <- taskResult{
+						storyId: data.StoryId,
+						userId:  data.UserId,
+						err:     nil,
+					}
+				
 				case 1:
 					gocqlid, err := gocql.ParseUUID(data.StoryId)
 					if err != nil {
@@ -115,11 +125,18 @@ func (c *ConsumerView) ConsumerViewCountStory(ctx context.Context) {
 						}
 						return
 					}
+					resultChan <- taskResult{
+						storyId: data.StoryId,
+						userId:  data.UserId,
+						err:     nil,
+					}
+
 					// Có thể thêm logic cập nhật cache hoặc các hệ thống khác nếu cần thiết
 					// Ví dụ: Cập nhật cache tổng số lượt xem của story
 				}
 			})
 		}
+		c.pool.Wait() // Đợi tất cả worker hoàn thành
 		for i := 0; i < worker; i++ {
 			result := <-resultChan
 			if result.err != nil {
@@ -134,6 +151,7 @@ func (c *ConsumerView) ConsumerViewCountStory(ctx context.Context) {
 				}
 			}
 		}
+		c.pool.Wait() // Đảm bảo tất cả worker đã hoàn thành trước khi kết thúc hàm xử lý sự kiện
 		return nil
 	})
 	if err != nil {

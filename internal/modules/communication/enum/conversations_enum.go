@@ -10,6 +10,7 @@ type ConversationType int
 const (
 	TypePrivate ConversationType = iota // 'private' (1-1)
 	TypeGroup                           // 'group' (Nhiều người)
+	TypeChannel                         // 'channel' (Kênh trong nhóm lớn)
 )
 
 //go:generate enumer -type=ConversationScope -json -transform=snake -trimprefix=Scope
@@ -23,5 +24,3 @@ const (
 // =============================================================================
 // 2. STATUS
 // =============================================================================
-
-

@@ -15,6 +15,7 @@ type ICallLogsRepository interface {
 	GetCallLogsByConversationID(ctx context.Context, conversationID string, cursor string, limit int) (*dto.PaginationRes, error)
 	UpdateCallLog(ctx context.Context, callLog *entity.CallLog) error
 	UpdateBulkCallLogs(ctx context.Context, callLogs []*entity.CallLog) (int64, []*mongodbErrors.BulkError, error)
+	DeleteCallLogByConversationID(ctx context.Context, conversationID string) error
 	DeleteCallLog(ctx context.Context, id string) error
 	DeleteBulkCallLogs(ctx context.Context, ids []string) (int64, []*mongodbErrors.BulkError, error)
 }

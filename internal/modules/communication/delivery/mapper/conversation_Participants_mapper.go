@@ -14,7 +14,7 @@ import (
 // ========================
 
 // ToEntityConversationParticipant tạo mới một Entity ConversationParticipant từ Request.
-func ToEntityConversationParticipant(r *req.ConversationParticipantReq) *entity.ConversationParticipant {
+func ToEntityConversationParticipant(r *req.ConversationParticipantReq, conversationId string) *entity.ConversationParticipant {
 	if r == nil {
 		return nil
 	}
@@ -25,7 +25,7 @@ func ToEntityConversationParticipant(r *req.ConversationParticipantReq) *entity.
 		id = primitive.NewObjectID() // Auto sinh ID nếu Req không truyền lên
 	}
 
-	convID, _ := primitive.ObjectIDFromHex(r.ConversationID)
+	convID, _ := primitive.ObjectIDFromHex(conversationId)
 
 	// Xử lý các trường thời gian mặc định
 	now := time.Now()
@@ -59,6 +59,21 @@ func ToEntityConversationParticipant(r *req.ConversationParticipantReq) *entity.
 		UpdatedAt:         updatedAt,
 		DeletedAt:         r.DeletedAt,
 	}
+}
+func ToEntityBulkConversationParticipant(r []*req.ConversationParticipantReq, conversationId string) []*entity.ConversationParticipant {
+	if r == nil {
+		return nil
+	}
+	var entities []*entity.ConversationParticipant
+	for _, item := range r {
+		entity := ToEntityConversationParticipant(item, conversationId)
+		if entity != nil {
+			entities = append(entities, entity)
+		}
+	}
+	return entities
+	// Xử lý chuyển đổi String sang ObjectID an toàn
+
 }
 
 // UpdateToEntityConversationParticipant cập nhật Entity hiện có dựa trên data từ Request.

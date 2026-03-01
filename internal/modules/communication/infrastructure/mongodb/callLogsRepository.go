@@ -9,7 +9,7 @@ import (
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/IRepositoryShare"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/dto"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/utils"
-	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/communication/domain/entity"	
+	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/communication/domain/entity"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -201,7 +201,15 @@ func (r *CallLogsRepository) UpdateBulkCallLogs(ctx context.Context, callLogs []
 	}
 	return result.ModifiedCount, faildocs, nil
 }
-
+func (r *CallLogsRepository) DeleteCallLogByConversationID(ctx context.Context, conversationID string) error {
+	collection := r.client.Collection(entity.CallLog{}.CollectionName())
+	finalid, _ := primitive.ObjectIDFromHex(conversationID)
+	_, err := collection.DeleteMany(ctx, bson.M{"conversation_id": finalid})
+	if err != nil {
+		return err
+	}
+	return nil
+}
 func (r *CallLogsRepository) DeleteCallLog(ctx context.Context, id string) error {
 	collection := r.client.Collection(entity.CallLog{}.CollectionName())
 	objID, err := primitive.ObjectIDFromHex(id)
