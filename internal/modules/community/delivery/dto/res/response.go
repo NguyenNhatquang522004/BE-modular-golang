@@ -9,6 +9,7 @@ type FailedGroup struct {
 type FailedMember struct {
 	GroupID      string `json:"group_id"`
 	UserID       string `json:"user_id"`
+	UserActionID string `json:"user_action_id,omitempty"`
 	ErrorMessage error  `json:"error_message"`
 }
 type FailedGroupQA struct {
@@ -27,6 +28,6 @@ type FailGroupFile struct {
 	UserID       string `json:"user_id"`
 	UserActionID string `json:"user_action_id"`
 	FileID       string `json:"file_id"`
-	Data		 any `json:"data,omitempty"`
+	Data         any    `json:"data,omitempty"`
 	ErrorMessage error  `json:"error_message"`
 }

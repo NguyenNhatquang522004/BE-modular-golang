@@ -19,3 +19,11 @@ type GroupEventStatsPayload struct {
 	InterestedCount int                 `json:"interested_count"`
 	EventType       constants.EventType `json:"event_type"`
 }
+
+type DownloadGroupFilePayload struct {
+	GroupID   string              `json:"group_id"`
+	FileID    string              `json:"file_id"`
+	Count     int                 `json:"count"`
+	UserID    string              `json:"user_id"`
+	EventType constants.EventType `json:"event_type"`
+}

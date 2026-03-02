@@ -12,15 +12,3 @@ const (
 	PrivacyPrivate                     // 'private' (Tìm thấy, nhưng phải join mới xem bài)
 	PrivacySecret                      // 'secret' (Không tìm thấy, chỉ invite)
 )
-
-// =============================================================================
-// 2. APPROVER PERMISSION (Ai có quyền duyệt thành viên?)
-// =============================================================================
-
-//go:generate enumer -type=GroupApprover -json -transform=snake -trimprefix=Approver
-type GroupApprover int
-
-const (
-	ApproverAdmin    GroupApprover = iota // 'admin' (Chỉ Admin/Mod)
-	ApproverEveryone                      // 'everyone' (Thành viên cũng được duyệt - Ít dùng nhưng Facebook có)
-)

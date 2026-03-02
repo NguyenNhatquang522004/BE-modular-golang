@@ -3,12 +3,15 @@ package entity
 import (
 	"time"
 
+	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/sharedEnums"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/community/enum"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
+
 const (
 	CollectionGroups = "Groups"
 )
+
 type Group struct {
 	ID primitive.ObjectID `bson:"_id,omitempty" json:"id"`
 
@@ -80,7 +83,7 @@ type GroupSettings struct {
 	AllowMemberPosting    bool `bson:"allow_member_posting" json:"allow_member_posting"`
 
 	// Enum: Ai có quyền duyệt thành viên?
-	WhoCanApproveMember enum.GroupApprover `bson:"who_can_approve_member" json:"who_can_approve_member"`
+	WhoCanApproveMember []*sharedEnums.RoleType `bson:"who_can_approve_member" json:"who_can_approve_member"`
 }
 
 // --- FEATURE FLAGS (Cấu hình tính năng) ---
@@ -96,6 +99,7 @@ type GroupStats struct {
 	PendingPostCount   int `bson:"pending_post_count" json:"pending_post_count"`
 	ReportedPostCount  int `bson:"reported_post_count" json:"reported_post_count"`
 }
+
 func (Group) CollectionName() string {
 	return CollectionGroups
 }

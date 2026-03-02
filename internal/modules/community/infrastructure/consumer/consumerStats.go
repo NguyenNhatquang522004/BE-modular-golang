@@ -14,14 +14,16 @@ type ConsumerStats struct {
 	events    events.EventBus
 	groupRepo IRepositoryMongodb.IGroupRepository
 	eventRepo IRepositoryMongodb.IGroupEventsRepository
+	groupFile IRepositoryMongodb.IGroupFilesRepository
 	pool      IRepositoryShare.IWorkerPool
 }
 
-func NewConsumerStats(events events.EventBus, groupRepo IRepositoryMongodb.IGroupRepository, eventRepo IRepositoryMongodb.IGroupEventsRepository, pool IRepositoryShare.IWorkerPool) *ConsumerStats {
+func NewConsumerStats(events events.EventBus, groupRepo IRepositoryMongodb.IGroupRepository, eventRepo IRepositoryMongodb.IGroupEventsRepository, groupFile IRepositoryMongodb.IGroupFilesRepository, pool IRepositoryShare.IWorkerPool) *ConsumerStats {
 	return &ConsumerStats{
 		events:    events,
 		groupRepo: groupRepo,
 		eventRepo: eventRepo,
+		groupFile: groupFile,
 		pool:      pool,
 	}
 }
@@ -91,3 +93,35 @@ func (c *ConsumerStats) ConsumerEventStats(ctx context.Context) {
 	}
 }
 func (c *ConsumerStats) ConsumerFailedEventStats(ctx context.Context)
+
+func (c *ConsumerStats) ConsumerDownloadGroupFile(ctx context.Context) {
+	err := c.events.Subscribe(ctx, constants.TopicDownloadGroupFile.String(), func(ctx context.Context, event events.IntegrationEvent) error {
+		data, ok := event.Payload.(*communityEvent.DownloadGroupFilePayload)
+		if !ok {
+			// Log error
+			return nil
+		}
+		// Process data and update group stats in the database
+		switch data.EventType {
+		case constants.Created:
+			// Update download count for the file in the database
+			// You can use data.GroupID, data.FileID, data.Count, and data.UserID to identify the file and update its download count
+
+			err := c.groupFile.UpdateGroupFileDownloadCount(ctx, data.FileID, data.Count)
+			if err != nil {
+				// Log error
+				return nil
+			}
+		case constants.Deleted:
+		case constants.Updated:
+		default:
+			// Log unknown event type
+			return nil
+		}
+		return nil
+	})
+	if err != nil {
+		// Log error
+	}
+}
+func (c *ConsumerStats) ConsumerFailedDownloadGroupFile(ctx context.Context)

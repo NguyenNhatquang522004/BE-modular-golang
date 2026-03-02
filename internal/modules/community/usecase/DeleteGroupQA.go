@@ -2,6 +2,7 @@ package usecase
 
 import (
 	"context"
+	"slices"
 
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/sharedEnums"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/community/delivery/dto/req"
@@ -15,8 +16,12 @@ type DeleteGroupQA struct {
 	groupMemberRepo IRepositoryMongodb.IGroupMembersRepository
 }
 
-func NewDeleteGroupQA() *DeleteGroupQA {
-	return &DeleteGroupQA{}
+func NewDeleteGroupQA(groupRepo IRepositoryMongodb.IGroupRepository, groupqaRepo IRepositoryMongodb.IGroupjoinQuestionsRepository, groupMemberRepo IRepositoryMongodb.IGroupMembersRepository) *DeleteGroupQA {
+	return &DeleteGroupQA{
+		groupRepo:       groupRepo,
+		groupqaRepo:     groupqaRepo,
+		groupMemberRepo: groupMemberRepo,
+	}
 }
 func (u *DeleteGroupQA) Execute(ctx context.Context, req *req.DeleteGroupQARequest) (*res.FailedGroupQA, error) {
 	datagroup, err := u.groupRepo.GetGroupByID(ctx, req.GroupID)
@@ -56,6 +61,13 @@ func (u *DeleteGroupQA) Execute(ctx context.Context, req *req.DeleteGroupQAReque
 			GroupID:      req.GroupID,
 			ErrorMessage: err, // Thay thế bằng lỗi thực tế nếu có
 		}, nil
+	}
+	exists := slices.Contains(datagroup.Settings.WhoCanApproveMember, &dataaction.Role)
+	if !exists {
+		return &res.FailedGroupQA{
+			GroupID:      req.GroupID,
+			ErrorMessage: err,
+		}, err
 	}
 	err = u.groupqaRepo.DeleteGroupJoinQuestion(ctx, req.QAID)
 	if err != nil {

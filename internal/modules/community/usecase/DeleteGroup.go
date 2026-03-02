@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/IRepositoryShare"
+	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/sharedEnums"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/community/delivery/dto/req"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/community/delivery/dto/res"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/community/domain/IRepository/IRepositoryMongodb"
@@ -30,6 +31,31 @@ func NewDeleteGroup(groupRepo IRepositoryMongodb.IGroupRepository, groupMemberRe
 }
 
 func (uc *DeleteGroup) Execute(ctx context.Context, req *req.DeleteGroupRequest) ([]*res.FailedGroup, error) {
+	datauserACtion, err := uc.groupMemberRepo.GetGroupMemberByUserIDAndGroupID(ctx, req.UserID, req.GroupID)
+	if err != nil {
+		return []*res.FailedGroup{
+			{
+				GroupID:      req.GroupID,
+				ErrorMessage: err,
+			},
+		}, err
+	}
+	if datauserACtion == nil {
+		return []*res.FailedGroup{
+			{
+				GroupID:      req.GroupID,
+				ErrorMessage: err,
+			},
+		}, err
+	}
+	if datauserACtion.Role != sharedEnums.RoleTypeAdmin {
+		return []*res.FailedGroup{
+			{
+				GroupID:      req.GroupID,
+				ErrorMessage: err,
+			},
+		}, err
+	}
 	workercount := 5
 	results := make(chan *res.FailedGroup, workercount)
 	for i := 0; i < workercount; i++ {

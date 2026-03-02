@@ -4,6 +4,9 @@ import (
 	"context"
 
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/IRepositoryShare"
+	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/constants"
+	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/events"
+	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/events/communityEvent"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/community/delivery/dto/req"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/community/delivery/dto/res"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/community/domain/IRepository/IRepositoryMongodb"
@@ -14,14 +17,16 @@ type DownloadGroupFile struct {
 	groupfileRepo   IRepositoryMongodb.IGroupFilesRepository
 	groupMemberRepo IRepositoryMongodb.IGroupMembersRepository
 	seaweedfsRepo   IRepositoryShare.ISeaweedfs
+	events          events.EventBus
 }
 
-func NewDownloadGroupFile(groupRepo IRepositoryMongodb.IGroupRepository, groupfileRepo IRepositoryMongodb.IGroupFilesRepository, groupMemberRepo IRepositoryMongodb.IGroupMembersRepository, seaweedfsRepo IRepositoryShare.ISeaweedfs) *DownloadGroupFile {
+func NewDownloadGroupFile(groupRepo IRepositoryMongodb.IGroupRepository, groupfileRepo IRepositoryMongodb.IGroupFilesRepository, groupMemberRepo IRepositoryMongodb.IGroupMembersRepository, seaweedfsRepo IRepositoryShare.ISeaweedfs, events events.EventBus) *DownloadGroupFile {
 	return &DownloadGroupFile{
 		groupRepo:       groupRepo,
 		groupfileRepo:   groupfileRepo,
 		groupMemberRepo: groupMemberRepo,
 		seaweedfsRepo:   seaweedfsRepo,
+		events:          events,
 	}
 }
 func (c *DownloadGroupFile) Execute(ctx context.Context, req *req.DownloadGroupFileRequest) (*res.FailGroupFile, error) {
@@ -115,6 +120,13 @@ func (c *DownloadGroupFile) Execute(ctx context.Context, req *req.DownloadGroupF
 			ErrorMessage: err,
 		}, err
 	}
+	err = c.events.Publish(ctx, constants.TopicDownloadGroupFile.String(), req.GroupID, constants.Created.String(), &communityEvent.DownloadGroupFilePayload{
+		GroupID:   req.GroupID,
+		FileID:    req.FileID,
+		Count:     1,
+		UserID:    req.UserActionID,
+		EventType: constants.Created,
+	})
 	return &res.FailGroupFile{
 		GroupID:      req.GroupID,
 		UserID:       req.UserActionID,

@@ -2,6 +2,7 @@ package usecase
 
 import (
 	"context"
+	"slices"
 
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/community/delivery/dto/req"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/community/delivery/dto/res"
@@ -10,14 +11,16 @@ import (
 )
 
 type CreateGroupQA struct {
-	groupRepo   IRepositoryMongodb.IGroupRepository
-	groupqaRepo IRepositoryMongodb.IGroupjoinQuestionsRepository
+	groupRepo       IRepositoryMongodb.IGroupRepository
+	groupqaRepo     IRepositoryMongodb.IGroupjoinQuestionsRepository
+	groupMemberRepo IRepositoryMongodb.IGroupMembersRepository
 }
 
-func NewCreateGroupQA(groupRepo IRepositoryMongodb.IGroupRepository, groupqaRepo IRepositoryMongodb.IGroupjoinQuestionsRepository) *CreateGroupQA {
+func NewCreateGroupQA(groupRepo IRepositoryMongodb.IGroupRepository, groupqaRepo IRepositoryMongodb.IGroupjoinQuestionsRepository, groupMemberRepo IRepositoryMongodb.IGroupMembersRepository) *CreateGroupQA {
 	return &CreateGroupQA{
-		groupRepo:   groupRepo,
-		groupqaRepo: groupqaRepo,
+		groupRepo:       groupRepo,
+		groupqaRepo:     groupqaRepo,
+		groupMemberRepo: groupMemberRepo,
 	}
 }
 func (u *CreateGroupQA) Execute(ctx context.Context, req *req.CreateGroupQARequest) (*res.FailedGroupQA, error) {
@@ -41,6 +44,26 @@ func (u *CreateGroupQA) Execute(ctx context.Context, req *req.CreateGroupQAReque
 			GroupID:      req.GroupID,
 			ErrorMessage: err, // Thay thế bằng lỗi thực tế nếu có
 		}, nil
+	}
+	datauserACtion, err := u.groupMemberRepo.GetGroupMemberByUserIDAndGroupID(ctx, req.UserActionID, datagroup.ID.Hex())
+	if err != nil {
+		return &res.FailedGroupQA{
+			GroupID:      req.GroupID,
+			ErrorMessage: err, // Thay thế bằng lỗi thực tế nếu có
+		}, nil
+	}
+	if datauserACtion == nil {
+		return &res.FailedGroupQA{
+			GroupID:      req.GroupID,
+			ErrorMessage: err, // Thay thế bằng lỗi thực tế nếu có
+		}, nil
+	}
+	exists := slices.Contains(datagroup.Settings.WhoCanApproveMember, &datauserACtion.Role)
+	if !exists {
+		return &res.FailedGroupQA{
+			GroupID:      req.GroupID,
+			ErrorMessage: err,
+		}, err
 	}
 	entityqa := mapper.ToEntityGroupJoinQuestion(req.CreateGroupJoinQuestionReq)
 	err = u.groupqaRepo.CreateGroupJoinQuestion(ctx, entityqa)

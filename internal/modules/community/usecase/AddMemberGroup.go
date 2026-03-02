@@ -4,6 +4,9 @@ import (
 	"context"
 	"errors"
 
+	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/constants"
+	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/events"
+	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/events/communityEvent"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/sharedEnums"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/community/delivery/dto/req"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/community/delivery/dto/res"
@@ -14,12 +17,14 @@ import (
 type AddMemberGroup struct {
 	groupRepo       IRepositoryMongodb.IGroupRepository
 	groupMemberRepo IRepositoryMongodb.IGroupMembersRepository
+	events          events.EventBus
 }
 
-func NewAddMemberGroup(groupRepo IRepositoryMongodb.IGroupRepository, groupMemberRepo IRepositoryMongodb.IGroupMembersRepository) *AddMemberGroup {
+func NewAddMemberGroup(groupRepo IRepositoryMongodb.IGroupRepository, groupMemberRepo IRepositoryMongodb.IGroupMembersRepository, events events.EventBus) *AddMemberGroup {
 	return &AddMemberGroup{
 		groupRepo:       groupRepo,
 		groupMemberRepo: groupMemberRepo,
+		events:          events,
 	}
 }
 
@@ -59,6 +64,16 @@ func (uc *AddMemberGroup) Execute(ctx context.Context, req *req.AddMemberGroupRe
 			ErrorMessage: err, // Thay thế bằng lỗi thực tế nếu có
 		}, nil
 	}
+	payload := &communityEvent.GroupStatsPayload{
+		GroupID:            req.GroupID,
+		MemberCount:        0,
+		PostCount:          0,
+		PendingMemberCount: 1,
+		PendingPostCount:   0,
+		ReportedPostCount:  0,
+		EventType:          constants.Created,
+	}
+	err = uc.events.Publish(ctx, constants.TopicGroupStats.String(), datagroup.ID.Hex(), constants.Created.String(), payload)
 	return &res.FailedMember{
 		GroupID:      req.GroupID,
 		UserID:       req.UserID,

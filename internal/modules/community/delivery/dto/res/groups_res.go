@@ -3,6 +3,7 @@ package res
 import (
 	"time"
 
+	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/sharedEnums"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/community/enum"
 )
 
@@ -45,10 +46,10 @@ type ResGroupRule struct {
 }
 
 type ResGroupSettings struct {
-	RequireApprovalToJoin bool               `json:"require_approval_to_join"`
-	RequireApprovalToPost bool               `json:"require_approval_to_post"`
-	AllowMemberPosting    bool               `json:"allow_member_posting"`
-	WhoCanApproveMember   enum.GroupApprover `json:"who_can_approve_member"`
+	RequireApprovalToJoin bool                    `json:"require_approval_to_join"`
+	RequireApprovalToPost bool                    `json:"require_approval_to_post"`
+	AllowMemberPosting    bool                    `json:"allow_member_posting"`
+	WhoCanApproveMember   []*sharedEnums.RoleType `json:"who_can_approve_member"`
 }
 
 type ResFeatureFlag struct {

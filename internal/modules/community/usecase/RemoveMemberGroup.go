@@ -4,6 +4,9 @@ import (
 	"context"
 	"errors"
 
+	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/constants"
+	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/events"
+	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/events/communityEvent"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/sharedEnums"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/community/delivery/dto/req"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/community/delivery/dto/res"
@@ -14,10 +17,16 @@ type RemoveMemberGroup struct {
 	groupRepo       IRepositoryMongodb.IGroupRepository
 	groupMemberRepo IRepositoryMongodb.IGroupMembersRepository
 	groupfileRepo   IRepositoryMongodb.IGroupFilesRepository
+	events          events.EventBus
 }
 
-func NewRemoveMemberGroup() *RemoveMemberGroup {
-	return &RemoveMemberGroup{}
+func NewRemoveMemberGroup(groupRepo IRepositoryMongodb.IGroupRepository, groupMemberRepo IRepositoryMongodb.IGroupMembersRepository, groupfileRepo IRepositoryMongodb.IGroupFilesRepository, events events.EventBus) *RemoveMemberGroup {
+	return &RemoveMemberGroup{
+		groupRepo:       groupRepo,
+		groupMemberRepo: groupMemberRepo,
+		groupfileRepo:   groupfileRepo,
+		events:          events,
+	}
 }
 func (uc *RemoveMemberGroup) Execute(ctx context.Context, req *req.RemoveMemberGroupRequest) (*res.FailedMember, error) {
 	// Thực hiện logic xóa thành viên khỏi nhóm
@@ -120,6 +129,16 @@ func (uc *RemoveMemberGroup) Execute(ctx context.Context, req *req.RemoveMemberG
 			ErrorMessage: err,
 		}, err
 	}
+	payload := &communityEvent.GroupStatsPayload{
+		GroupID:            req.GroupID,
+		MemberCount:        -1,
+		PostCount:          0,
+		PendingMemberCount: 0,
+		PendingPostCount:   0,
+		ReportedPostCount:  0,
+		EventType:          constants.Created,
+	}
+	err = uc.events.Publish(ctx, constants.TopicGroupStats.String(), datagroup.ID.Hex(), constants.Created.String(), payload)
 	return &res.FailedMember{
 		GroupID:      req.GroupID,
 		UserID:       req.UserID,

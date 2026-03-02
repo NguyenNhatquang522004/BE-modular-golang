@@ -16,6 +16,9 @@ type IUpdateGroup interface {
 type IDeleteGroup interface {
 	Execute(ctx context.Context, req *req.DeleteGroupRequest) ([]*res.FailedGroup, error)
 }
+type IAcceptGroupJoinRequest interface {
+	Execute(ctx context.Context, req *req.AcceptGroupJoinRequest) (*res.FailedMember, error)
+}
 type IAddMemberGroup interface {
 	Execute(ctx context.Context, req *req.AddMemberGroupRequest) (*res.FailedMember, error)
 }
@@ -42,6 +45,9 @@ type IUpdateGroupEvent interface {
 }
 type IDeleteGroupEvent interface {
 	Execute(ctx context.Context, req *req.DeleteGroupEventRequest) (*res.FailedGroupEvent, error)
+}
+type IStatsGroupEvent interface {
+	Execute(ctx context.Context, req *req.StatsGroupEventRequest) (*res.FailedGroupEvent, error)
 }
 type ICreateGroupFile interface {
 	Execute(ctx context.Context, req *req.CreateGroupFileRequest) (*res.FailGroupFile, error)

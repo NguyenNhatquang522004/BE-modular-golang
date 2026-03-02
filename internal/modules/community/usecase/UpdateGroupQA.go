@@ -2,8 +2,8 @@ package usecase
 
 import (
 	"context"
+	"slices"
 
-	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/sharedEnums"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/community/delivery/dto/req"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/community/delivery/dto/res"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/community/delivery/mapper"
@@ -56,11 +56,12 @@ func (u *UpdateGroupQA) Execute(ctx context.Context, req *req.UpdateGroupQAReque
 			ErrorMessage: err, // Thay thế bằng lỗi thực tế nếu có
 		}, nil
 	}
-	if dataaction.Role != sharedEnums.RoleTypeAdmin && dataaction.Role != sharedEnums.RoleTypeModerator {
+	exists := slices.Contains(datagroup.Settings.WhoCanApproveMember, &dataaction.Role)
+	if !exists {
 		return &res.FailedGroupQA{
 			GroupID:      req.GroupID,
-			ErrorMessage: err, // Thay thế bằng lỗi thực tế nếu có
-		}, nil
+			ErrorMessage: err,
+		}, err
 	}
 	dataQA, err := u.groupqaRepo.GetGroupJoinQuestionByID(ctx, req.QAID)
 	if err != nil {
