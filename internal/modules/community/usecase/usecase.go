@@ -7,55 +7,55 @@ import (
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/community/delivery/dto/res"
 )
 
-type ICreateGroup interface {
+type ICreateGroupUsecase interface {
 	Execute(ctx context.Context, req *req.CreateGroupRequest) (*res.FailedGroup, error)
 }
-type IUpdateGroup interface {
+type IUpdateGroupUsecase interface {
 	Execute(ctx context.Context, req *req.UpdateGroupRequest) (*res.FailedGroup, error)
 }
-type IDeleteGroup interface {
+type IDeleteGroupUsecase interface {
 	Execute(ctx context.Context, req *req.DeleteGroupRequest) ([]*res.FailedGroup, error)
 }
-type IAcceptGroupJoinRequest interface {
+type IAcceptGroupJoinUsecase interface {
 	Execute(ctx context.Context, req *req.AcceptGroupJoinRequest) (*res.FailedMember, error)
 }
-type IAddMemberGroup interface {
+type IAddMemberGroupUsecase interface {
 	Execute(ctx context.Context, req *req.AddMemberGroupRequest) (*res.FailedMember, error)
 }
-type IRemoveMemberGroup interface {
+type IRemoveMemberGroupUsecase interface {
 	Execute(ctx context.Context, req *req.RemoveMemberGroupRequest) (*res.FailedMember, error)
 }
-type IUpdateMemberGroup interface {
+type IUpdateMemberGroupUsecase interface {
 	Execute(ctx context.Context, req *req.UpdateMemberGroupRequest) (*res.FailedMember, error)
 }
-type ICreateGroupQA interface {
+type ICreateGroupQAUsecase interface {
 	Execute(ctx context.Context, req *req.CreateGroupQARequest) (*res.FailedGroupQA, error)
 }
-type IUpdateGroupQA interface {
+type IUpdateGroupQAUsecase interface {
 	Execute(ctx context.Context, req *req.UpdateGroupQARequest) (*res.FailedGroupQA, error)
 }
-type IDeleteGroupQA interface {
+type IDeleteGroupQAUsecase interface {
 	Execute(ctx context.Context, req *req.DeleteGroupQARequest) (*res.FailedGroupQA, error)
 }
-type ICreateGroupEvent interface {
+type ICreateGroupEventUsecase interface {
 	Execute(ctx context.Context, req *req.CreateGroupEventRequest) (*res.FailedGroupEvent, error)
 }
-type IUpdateGroupEvent interface {
+type IUpdateGroupEventUsecase interface {
 	Execute(ctx context.Context, req *req.UpdateGroupEventRequest) (*res.FailedGroupEvent, error)
 }
-type IDeleteGroupEvent interface {
+type IDeleteGroupEventUsecase interface {
 	Execute(ctx context.Context, req *req.DeleteGroupEventRequest) (*res.FailedGroupEvent, error)
 }
-type IStatsGroupEvent interface {
+type IStatsGroupEventUsecase interface {
 	Execute(ctx context.Context, req *req.StatsGroupEventRequest) (*res.FailedGroupEvent, error)
 }
-type ICreateGroupFile interface {
+type ICreateGroupFileUsecase interface {
 	Execute(ctx context.Context, req *req.CreateGroupFileRequest) (*res.FailGroupFile, error)
 }
-type IDeleteGroupFile interface {
+type IDeleteGroupFileUsecase interface {
 	Execute(ctx context.Context, req *req.DeleteGroupFileRequest) (*res.FailGroupFile, error)
 }
-type IDownloadGroupFile interface {
+type IDownloadGroupFileUsecase interface {
 	Execute(ctx context.Context, req *req.DownloadGroupFileRequest) (*res.FailGroupFile, error)
 }
 
