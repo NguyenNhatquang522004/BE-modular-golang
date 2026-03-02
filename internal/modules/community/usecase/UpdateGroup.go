@@ -29,6 +29,20 @@ func (u *UpdateGroup) Execute(ctx context.Context, req *req.UpdateGroupRequest) 
 			ErrorMessage: errors.New("failed to get group member"), // Thay thế bằng lỗi thực tế nếu có
 		}, nil
 	}
+	if datagroup == nil {
+		return &res.FailedGroup{
+			GroupID:      req.GroupID,
+			UserID:       req.UserID,
+			ErrorMessage: errors.New("group not found"), // Thay thế bằng lỗi thực tế nếu có
+		}, nil
+	}
+	if datagroup.ID.Hex() != req.GroupID {
+		return &res.FailedGroup{
+			GroupID:      req.GroupID,
+			UserID:       req.UserID,
+			ErrorMessage: errors.New("group ID mismatch"), // Thay thế bằng lỗi thực tế nếu có
+		}, nil
+	}
 	datamember, err := u.groupMemberRepo.GetGroupMemberByUserIDAndGroupID(ctx, req.UserID, req.GroupID)
 	if err != nil {
 		return &res.FailedGroup{
