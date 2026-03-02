@@ -6,6 +6,7 @@ import (
 
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/constants"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/events"
+	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/events/communicationEvent"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/events/mediaEvent"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/sharedEnums"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/communication/delivery/dto/req"
@@ -79,22 +80,18 @@ func (u *MessageRelyStoryUsecase) Execute(ctx context.Context, reqa *req.Message
 			ErrorMessage: errors.New("invalid user ID format"),
 		}, nil
 	}
-	messreq := &req.MessageReq{
-		ConversationID:   datacheck.ID.Hex(),
-		Bucket:           mapper.GenerateBucket(reqa.Bucket),
-		SenderID:         convertUserID,
-		Type:             sharedEnums.MediaTypeText, // Assuming the message type is text for a story reply
-		Content:          reqa.Content,
-		Attachments:      nil, // No attachments for a story reply
-		IsEdited:         false,
-		ReplyToMessageID: nil,
-		StoryRefID:       &convertstoryID,
-		IsRevoked:        false,
-		CreatedAt:        reqa.Bucket,
-	}
-	MessageRequest := &req.MessageRequest{
+	MessageRequest := &communicationEvent.MessagePayload{
 		ConversationID: datacheck.ID.Hex(),
-		MessageReq:     messreq,
+		Bucket:         mapper.GenerateBucket(reqa.Bucket),
+		MessageID:      gocql.TimeUUID(),
+		SenderID:       convertUserID,
+		Type:           sharedEnums.MediaTypeText,
+		Content:        reqa.Content,
+		Attachments:    nil,
+		IsEdited:       false,
+		StoryRefID:     &convertstoryID,
+		IsRevoked:      false,
+		CreatedAt:      reqa.Bucket,
 		EventType:      constants.Created,
 	}
 	err = u.events.Publish(ctx, constants.TopicMessage.String(), datacheck.ID.Hex(), constants.Created.String(), MessageRequest)

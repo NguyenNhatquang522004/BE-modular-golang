@@ -9,8 +9,8 @@ import (
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/IRepositoryShare"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/constants"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/events"
+	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/events/interactionEvent"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/events/mediaEvent"
-	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/media/delivery/dto/req"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/media/delivery/dto/res"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/media/domain/IRepository/IRepositoryCassandra"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/media/domain/IRepository/IRepositoryMongodb"
@@ -59,7 +59,7 @@ func NewConsumerReact(ablumRepo IRepositoryMongodb.IAlbumsRepository,
 func (c *ConsumerReact) ConsumerReactAlbum(ctx context.Context) {
 	// Implement the logic for consuming react album events here
 	err := c.eventbus.Subscribe(ctx, constants.TopicReactAlbum.String(), func(ctx context.Context, event events.IntegrationEvent) error {
-		data, ok := event.Payload.(*req.ReactAlbumRequest)
+		data, ok := event.Payload.(*mediaEvent.ReactAlbumPayload)
 		if !ok {
 			// Handle type assertion error
 			return nil
@@ -112,7 +112,7 @@ func (c *ConsumerReact) CosumerReactStory(ctx context.Context) {
 	resultChan := make(chan res.FailedConsumerReactStoryResponse, workerCount)
 	// Implement the logic for consuming react story events here
 	err := c.eventbus.Subscribe(ctx, constants.TopicReactStory.String(), func(ctx context.Context, event events.IntegrationEvent) error {
-		data, ok := event.Payload.(*req.ReactStoryRequest)
+		data, ok := event.Payload.(*mediaEvent.ReactStoryPayload)
 		if !ok {
 			// Handle type assertion error
 			resultChan <- res.FailedConsumerReactStoryResponse{
@@ -330,7 +330,7 @@ func (c *ConsumerReact) ConsumerFailedReactStory(ctx context.Context) {
 func (c *ConsumerReact) ConsumerReactReel(ctx context.Context) {
 	// Implement the logic for consuming react reel events here
 	err := c.eventbus.Subscribe(ctx, constants.TopicReactReel.String(), func(ctx context.Context, event events.IntegrationEvent) error {
-		data, ok := event.Payload.(*req.ReactReelRequest)
+		data, ok := event.Payload.(*mediaEvent.ReactReelPayload)
 		if !ok {
 			// Handle type assertion error
 			return errors.New("invalid event payload")
@@ -366,7 +366,7 @@ func (c *ConsumerReact) ConsumerFailedCounterReel(ctx context.Context) {
 }
 func (c *ConsumerReact) ConsumerCounterReel(ctx context.Context) {
 	err := c.eventbus.Subscribe(ctx, constants.TopicCounterReel.String(), func(ctx context.Context, event events.IntegrationEvent) error {
-		data, ok := event.Payload.(*req.ReactCounterReelRequest)
+		data, ok := event.Payload.(*mediaEvent.ReactCounterReelPayload)
 		if !ok {
 			// Handle type assertion error
 			return errors.New("invalid event payload")
@@ -398,7 +398,7 @@ func (c *ConsumerReact) ConsumerCounterReel(ctx context.Context) {
 }
 func (c *ConsumerReact) ConsumerReactLive(ctx context.Context) {
 	err := c.eventbus.Subscribe(ctx, constants.TopicReactLive.String(), func(ctx context.Context, event events.IntegrationEvent) error {
-		data, ok := event.Payload.(*req.ReactLiveStreamRequest)
+		data, ok := event.Payload.(*mediaEvent.ReactLiveStreamPayload)
 		if !ok {
 			// Handle type assertion error
 			return errors.New("invalid event payload")
@@ -419,7 +419,20 @@ func (c *ConsumerReact) ConsumerReactLive(ctx context.Context) {
 				return nil
 			}
 			// You can also choose to publish an event or perform other actions as needed
-			err = c.eventbus.Publish(ctx, constants.TopicEntityReaction.String(), data.LiveSessionID, constants.Created.String(), data)
+			convertusercql, err := gocql.ParseUUID(data.UserID)
+			if err != nil {
+				// Handle error
+				return nil
+			}
+			payload := &interactionEvent.EntityReactionPayload{
+				TargetID:     data.LiveSessionID,
+				UserID:       convertusercql,
+				TargetType:   data.TargetType,
+				ReactionCode: data.ReactionCode,
+				CreatedAt:    data.CreatedAt,
+				Topic:        constants.Created,
+			}
+			err = c.eventbus.Publish(ctx, constants.TopicEntityReaction.String(), data.LiveSessionID, constants.Created.String(), payload)
 			if err != nil {
 				// Handle publish error
 				log.Printf("Error publishing entity reaction event: %v", err)
@@ -441,7 +454,7 @@ func (c *ConsumerReact) ConsumerFailedReactLive(ctx context.Context)
 
 func (c *ConsumerReact) ConsumerCounterLive(ctx context.Context) {
 	err := c.eventbus.Subscribe(ctx, constants.TopicCounterLive.String(), func(ctx context.Context, event events.IntegrationEvent) error {
-		data, ok := event.Payload.(*req.CounterLiveStreamRequest)
+		data, ok := event.Payload.(*mediaEvent.CoutnerLiveStreamPayload)
 		if !ok {
 			// Handle type assertion error
 			return errors.New("invalid event payload")
@@ -509,4 +522,4 @@ func (c *ConsumerReact) ConsumerCounterReplyStory(ctx context.Context) {
 	}
 }
 
-func (c *ConsumerReact) ConsumerFailedCounterReplyStory(ctx context.Context) 
+func (c *ConsumerReact) ConsumerFailedCounterReplyStory(ctx context.Context)

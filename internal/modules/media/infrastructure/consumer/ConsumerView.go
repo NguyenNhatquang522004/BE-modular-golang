@@ -7,7 +7,7 @@ import (
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/IRepositoryShare"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/constants"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/events"
-	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/media/delivery/dto/req"
+	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/events/mediaEvent"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/media/delivery/dto/res"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/media/domain/IRepository/IRepositoryCassandra"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/media/domain/IRepository/IRepositoryMongodb"
@@ -39,7 +39,7 @@ func (c *ConsumerView) ConsumerViewCountStory(ctx context.Context) {
 	}
 	worker := 2
 	err := c.events.Subscribe(ctx, constants.TopicViewCountStory.String(), func(ctx context.Context, event events.IntegrationEvent) error {
-		data, ok := event.Payload.(*req.ViewCountStoryRequest)
+		data, ok := event.Payload.(*mediaEvent.ViewStoryPayload)
 		if !ok {
 			log.Println("Invalid payload type for ViewCountStoryRequest")
 			return nil
@@ -83,7 +83,7 @@ func (c *ConsumerView) ConsumerViewCountStory(ctx context.Context) {
 						userId:  data.UserId,
 						err:     nil,
 					}
-				
+
 				case 1:
 					gocqlid, err := gocql.ParseUUID(data.StoryId)
 					if err != nil {

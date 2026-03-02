@@ -8,6 +8,7 @@ import (
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/IRepositoryShare"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/constants"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/events"
+	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/events/communicationEvent"
 
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/communication/delivery/dto/req"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/communication/delivery/mapper"
@@ -41,7 +42,7 @@ func NewConsumerMessage(conversationRepo IRepositoryMongodb.IConversationsReposi
 
 func (c *ConsumerMessage) ConsumerMessage(ctx context.Context) error {
 	err := c.events.Subscribe(ctx, constants.TopicMessage.String(), func(ctx context.Context, event events.IntegrationEvent) error {
-		data, ok := event.Payload.(*req.MessageRequest)
+		data, ok := event.Payload.(*communicationEvent.MessagePayload)
 		if !ok {
 			return errors.New("invalid event payload")
 		}
@@ -60,7 +61,21 @@ func (c *ConsumerMessage) ConsumerMessage(ctx context.Context) error {
 				}
 
 				err = c.conversationRepo.UpdateConversation(ctx, dataconversation)
-				messageEntity := mapper.ToEntityMessage(data.MessageReq, dataconversation.ID.Hex())
+				reqa := &req.MessageReq{
+					ConversationID:   data.ConversationID,
+					Bucket:           data.Bucket,
+					MessageID:        data.MessageID,
+					SenderID:         data.SenderID,
+					Type:             data.Type,
+					Content:          data.Content,
+					Attachments:      data.Attachments,
+					IsEdited:         data.IsEdited,
+					ReplyToMessageID: data.ReplyToMessageID,
+					StoryRefID:       data.StoryRefID,
+					IsRevoked:        data.IsRevoked,
+					CreatedAt:        data.CreatedAt,
+				}
+				messageEntity := mapper.ToEntityMessage(reqa, dataconversation.ID.Hex())
 				err = c.messageRepo.CreateMessage(ctx, messageEntity)
 				if err != nil {
 					log.Printf("Error creating message: %v", err)
@@ -102,7 +117,21 @@ func (c *ConsumerMessage) ConsumerMessage(ctx context.Context) error {
 					log.Printf("Message not found: %s", data.MessageID)
 					return
 				}
-				mapper.UpdateToEntityMessage(data.MessageReq, dataGetMessage)
+				reqa := &req.MessageReq{
+					ConversationID:   data.ConversationID,
+					Bucket:           data.Bucket,
+					MessageID:        data.MessageID,
+					SenderID:         data.SenderID,
+					Type:             data.Type,
+					Content:          data.Content,
+					Attachments:      data.Attachments,
+					IsEdited:         data.IsEdited,
+					ReplyToMessageID: data.ReplyToMessageID,
+					StoryRefID:       data.StoryRefID,
+					IsRevoked:        data.IsRevoked,
+					CreatedAt:        data.CreatedAt,
+				}
+				mapper.UpdateToEntityMessage(reqa, dataGetMessage)
 				dataGetMessage.IsEdited = true // Đánh dấu là đã chỉnh sửa
 				err = c.messageRepo.UpdateMessage(ctx, dataGetMessage)
 				if err != nil {
@@ -158,7 +187,7 @@ func (c *ConsumerMessage) FailedMessage(ctx context.Context) error {
 
 func (c *ConsumerMessage) ConsumerStateMessage(ctx context.Context) error {
 	err := c.events.Subscribe(ctx, constants.TopicStateMessage.String(), func(ctx context.Context, event events.IntegrationEvent) error {
-		data, ok := event.Payload.(*req.MessageStateRequest)
+		data, ok := event.Payload.(*communicationEvent.MessageStatePayload)
 		if !ok {
 			return errors.New("invalid event payload")
 		}
@@ -226,13 +255,19 @@ func (c *ConsumerMessage) FailedStateMessage(ctx context.Context) error {
 
 func (c *ConsumerMessage) ConsumerReactMessage(ctx context.Context) error {
 	err := c.events.Subscribe(ctx, constants.TopicReactMessage.String(), func(ctx context.Context, event events.IntegrationEvent) error {
-		data, ok := event.Payload.(*req.ReactMessageRequest)
+		data, ok := event.Payload.(*communicationEvent.MessageReactionPayload)
 		if !ok {
 			return errors.New("invalid event payload")
 		}
 		switch data.EventType {
 		case constants.Created:
-			entity := mapper.ToEntityMessageReaction(data.MessageReactionReq)
+			entity := &entity.MessageReaction{
+				ConversationID: data.ConversationID,
+				MessageID:      data.MessageID,
+				UserID:         data.UserID,
+				ReactionCode:   data.ReactionCode,
+				CreatedAt:      data.CreatedAt,
+			}
 			err := c.messageReact.CreateReaction(ctx, entity)
 			if err != nil {
 				log.Printf("Error creating message reaction: %v", err)

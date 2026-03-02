@@ -1,5 +1,4 @@
-package enum
-
+package sharedEnums
 //go:generate enumer -type=StoryInteractionType -json -transform=snake -trimprefix=Interaction
 type StoryInteractionType int
 

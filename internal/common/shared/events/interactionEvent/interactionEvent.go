@@ -21,3 +21,13 @@ type CounterPostPayload struct {
 	PostID string `json:"post_id" validate:"required"`
 	UserID string `json:"user_id" validate:"required"`
 }
+
+type CommentCountPayload struct {
+	CommentID    string              `json:"comment_id,omitempty"` // Nếu có comment_id thì đếm reply của comment đó, không có thì đếm comment của post
+	ReplyCount   int                 `json:"reply_count,omitempty"`
+	MentionCount int                 `json:"mention_count,omitempty"`
+	ReportCount  int                 `json:"report_count,omitempty"`
+	EventType    constants.TopicName `json:"event_type,omitempty"`
+}
+
+

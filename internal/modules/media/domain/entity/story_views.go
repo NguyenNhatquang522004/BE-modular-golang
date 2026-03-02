@@ -4,7 +4,6 @@ import (
 	"time"
 
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/sharedEnums"
-	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/media/enum"
 	"github.com/gocql/gocql"
 )
 
@@ -35,7 +34,7 @@ type StoryView struct {
 
 	// 5. INTERACTION DETAILS
 	// Enum: view, reaction, poll_vote
-	InteractionType enum.StoryInteractionType `cql:"interaction_type" json:"interaction_type"`
+	InteractionType sharedEnums.StoryInteractionType `cql:"interaction_type" json:"interaction_type"`
 
 	// Reaction Code: "❤️", "😂" hoặc ID sticker
 	ReactionCode sharedEnums.ReactionCode `cql:"reaction_code" json:"reaction_code"`

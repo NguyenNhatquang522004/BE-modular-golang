@@ -42,7 +42,8 @@ func (r *AdAccountsRepository) CreateBulkAdAccounts(ctx context.Context, account
 }
 func (r *AdAccountsRepository) GetAdAccountByIDDetail(ctx context.Context, accountID string) (*entity.AdAccount, error) {
 	var account *entity.AdAccount
-	if err := r.db.WithContext(ctx).Where(&entity.AdAccount{ID: uuid.MustParse(accountID)}).First(&account).Error; err != nil {
+	parseID := uuid.MustParse(accountID)
+	if err := r.db.WithContext(ctx).Where(&entity.AdAccount{ID: parseID}).First(&account).Error; err != nil {
 		return nil, err
 	}
 	return account, nil
@@ -140,7 +141,8 @@ func (r *AdAccountsRepository) GetAdAccountsByOwnerUserID(ctx context.Context, o
 	}
 	var accounts []*entity.AdAccount
 	querylimit := limit + 1
-	query := r.db.WithContext(ctx).Model(&entity.AdAccount{}).Where(&entity.AdAccount{OwnerUserID: uuid.MustParse(ownerUserID)}).Order("created_at DESC , id DESC").Limit(querylimit)
+	parseOwnerUserID := uuid.MustParse(ownerUserID)
+	query := r.db.WithContext(ctx).Model(&entity.AdAccount{}).Where(&entity.AdAccount{OwnerUserID: parseOwnerUserID}).Order("created_at DESC , id DESC").Limit(querylimit)
 	if cursor != "" {
 		lastCreatedAt, lastID, err := utils.DecodeCursor(cursor)
 		if err != nil {
@@ -198,7 +200,8 @@ func (r *AdAccountsRepository) UpdateBulkAdAccounts(ctx context.Context, account
 	return int64(len(accounts) - len(bulkErrors)), bulkErrors, nil
 }
 func (r *AdAccountsRepository) DeleteAdAccount(ctx context.Context, accountID string) error {
-	return r.db.WithContext(ctx).Where(&entity.AdAccount{ID: uuid.MustParse(accountID)}).Delete(&entity.AdAccount{}).Error
+	parseID := uuid.MustParse(accountID)
+	return r.db.WithContext(ctx).Where(&entity.AdAccount{ID: parseID}).Delete(&entity.AdAccount{}).Error
 }
 func (r *AdAccountsRepository) DeleteBulkAdAccounts(ctx context.Context, accountIDs []string) (int64, []*postgresErrors.AdAccountsBulkError, error) {
 	var bulkErrors []*postgresErrors.AdAccountsBulkError

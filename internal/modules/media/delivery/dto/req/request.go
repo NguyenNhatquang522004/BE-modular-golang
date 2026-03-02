@@ -5,7 +5,6 @@ import (
 
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/constants"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/sharedEnums"
-	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/media/enum"
 )
 
 type CreateAlbumRequest struct {
@@ -49,41 +48,41 @@ type DeleteStoryRequest struct {
 }
 
 type ViewCountStoryRequest struct {
-	StoryId         string                    `json:"story_id"`
-	UserId          string                    `json:"user_id"`
-	Avatar          string                    `json:"avatar"`
-	Name            string                    `json:"name"`
-	ViewedAt        time.Time                 `json:"viewed_at"`
-	InteractionType enum.StoryInteractionType `json:"interaction_type"`  // "view", "reaction", hoặc "poll_vote"
-	ReactionCode    sharedEnums.ReactionCode  `json:"reaction_code"`     // "❤️", "😂" hoặc ID sticker
-	PollOptionIndex *int                      `json:"poll_option_index"` // nil nếu không vote, 0 hoặc 1 nếu có vote
-	EventType       constants.EventType       `json:"event_type"`        // "view" hoặc "unview"
-	Content         string                    ` json:"content"`
+	StoryId         string                           `json:"story_id"`
+	UserId          string                           `json:"user_id"`
+	Avatar          string                           `json:"avatar"`
+	Name            string                           `json:"name"`
+	ViewedAt        time.Time                        `json:"viewed_at"`
+	InteractionType sharedEnums.StoryInteractionType `json:"interaction_type"`  // "view", "reaction", hoặc "poll_vote"
+	ReactionCode    sharedEnums.ReactionCode         `json:"reaction_code"`     // "❤️", "😂" hoặc ID sticker
+	PollOptionIndex *int                             `json:"poll_option_index"` // nil nếu không vote, 0 hoặc 1 nếu có vote
+	EventType       constants.EventType              `json:"event_type"`        // "view" hoặc "unview"
+	Content         string                           ` json:"content"`
 }
 type ReactStoryRequest struct {
-	StoryId         string                    `json:"story_id"`
-	UserId          string                    `json:"user_id"`
-	Avatar          string                    `json:"avatar"`
-	Name            string                    `json:"name"`
-	ViewedAt        time.Time                 `json:"viewed_at"`
-	InteractionType enum.StoryInteractionType `json:"interaction_type"`  // "view", "reaction", hoặc "poll_vote"
-	ReactionCode    sharedEnums.ReactionCode  `json:"reaction_code"`     // "❤️", "😂" hoặc ID sticker
-	PollOptionIndex *int                      `json:"poll_option_index"` // nil nếu không vote, 0 hoặc 1 nếu có vote
-	EventType       constants.EventType       `json:"event_type"`        // "view" hoặc "unview"
-	Content         string                    ` json:"content"`
+	StoryId         string                           `json:"story_id"`
+	UserId          string                           `json:"user_id"`
+	Avatar          string                           `json:"avatar"`
+	Name            string                           `json:"name"`
+	ViewedAt        time.Time                        `json:"viewed_at"`
+	InteractionType sharedEnums.StoryInteractionType `json:"interaction_type"`  // "view", "reaction", hoặc "poll_vote"
+	ReactionCode    sharedEnums.ReactionCode         `json:"reaction_code"`     // "❤️", "😂" hoặc ID sticker
+	PollOptionIndex *int                             `json:"poll_option_index"` // nil nếu không vote, 0 hoặc 1 nếu có vote
+	EventType       constants.EventType              `json:"event_type"`        // "view" hoặc "unview"
+	Content         string                           ` json:"content"`
 }
 type RelyStoryRequest struct {
 	// Define fields for relying to a story here
-	StoryId         string                    `json:"story_id"`
-	UserId          string                    `json:"user_id"`
-	Avatar          string                    `json:"avatar"`
-	Name            string                    `json:"name"`
-	ViewedAt        time.Time                 `json:"viewed_at"`
-	InteractionType enum.StoryInteractionType `json:"interaction_type"`  // "view", "reaction", hoặc "poll_vote"
-	ReactionCode    sharedEnums.ReactionCode  `json:"reaction_code"`     // "❤️", "😂" hoặc ID sticker
-	PollOptionIndex *int                      `json:"poll_option_index"` // nil nếu không vote, 0 hoặc 1 nếu có vote
-	EventType       constants.EventType       `json:"event_type"`        // "view" hoặc "unview"
-	Content         string                    `json:"content"`
+	StoryId         string                           `json:"story_id"`
+	UserId          string                           `json:"user_id"`
+	Avatar          string                           `json:"avatar"`
+	Name            string                           `json:"name"`
+	ViewedAt        time.Time                        `json:"viewed_at"`
+	InteractionType sharedEnums.StoryInteractionType `json:"interaction_type"`  // "view", "reaction", hoặc "poll_vote"
+	ReactionCode    sharedEnums.ReactionCode         `json:"reaction_code"`     // "❤️", "😂" hoặc ID sticker
+	PollOptionIndex *int                             `json:"poll_option_index"` // nil nếu không vote, 0 hoặc 1 nếu có vote
+	EventType       constants.EventType              `json:"event_type"`        // "view" hoặc "unview"
+	Content         string                           `json:"content"`
 }
 
 type CreateReelRequest struct {
@@ -169,4 +168,3 @@ type CounterLiveStreamRequest struct {
 	Views         int                 `json:"views"`
 	EventType     constants.EventType `json:"event_type"` // "increment" hoặc "decrement"
 }
-

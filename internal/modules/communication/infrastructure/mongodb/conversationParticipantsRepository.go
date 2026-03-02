@@ -270,8 +270,9 @@ func (r *ConversationParticipantsRepository) UpdateBulkConversationParticipants(
 
 func (r *ConversationParticipantsRepository) DeleteConversationParticipant(ctx context.Context, conversationID string, userID string) error {
 	collection := r.client.Collection(entity.ConversationParticipant{}.CollectionName())
+	parsedConversationID, err := primitive.ObjectIDFromHex(conversationID)
 	query := bson.M{
-		"conversation_id": conversationID,
+		"conversation_id": parsedConversationID,
 		"user_id":         userID,
 	}
 	result, err := collection.DeleteOne(ctx, query)
@@ -288,9 +289,13 @@ func (r *ConversationParticipantsRepository) DeleteBulkConversationParticipants(
 	collection := r.client.Collection(entity.ConversationParticipant{}.CollectionName())
 	var models []mongo.WriteModel
 	for _, conversationID := range conversationIDs {
+		parsedConversationID, err := primitive.ObjectIDFromHex(conversationID)
+		if err != nil {
+			return 0, nil, fmt.Errorf("invalid conversation ID: %w", err)
+		}
 		for _, userID := range userIDs {
 			query := bson.M{
-				"conversation_id": conversationID,
+				"conversation_id": parsedConversationID,
 				"user_id":         userID,
 			}
 			models = append(models, mongo.NewDeleteOneModel().SetFilter(query))
@@ -321,8 +326,12 @@ func (r *ConversationParticipantsRepository) DeleteBulkConversationParticipants(
 }
 func (r *ConversationParticipantsRepository) DeleteConversationParticipantByConversationID(ctx context.Context, conversationID string) error {
 	collection := r.client.Collection(entity.ConversationParticipant{}.CollectionName())
+	parsedConversationID, err := primitive.ObjectIDFromHex(conversationID)
+	if err != nil {
+		return fmt.Errorf("invalid conversation ID: %w", err)
+	}
 	query := bson.M{
-		"conversation_id": conversationID,
+		"conversation_id": parsedConversationID,
 	}
 	result, err := collection.DeleteMany(ctx, query)
 	if err != nil {
@@ -335,12 +344,16 @@ func (r *ConversationParticipantsRepository) DeleteConversationParticipantByConv
 }
 func (r *ConversationParticipantsRepository) GetConversationParticipant(ctx context.Context, conversationID string, userID string) (*entity.ConversationParticipant, error) {
 	collection := r.client.Collection(entity.ConversationParticipant{}.CollectionName())
+	parsedConversationID, err := primitive.ObjectIDFromHex(conversationID)
+	if err != nil {
+		return nil, fmt.Errorf("invalid conversation ID: %w", err)
+	}
 	query := bson.M{
-		"conversation_id": conversationID,
+		"conversation_id": parsedConversationID,
 		"user_id":         userID,
 	}
 	var participant entity.ConversationParticipant
-	err := collection.FindOne(ctx, query).Decode(&participant)
+	err = collection.FindOne(ctx, query).Decode(&participant)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
 			return nil, nil

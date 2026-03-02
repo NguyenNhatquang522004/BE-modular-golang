@@ -4,6 +4,8 @@ import (
 	"time"
 
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/constants"
+	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/sharedEnums"
+	"github.com/gocql/gocql"
 )
 
 type CreatePrivateConversationRequest struct {
@@ -78,8 +80,12 @@ type MessageStateRequest struct {
 	EventType      constants.EventType `json:"event_type"`
 }
 type ReactMessageRequest struct {
-	*MessageReactionReq
-	EventType constants.EventType `json:"event_type"`
+	ConversationID string                   `json:"conversation_id" validate:"required"`
+	MessageID      gocql.UUID               `json:"message_id" validate:"required"`
+	UserID         gocql.UUID               `json:"user_id" validate:"required"`
+	ReactionCode   sharedEnums.ReactionCode `json:"reaction_code" validate:"required"`
+	CreatedAt      time.Time                `json:"created_at"`
+	EventType      constants.EventType      `json:"event_type"`
 }
 type MessageRelyStoryRequest struct {
 	StoryID string    `json:"story_id"`

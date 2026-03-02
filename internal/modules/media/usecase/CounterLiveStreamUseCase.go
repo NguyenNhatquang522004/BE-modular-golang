@@ -5,6 +5,7 @@ import (
 
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/constants"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/events"
+	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/events/mediaEvent"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/media/delivery/dto/req"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/media/delivery/dto/res"
 )
@@ -20,7 +21,13 @@ func NewCounterLiveStreamUseCase(eventbus events.EventBus) *CounterLiveStreamUse
 }
 
 func (c *CounterLiveStreamUseCase) Execute(ctx context.Context, req *req.CounterLiveStreamRequest) (*res.FailedLiveStreamResponse, error) {
-	err := c.eventbus.Publish(ctx, constants.TopicCounterLive.String(), req.LiveSessionID, req.EventType.String(), req)
+	payload := &mediaEvent.CoutnerLiveStreamPayload{
+		LiveSessionID: req.LiveSessionID,
+		Comments:      req.Comments,
+		Views:         req.Views,
+		EventType:     req.EventType,
+	}
+	err := c.eventbus.Publish(ctx, constants.TopicCounterLive.String(), req.LiveSessionID, req.EventType.String(), payload)
 	if err != nil {
 		return &res.FailedLiveStreamResponse{
 			LiveSessionID: req.LiveSessionID,

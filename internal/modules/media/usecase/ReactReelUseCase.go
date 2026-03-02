@@ -6,6 +6,7 @@ import (
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/constants"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/events"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/events/interactionEvent"
+	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/events/mediaEvent"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/media/delivery/dto/req"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/media/delivery/dto/res"
 	"github.com/gocql/gocql"
@@ -38,7 +39,16 @@ func (uc *ReactReelUseCase) Execute(ctx context.Context, req *req.ReactReelReque
 		CreatedAt:    req.CreatedAt,
 		Topic:        req.EventType,
 	}
-	err = uc.eventBus.Publish(ctx, constants.TopicReactReel.String(), req.ReelID, req.EventType.String(), req)
+	payload2 := &mediaEvent.ReactReelPayload{
+		ReelID:       req.ReelID,
+		UserID:       req.UserID,
+		Total:        req.Total,
+		TargetType:   req.TargetType,
+		ReactionCode: req.ReactionCode,
+		CreatedAt:    req.CreatedAt,
+		EventType:    req.EventType,
+	}
+	err = uc.eventBus.Publish(ctx, constants.TopicReactReel.String(), req.ReelID, req.EventType.String(), payload2)
 	if err != nil {
 		return &res.FailedReelResponse{
 			ReelID:       req.ReelID,

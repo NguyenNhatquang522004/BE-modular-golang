@@ -3,6 +3,7 @@ package entity
 import (
 	"time"
 
+	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/sharedEnums"
 	"github.com/gocql/gocql"
 )
 const (
@@ -31,7 +32,7 @@ type LiveComment struct {
 
 	// Badges: Cassandra SET<TEXT> map về []string trong Go.
 	// Logic: Service sẽ convert []enum.UserBadge -> []string trước khi gán vào đây.
-	UserBadges []string `cql:"user_badges" json:"user_badges"`
+	UserBadges []*sharedEnums.UserBadge `cql:"user_badges" json:"user_badges"`
 
 	// 5. CONTENT & STATUS
 	Content  string `cql:"content" json:"content"`

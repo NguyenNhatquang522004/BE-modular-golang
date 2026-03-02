@@ -11,10 +11,10 @@ import (
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/IRepositoryShare"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/constants"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/events"
-	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/media/delivery/dto/req"
-	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/media/delivery/mapper"
+	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/events/mediaEvent"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/media/domain/IRepository/IRepositoryCassandra"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/media/domain/IRepository/IRepositoryMongodb"
+	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/media/domain/entity"
 	"github.com/fsnotify/fsnotify"
 )
 
@@ -39,7 +39,7 @@ func NewConsumerLiveSession(liveComment IRepositoryCassandra.ILiveCommentsReposi
 }
 func (c *ConsumerLiveSession) ConsumeStartLiveStream(ctx context.Context) {
 	err := c.events.Subscribe(ctx, constants.TopicStartStopLive.String(), func(ctx context.Context, event events.IntegrationEvent) error {
-		data, ok := event.Payload.(*req.StartStopVideoLiveStreamRequest)
+		data, ok := event.Payload.(*mediaEvent.StartStopVideoLiveStreamPayload)
 		if !ok {
 			return fmt.Errorf("invalid event payload")
 		}
@@ -176,27 +176,48 @@ func (s *ConsumerLiveSession) watchAndUploadSegments(ctx context.Context, sessio
 
 func (c *ConsumerLiveSession) ConsumeCommentLiveStream(ctx context.Context) {
 	err := c.events.Subscribe(ctx, constants.TopicCommentLive.String(), func(ctx context.Context, event events.IntegrationEvent) error {
-		data, ok := event.Payload.(*req.CommentLiveStreamRequest)
+		data, ok := event.Payload.(*mediaEvent.CommentLiveStreamPayload)
 		if !ok {
 			return fmt.Errorf("invalid event payload")
 		}
 		switch event.Type {
 		case string(constants.Created):
-			entity := mapper.ToEntityLiveComment(data.LiveCommentReq)
-			err := c.liveComment.CreateLiveComment(ctx, entity)
+			entityComment := &entity.LiveComment{
+				CommentID:     data.CommentID,
+				StreamID:      data.StreamID,
+				UserID:        data.UserID,
+				UserNickname:  data.UserNickname,
+				UserAvatarURL: data.UserAvatarURL,
+				UserBadges:    data.UserBadges,
+				Content:       data.Content,
+				IsPinned:      data.IsPinned,
+				CreatedAt:     data.CreatedAt,
+			}
+			err := c.liveComment.CreateLiveComment(ctx, entityComment)
 			if err != nil {
 				return fmt.Errorf("failed to create live comment: %w", err)
 			}
 		case string(constants.Updated):
-			datalivecomment, err := c.liveComment.GetLiveCommentByUserID(ctx, data.LiveCommentReq.StreamID.String(), data.LiveCommentReq.UserID.String())
+			datalivecomment, err := c.liveComment.GetLiveCommentByUserID(ctx, data.StreamID.String(), data.UserID.String())
 			if err != nil {
 				return fmt.Errorf("failed to get live comment: %w", err)
 			}
 			if datalivecomment == nil {
 				return fmt.Errorf("live comment not found")
 			}
-			mapper.UpdateToEntityLiveComment(data.LiveCommentReq, datalivecomment)
-			err = c.liveComment.UpdateLiveComment(ctx, datalivecomment)
+
+			entityComment := &entity.LiveComment{
+				CommentID:     data.CommentID,
+				StreamID:      data.StreamID,
+				UserID:        data.UserID,
+				UserNickname:  data.UserNickname,
+				UserAvatarURL: data.UserAvatarURL,
+				UserBadges:    data.UserBadges,
+				Content:       data.Content,
+				IsPinned:      data.IsPinned,
+				CreatedAt:     data.CreatedAt,
+			}
+			err = c.liveComment.UpdateLiveComment(ctx, entityComment)
 			if err != nil {
 				return fmt.Errorf("failed to update live comment: %w", err)
 			}

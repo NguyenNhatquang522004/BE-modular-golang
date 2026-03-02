@@ -7,7 +7,7 @@ import (
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/IRepositoryShare"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/constants"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/events"
-	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/interaction/delivery/dto/req"
+	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/events/interactionEvent"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/interaction/domain/IRepository/IRepositoryMongoDB"
 )
 
@@ -27,7 +27,7 @@ func NewConsumerCounterComment(comment IRepositoryMongoDB.ICommentRepository, ev
 
 func (c *ConsumerCounterComment) ConsumeCounterComment(ctx context.Context) error {
 	err := c.events.Subscribe(ctx, constants.TopicCounterComment.String(), func(ctx context.Context, event events.IntegrationEvent) error {
-		data, ok := event.Payload.(*req.CommentCountRequest)
+		data, ok := event.Payload.(*interactionEvent.CommentCountPayload)
 		switch event.Type {
 		case constants.Created.String():
 			if !ok {

@@ -10,7 +10,6 @@ import (
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/events"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/events/contentEvent"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/events/interactionEvent"
-	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/content/delivery/dto/req"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/content/domain/IRepository/IRepositoryCassandra"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/content/domain/IRepository/IRepositoryMongodb"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/content/domain/entity"
@@ -227,7 +226,7 @@ func (c *ContentConsumer) ConsumerSharePost(ctx context.Context) error {
 	resultChan := make(chan taskResult, worker)
 	resultChan2 := make(chan taskResult2, worker2)
 	err := c.eventBus.Subscribe(ctx, constants.TopicSharePost.String(), func(ctx context.Context, event events.IntegrationEvent) error {
-		data, ok := event.Payload.(*req.SharePostRequest)
+		data, ok := event.Payload.(*contentEvent.SharePostPayload)
 		if !ok {
 			log.Printf("❌ Lỗi khi chuyển đổi payload: %v", event.Payload)
 			return nil // Hoặc trả về lỗi nếu muốn dừng việc xử lý

@@ -25,7 +25,15 @@ func NewReactionPostUsecase(pool IRepositoryShare.IWorkerPool, eventBus events.E
 
 func (u *ReactionPostUsecase) Execute(ctx context.Context, req *interactionEvent.EntityReactionPayload) (*response.Response, error) {
 	// Implement the logic for reacting to a post here
-	err := u.eventBus.Publish(ctx, constants.TopicReactPost.String(), req.UserID.String(), string(req.Topic), req)
+	payload := interactionEvent.EntityReactionPayload{
+		TargetID:     req.TargetID,
+		UserID:       req.UserID,
+		TargetType:   req.TargetType,
+		ReactionCode: req.ReactionCode,
+		CreatedAt:    req.CreatedAt,
+		Topic:        req.Topic,
+	}
+	err := u.eventBus.Publish(ctx, constants.TopicReactPost.String(), req.UserID.String(), string(req.Topic), payload)
 	if err != nil {
 		return nil, err
 	}

@@ -5,6 +5,7 @@ import (
 
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/constants"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/events"
+	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/events/mediaEvent"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/media/delivery/dto/req"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/media/delivery/dto/res"
 )
@@ -22,7 +23,13 @@ func NewReactAlbumUseCase(eventbus events.EventBus) *ReactAlbumUseCase {
 
 func (uc *ReactAlbumUseCase) Execute(ctx context.Context, req *req.ReactAlbumRequest) (*res.ReactAlbumResponse, error) {
 	// Implement the logic for reacting to an album here
-	err := uc.eventbus.Publish(ctx, constants.TopicReactAlbum.String(), req.AlbumID, req.EventType.String(), req)
+	payload := &mediaEvent.ReactAlbumPayload{
+		AlbumID:        req.AlbumID,
+		TotalReactions: req.TotalReactions,
+		ReactionType:   req.ReactionType,
+		EventType:      req.EventType,
+	}
+	err := uc.eventbus.Publish(ctx, constants.TopicReactAlbum.String(), req.AlbumID, req.EventType.String(), payload)
 	if err != nil {
 		return &res.ReactAlbumResponse{
 			AlbumID:            req.AlbumID,

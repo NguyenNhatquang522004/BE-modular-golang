@@ -351,11 +351,15 @@ func (r *ConversationReadStateRepository) DeleteConversationReadStatesByConversa
 }
 func (r *ConversationReadStateRepository) DeleteConversationReadStatesByUserID(ctx context.Context, conversationID string, userID string) error {
 	tableName := (&entity.ConversationReadState{}).TableName()
+	parsedUserID, err := gocql.ParseUUID(userID)
+	if err != nil {
+		return fmt.Errorf("invalid userID: %s", userID)
+	}
 	query := fmt.Sprintf(`
 		DELETE FROM %s WHERE conversation_id = ? AND user_id = ?
 	`, tableName)
 	safectx := context.WithoutCancel(ctx)
-	err := r.session.Query(query, conversationID, userID).WithContext(safectx).Exec()
+	err = r.session.Query(query, conversationID, parsedUserID).WithContext(safectx).Exec()
 	if err != nil {
 		return err
 	}
