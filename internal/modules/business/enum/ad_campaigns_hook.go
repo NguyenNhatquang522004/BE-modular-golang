@@ -34,18 +34,6 @@ func (e *BuyingType) UnmarshalBSONValue(t bsontype.Type, data []byte) error {
 	val, err := BuyingTypeString(string(data)); if err != nil { return err }; *e = val; return nil
 }
 
-// =============================================================================
-// 3. STATUS HOOKS
-// =============================================================================
-func (e CampaignStatus) Value() (driver.Value, error) { return e.String(), nil }
-func (e *CampaignStatus) Scan(v interface{}) error {
-	return scanEnum(v, func(s string) (interface{}, error) { return CampaignStatusString(s) }, e)
-}
-func (e CampaignStatus) MarshalBSONValue() (bsontype.Type, []byte, error) { return bsontype.String, []byte(e.String()), nil }
-func (e *CampaignStatus) UnmarshalBSONValue(t bsontype.Type, data []byte) error {
-	val, err := CampaignStatusString(string(data)); if err != nil { return err }; *e = val; return nil
-}
-
 // --- Generic Scan Helper (Để code gọn hơn, tránh lặp lại switch case) ---
 func scanEnum(value interface{}, parser func(string) (interface{}, error), target interface{}) error {
 	if value == nil { return nil }
@@ -65,7 +53,6 @@ func scanEnum(value interface{}, parser func(string) (interface{}, error), targe
 	switch t := target.(type) {
 	case *CampaignObjective: *t = val.(CampaignObjective)
 	case *BuyingType: *t = val.(BuyingType)
-	case *CampaignStatus: *t = val.(CampaignStatus)
 	}
 	return nil
 }

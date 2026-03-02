@@ -1,8 +1,6 @@
 package req
 
-import (
-	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/business/enum"
-)
+import "github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/sharedEnums"
 
 // PageFollowerReq chứa dữ liệu request từ client.
 type PageFollowerReq struct {
@@ -15,6 +13,6 @@ type PageFollowerReq struct {
 
 // FollowerSettingsReq chứa cấu hình thông báo từ request.
 type FollowerSettingsReq struct {
-	NotificationLevel enum.NotificationLevel `json:"notification_level" validate:"required"`
-	IsFavorite        bool                   `json:"is_favorite"`
+	NotificationLevel sharedEnums.NotificationLevel `json:"notification_level" validate:"required"`
+	IsFavorite        bool                          `json:"is_favorite"`
 }

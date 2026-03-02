@@ -3,6 +3,7 @@ package req
 import (
 	"time"
 
+	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/sharedEnums"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/business/enum"
 )
 
@@ -59,7 +60,7 @@ type CTAButtonReq struct {
 
 type PageSettingsReq struct {
 	AllowVisitorPost bool                 `json:"allow_visitor_post"`
-	ProfanityFilter  enum.ProfanityFilter `json:"profanity_filter"`
+	ProfanityFilter  sharedEnums.UserBadge `json:"profanity_filter"`
 	MessagingStatus  enum.MessagingStatus `json:"messaging_status"`
 }
 

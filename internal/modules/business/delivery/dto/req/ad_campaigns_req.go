@@ -3,6 +3,7 @@ package req
 import (
 	"time"
 
+	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/sharedEnums"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/business/enum"
 	"github.com/google/uuid"
 )
@@ -18,7 +19,7 @@ type AdCampaignReq struct {
 	LifetimeBudget *float64               `json:"lifetime_budget,omitempty"`
 	StartTime      time.Time              `json:"start_time"`
 	EndTime        *time.Time             `json:"end_time,omitempty"`
-	Status         *enum.CampaignStatus    `json:"status"`
+	Status         *sharedEnums.ProcessingStatus `json:"status"`
 	CreatedAt      time.Time              `json:"created_at"`
 	UpdatedAt      time.Time              `json:"updated_at"`
 	DeletedAt      *time.Time             `json:"deleted_at,omitempty"`

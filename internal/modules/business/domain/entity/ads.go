@@ -3,7 +3,7 @@ package entity
 import (
 	"time"
 
-	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/business/enum"
+	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/sharedEnums"
 	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
@@ -34,7 +34,7 @@ type Ad struct {
 
 	// 5. STATUS & MODERATION
 	// Mặc định là 'reviewing' khi vừa tạo
-	Status enum.AdStatus `gorm:"type:varchar(20);index;default:'reviewing'" json:"status"`
+	Status sharedEnums.ProcessingStatus `gorm:"type:varchar(20);index;default:'reviewing'" json:"status"`
 
 	// Lý do từ chối (Chỉ có giá trị khi Status = Rejected)
 	// Dùng Pointer (*string) để cho phép NULL trong DB.

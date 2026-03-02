@@ -28,18 +28,6 @@ const (
 	CTAFollow                     // 'follow'
 )
 
-// =============================================================================
-// 3. SETTINGS ENUMS
-// =============================================================================
-
-//go:generate enumer -type=ProfanityFilter -json -transform=snake -trimprefix=Profanity
-type ProfanityFilter int
-
-const (
-	ProfanityOff    ProfanityFilter = iota // 'off'
-	ProfanityMedium                        // 'medium'
-	ProfanityStrong                        // 'strong'
-)
 
 //go:generate enumer -type=MessagingStatus -json -transform=snake -trimprefix=MsgStatus
 type MessagingStatus int

@@ -27,15 +27,6 @@ func (e *CTAType) UnmarshalBSONValue(t bsontype.Type, data []byte) error {
 }
 
 // -----------------------------------------------------------------------------
-// ProfanityFilter
-// -----------------------------------------------------------------------------
-func (e ProfanityFilter) MarshalBSONValue() (bsontype.Type, []byte, error) { return bsontype.String, []byte(e.String()), nil }
-func (e *ProfanityFilter) UnmarshalBSONValue(t bsontype.Type, data []byte) error {
-	if t != bsontype.String { return fmt.Errorf("expected string, got %v", t) }
-	val, err := ProfanityFilterString(string(data)); if err != nil { return err }; *e = val; return nil
-}
-
-// -----------------------------------------------------------------------------
 // MessagingStatus
 // -----------------------------------------------------------------------------
 func (e MessagingStatus) MarshalBSONValue() (bsontype.Type, []byte, error) { return bsontype.String, []byte(e.String()), nil }

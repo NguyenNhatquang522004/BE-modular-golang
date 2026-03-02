@@ -55,7 +55,9 @@ const (
 	TopicReactMessage TopicName = "communication.react_message.events"
 
 	//community
-	TopicStats TopicName = "community.stats.events"
+	TopicGroupStats TopicName = "community.group_stats.events"
+	TopicEventStats TopicName = "community.event_stats.events"
+	
 )
 
 type TopicConfig struct {

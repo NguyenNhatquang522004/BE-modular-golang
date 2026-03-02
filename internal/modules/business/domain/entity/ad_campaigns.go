@@ -3,6 +3,7 @@ package entity
 import (
 	"time"
 
+	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/sharedEnums"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/business/enum"
 	"github.com/google/uuid"
 	"gorm.io/gorm"
@@ -40,7 +41,7 @@ type AdCampaign struct {
 
 	// 6. STATUS
 	// Index để lọc nhanh các chiến dịch đang chạy (Active)
-	Status enum.CampaignStatus `gorm:"type:varchar(20);index;default:'paused'" json:"status"`
+	Status sharedEnums.ProcessingStatus `gorm:"type:varchar(20);index;default:'paused'" json:"status"`
 
 	CreatedAt time.Time      `gorm:"type:timestamp;default:now()" json:"created_at"`
 	UpdatedAt time.Time      `gorm:"type:timestamp;default:now()" json:"updated_at"`

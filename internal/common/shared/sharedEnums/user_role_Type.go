@@ -10,4 +10,7 @@ const (
 	RoleTypeSystemAdmin
 	RoleTypeModerator
 	RoleTypeMember
+	RoleTypeGuest
+	RoleTypeAdvertiser
+	RoleTypeAnalyst
 )

@@ -3,7 +3,7 @@ package entity
 import (
 	"time"
 
-	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/business/enum"
+	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/sharedEnums"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -25,7 +25,7 @@ type PageRole struct {
 
 	// 2. PHÂN QUYỀN (RBAC + ABAC)
 	// Vai trò chính (Role-Based)
-	Role enum.PageRole `bson:"role" json:"role"`
+	Role sharedEnums.RoleType `bson:"role" json:"role"`
 
 	// Quyền tùy chỉnh thêm (Attribute-Based)
 	// VD: ["manage_jobs", "manage_events", "publish_stories"]

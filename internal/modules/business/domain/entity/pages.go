@@ -3,6 +3,7 @@ package entity
 import (
 	"time"
 
+	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/sharedEnums"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/business/enum"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -97,9 +98,9 @@ type CTAButton struct {
 
 // --- SETTINGS ---
 type PageSettings struct {
-	AllowVisitorPost bool                 `bson:"allow_visitor_post" json:"allow_visitor_post"`
-	ProfanityFilter  enum.ProfanityFilter `bson:"profanity_filter" json:"profanity_filter"` // 'strong'
-	MessagingStatus  enum.MessagingStatus `bson:"messaging_status" json:"messaging_status"` // 'online'
+	AllowVisitorPost bool                  `bson:"allow_visitor_post" json:"allow_visitor_post"`
+	ProfanityFilter  sharedEnums.UserBadge `bson:"profanity_filter" json:"profanity_filter"` // 'strong'
+	MessagingStatus  enum.MessagingStatus  `bson:"messaging_status" json:"messaging_status"` // 'online'
 }
 
 // --- METRICS ---

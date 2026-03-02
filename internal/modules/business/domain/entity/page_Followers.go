@@ -3,7 +3,7 @@ package entity
 import (
 	"time"
 
-	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/business/enum"
+	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/sharedEnums"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -31,7 +31,7 @@ type PageFollower struct {
 // --- SETTINGS ---
 type FollowerSettings struct {
 	// Mức độ thông báo: all, highlight, off
-	NotificationLevel enum.NotificationLevel `bson:"notification_level" json:"notification_level"`
+	NotificationLevel sharedEnums.NotificationLevel `bson:"notification_level" json:"notification_level"`
 
 	// "See First" (Xem trước): Ưu tiên hiển thị bài của Page này trên Newsfeed user
 	IsFavorite bool `bson:"is_favorite" json:"is_favorite"`

@@ -26,16 +26,3 @@ const (
 	BuyingFixedPrice                   // 'fixed_price' (Giá cố định/Reservation)
 )
 
-// =============================================================================
-// 3. CAMPAIGN STATUS
-// =============================================================================
-
-//go:generate enumer -type=CampaignStatus -json -transform=snake -trimprefix=CampaignStatus
-type CampaignStatus int
-
-const (
-	CampaignStatusActive    CampaignStatus = iota // 'active'
-	CampaignStatusPaused                          // 'paused'
-	CampaignStatusCompleted                       // 'completed'
-	CampaignStatusArchived                        // 'archived'
-)

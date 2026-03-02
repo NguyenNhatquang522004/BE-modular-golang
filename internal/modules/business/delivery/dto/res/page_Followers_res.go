@@ -1,8 +1,6 @@
 package res
 
-import (
-	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/business/enum"
-)
+import "github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/sharedEnums"
 
 // PageFollowerRes chứa dữ liệu trả về cho client.
 type PageFollowerRes struct {
@@ -14,6 +12,6 @@ type PageFollowerRes struct {
 
 // FollowerSettingsRes chứa cấu hình thông báo trả về.
 type FollowerSettingsRes struct {
-	NotificationLevel enum.NotificationLevel `json:"notification_level"`
-	IsFavorite        bool                   `json:"is_favorite"`
+	NotificationLevel sharedEnums.NotificationLevel `json:"notification_level"`
+	IsFavorite        bool                          `json:"is_favorite"`
 }

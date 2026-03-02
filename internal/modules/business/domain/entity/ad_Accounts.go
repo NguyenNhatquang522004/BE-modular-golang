@@ -3,7 +3,7 @@ package entity
 import (
 	"time"
 
-	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/business/enum"
+	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/sharedEnums"
 	"github.com/google/uuid"
 )
 
@@ -35,7 +35,7 @@ type AdAccount struct {
 
 	// 5. STATUS (ENUM)
 	// Nhờ implement interface Valuer/Scanner ở file hooks, GORM tự động map string <-> int
-	Status enum.AccountStatus `gorm:"type:varchar(20);index" json:"status"`
+	Status sharedEnums.ProcessingStatus `gorm:"type:varchar(20);index" json:"status"`
 
 	// 6. TIMESTAMPS
 	CreatedAt time.Time  `gorm:"type:timestamp;default:now()" json:"created_at"`
