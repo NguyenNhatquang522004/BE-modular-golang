@@ -30,4 +30,6 @@ type CommentCountPayload struct {
 	EventType    constants.TopicName `json:"event_type,omitempty"`
 }
 
-
+type DeleteInteractionRelationTargetPayload struct {
+	TargetID string `json:"target_id"`
+}

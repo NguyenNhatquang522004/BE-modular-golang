@@ -8,12 +8,14 @@ package sharedEnums
 type ReactionTarget int
 
 const (
-	ReactionTargetPost    ReactionTarget = iota // 'post'
-	ReactionTargetComment                       // 'comment'
-	ReactionTargetAlbum                         // 'album'
-	ReactionTargetStory                         // 'story'
-	ReactionTargetReel                          // 'reel'
-	ReactionTargetUnknown                       // 'unknown
+	ReactionTargetPost       ReactionTarget = iota // 'post'
+	ReactionTargetComment                          // 'comment'
+	ReactionTargetAlbum                            // 'album'
+	ReactionTargetStory                            // 'story'
+	ReactionTargetReel                             // 'reel'
+	ReactionTargetUnknown                          // 'unknown'
+	ReactionTargetLive                             // 'live'
+	ReactionTargetFollowPage                       // 'follow_page'
 )
 
 // =============================================================================

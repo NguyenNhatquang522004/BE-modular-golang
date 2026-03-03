@@ -11,6 +11,7 @@ import (
 )
 
 type UpdatePageUsecase struct {
+
 	pageRepo IRepositoryMongodb.IPagesRepository
 	pageRole IRepositoryMongodb.IPageRolesRepository
 }

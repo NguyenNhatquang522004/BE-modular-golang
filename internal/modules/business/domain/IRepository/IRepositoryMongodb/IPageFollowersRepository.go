@@ -19,4 +19,5 @@ type IPageFollowersRepository interface {
 	DeleteFollower(ctx context.Context, pageID string, userID string) error
 	DeleteBulkFollowers(ctx context.Context, pageID string, userIDs []string) (int64, []*mongodbErrors.BulkError, error)
 	DeleteBulkFollowersByPageID(ctx context.Context, pageID string) (int64, []*mongodbErrors.BulkError, error)
+	DeleteFollowerByPageID(ctx context.Context, pageID string) error
 }

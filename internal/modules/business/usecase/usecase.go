@@ -17,7 +17,7 @@ type IDeletePageUsecase interface {
 	Execute(ctx context.Context, req *req.DeletePageRequest) (*res.FailedPageResponse, error)
 }
 type IStatsPageUsecase interface {
-	Execute(ctx context.Context) error
+	Execute(ctx context.Context, req *req.StatsPageRequest) (*res.FailedPageResponse, error)
 }
 type ICreatePageRoleUsecase interface {
 	Execute(ctx context.Context) error

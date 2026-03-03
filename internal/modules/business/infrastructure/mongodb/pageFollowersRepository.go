@@ -337,3 +337,20 @@ func (r *PageFollowersRepository) DeleteBulkFollowersByPageID(ctx context.Contex
 	}
 	return deletedCount, bulkErrors, nil
 }
+
+func (r *PageFollowersRepository) DeleteFollowerByPageID(ctx context.Context, pageID string) error {
+	collection := r.client.Collection(entity.PageFollower{}.CollectionName())
+	finalPageID, err := primitive.ObjectIDFromHex(pageID)
+	if err != nil {
+		return fmt.Errorf("invalid page ID: %w", err)
+	}
+	filter := bson.M{"page_id": finalPageID}
+	result, err := collection.DeleteMany(ctx, filter)
+	if err != nil {
+		return fmt.Errorf("database error: %w", err)
+	}
+	if result.DeletedCount == 0 {
+		return fmt.Errorf("no followers found for this page")
+	}
+	return nil
+}

@@ -98,3 +98,7 @@ type ReactAlbumPayload struct {
 	ReactionType   sharedEnums.ReactionCode `json:"reaction_type"`
 	EventType      constants.EventType      `json:"event_type"` // "add" hoặc "remove"
 }
+
+type DeleteMediaRelationTargetPayload struct {
+	TargetID string `json:"target_id"`
+}

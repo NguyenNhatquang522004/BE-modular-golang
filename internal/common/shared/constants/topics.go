@@ -14,9 +14,10 @@ type TopicName string
 
 const (
 	//socials
-	TopicFriendship TopicName = "social.friendship.events"
-	TopicBlock      TopicName = "social.block.events"
-	TopicFollow     TopicName = "social.follow.events"
+	TopicFriendship                 TopicName = "social.friendship.events"
+	TopicBlock                      TopicName = "social.block.events"
+	TopicFollow                     TopicName = "social.follow.events"
+	TopicDeleteSocialRelationTarget TopicName = "social.delete_relation_target.events" // chưa làm gì cả
 
 	//content
 	TopicContentPostPublish              TopicName = "content.post.publish.events"
@@ -24,18 +25,20 @@ const (
 	ContentPostPublishNotificationFriend TopicName = "content.post.publish_notification_friend.events"
 	ContentPostPublishNotificationTag    TopicName = "content.post.publish_notification_tag.events"
 	TopicSharePost                       TopicName = "content.post.share.events"
+	TopicDeleteContentRelationTarget     TopicName = "content.delete_relation_target.events" // chưa làm gì cả
 
 	// notification
 	TopicCreateUserNotificationSettings TopicName = "notification.create_user_notification_settings.events"
 	TopicSendNotificationType           TopicName = "notification.send_notification.events"
 
 	//interaction
-	TopicReactComment   TopicName = "interaction.react_comment.events"
-	TopicReactPost      TopicName = "interaction.react_post.events"
-	TopicCommentPost    TopicName = "interaction.comment_post.events"
-	TopicCounterPost    TopicName = "interaction.counter_post.events"
-	TopicCounterComment TopicName = "interaction.counter_comment.events"
-	TopicEntityReaction TopicName = "interaction.entity_reaction.events"
+	TopicReactComment                    TopicName = "interaction.react_comment.events"
+	TopicReactPost                       TopicName = "interaction.react_post.events"
+	TopicCommentPost                     TopicName = "interaction.comment_post.events"
+	TopicCounterPost                     TopicName = "interaction.counter_post.events"
+	TopicCounterComment                  TopicName = "interaction.counter_comment.events"
+	TopicEntityReaction                  TopicName = "interaction.entity_reaction.events"
+	TopicDeleteInteractionRelationTarget TopicName = "interaction.delete_relation_target.events" // chưa làm gì cả
 
 	// media
 	TopicReactAlbum     TopicName = "media.react_album.events"
@@ -48,16 +51,21 @@ const (
 	TopicStartStopLive  TopicName = "media.start_stop_live.events"
 	TopicCommentLive    TopicName = "media.comment_live.events"
 	TopicCounterLive    TopicName = "media.counter_live.events"
-
+	TopicDelete
+	TopicDeleteMediaRelationTarget TopicName = "media.delete_relation_target.events" // chưa làm gì cả
 	// communication
-	TopicMessage      TopicName = "communication.message.events"
-	TopicStateMessage TopicName = "communication.state_message.events"
-	TopicReactMessage TopicName = "communication.react_message.events"
-
+	TopicMessage              TopicName = "communication.message.events"
+	TopicStateMessage         TopicName = "communication.state_message.events"
+	TopicReactMessage         TopicName = "communication.react_message.events"
+	TopicDeleteRelationTarget TopicName = "business.delete_relation_target.events"
 	//community
-	TopicGroupStats        TopicName = "community.group_stats.events"
-	TopicEventStats        TopicName = "community.event_stats.events"
-	TopicDownloadGroupFile TopicName = "community.download_group_file.events"
+	TopicGroupStats                    TopicName = "community.group_stats.events"
+	TopicEventStats                    TopicName = "community.event_stats.events"
+	TopicDownloadGroupFile             TopicName = "community.download_group_file.events"
+	TopicDeleteCommunityRelationTarget TopicName = "business.delete_relation_target.events" // chưa làm gì cả, dùng chung với communication
+
+	// business
+	TopicStatsPage TopicName = "business.stats_page.events"
 )
 
 type TopicConfig struct {
@@ -81,5 +89,5 @@ var SocialTopics = []TopicConfig{
 	{Name: TopicContentPostPublishMediaAssets, Partitions: 3},
 	{Name: TopicCreateUserNotificationSettings, Partitions: 3},
 	{Name: TopicSendNotificationType, Partitions: 3},
-	// Thêm các topic khác vào đây
+	{Name: TopicDeleteRelationTarget, Partitions: 3},
 }

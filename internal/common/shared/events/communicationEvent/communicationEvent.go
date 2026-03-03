@@ -39,3 +39,7 @@ type MessageReactionPayload struct {
 	CreatedAt      time.Time                `json:"created_at"`
 	EventType      constants.EventType      `json:"event_type"`
 }
+
+type DeletePrivateConversationGroupPayload struct {
+	TargetID string `json:"target_id"`
+}

@@ -27,3 +27,7 @@ type DownloadGroupFilePayload struct {
 	UserID    string              `json:"user_id"`
 	EventType constants.EventType `json:"event_type"`
 }
+
+type DeleteCommunityRelationTargetPayload struct {
+	TargetID string `json:"target_id"`
+}
