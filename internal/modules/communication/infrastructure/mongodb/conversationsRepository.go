@@ -340,3 +340,86 @@ func (r *ConversationsRepository) CheckConversationExists(ctx context.Context, u
 	}
 	return &conversation, nil // Trả về cuộc trò chuyện tìm thấy
 }
+func (r *ConversationsRepository) GetConversationByGroupID(ctx context.Context, groupID string, cursor string, limit int) (*dto.PaginationRes, error) {
+	// Implement the logic to get conversation by group ID
+	collection := r.client.Collection(entity.Conversation{}.CollectionName())
+	var conversations []*entity.Conversation
+	querylimit := int64(limit + 1)
+	// Check cache first
+	if cursor == "" {
+		datacache, nextcursor, hasnext, limitcache, err := r.redisRepo.CustomizeGetCache(ctx, []string{
+			"conversation_cache_groupID_" + groupID,
+			"conversation_cache_nextcursor_groupID_" + groupID,
+			"conversation_cache_hasnext_groupID_" + groupID,
+			"conversation_cache_limit_groupID_" + groupID,
+		})
+		if err == nil && datacache != nil {
+			if conversationsList, ok := datacache.([]*entity.Conversation); ok {
+				return &dto.PaginationRes{
+					Data:       conversationsList,
+					NextCursor: nextcursor,
+					HasNext:    hasnext,
+					Limit:      limitcache,
+				}, nil
+			}
+		}
+	}
+	parseID, err := primitive.ObjectIDFromHex(groupID)
+	if err != nil {
+		return nil, fmt.Errorf("invalid group ID: %w", err)
+	}
+	query := bson.M{"related_group_id": parseID}
+	if cursor != "" {
+		decodedCursor, err := utils.DecodeCursorMongodb(cursor)
+		if err != nil {
+			return nil, fmt.Errorf("invalid cursor: %w", err)
+		}
+		query["$or"] = []bson.M{
+			{"created_at": bson.M{"$lt": decodedCursor.CreatedAt}},
+			{"created_at": decodedCursor.CreatedAt, "_id": bson.M{"$lt": decodedCursor.PostID}},
+		}
+	}
+
+	opts := options.Find().
+		SetSort(bson.D{
+			{Key: "created_at", Value: -1},
+			{Key: "_id", Value: -1}, // Tie-breaker
+		}).
+		SetLimit(int64(querylimit))
+	cursorDB, err := collection.Find(ctx, query, opts)
+	if err != nil {
+		return nil, fmt.Errorf("database error: %w", err)
+	}
+	defer cursorDB.Close(ctx)
+	if err = cursorDB.All(ctx, &conversations); err != nil {
+		return nil, fmt.Errorf("error decoding results: %w", err)
+	}
+
+	var nextCursor string
+	hasNext := false
+	if len(conversations) > limit {
+		hasNext = true
+		conversations = conversations[:limit] // Lấy đúng số lượng cần thiết
+		lastConversation := conversations[len(conversations)-1]
+		nextCursor = utils.EncodeCursorMongodb(lastConversation.CreatedAt, lastConversation.ID)
+	}
+	// Cache kết quả nếu là trang đầu tiên
+	if cursor == "" {
+		items := map[string]any{
+			"conversation_cache_groupID_" + groupID:            conversations,
+			"conversation_cache_nextcursor_groupID_" + groupID: nextCursor,
+			"conversation_cache_hasnext_groupID_" + groupID:    hasNext,
+			"conversation_cache_limit_groupID_" + groupID:      limit,
+		}
+		err = r.redisRepo.CustomizeSetCache(ctx, items)
+		if err != nil {
+			fmt.Printf("Failed to set cache for pagination: %v\n", err)
+		}
+	}
+	return &dto.PaginationRes{
+		Data:       conversations,
+		NextCursor: nextCursor,
+		HasNext:    hasNext,
+		Limit:      limit,
+	}, nil
+}

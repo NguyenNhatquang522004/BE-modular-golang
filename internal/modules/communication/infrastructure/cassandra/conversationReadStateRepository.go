@@ -448,3 +448,17 @@ func (r *ConversationReadStateRepository) UpsertConversationReadState(ctx contex
 	}
 	return r.CreateConversationReadState(ctx, readState)
 }
+func (r *ConversationReadStateRepository) DeleteBulkConversationReadState(ctx context.Context, conversationIDs []string) error {
+	tableName := (&entity.ConversationReadState{}).TableName()
+	query := fmt.Sprintf(`
+		DELETE FROM %s WHERE conversation_id = ?
+	`, tableName)
+	safectx := context.WithoutCancel(ctx)
+	for _, conversationID := range conversationIDs {
+		err := r.session.Query(query, conversationID).WithContext(safectx).Exec()
+		if err != nil {
+			return fmt.Errorf("failed to delete conversation read states for conversation %s: %w", conversationID, err)
+		}
+	}
+	return nil
+}

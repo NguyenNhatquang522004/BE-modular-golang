@@ -23,6 +23,16 @@ type Config struct {
 	RedisDB        RedisConfig
 	PostgresDB     PostgresConfig
 	Server         ServerConfig
+	VNPay          VNPayConfig
+}
+type VNPayConfig struct {
+	TMN_CODE    string
+	HASH_SECRET string
+	PAYMENT_URL string
+	API_URL     string
+	RETURN_URL  string
+	IPN_URL     string
+	IS_SANDBOX  bool
 }
 type WorkerPoolConfig struct {
 	WORKER_POOL_SIZE_MAX          int
@@ -246,6 +256,17 @@ func LoadConfig() (*Config, error) {
 		Server: ServerConfig{
 			Port:    viper.GetString("SERVER_PORT"),
 			BaseURL: viper.GetString("Base_URL"),
+		},
+
+		// --- VNPay ---
+		VNPay: VNPayConfig{
+			TMN_CODE:    viper.GetString("VNPAY_TMN_CODE"),
+			HASH_SECRET: viper.GetString("VNPAY_HASH_SECRET"),
+			PAYMENT_URL: viper.GetString("VNPAY_PAYMENT_URL"),
+			API_URL:     viper.GetString("VNPAY_API_URL"),
+			RETURN_URL:  viper.GetString("VNPAY_RETURN_URL"),
+			IPN_URL:     viper.GetString("VNPAY_IPN_URL"),
+			IS_SANDBOX:  viper.GetBool("VNPAY_IS_SANDBOX"),
 		},
 	}
 

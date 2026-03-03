@@ -68,8 +68,23 @@ func (r *PagesRepository) CreateBulkPages(ctx context.Context, pages []*entity.P
 	}
 	return int64(len(result.InsertedIDs)), faildocs, nil
 }
-
-func (r *PagesRepository) GetPageByID(ctx context.Context, pageID string, cursor string, limit int) (*dto.PaginationRes, error) {
+func (r *PagesRepository) GetPageByID(ctx context.Context, pageID string) (*entity.Page, error) {
+	collection := r.client.Collection(entity.Page{}.CollectionName())
+	finalid, err := primitive.ObjectIDFromHex(pageID)
+	if err != nil {
+		return nil, errors.New("invalid page ID format")
+	}
+	var page entity.Page
+	err = collection.FindOne(ctx, bson.M{"_id": finalid}).Decode(&page)
+	if err != nil {
+		if errors.Is(err, mongo.ErrNoDocuments) {
+			return nil, fmt.Errorf("page not found: %w", err)
+		}
+		return nil, fmt.Errorf("database error: %w", err)
+	}
+	return &page, nil
+}
+func (r *PagesRepository) GetPageCursorByID(ctx context.Context, pageID string, cursor string, limit int) (*dto.PaginationRes, error) {
 	collection := r.client.Collection(entity.Page{}.CollectionName())
 	var pages []*entity.Page
 	querylimit := int64(limit + 1)

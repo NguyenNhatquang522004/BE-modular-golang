@@ -18,6 +18,10 @@ type UpdatePrivateConversationRequest struct {
 }
 type DeletePrivateConversationRequest struct {
 	ConversationID string `json:"conversation_id"`
+	GroupID        string `json:"group_id,omitempty"`
+}
+type DeletePrivateConversationGroupRequest struct {
+	GroupID string `json:"group_id"`
 }
 type CreateChannelGroupConversationRequest struct {
 	*ConversationReq

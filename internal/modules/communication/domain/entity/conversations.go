@@ -7,15 +7,17 @@ import (
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/communication/enum"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
+
 const (
 	CollectionConversations = "Conversations"
 )
+
 type Conversation struct {
 	ID primitive.ObjectID `bson:"_id,omitempty" json:"id"`
 
 	// 1. CLASSIFICATION
-	Type   enum.ConversationType   `bson:"type" json:"type"`     // 'private', 'group'
-	Scope  enum.ConversationScope  `bson:"scope" json:"scope"`   // 'messenger', 'community_channel'
+	Type   enum.ConversationType        `bson:"type" json:"type"`     // 'private', 'group'
+	Scope  enum.ConversationScope       `bson:"scope" json:"scope"`   // 'messenger', 'community_channel'
 	Status sharedEnums.ProcessingStatus `bson:"status" json:"status"` // 'active', 'pending'
 
 	// 2. GROUP INFO
@@ -30,8 +32,8 @@ type Conversation struct {
 
 	// Link tới Module Groups (Nếu scope là community_channel)
 	// Index: { related_group_id: 1 } -> Lấy danh sách kênh của 1 nhóm
-	RelatedGroupID *primitive.ObjectID `bson:"related_group_id,omitempty" json:"related_group_id,omitempty"`
-
+	RelatedGroupID   *primitive.ObjectID `bson:"related_group_id,omitempty" json:"related_group_id,omitempty"`
+	RelatedChannelID *primitive.ObjectID `bson:"related_channel_id,omitempty" json:"related_channel_id,omitempty"`
 	// 4. SETTINGS
 	// Permissions luôn có giá trị mặc định, không nên để pointer
 	Permissions ConversationPermissions `bson:"permissions" json:"permissions"`
@@ -80,10 +82,11 @@ type LastMessageCache struct {
 	// SenderID từ Postgres (UUID) -> Lưu String
 	SenderID string `bson:"sender_id" json:"sender_id"`
 
-	Type sharedEnums.MediaType`bson:"type" json:"type"`
+	Type sharedEnums.MediaType `bson:"type" json:"type"`
 
 	CreatedAt time.Time `bson:"created_at" json:"created_at"`
 }
+
 func (Conversation) CollectionName() string {
 	return CollectionConversations
 }

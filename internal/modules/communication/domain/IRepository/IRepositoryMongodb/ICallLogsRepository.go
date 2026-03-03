@@ -6,6 +6,7 @@ import (
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/errors/mongodbErrors"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/dto"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/communication/domain/entity"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 type ICallLogsRepository interface {
@@ -16,6 +17,7 @@ type ICallLogsRepository interface {
 	UpdateCallLog(ctx context.Context, callLog *entity.CallLog) error
 	UpdateBulkCallLogs(ctx context.Context, callLogs []*entity.CallLog) (int64, []*mongodbErrors.BulkError, error)
 	DeleteCallLogByConversationID(ctx context.Context, conversationID string) error
+	DeleteBulkCallLogsByConversationIDs(ctx context.Context, conversationIDs []primitive.ObjectID) error
 	DeleteCallLog(ctx context.Context, id string) error
 	DeleteBulkCallLogs(ctx context.Context, ids []string) (int64, []*mongodbErrors.BulkError, error)
 }

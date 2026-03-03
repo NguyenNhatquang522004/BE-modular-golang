@@ -40,6 +40,7 @@ type ConversationReq struct {
 	CreatorID        string                        `json:"creator_id" binding:"required"`
 	OwnerID          string                        `json:"owner_id" binding:"required"`
 	RelatedGroupID   *string                       `json:"related_group_id,omitempty"` // Pointer string
+	RelatedChannelID *string                       `json:"related_channel_id,omitempty"`
 	Permissions      ConversationPermissionsReq    `json:"permissions"`
 	Theme            *ConversationThemeReq         `json:"theme,omitempty"`
 	LastMessage      *LastMessageCacheReq          `json:"last_message,omitempty"`

@@ -362,3 +362,12 @@ func (r *ConversationParticipantsRepository) GetConversationParticipant(ctx cont
 	}
 	return &participant, nil
 }
+
+func (r *ConversationParticipantsRepository) DeleteBulkConversationParticipantsByConversationIDs(ctx context.Context, conversationIDs []primitive.ObjectID) error {
+	collection := r.client.Collection(entity.ConversationParticipant{}.CollectionName())
+	query := bson.M{
+		"conversation_id": bson.M{"$in": conversationIDs},
+	}
+	_, err := collection.DeleteMany(ctx, query)
+	return err
+}

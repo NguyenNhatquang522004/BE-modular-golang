@@ -16,6 +16,9 @@ type IUpdatePrivateConversationUsecase interface {
 type IDeletePrivateConversationUsecase interface {
 	Execute(ctx context.Context, req *req.DeletePrivateConversationRequest) (*res.FailedPrivateConversationResponse, error)
 }
+type IDeletePrivateConversationGroupUsecase interface {
+	Execute(ctx context.Context, req *req.DeletePrivateConversationGroupRequest) (*res.FailedPrivateConversationResponse, error)
+}
 type ICreateChannelGroupConversationUsecase interface {
 	Execute(ctx context.Context, req *req.CreateChannelGroupConversationRequest) (*res.FailedPrivateConversationResponse, error)
 }

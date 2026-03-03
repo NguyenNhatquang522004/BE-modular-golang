@@ -256,3 +256,11 @@ func (r *CallLogsRepository) DeleteBulkCallLogs(ctx context.Context, ids []strin
 	}
 	return result.DeletedCount, faildocs, nil
 }
+func (r *CallLogsRepository) DeleteBulkCallLogsByConversationIDs(ctx context.Context, conversationIDs []primitive.ObjectID) error {
+	collection := r.client.Collection(entity.CallLog{}.CollectionName())
+	_, err := collection.DeleteMany(ctx, bson.M{"conversation_id": bson.M{"$in": conversationIDs}})
+	if err != nil {
+		return err
+	}
+	return nil
+}

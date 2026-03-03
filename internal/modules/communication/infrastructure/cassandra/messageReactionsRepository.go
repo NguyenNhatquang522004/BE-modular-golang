@@ -787,3 +787,23 @@ func (r *MessageReactionsRepository) DeleteReactionByConversationID(ctx context.
 
 	return nil
 }
+
+func (r *MessageReactionsRepository) DeleteBulkReactionByConversationID(ctx context.Context, conversationIDs []string) error {
+	tableName := entity.MessageReaction{}.TableName()
+	query := fmt.Sprintf("DELETE FROM %s WHERE conversation_id = ?", tableName)
+
+	for _, convID := range conversationIDs {
+		if convID == "" {
+			continue // Skip invalid conversationID
+		}
+
+		safeCtx := context.WithoutCancel(ctx)
+
+		if err := r.session.Query(query, convID).WithContext(safeCtx).Exec(); err != nil {
+			fmt.Printf("failed to delete reactions for conversation %s: %v\n", convID, err)
+			// Log lỗi nhưng không dừng toàn bộ quá trình
+		}
+	}
+
+	return nil
+}

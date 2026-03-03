@@ -23,4 +23,5 @@ type IPageRolesRepository interface {
 	DeletePageRoleByUserIDandPageID(ctx context.Context, userID string, pageID string) error
 	DeleteBulkPageRolesByUserIDsAndPageID(ctx context.Context, userIDs []string, pageID string) (int64, []*mongodbErrors.BulkError, error)
 	DeleteBulkPageRolesByPageIDsAndUserID(ctx context.Context, pageIDs []string, userID string) (int64, []*mongodbErrors.BulkError, error)
+	DeletePageRoleByPageID(ctx context.Context, pageID string) error
 }

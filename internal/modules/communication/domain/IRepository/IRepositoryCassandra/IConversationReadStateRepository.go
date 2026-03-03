@@ -19,4 +19,5 @@ type IConversationReadStateRepository interface {
 	DeleteConversationReadStatesByConversationID(ctx context.Context, conversationID string) error
 	DeleteConversationReadStatesByUserID(ctx context.Context, conversationID string, userID string) error
 	DeleteBulkConversationReadStatesByManyUserID(ctx context.Context, conversationID string, userIDs []string) (int64, []*cassandraErrors.ConversationReadStateBulkError, error)
+	DeleteBulkConversationReadState(ctx context.Context, conversationIDs []string) error
 }

@@ -436,3 +436,19 @@ func (r *PagesRolesRepository) DeleteBulkPageRolesByPageIDsAndUserID(ctx context
 	}
 	return result.DeletedCount, failedDocs, nil
 }
+func (r *PagesRolesRepository) DeletePageRoleByPageID(ctx context.Context, pageID string) error {
+	collection := r.client.Collection(entity.PageRole{}.CollectionName())
+	parseID, ok := primitive.ObjectIDFromHex(pageID)
+	if ok != nil {
+		return ok
+	}
+	query := bson.M{
+		"page_id": parseID,
+	}
+	_, err := collection.DeleteMany(ctx, query)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}

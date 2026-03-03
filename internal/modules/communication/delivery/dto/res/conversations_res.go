@@ -40,6 +40,7 @@ type ConversationRes struct {
 	CreatorID        string                     `json:"creator_id"`
 	OwnerID          string                     `json:"owner_id"`
 	RelatedGroupID   *string                    `json:"related_group_id,omitempty"`
+	RelatedChannelID *string                    `json:"related_channel_id,omitempty"`
 	Permissions      ConversationPermissionsRes `json:"permissions"`
 	Theme            *ConversationThemeRes      `json:"theme,omitempty"`
 	LastMessage      *LastMessageCacheRes       `json:"last_message,omitempty"`

@@ -688,3 +688,16 @@ func (r *MessageRepository) GetMessagesByConversationID(ctx context.Context, con
 
 	return &message, nil
 }
+func (r *MessageRepository) DeleteBulkMessagesByConversationID(ctx context.Context, conversationIDs []string) error {
+	tableName := entity.Message{}.TableName()
+	querty := fmt.Sprintf(` DELETE FROM %s WHERE conversation_id = ?`, tableName)
+
+	for _, conversationID := range conversationIDs {
+		safeCtx := context.WithoutCancel(ctx)
+		if err := r.session.Query(querty, conversationID).WithContext(safeCtx).Exec(); err != nil {
+			return fmt.Errorf("failed to delete messages of conversation %s: %w", conversationID, err)
+		}
+	}
+
+	return nil
+}

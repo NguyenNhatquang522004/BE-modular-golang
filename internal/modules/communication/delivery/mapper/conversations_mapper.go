@@ -32,6 +32,13 @@ func ToEntityConversation(r *req.ConversationReq) *entity.Conversation {
 			relatedGroupID = &oid
 		}
 	}
+	var relatedChannelID *primitive.ObjectID
+	if r.RelatedChannelID != nil && *r.RelatedChannelID != "" {
+		oid, err := primitive.ObjectIDFromHex(*r.RelatedChannelID)
+		if err == nil {
+			relatedChannelID = &oid
+		}
+	}
 
 	// Mappers cho các struct lồng nhau
 	var avatar *entity.ConversationAvatar
@@ -70,15 +77,16 @@ func ToEntityConversation(r *req.ConversationReq) *entity.Conversation {
 	}
 
 	return &entity.Conversation{
-		ID:             id,
-		Type:           *r.Type,
-		Scope:          *r.Scope,
-		Status:         *r.Status,
-		Name:           r.Name,
-		Avatar:         avatar,
-		CreatorID:      r.CreatorID,
-		OwnerID:        r.OwnerID,
-		RelatedGroupID: relatedGroupID,
+		ID:               id,
+		Type:             *r.Type,
+		Scope:            *r.Scope,
+		Status:           *r.Status,
+		Name:             r.Name,
+		Avatar:           avatar,
+		CreatorID:        r.CreatorID,
+		OwnerID:          r.OwnerID,
+		RelatedGroupID:   relatedGroupID,
+		RelatedChannelID: relatedChannelID,
 		Permissions: entity.ConversationPermissions{
 			SendMessage: *r.Permissions.SendMessage,
 			AddMember:   *r.Permissions.AddMember,
@@ -124,6 +132,12 @@ func UpdateToEntityConversation(r *req.ConversationReq, e *entity.Conversation) 
 	if r.RelatedGroupID != nil && *r.RelatedGroupID != "" {
 		if oid, err := primitive.ObjectIDFromHex(*r.RelatedGroupID); err == nil {
 			e.RelatedGroupID = &oid
+		}
+	}
+
+	if r.RelatedChannelID != nil && *r.RelatedChannelID != "" {
+		if oid, err := primitive.ObjectIDFromHex(*r.RelatedChannelID); err == nil {
+			e.RelatedChannelID = &oid
 		}
 	}
 
@@ -198,15 +212,16 @@ func ToResFromReqConversation(r *req.ConversationReq) *res.ConversationRes {
 	}
 
 	return &res.ConversationRes{
-		ID:             r.ID,
-		Type:           *r.Type,
-		Scope:          *r.Scope,
-		Status:         *r.Status,
-		Name:           r.Name,
-		Avatar:         avatarRes,
-		CreatorID:      r.CreatorID,
-		OwnerID:        r.OwnerID,
-		RelatedGroupID: r.RelatedGroupID,
+		ID:               r.ID,
+		Type:             *r.Type,
+		Scope:            *r.Scope,
+		Status:           *r.Status,
+		Name:             r.Name,
+		Avatar:           avatarRes,
+		CreatorID:        r.CreatorID,
+		OwnerID:          r.OwnerID,
+		RelatedGroupID:   r.RelatedGroupID,
+		RelatedChannelID: r.RelatedChannelID,
 		Permissions: res.ConversationPermissionsRes{
 			SendMessage: *r.Permissions.SendMessage,
 			AddMember:   *r.Permissions.AddMember,
@@ -229,6 +244,12 @@ func ToResFromEntityConversation(e *entity.Conversation) *res.ConversationRes {
 	if e.RelatedGroupID != nil {
 		idHex := e.RelatedGroupID.Hex()
 		relatedGroupStr = &idHex
+	}
+
+	var relatedChannelStr *string
+	if e.RelatedChannelID != nil {
+		idHex := e.RelatedChannelID.Hex()
+		relatedChannelStr = &idHex
 	}
 
 	var avatarRes *res.ConversationAvatarRes
@@ -257,15 +278,16 @@ func ToResFromEntityConversation(e *entity.Conversation) *res.ConversationRes {
 	}
 
 	return &res.ConversationRes{
-		ID:             e.ID.Hex(),
-		Type:           e.Type,
-		Scope:          e.Scope,
-		Status:         e.Status,
-		Name:           e.Name,
-		Avatar:         avatarRes,
-		CreatorID:      e.CreatorID,
-		OwnerID:        e.OwnerID,
-		RelatedGroupID: relatedGroupStr,
+		ID:               e.ID.Hex(),
+		Type:             e.Type,
+		Scope:            e.Scope,
+		Status:           e.Status,
+		Name:             e.Name,
+		Avatar:           avatarRes,
+		CreatorID:        e.CreatorID,
+		OwnerID:          e.OwnerID,
+		RelatedGroupID:   relatedGroupStr,
+		RelatedChannelID: relatedChannelStr,
 		Permissions: res.ConversationPermissionsRes{
 			SendMessage: e.Permissions.SendMessage,
 			AddMember:   e.Permissions.AddMember,
