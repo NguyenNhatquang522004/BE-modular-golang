@@ -3,6 +3,7 @@ package kafka
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log"
 	"time"
@@ -16,12 +17,13 @@ import (
 // KafkaConfig cấu hình từ env
 
 type KafkaEventBus struct {
-	writer *kafka.Writer
-	config *configs.KafkaConfig
+	writer       *kafka.Writer
+	config       *configs.KafkaConfig
+	dlqPublisher DLQPublisher
 }
 
 // NewKafkaEventBus Provider cho Wire
-func NewKafkaEventBus(cfg *configs.KafkaConfig) events.EventBus {
+func NewKafkaEventBus(cfg *configs.KafkaConfig, dlqPublisher DLQPublisher) events.EventBus {
 	// Setup Producer (Writer)
 	w := &kafka.Writer{
 		Addr:     kafka.TCP(cfg.BROKERS...),
@@ -34,8 +36,9 @@ func NewKafkaEventBus(cfg *configs.KafkaConfig) events.EventBus {
 	}
 
 	return &KafkaEventBus{
-		writer: w,
-		config: cfg,
+		writer:       w,
+		config:       cfg,
+		dlqPublisher: dlqPublisher,
 	}
 }
 
@@ -76,32 +79,81 @@ func (k *KafkaEventBus) Subscribe(ctx context.Context, topic string, handler eve
 	// Setup Consumer (Reader) với GroupID
 	r := kafka.NewReader(kafka.ReaderConfig{
 		Brokers:  k.config.BROKERS,
-		GroupID:  k.config.CONSUMER_GROUP, // BẮT BUỘC để scale nhiều instances
+		GroupID:  k.config.CONSUMER_GROUP,
 		Topic:    topic,
 		MinBytes: 10e3, // 10KB
 		MaxBytes: 10e6, // 10MB
+		// FetchMessage sẽ tự động bỏ qua auto-commit, trao quyền kiểm soát 100% cho bạn
 	})
 
 	// Run consumer trong goroutine riêng biệt (Non-blocking)
 	go func() {
-		defer r.Close()
-		for {
-			m, err := r.ReadMessage(ctx)
-			if err != nil {
-				// Handle shutdown hoặc error connection
-				return
+		// Đảm bảo luôn đóng kết nối khi goroutine kết thúc để không rò rỉ bộ nhớ
+		defer func() {
+			if err := r.Close(); err != nil {
+				log.Printf("Error closing kafka reader for topic %s: %v", topic, err)
 			}
+		}()
 
-			var event events.IntegrationEvent
-			if err := json.Unmarshal(m.Value, &event); err != nil {
-				log.Printf("Error unmarshal event: %v", err)
+		for {
+			// 1. SỬ DỤNG FetchMessage THAY VÌ ReadMessage
+			// FetchMessage chỉ "mượn" data về, Kafka vẫn đánh dấu là CHƯA XỬ LÝ (Uncommitted)
+			m, err := r.FetchMessage(ctx)
+			if err != nil {
+				// Xử lý khi ứng dụng bị tắt (Ctrl+C) hoặc Context bị huỷ
+				if errors.Is(err, context.Canceled) || errors.Is(err, context.DeadlineExceeded) {
+					log.Printf("Graceful shutdown: Consumer for topic %s stopped", topic)
+					return
+				}
+
+				log.Printf("Error fetching message from topic %s: %v", topic, err)
+				// Tránh việc lỗi mạng làm vòng lặp for quay cuồng gây tốn 100% CPU
+				time.Sleep(1 * time.Second)
 				continue
 			}
 
-			// Thực thi logic của module
-			if err := handler(ctx, event); err != nil {
-				log.Printf("Error processing event: %v", err)
-				// Best practice: Có thể implement Retry hoặc Dead Letter Queue (DLQ) ở đây
+			// 2. XỬ LÝ LỖI POISON PILL (LỖI GIẢI MÃ JSON)
+			var event events.IntegrationEvent
+			if err := json.Unmarshal(m.Value, &event); err != nil {
+				// Log lại data thô để Dev debug
+				log.Printf("CRITICAL: Poison pill detected (Unmarshal error) on topic %s: %v. Raw Data: %s", topic, err, string(m.Value))
+
+				// BẮT BUỘC PHẢI COMMIT ĐỂ ĐI TIẾP!
+				// Nếu không commit, Kafka sẽ kẹt mãi ở message này không bao giờ thoát.
+				if commitErr := r.CommitMessages(ctx, m); commitErr != nil {
+					log.Printf("Failed to commit poison pill: %v", commitErr)
+				}
+				continue // Bỏ qua và đọc message tiếp theo
+			}
+			err = HandleWithRetryAndDLQ(
+				ctx,
+				event,
+				handler,
+				k.dlqPublisher,
+				DefaultRetryConfig(), // Lấy cấu hình 3 lần retry, max 15s
+			)
+			// 3. THỰC THI LOGIC NGHIỆP VỤ
+			if err != nil {
+				// Lỗi này xảy ra khi: DB sập, API lỗi, hoặc đẩy vào DLQ thất bại.
+				log.Printf("Error processing event %s: %v", event.ID, err)
+
+				// KHÔNG COMMIT!
+				// Message vẫn ở trạng thái Uncommitted. Ở vòng lặp tiếp theo,
+				// Kafka sẽ tiếp tục trả về chính message này để thử lại (Retry).
+
+				// BẮT BUỘC PHẢI SLEEP: Chặn đứng vòng lặp "Tight-loop".
+				// Nếu DB đang sập mà bạn retry liên tục 1000 lần/giây, server của bạn sẽ cạn kiệt RAM/CPU ngay lập tức.
+				time.Sleep(2 * time.Second)
+				continue
+			}
+
+			// 4. CHỦ ĐỘNG COMMIT (XÁC NHẬN HOÀN THÀNH)
+			// Lệnh này chỉ chạy khi Handler trả về nil (Thành công, HOẶC đã đẩy vào DLQ an toàn)
+			if commitErr := r.CommitMessages(ctx, m); commitErr != nil {
+				log.Printf("Failed to commit message %s: %v", event.ID, commitErr)
+				// Lỗi commit thường do rớt mạng lúc báo cáo về Kafka.
+				// Do data ĐÃ ĐƯỢC LƯU VÀO DB rồi, nên lần tới Kafka gửi lại,
+				// logic của bạn (Handler) CẦN phải có tính chất Idempotent (check trùng ID để bỏ qua).
 			}
 		}
 	}()
@@ -151,7 +203,13 @@ func (k *KafkaEventBus) SubscribeBatch(ctx context.Context, topic string, batchS
 			}
 
 			// 1. Gọi handler xử lý logic (DB insert, bulk update...)
-			err := handler(ctx, batchEvents)
+			err := HandleBatchWithRetryAndDLQ(
+				ctx,
+				batchEvents, // Truyền biến mảng batchEvents
+				handler,     // Truyền handler của Batch
+				k.dlqPublisher,
+				DefaultRetryConfig(), // Lấy cấu hình 3 lần retry, max 15s
+			)
 			if err != nil {
 				log.Printf("Error processing batch: %v", err)
 				// Lưu ý: Cần có chiến lược Retry hoặc DLQ ở đây.

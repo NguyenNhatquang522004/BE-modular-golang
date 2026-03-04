@@ -13,10 +13,13 @@ const (
 type TopicName string
 
 const (
+	//DQL chung
+	TopicDLQ TopicName = "dlq.events"
 	//socials
 	TopicFriendship                 TopicName = "social.friendship.events"
 	TopicBlock                      TopicName = "social.block.events"
 	TopicFollow                     TopicName = "social.follow.events"
+	TopicProfile                    TopicName = "social.profile.events"
 	TopicDeleteSocialRelationTarget TopicName = "social.delete_relation_target.events" // chưa làm gì cả
 
 	//content
@@ -68,7 +71,6 @@ const (
 	TopicStatsPage        TopicName = "business.stats_page.events"
 	TopicFollowerPage     TopicName = "business.follower_page.events"
 	TopicDailyMetricsPage TopicName = "business.daily_metrics_page.events"
-	
 )
 
 type TopicConfig struct {

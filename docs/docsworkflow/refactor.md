@@ -1,0 +1,14 @@
+-tạo user bắn qua module  social tạo profile 
+- làm middleware để check xem user 
+-module social refactor lại những luồng  followers friendships user_blocks
+-refactor lại tất cả consumer xử lý theo batch và handle lỗi tốt hơn
+- xử dùng saga pattern để xử lý các luồng liên quan đến
+- xử lý hình ảnh 
+- refactor lại cách cache data để tối ưu hiệu suất và giảm tải cho database
+- refactor usecase không trả về status code mà trả ra lỗi nếu có lỗi và trả về data nếu thành công
+-khi tạo post gọi  qua module identity lấy user setting 
+-refactor lại tất cả delete đều chuyển thành soft delete
+-check lại toàn bộ chức năng và gọi module notification để gửi thông báo cho user khi có sự kiện liên quan đến họ
+- post liên quan đến module  media ,  community group ,  business ,ads 
+-module media refactor lại cách lưu trữ và xử lý hình ảnh để tối ưu hiệu suất và giảm tải cho database
+-module media lấy data từ user setting của module identity để xử lý hình ảnh theo đúng cài đặt của user theo mặc định nếu user không gửi lên 
