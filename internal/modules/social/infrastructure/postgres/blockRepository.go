@@ -25,7 +25,7 @@ func NewBlockRepository(db *gorm.DB, redisRepo IRepositoryShare.IRedis) *BlockRe
 	}
 }
 
-func (r *BlockRepository) CreateBlockUser(blockerUserID uuid.UUID, blockedUserID uuid.UUID, statusBlock enum.Type_Block) error {
+func (r *BlockRepository) CreateBlockUser(ctx context.Context, blockerUserID uuid.UUID, blockedUserID uuid.UUID, statusBlock enum.Type_Block) error {
 	// Implementation here
 
 	return r.db.Create(&entity.UserBlock{
@@ -34,13 +34,13 @@ func (r *BlockRepository) CreateBlockUser(blockerUserID uuid.UUID, blockedUserID
 		Type_Block:     statusBlock,
 	}).Error
 }
-func (r *BlockRepository) DeleteBlockUser(blockerUserID uuid.UUID, blockedUserID uuid.UUID) error {
+func (r *BlockRepository) DeleteBlockUser(ctx context.Context, blockerUserID uuid.UUID, blockedUserID uuid.UUID) error {
 	// Implementation here
 	return r.db.Where(&entity.UserBlock{Blocker_UserID: blockerUserID, Blocked_UserID: blockedUserID}).Delete(&entity.UserBlock{}).Error
 }
-func (r *BlockRepository) UpdateBlockUser(blockerUserID uuid.UUID, blockedUserID uuid.UUID, statusBlock enum.Type_Block) error {
+func (r *BlockRepository) UpdateBlockUser(ctx context.Context, blockerUserID uuid.UUID, blockedUserID uuid.UUID, statusBlock enum.Type_Block) error {
 	// Implementation here
-	data, err := r.GetBlockedUsers(blockerUserID, blockedUserID)
+	data, err := r.GetBlockedUsers(ctx, blockerUserID, blockedUserID)
 	if err != nil {
 		return err
 	}
@@ -52,9 +52,9 @@ func (r *BlockRepository) UpdateBlockUser(blockerUserID uuid.UUID, blockedUserID
 	return nil
 }
 
-func (r *BlockRepository) IsBlocked(blockerUserID uuid.UUID, blockedUserID uuid.UUID) (bool, error) {
+func (r *BlockRepository) IsBlocked(ctx context.Context, blockerUserID uuid.UUID, blockedUserID uuid.UUID) (bool, error) {
 	// Implementation here
-	data, err := r.GetBlockIndiscriminate(blockerUserID, blockedUserID)
+	data, err := r.GetBlockIndiscriminate(ctx, blockerUserID, blockedUserID)
 	if err != nil {
 		return false, err
 	}
@@ -64,7 +64,7 @@ func (r *BlockRepository) IsBlocked(blockerUserID uuid.UUID, blockedUserID uuid.
 	return false, nil
 }
 
-func (r *BlockRepository) GetBlockedUsers(blockerUserID uuid.UUID, blockedUserID uuid.UUID) (*entity.UserBlock, error) {
+func (r *BlockRepository) GetBlockedUsers(ctx context.Context, blockerUserID uuid.UUID, blockedUserID uuid.UUID) (*entity.UserBlock, error) {
 	// Implementation here
 	var data = &entity.UserBlock{}
 	err := r.db.Where(&entity.UserBlock{Blocker_UserID: blockerUserID, Blocked_UserID: blockedUserID}).Or(&entity.UserBlock{Blocker_UserID: blockedUserID, Blocked_UserID: blockerUserID}).First(data).Error
@@ -74,7 +74,7 @@ func (r *BlockRepository) GetBlockedUsers(blockerUserID uuid.UUID, blockedUserID
 	return data, nil
 }
 
-func (r *BlockRepository) GetPaginationTypeBlock(BlockerUserID uuid.UUID, cursor string, limit int, blocktype enum.Type_Block) (*dto.PaginationRes, error) {
+func (r *BlockRepository) GetPaginationTypeBlock(ctx context.Context, BlockerUserID uuid.UUID, cursor string, limit int, blocktype enum.Type_Block) (*dto.PaginationRes, error) {
 	// Implementation here
 	data := []*entity.UserBlock{}
 	querylimit := limit + 1
@@ -84,7 +84,7 @@ func (r *BlockRepository) GetPaginationTypeBlock(BlockerUserID uuid.UUID, cursor
 		"block_cache_nextcursor_user_" + BlockerUserID.String(),
 		"block_cache_limit_user_" + BlockerUserID.String(),
 	}
-	cacheData, cacheCursor, hasNextCache, cacheLimit, err := r.redisRepo.CustomizeGetCache(context.Background(), itemset)
+	cacheData, cacheCursor, hasNextCache, cacheLimit, err := r.redisRepo.CustomizeGetCache(ctx, itemset)
 	if err != nil {
 		return nil, err
 	}
@@ -146,7 +146,7 @@ func (r *BlockRepository) GetPaginationTypeBlock(BlockerUserID uuid.UUID, cursor
 	}, nil
 }
 
-func (r *BlockRepository) GetBlockIndiscriminate(requesterID uuid.UUID, recipientID uuid.UUID) (*entity.UserBlock, error) {
+func (r *BlockRepository) GetBlockIndiscriminate(ctx context.Context, requesterID uuid.UUID, recipientID uuid.UUID) (*entity.UserBlock, error) {
 	data := &entity.UserBlock{}
 	err := r.db.Where(&entity.UserBlock{Blocker_UserID: requesterID, Blocked_UserID: recipientID}).Or(&entity.UserBlock{Blocker_UserID: recipientID, Blocked_UserID: requesterID}).First(data).Error
 	if err != nil {

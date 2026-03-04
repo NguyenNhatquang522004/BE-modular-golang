@@ -2,7 +2,6 @@ package usecase
 
 import (
 	"context"
-	"time"
 
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/server/http/response"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/dto"
@@ -24,10 +23,9 @@ func NewFollowUseCase(followRepo IRepositoryPostgres.IFollowersRepository, follo
 		followProducer: followProducer,
 	}
 }
-func (f *FollowUseCase) CreateFollowUserUseCase(req *req.FollowCreateRequest) (*response.Response, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
-	err := f.followRepo.CreateFollowUser(uuid.MustParse(req.FollowerUserID), uuid.MustParse(req.FollowedUserID))
+func (f *FollowUseCase) CreateFollowUserUseCase(ctx context.Context, req *req.FollowCreateRequest) (*response.Response, error) {
+
+	err := f.followRepo.CreateFollowUser(ctx, uuid.MustParse(req.FollowerUserID), uuid.MustParse(req.FollowedUserID))
 	if err != nil {
 		return response.NewResponse(response.WithData(""), response.WithMessage(err.Error()), response.WithStatus("")), err
 	}
@@ -42,13 +40,11 @@ func (f *FollowUseCase) CreateFollowUserUseCase(req *req.FollowCreateRequest) (*
 	}
 	return response.NewResponse(response.WithData(""), response.WithMessage("Success"), response.WithStatus("200")), nil
 }
-func (f *FollowUseCase) DeleteSoftFollowUserUseCase(follower *req.FollowDeleteSoftRequest) (*response.Response, error) {
-	err := f.followRepo.DeleteSoftFollowUser(uuid.MustParse(follower.FollowerUserID))
+func (f *FollowUseCase) DeleteSoftFollowUserUseCase(ctx context.Context, follower *req.FollowDeleteSoftRequest) (*response.Response, error) {
+	err := f.followRepo.DeleteSoftFollowUser(ctx, uuid.MustParse(follower.FollowerUserID))
 	if err != nil {
 		return response.NewResponse(response.WithData(""), response.WithMessage(err.Error()), response.WithStatus("")), err
 	}
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
 	payload := &socialEvent.FollowDeletePayload{
 		Follower_UserID: follower.FollowerUserID,
 	}
@@ -58,13 +54,11 @@ func (f *FollowUseCase) DeleteSoftFollowUserUseCase(follower *req.FollowDeleteSo
 	}
 	return response.NewResponse(response.WithData(""), response.WithMessage("Success"), response.WithStatus("200")), nil
 }
-func (f *FollowUseCase) DeleteHardFollowUserUseCase(follower *req.FollowDeleteHardRequest) (*response.Response, error) {
-	err := f.followRepo.DeleteHardFollowUser(uuid.MustParse(follower.FollowerUserID))
+func (f *FollowUseCase) DeleteHardFollowUserUseCase(ctx context.Context, follower *req.FollowDeleteHardRequest) (*response.Response, error) {
+	err := f.followRepo.DeleteHardFollowUser(ctx, uuid.MustParse(follower.FollowerUserID))
 	if err != nil {
 		return response.NewResponse(response.WithData(""), response.WithMessage(err.Error()), response.WithStatus("")), err
 	}
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
 	payload := &socialEvent.FollowDeletePayload{
 		Follower_UserID: follower.FollowerUserID,
 	}
@@ -74,13 +68,11 @@ func (f *FollowUseCase) DeleteHardFollowUserUseCase(follower *req.FollowDeleteHa
 	}
 	return response.NewResponse(response.WithData(""), response.WithMessage("Success"), response.WithStatus("200")), nil
 }
-func (f *FollowUseCase) UpdatateMuteFollowUserUseCase(follower *req.FollowUpdateMuteRequest) (*response.Response, error) {
-	err := f.followRepo.UpdatateMuteFollowUser(uuid.MustParse(follower.FollowerUserID), uuid.MustParse(follower.FollowedUserID), follower.IsMuted)
+func (f *FollowUseCase) UpdatateMuteFollowUserUseCase(ctx context.Context, follower *req.FollowUpdateMuteRequest) (*response.Response, error) {
+	err := f.followRepo.UpdatateMuteFollowUser(ctx, uuid.MustParse(follower.FollowerUserID), uuid.MustParse(follower.FollowedUserID), follower.IsMuted)
 	if err != nil {
 		return response.NewResponse(response.WithData(""), response.WithMessage(err.Error()), response.WithStatus("")), err
 	}
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
 	payload := &socialEvent.FollowUpdatePayload{
 		Follower_UserID: follower.FollowerUserID,
 		Followed_UserID: follower.FollowedUserID,
@@ -92,8 +84,8 @@ func (f *FollowUseCase) UpdatateMuteFollowUserUseCase(follower *req.FollowUpdate
 	}
 	return response.NewResponse(response.WithData(""), response.WithMessage("Success"), response.WithStatus("200")), nil
 }
-func (f *FollowUseCase) PaginationFollowersUseCase(req *req.FollowPaginationRequest) (*response.Response, error) {
-	res, err := f.followRepo.PaginationFollowers(uuid.MustParse(req.UserID), req.Cursor, req.Limit)
+func (f *FollowUseCase) PaginationFollowersUseCase(ctx context.Context, req *req.FollowPaginationRequest) (*response.Response, error) {
+	res, err := f.followRepo.PaginationFollowers(ctx, uuid.MustParse(req.UserID), req.Cursor, req.Limit)
 	if err != nil {
 		return response.NewResponse(response.WithData(""), response.WithMessage(err.Error()), response.WithStatus("")), err
 	}
@@ -104,8 +96,8 @@ func (f *FollowUseCase) PaginationFollowersUseCase(req *req.FollowPaginationRequ
 		Limit:      req.Limit,
 	}), response.WithMessage("Success"), response.WithStatus("200")), nil
 }
-func (f *FollowUseCase) PaginationFollowedsUseCase(req *req.FollowPaginationRequest) (*response.Response, error) {
-	res, err := f.followRepo.PaginationFolloweds(uuid.MustParse(req.UserID), req.Cursor, req.Limit)
+func (f *FollowUseCase) PaginationFollowedsUseCase(ctx context.Context, req *req.FollowPaginationRequest) (*response.Response, error) {
+	res, err := f.followRepo.PaginationFolloweds(ctx, uuid.MustParse(req.UserID), req.Cursor, req.Limit)
 	if err != nil {
 		return response.NewResponse(response.WithData(""), response.WithMessage(err.Error()), response.WithStatus("")), err
 	}

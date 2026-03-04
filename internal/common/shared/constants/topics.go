@@ -10,6 +10,14 @@ const (
 	Failed  EventType = "FAILED"
 )
 
+type ProcessStatus string
+
+const (
+	StatusSuccess ProcessStatus = "SUCCESS"
+	StatusFailed  ProcessStatus = "FAILED"
+	StatusSkipped ProcessStatus = "SKIPPED" // Dùng khi message bị trùng (Idempotent) hoặc không hợp lệ để xử lý
+)
+
 type TopicName string
 
 const (
@@ -78,6 +86,9 @@ type TopicConfig struct {
 	Partitions int
 }
 
+func (t ProcessStatus) String() string {
+	return string(t)
+}
 func (t TopicName) String() string {
 	return string(t)
 }

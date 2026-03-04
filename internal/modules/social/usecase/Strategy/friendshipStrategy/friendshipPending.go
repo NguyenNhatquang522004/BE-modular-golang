@@ -1,6 +1,8 @@
 package friendshipstrategy
 
 import (
+	"context"
+
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/server/http/response"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/social/delivery/dto/req"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/social/domain/IRepsitory/IProducer/IGraph"
@@ -29,7 +31,7 @@ func NewFriendshipPending(friendshipRepo IRepositoryPostgres.IFriendshipsReposit
 }
 
 // Execute(req *req.FriendShipUseCaseRequest) (*response.Response, error)
-func (h *FriendshipPending) Execute(req *req.FriendShipUseCaseRequest) (*response.Response, error) {
+func (h *FriendshipPending) Execute(ctx context.Context, req *req.FriendShipUseCaseRequest) (*response.Response, error) {
 	// Xử lý logic khi trạng thái là Pending
 	// Ví dụ: Cập nhật cơ sở dữ liệu, gửi thông báo, v.v.
 	return response.NewResponse(response.WithData(""), response.WithMessage("Friendship pending executed successfully"), response.WithStatus("200")), nil

@@ -9,6 +9,7 @@ import (
 	"math/rand"
 	"time"
 
+	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/configs"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/events"
 )
 
@@ -45,10 +46,19 @@ type RetryConfig struct {
 }
 
 func DefaultRetryConfig() RetryConfig {
+	cfg, err := configs.LoadConfig() // Load cấu hình từ file/env
+	if err != nil {
+		// Nếu có lỗi khi load config, trả về cấu hình mặc định cứng (Fail-safe)
+		return RetryConfig{
+			MaxRetries:     3,
+			InitialBackoff: 2 * time.Second,
+			MaxBackoff:     15 * time.Second,
+		}
+	}
 	return RetryConfig{
-		MaxRetries:     3,
-		InitialBackoff: 1 * time.Second,  // Lần 1 chờ 1s
-		MaxBackoff:     15 * time.Second, // Chờ tối đa 15s để không block Kafka quá lâu
+		MaxRetries:     cfg.DLQ.MAX_RETRIES,
+		InitialBackoff: time.Duration(cfg.DLQ.RETRY_BACKOFF_MS) * time.Millisecond,
+		MaxBackoff:     time.Duration(cfg.DLQ.RETRY_BACKOFF_MS) * time.Second, // Chờ tối đa 15s để không block Kafka quá lâu
 	}
 }
 

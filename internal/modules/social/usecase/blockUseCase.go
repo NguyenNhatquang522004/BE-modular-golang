@@ -34,12 +34,12 @@ func NewBlockUseCase(blockRepo IRepositoryPostgres.IBlockRepository,
 	}
 }
 
-func (uc *BlockUseCase) UseCaseBlockUser(req *req.BlockCreateRequest) (*response.Response, error) {
+func (uc *BlockUseCase) UseCaseBlockUser(ctx context.Context, req *req.BlockCreateRequest) (*response.Response, error) {
 	handler, ok := uc.handlerblockStrategy[req.Status]
 	if !ok {
 		return response.NewResponse(response.WithData(""), response.WithMessage("Invalid block type"), response.WithStatus("400")), nil
 	}
-	data, err := handler.Execute(context.Background(), req)
+	data, err := handler.Execute(ctx, req)
 	if err != nil {
 		return response.NewResponse(response.WithData(""), response.WithMessage(err.Error()), response.WithStatus("500")), err
 	}
@@ -47,15 +47,15 @@ func (uc *BlockUseCase) UseCaseBlockUser(req *req.BlockCreateRequest) (*response
 	return data, nil
 }
 
-func (uc *BlockUseCase) IsBlockedUseCase(req *req.BlockIsBlockedRequest) (*response.Response, error) {
-	data, err := uc.blockRepo.IsBlocked(uuid.MustParse(req.BlockerUserID), uuid.MustParse(req.BlockedUserID))
+func (uc *BlockUseCase) IsBlockedUseCase(ctx context.Context, req *req.BlockIsBlockedRequest) (*response.Response, error) {
+	data, err := uc.blockRepo.IsBlocked(ctx, uuid.MustParse(req.BlockerUserID), uuid.MustParse(req.BlockedUserID))
 	if err != nil {
 		return response.NewResponse(response.WithData(""), response.WithMessage(err.Error()), response.WithStatus("500")), err
 	}
 	return response.NewResponse(response.WithData(data), response.WithMessage("Check block status successfully"), response.WithStatus("200")), nil
 }
-func (uc *BlockUseCase) GetPaginationTypeBlockUseCase(req *req.BlockPaginationTypeBlockRequest) (*response.Response, error) {
-	data, err := uc.blockRepo.GetPaginationTypeBlock(uuid.MustParse(req.BlockerUserID), req.Metadata.Cursor, req.Metadata.Limit, req.BlockType)
+func (uc *BlockUseCase) GetPaginationTypeBlockUseCase(ctx context.Context, req *req.BlockPaginationTypeBlockRequest) (*response.Response, error) {
+	data, err := uc.blockRepo.GetPaginationTypeBlock(ctx, uuid.MustParse(req.BlockerUserID), req.Metadata.Cursor, req.Metadata.Limit, req.BlockType)
 	if err != nil {
 		return response.NewResponse(response.WithData(""), response.WithMessage(err.Error()), response.WithStatus("500")), err
 	}

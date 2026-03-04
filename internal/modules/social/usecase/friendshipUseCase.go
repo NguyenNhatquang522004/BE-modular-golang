@@ -2,7 +2,6 @@ package usecase
 
 import (
 	"context"
-	"time"
 
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/server/http/response"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/dto"
@@ -46,17 +45,16 @@ func NewFriendshipUseCase(friendshipRepo IRepositoryPostgres.IFriendshipsReposit
 	}
 }
 
-func (uc *FriendshipUseCase) CreateFriendshipUseCase(req *req.CreateFriendshipRequest) (*response.Response, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
-	checkBlock, err := uc.blockRepo.IsBlocked(uuid.MustParse(req.RequesterID), uuid.MustParse(req.RecipientID))
+func (uc *FriendshipUseCase) CreateFriendshipUseCase(ctx context.Context, req *req.CreateFriendshipRequest) (*response.Response, error) {
+
+	checkBlock, err := uc.blockRepo.IsBlocked(ctx, uuid.MustParse(req.RequesterID), uuid.MustParse(req.RecipientID))
 	if err != nil {
 		return response.NewResponse(response.WithData(""), response.WithMessage(""), response.WithStatus("")), err
 	}
 	if checkBlock {
 		return response.NewResponse(response.WithData(""), response.WithMessage("You are blocked by this user or you have blocked this user"), response.WithStatus("403")), nil
 	}
-	err = uc.friendshipRepo.CreateFriendship(uuid.MustParse(req.RequesterID), uuid.MustParse(req.RecipientID))
+	err = uc.friendshipRepo.CreateFriendship(ctx, uuid.MustParse(req.RequesterID), uuid.MustParse(req.RecipientID))
 	if err != nil {
 		return response.NewResponse(response.WithData(""), response.WithMessage(""), response.WithStatus("")), err
 	}
@@ -71,7 +69,7 @@ func (uc *FriendshipUseCase) CreateFriendshipUseCase(req *req.CreateFriendshipRe
 	}
 	// sau này nếu trong user sẽ có phần user này đang public hay private thì sẽ check ở đây nếu private thì sẽ không tạo follow còn public thì sẽ tạo follow luôn
 	// phải gọi phía module identity để check xem user có đang private hay không nếu private thì sẽ không tạo follow còn public thì sẽ tạo follow luôn bằng GRPC
-	err = uc.followRepo.CreateFollowUser(uuid.MustParse(req.RequesterID), uuid.MustParse(req.RecipientID))
+	err = uc.followRepo.CreateFollowUser(ctx, uuid.MustParse(req.RequesterID), uuid.MustParse(req.RecipientID))
 	if err != nil {
 		return response.NewResponse(response.WithData(""), response.WithMessage(""), response.WithStatus("")), err
 	}
@@ -86,19 +84,19 @@ func (uc *FriendshipUseCase) CreateFriendshipUseCase(req *req.CreateFriendshipRe
 	}
 	return response.NewResponse(response.WithData(""), response.WithMessage("Friendship created successfully"), response.WithStatus("200")), nil
 }
-func (uc *FriendshipUseCase) HandleFriendShipUseCase(req *req.FriendShipUseCaseRequest) (*response.Response, error) {
+func (uc *FriendshipUseCase) HandleFriendShipUseCase(ctx context.Context, req *req.FriendShipUseCaseRequest) (*response.Response, error) {
 	handler, exists := uc.handlerFriendshipStrategy[req.Status]
 	if !exists {
 		return response.NewResponse(response.WithData(""), response.WithMessage("No handler found for the given friendship status"), response.WithStatus("400")), nil
 	}
-	data, err := handler.Execute(req)
+	data, err := handler.Execute(ctx, req)
 	if err != nil {
 		return response.NewResponse(response.WithData(""), response.WithMessage(err.Error()), response.WithStatus("500")), err
 	}
 	return data, nil
 }
-func (uc *FriendshipUseCase) PanigationAcceptedFriendshipUseCase(req *req.PaginationFriendshipRequest) (*response.Response, error) {
-	data, err := uc.friendshipRepo.PanigationStatusFriendship(uuid.MustParse(req.UserID), req.Metadata.Cursor, req.Metadata.Limit, enum.StatusFriendship_Accepted)
+func (uc *FriendshipUseCase) PanigationAcceptedFriendshipUseCase(ctx context.Context, req *req.PaginationFriendshipRequest) (*response.Response, error) {
+	data, err := uc.friendshipRepo.PanigationStatusFriendship(ctx, uuid.MustParse(req.UserID), req.Metadata.Cursor, req.Metadata.Limit, enum.StatusFriendship_Accepted)
 	if err != nil {
 		return response.NewResponse(response.WithData(""), response.WithMessage(""), response.WithStatus("")), err
 	}

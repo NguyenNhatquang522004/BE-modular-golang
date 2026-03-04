@@ -1,37 +1,39 @@
 package usecase
 
 import (
+	"context"
+
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/server/http/response"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/social/delivery/dto/req"
 )
 
 type IFollowUseCase interface {
-	CreateFollowUserUseCase(req *req.FollowCreateRequest) (*response.Response, error)
-	DeleteSoftFollowUserUseCase(follower *req.FollowDeleteSoftRequest) (*response.Response, error)
-	DeleteHardFollowUserUseCase(follower *req.FollowDeleteHardRequest) (*response.Response, error)
-	UpdatateMuteFollowUserUseCase(follower *req.FollowUpdateMuteRequest) (*response.Response, error)
-	PaginationFollowersUseCase(req *req.FollowPaginationRequest) (*response.Response, error)
-	PaginationFollowedsUseCase(req *req.FollowPaginationRequest) (*response.Response, error)
+	CreateFollowUserUseCase(ctx context.Context, req *req.FollowCreateRequest) (*response.Response, error)
+	DeleteSoftFollowUserUseCase(ctx context.Context, follower *req.FollowDeleteSoftRequest) (*response.Response, error)
+	DeleteHardFollowUserUseCase(ctx context.Context, follower *req.FollowDeleteHardRequest) (*response.Response, error)
+	UpdatateMuteFollowUserUseCase(ctx context.Context, follower *req.FollowUpdateMuteRequest) (*response.Response, error)
+	PaginationFollowersUseCase(ctx context.Context, req *req.FollowPaginationRequest) (*response.Response, error)
+	PaginationFollowedsUseCase(ctx context.Context, req *req.FollowPaginationRequest) (*response.Response, error)
 }
 
 type IFriendshipUseCase interface {
-	HandleFriendShipUseCase(req *req.FriendShipUseCaseRequest) (*response.Response, error)
-	CreateFriendshipUseCase(req *req.CreateFriendshipRequest) (*response.Response, error)
-	PanigationAcceptedFriendshipUseCase(req *req.PaginationFriendshipRequest) (*response.Response, error)
-	PanigationPendingFriendshipUseCase(req *req.PaginationFriendshipRequest) (*response.Response, error)
+	HandleFriendShipUseCase(ctx context.Context, req *req.FriendShipUseCaseRequest) (*response.Response, error)
+	CreateFriendshipUseCase(ctx context.Context, req *req.CreateFriendshipRequest) (*response.Response, error)
+	PanigationAcceptedFriendshipUseCase(ctx context.Context, req *req.PaginationFriendshipRequest) (*response.Response, error)
+	PanigationPendingFriendshipUseCase(ctx context.Context, req *req.PaginationFriendshipRequest) (*response.Response, error)
 }
 
 type IBlockUseCase interface {
-	UseCaseBlockUser(req *req.BlockCreateRequest) (*response.Response, error)
-	GetPaginationTypeBlockUseCase(req *req.BlockPaginationTypeBlockRequest) (*response.Response, error)
-	IsBlockedUseCase(req *req.BlockIsBlockedRequest) (*response.Response, error)
+	UseCaseBlockUser(ctx context.Context, req *req.BlockCreateRequest) (*response.Response, error)
+	GetPaginationTypeBlockUseCase(ctx context.Context, req *req.BlockPaginationTypeBlockRequest) (*response.Response, error)
+	IsBlockedUseCase(ctx context.Context, req *req.BlockIsBlockedRequest) (*response.Response, error)
 }
 
 type IProfileUseCase interface {
-	CreateProfileUseCase(req *req.CreateAndUpdateProfileRequest) (*response.Response, error)
-	GetProfileByIDUseCase(req *req.ProfileIDRequest) (*response.Response, error)
-	UpdateProfileUseCase(req *req.CreateAndUpdateProfileRequest) (*response.Response, error)
-	GetProfileByUserIDUseCase(req *req.ProfileIDRequest) (*response.Response, error)
+	CreateProfileUseCase(ctx context.Context, req *req.CreateAndUpdateProfileRequest) (*response.Response, error)
+	GetProfileByIDUseCase(ctx context.Context, req *req.ProfileIDRequest) (*response.Response, error)
+	UpdateProfileUseCase(ctx context.Context, req *req.CreateAndUpdateProfileRequest) (*response.Response, error)
+	GetProfileByUserIDUseCase(ctx context.Context, req *req.ProfileIDRequest) (*response.Response, error)
 }
 
 type IAdminSocialUseCase interface {

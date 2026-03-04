@@ -2,7 +2,6 @@ package blockStrategy
 
 import (
 	"context"
-	"time"
 
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/server/http/response"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/events/socialEvent"
@@ -35,14 +34,12 @@ func NewBlockNone(blockRepo IRepositoryPostgres.IBlockRepository, blockProducer 
 }
 
 func (h *BlockNone) Execute(ctx context.Context, req *req.BlockCreateRequest) (*response.Response, error) {
-	init, errinit := h.blockRepo.GetBlockIndiscriminate(uuid.MustParse(req.BlockerUserID), uuid.MustParse(req.BlockedUserID))
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
+	init, errinit := h.blockRepo.GetBlockIndiscriminate(ctx, uuid.MustParse(req.BlockerUserID), uuid.MustParse(req.BlockedUserID))
 	if errinit != nil {
 		return response.NewResponse(response.WithData(""), response.WithMessage(errinit.Error()), response.WithStatus("")), errinit
 	}
 	init.Type_Block = req.Status
-	err := h.blockRepo.DeleteBlockUser(uuid.MustParse(req.BlockerUserID), uuid.MustParse(req.BlockedUserID))
+	err := h.blockRepo.DeleteBlockUser(ctx, uuid.MustParse(req.BlockerUserID), uuid.MustParse(req.BlockedUserID))
 	if err != nil {
 		return response.NewResponse(response.WithData(""), response.WithMessage(err.Error()), response.WithStatus("")), err
 	}

@@ -1,6 +1,8 @@
 package friendshipstrategy
 
 import (
+	"context"
+
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/server/http/response"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/social/delivery/dto/req"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/social/domain/IRepsitory/IProducer/IGraph"
@@ -30,15 +32,15 @@ func NewFriendshipDeclined(friendshipRepo IRepositoryPostgres.IFriendshipsReposi
 }
 
 // execute(req *req.FriendShipUseCaseRequest) (*response.Response, error)
-func (r *FriendshipDeclined) Execute(req *req.FriendShipUseCaseRequest) (*response.Response, error) {
-	initdata, err := r.friendshipRepo.GetFriendshipTableByTableId(uuid.MustParse(req.FriendshipID))
+func (r *FriendshipDeclined) Execute(ctx context.Context, req *req.FriendShipUseCaseRequest) (*response.Response, error) {
+	initdata, err := r.friendshipRepo.GetFriendshipTableByTableId(ctx, uuid.MustParse(req.FriendshipID))
 	if err != nil {
 		return response.NewResponse(response.WithData(""), response.WithMessage(err.Error()), response.WithStatus("")), err
 	}
 	if initdata == nil {
 		return response.NewResponse(response.WithData(""), response.WithMessage("Friendship not found"), response.WithStatus("")), nil
 	}
-	err = r.friendshipRepo.DeleteSoftFriendship(initdata.ID)
+	err = r.friendshipRepo.DeleteSoftFriendship(ctx, initdata.ID)
 	if err != nil {
 		return response.NewResponse(response.WithData(""), response.WithMessage(err.Error()), response.WithStatus("")), err
 	}

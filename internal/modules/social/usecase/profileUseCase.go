@@ -1,9 +1,12 @@
 package usecase
 
 import (
+	"context"
+
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/server/http/response"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/IRepositoryShare"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/social/delivery/dto/req"
+	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/social/delivery/mapper"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/social/domain/IRepsitory/IRepositoryMongodb"
 	"go.mongodb.org/mongo-driver/mongo"
 )
@@ -21,8 +24,17 @@ func NewProfileUseCase(client *mongo.Database, profileRepo IRepositoryMongodb.IP
 		seaweedfsRepo: seaweedfsRepo,
 	}
 }
-func (r *ProfileUseCase) CreateProfileUseCase(req *req.CreateAndUpdateProfileRequest) (*response.Response, error) {
-	err := r.profileRepo.CreateProfile(req.ProfileReq)
+func (r *ProfileUseCase) CreateProfileUseCase(ctx context.Context, req *req.CreateAndUpdateProfileRequest) (*response.Response, error) {
+	entity, err := mapper.ToEntityProfile(req.ProfileReq)
+	err = r.profileRepo.CreateProfile(ctx, entity)
+	if err != nil {
+		return response.NewResponse(
+			response.WithData(""),
+			response.WithStatus("error"),
+			response.WithMessage("Failed to map profile data"),
+		), err
+	}
+	err = r.profileRepo.CreateProfile(ctx, entity)
 	if err != nil {
 		return response.NewResponse(
 			response.WithData(""),
@@ -36,8 +48,8 @@ func (r *ProfileUseCase) CreateProfileUseCase(req *req.CreateAndUpdateProfileReq
 		response.WithMessage("Profile created successfully"),
 	), nil
 }
-func (r *ProfileUseCase) GetProfileByIDUseCase(req *req.ProfileIDRequest) (*response.Response, error) {
-	data, err := r.profileRepo.GetProfileByID(req.ProfileID)
+func (r *ProfileUseCase) GetProfileByIDUseCase(ctx context.Context, req *req.ProfileIDRequest) (*response.Response, error) {
+	data, err := r.profileRepo.GetProfileByID(ctx, req.ProfileID)
 	if data.Avatar != nil {
 		data.Avatar.URL = r.seaweedfsRepo.GetPublicURL(data.Avatar.URL)
 	}
@@ -61,8 +73,18 @@ func (r *ProfileUseCase) GetProfileByIDUseCase(req *req.ProfileIDRequest) (*resp
 		response.WithMessage("Profile retrieved successfully"),
 	), nil
 }
-func (r *ProfileUseCase) UpdateProfileUseCase(req *req.CreateAndUpdateProfileRequest) (*response.Response, error) {
-	err := r.profileRepo.UpdateProfile(req.ProfileID, req.ProfileReq)
+func (r *ProfileUseCase) UpdateProfileUseCase(ctx context.Context, req *req.CreateAndUpdateProfileRequest) (*response.Response, error) {
+	data, err := r.profileRepo.GetProfileByID(ctx, req.ProfileID)
+	if err != nil {
+		return response.NewResponse(
+			response.WithData(""),
+			response.WithStatus("error"),
+			response.WithMessage("Failed to retrieve profile for update"),
+		), err
+	}
+	// Map dữ liệu cập nhật từ req vào entity hiện tại
+	mapper.ToEntityUpdateProfile(data, req.ProfileReq)
+	err = r.profileRepo.UpdateProfile(ctx, data)
 	if err != nil {
 		return response.NewResponse(
 			response.WithData(""),
@@ -76,8 +98,8 @@ func (r *ProfileUseCase) UpdateProfileUseCase(req *req.CreateAndUpdateProfileReq
 		response.WithMessage("Profile updated successfully"),
 	), nil
 }
-func (r *ProfileUseCase) GetProfileByUserIDUseCase(req *req.ProfileIDRequest) (*response.Response, error) {
-	data, err := r.profileRepo.GetProfileByUserID(req.ProfileID)
+func (r *ProfileUseCase) GetProfileByUserIDUseCase(ctx context.Context, req *req.ProfileIDRequest) (*response.Response, error) {
+	data, err := r.profileRepo.GetProfileByUserID(ctx, req.ProfileID)
 	if data.Avatar != nil {
 		data.Avatar.URL = r.seaweedfsRepo.GetPublicURL(data.Avatar.URL)
 	}

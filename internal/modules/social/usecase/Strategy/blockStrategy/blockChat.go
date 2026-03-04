@@ -39,7 +39,7 @@ func NewBlockChat(blockRepo IRepositoryPostgres.IBlockRepository,
 
 // Execute(ctx context.Context, req *req.BlockCreateRequest) error
 func (h *BlockChat) Execute(ctx context.Context, req *req.BlockCreateRequest) (*response.Response, error) {
-	init, errinit := h.blockRepo.GetBlockIndiscriminate(uuid.MustParse(req.BlockerUserID), uuid.MustParse(req.BlockedUserID))
+	init, errinit := h.blockRepo.GetBlockIndiscriminate(ctx, uuid.MustParse(req.BlockerUserID), uuid.MustParse(req.BlockedUserID))
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 	if errinit != nil {
@@ -47,12 +47,12 @@ func (h *BlockChat) Execute(ctx context.Context, req *req.BlockCreateRequest) (*
 	}
 	if init != nil {
 		init.Type_Block = req.Status
-		err := h.blockRepo.UpdateBlockUser(uuid.MustParse(req.BlockerUserID), uuid.MustParse(req.BlockedUserID), req.Status)
+		err := h.blockRepo.UpdateBlockUser(ctx, uuid.MustParse(req.BlockerUserID), uuid.MustParse(req.BlockedUserID), req.Status)
 		if err != nil {
 			return response.NewResponse(response.WithData(""), response.WithMessage(err.Error()), response.WithStatus("")), err
 		}
 	} else {
-		err := h.blockRepo.CreateBlockUser(uuid.MustParse(req.BlockerUserID), uuid.MustParse(req.BlockedUserID), req.Status)
+		err := h.blockRepo.CreateBlockUser(ctx, uuid.MustParse(req.BlockerUserID), uuid.MustParse(req.BlockedUserID), req.Status)
 		if err != nil {
 			return response.NewResponse(response.WithData(""), response.WithMessage(err.Error()), response.WithStatus("")), err
 		}

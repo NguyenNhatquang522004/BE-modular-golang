@@ -1,26 +1,19 @@
-package responseEvent
+package events
 
 import (
 	"time"
 
-	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/events"
+	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/constants"
 )
 
 // Định nghĩa các trạng thái xử lý chuẩn (Enum)
-type ProcessStatus string
-
-const (
-	StatusSuccess ProcessStatus = "SUCCESS"
-	StatusFailed  ProcessStatus = "FAILED"
-	StatusSkipped ProcessStatus = "SKIPPED" // Dùng khi message bị trùng (Idempotent) hoặc không hợp lệ để xử lý
-)
 
 // ConsumerResult là DTO bọc lại kết quả của MỌI handler.
 // Ký hiệu [T any] cho phép trường Data chứa bất kỳ kiểu dữ liệu nào (struct, int, string, map...).
 type ConsumerResult[T any] struct {
-	OriginalEventID string        `json:"original_event_id"` // ID của event gốc để truy vết (Traceability)
-	Topic           string        `json:"topic"`
-	Status          ProcessStatus `json:"status"`
+	OriginalEventID string                  `json:"original_event_id"` // ID của event gốc để truy vết (Traceability)
+	Topic           string                  `json:"topic"`
+	Status          constants.ProcessStatus `json:"status"`
 
 	// Data chứa kết quả ĐẦU RA sau khi xử lý.
 	// Ví dụ: Tạo user xong thì trả về UserID, tạo đơn hàng xong trả về Order struct.
@@ -36,11 +29,11 @@ type ConsumerResult[T any] struct {
 	RetryCount     int           `json:"retry_count"`
 }
 
-func NewSuccessResult[T any](event events.IntegrationEvent, data T, duration time.Duration) ConsumerResult[T] {
+func NewSuccessResult[T any](event IntegrationEvent, data T, duration time.Duration) ConsumerResult[T] {
 	return ConsumerResult[T]{
 		OriginalEventID: event.ID,
 		Topic:           event.Topic,
-		Status:          StatusSuccess,
+		Status:          constants.StatusSuccess,
 		Data:            data,
 		ProcessedAt:     time.Now(),
 		ProcessingTime:  duration,
@@ -48,7 +41,7 @@ func NewSuccessResult[T any](event events.IntegrationEvent, data T, duration tim
 }
 
 // Helper tạo kết quả THẤT BẠI (Dùng để ném vào DLQ)
-func NewFailedResult[T any](event events.IntegrationEvent, err error, retries int, duration time.Duration) ConsumerResult[T] {
+func NewFailedResult[T any](event IntegrationEvent, err error, retries int, duration time.Duration) ConsumerResult[T] {
 	errMessage := "unknown error"
 	if err != nil {
 		errMessage = err.Error()
@@ -57,7 +50,7 @@ func NewFailedResult[T any](event events.IntegrationEvent, err error, retries in
 	return ConsumerResult[T]{
 		OriginalEventID: event.ID,
 		Topic:           event.Topic,
-		Status:          StatusFailed,
+		Status:          constants.StatusFailed,
 		Error:           errMessage,
 		ProcessedAt:     time.Now(),
 		ProcessingTime:  duration,
@@ -66,11 +59,11 @@ func NewFailedResult[T any](event events.IntegrationEvent, err error, retries in
 }
 
 // Helper tạo kết quả BỎ QUA (Ví dụ: Đã xử lý rồi, check DB thấy trùng)
-func NewSkippedResult[T any](event events.IntegrationEvent, reason string) ConsumerResult[T] {
+func NewSkippedResult[T any](event IntegrationEvent, reason string) ConsumerResult[T] {
 	return ConsumerResult[T]{
 		OriginalEventID: event.ID,
 		Topic:           event.Topic,
-		Status:          StatusSkipped,
+		Status:          constants.StatusSkipped,
 		Error:           reason, // Ghi lý do bỏ qua vào đây
 		ProcessedAt:     time.Now(),
 	}

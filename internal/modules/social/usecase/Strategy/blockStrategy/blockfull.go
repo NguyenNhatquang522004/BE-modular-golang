@@ -2,7 +2,6 @@ package blockStrategy
 
 import (
 	"context"
-	"time"
 
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/server/http/response"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/events/socialEvent"
@@ -41,27 +40,25 @@ func NewBlockFull(blockRepo IRepositoryPostgres.IBlockRepository,
 // Type() enum.Type_Block // Để nhận diện strategy này dùng cho Enum nào
 
 func (h *BlockFull) Execute(ctx context.Context, req *req.BlockCreateRequest) (*response.Response, error) {
-	init, errinit := h.blockRepo.GetBlockIndiscriminate(uuid.MustParse(req.BlockerUserID), uuid.MustParse(req.BlockedUserID))
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
+	init, errinit := h.blockRepo.GetBlockIndiscriminate(ctx, uuid.MustParse(req.BlockerUserID), uuid.MustParse(req.BlockedUserID))
 	if errinit != nil {
 		return response.NewResponse(response.WithData(""), response.WithMessage(errinit.Error()), response.WithStatus("")), errinit
 	}
 	if init != nil {
 		init.Type_Block = req.Status
-		err := h.blockRepo.UpdateBlockUser(uuid.MustParse(req.BlockerUserID), uuid.MustParse(req.BlockedUserID), req.Status)
+		err := h.blockRepo.UpdateBlockUser(ctx, uuid.MustParse(req.BlockerUserID), uuid.MustParse(req.BlockedUserID), req.Status)
 		if err != nil {
 			return response.NewResponse(response.WithData(""), response.WithMessage(err.Error()), response.WithStatus("")), err
 		}
 	} else {
-		err := h.blockRepo.CreateBlockUser(uuid.MustParse(req.BlockerUserID), uuid.MustParse(req.BlockedUserID), req.Status)
+		err := h.blockRepo.CreateBlockUser(ctx, uuid.MustParse(req.BlockerUserID), uuid.MustParse(req.BlockedUserID), req.Status)
 		if err != nil {
 			return response.NewResponse(response.WithData(""), response.WithMessage(err.Error()), response.WithStatus("")), err
 		}
 	}
-	follow, err := h.followRepo.GetFollowerIndiscriminate(uuid.MustParse(req.BlockerUserID), uuid.MustParse(req.BlockedUserID))
+	follow, err := h.followRepo.GetFollowerIndiscriminate(ctx, uuid.MustParse(req.BlockerUserID), uuid.MustParse(req.BlockedUserID))
 	if err == nil && follow != nil {
-		err = h.followRepo.DeleteBatchSoftFollowUser(uuid.MustParse(req.BlockerUserID), uuid.MustParse(req.BlockedUserID))
+		err = h.followRepo.DeleteBatchSoftFollowUser(ctx, uuid.MustParse(req.BlockerUserID), uuid.MustParse(req.BlockedUserID))
 		if err != nil {
 			return response.NewResponse(response.WithData(""), response.WithMessage(err.Error()), response.WithStatus("")), err
 		}
@@ -76,10 +73,10 @@ func (h *BlockFull) Execute(ctx context.Context, req *req.BlockCreateRequest) (*
 			return response.NewResponse(response.WithData(""), response.WithMessage(err.Error()), response.WithStatus("")), err
 		}
 	}
-	friendship, err := h.friendshipRepo.GetFriendshipIndiscriminate(uuid.MustParse(req.BlockerUserID), uuid.MustParse(req.BlockedUserID))
+	friendship, err := h.friendshipRepo.GetFriendshipIndiscriminate(ctx, uuid.MustParse(req.BlockerUserID), uuid.MustParse(req.BlockedUserID))
 	if err == nil && friendship != nil {
 		friendship.Status = enum.StatusFriendship_Blocked
-		err = h.friendshipRepo.UpdateFriendshipStatus(friendship)
+		err = h.friendshipRepo.UpdateFriendshipStatus(ctx, friendship)
 		if err != nil {
 			return response.NewResponse(response.WithData(""), response.WithMessage(err.Error()), response.WithStatus("")), err
 		}

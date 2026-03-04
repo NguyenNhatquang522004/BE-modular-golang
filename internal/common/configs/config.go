@@ -7,6 +7,7 @@ import (
 )
 
 type Config struct {
+	DLQ            DLQConfig
 	WorkerPool     WorkerPoolConfig
 	CircuitBreaker CircuitBreakerConfig
 	GRPCServer     GRPCServerConfig
@@ -25,6 +26,14 @@ type Config struct {
 	Server         ServerConfig
 	VNPay          VNPayConfig
 }
+
+// DLQ (Dead Letter Queue) Configuration
+type DLQConfig struct {
+	TOPIC            string
+	MAX_RETRIES      int
+	RETRY_BACKOFF_MS int
+}
+
 type VNPayConfig struct {
 	TMN_CODE    string
 	HASH_SECRET string
@@ -141,6 +150,12 @@ func LoadConfig() (*Config, error) {
 	// Vì file .env của bạn đặt tên biến lộn xộn (Host, POSTGRES_USER...)
 	// nên ta phải lấy từng cái bỏ vào đúng chỗ trong Struct.
 	cfg := &Config{
+		// --- DLQ Config ---
+		DLQ: DLQConfig{
+			TOPIC:            viper.GetString("KAFKA_TOPIC_DLQ"),
+			MAX_RETRIES:      viper.GetInt("KAFKA_MAX_RETRIES"),
+			RETRY_BACKOFF_MS: viper.GetInt("KAFKA_RETRY_BACKOFF_MS"),
+		},
 		// --- Worker Pool ---
 		WorkerPool: WorkerPoolConfig{
 			WORKER_POOL_SIZE_MAX:          int(viper.GetInt64("WORKER_POOL_SIZE_MAX")),

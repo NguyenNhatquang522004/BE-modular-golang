@@ -1,14 +1,16 @@
 package IRepositoryMongodb
 
 import (
-	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/social/delivery/dto/req"
+	"context"
+
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/social/domain/entity"
 )
 
 type IProfileRepositoryMongodb interface {
 	// Define methods for profile repository
-	CreateProfile(profileData *req.ProfileReq) error
-	GetProfileByID(profileID string) (*entity.Profiles, error)
-	UpdateProfile(profileID string, updateData *req.ProfileReq) error
-	GetProfileByUserID(userID string) (*entity.Profiles, error)
+	CreateProfile(ctx context.Context, profileData *entity.Profiles) error
+	GetProfileByID(ctx context.Context, profileID string) (*entity.Profiles, error)
+	UpdateProfile(ctx context.Context, profileData *entity.Profiles) error
+	GetProfileByUserID(ctx context.Context, userID string) (*entity.Profiles, error)
+	DeleteProfile(ctx context.Context, profileID string) error
 }

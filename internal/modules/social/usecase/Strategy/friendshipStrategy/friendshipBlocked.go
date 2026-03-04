@@ -2,7 +2,6 @@ package friendshipstrategy
 
 import (
 	"context"
-	"time"
 
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/server/http/response"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/events/socialEvent"
@@ -34,10 +33,8 @@ func NewFriendshipBlocked(friendshipRepo IRepositoryPostgres.IFriendshipsReposit
 }
 
 // execute(req *req.FriendShipUseCaseRequest) (*response.Response, error)
-func (r *FriendshipBlocked) Execute(req *req.FriendShipUseCaseRequest) (*response.Response, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
-	initdata, err := r.friendshipRepo.GetFriendshipTableByTableId(uuid.MustParse(req.FriendshipID))
+func (r *FriendshipBlocked) Execute(ctx context.Context, req *req.FriendShipUseCaseRequest) (*response.Response, error) {
+	initdata, err := r.friendshipRepo.GetFriendshipTableByTableId(ctx, uuid.MustParse(req.FriendshipID))
 	if err != nil {
 		return response.NewResponse(response.WithData(""), response.WithMessage(err.Error()), response.WithStatus("")), err
 	}
@@ -45,11 +42,11 @@ func (r *FriendshipBlocked) Execute(req *req.FriendShipUseCaseRequest) (*respons
 		return response.NewResponse(response.WithData(""), response.WithMessage("Friendship not found"), response.WithStatus("")), nil
 	}
 	initdata.Status = enum.StatusFriendship_Blocked
-	err = r.friendshipRepo.UpdateFriendshipStatus(initdata)
+	err = r.friendshipRepo.UpdateFriendshipStatus(ctx, initdata)
 	if err != nil {
 		return response.NewResponse(response.WithData(""), response.WithMessage(err.Error()), response.WithStatus("")), err
 	}
-	err = r.followRepo.DeleteBatchSoftFollowUser(initdata.Requester_ID, initdata.Recipient_ID)
+	err = r.followRepo.DeleteBatchSoftFollowUser(ctx, initdata.Requester_ID, initdata.Recipient_ID)
 	if err != nil {
 		return response.NewResponse(response.WithData(""), response.WithMessage(err.Error()), response.WithStatus("")), err
 	}
@@ -73,7 +70,7 @@ func (r *FriendshipBlocked) Execute(req *req.FriendShipUseCaseRequest) (*respons
 		finalid = initdata.Requester_ID.String()
 	}
 
-	err = r.blockRepo.CreateBlockUser(uuid.MustParse(req.UserID), uuid.MustParse(finalid), enum.Type_Block_Profile)
+	err = r.blockRepo.CreateBlockUser(ctx, uuid.MustParse(req.UserID), uuid.MustParse(finalid), enum.Type_Block_Profile)
 	if err != nil {
 		return response.NewResponse(response.WithData(""), response.WithMessage(err.Error()), response.WithStatus("")), err
 	}

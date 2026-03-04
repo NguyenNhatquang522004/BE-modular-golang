@@ -24,7 +24,7 @@ func NewFollowersRepository(db *gorm.DB, redisRepo IRepositoryShare.IRedis) *Fol
 	}
 }
 
-func (r *FollowersRepository) CreateFollowUser(followerUserID uuid.UUID, followedUserID uuid.UUID) error {
+func (r *FollowersRepository) CreateFollowUser(ctx context.Context, followerUserID uuid.UUID, followedUserID uuid.UUID) error {
 	return r.db.Create(&entity.Followers{
 		Follower_UserID: followerUserID,
 		Followed_UserID: followedUserID,
@@ -32,8 +32,8 @@ func (r *FollowersRepository) CreateFollowUser(followerUserID uuid.UUID, followe
 	}).Error
 }
 
-func (r *FollowersRepository) DeleteSoftFollowUser(follower uuid.UUID) error {
-	data, err := r.GetFollowerByID(follower)
+func (r *FollowersRepository) DeleteSoftFollowUser(ctx context.Context, follower uuid.UUID) error {
+	data, err := r.GetFollowerByID(ctx, follower)
 	if err != nil {
 		return err
 	}
@@ -43,7 +43,7 @@ func (r *FollowersRepository) DeleteSoftFollowUser(follower uuid.UUID) error {
 	}
 	return nil
 }
-func (r *FollowersRepository) DeleteBatchSoftFollowUser(followerID uuid.UUID, followedUserID uuid.UUID) error {
+func (r *FollowersRepository) DeleteBatchSoftFollowUser(ctx context.Context, followerID uuid.UUID, followedUserID uuid.UUID) error {
 	// Implementation here
 	err := r.db.Where(&entity.Followers{Follower_UserID: followerID, Followed_UserID: followedUserID}).
 		Or(&entity.Followers{Follower_UserID: followedUserID, Followed_UserID: followerID}).
@@ -55,7 +55,7 @@ func (r *FollowersRepository) DeleteBatchSoftFollowUser(followerID uuid.UUID, fo
 	}
 	return nil
 }
-func (r *FollowersRepository) DeleteBatchHardFollowUser(followerID uuid.UUID, followedUserID uuid.UUID) error {
+func (r *FollowersRepository) DeleteBatchHardFollowUser(ctx context.Context, followerID uuid.UUID, followedUserID uuid.UUID) error {
 	// Implementation here
 	err := r.db.Where(&entity.Followers{Follower_UserID: followerID, Followed_UserID: followedUserID}).
 		Or(&entity.Followers{Follower_UserID: followedUserID, Followed_UserID: followerID}).
@@ -67,8 +67,8 @@ func (r *FollowersRepository) DeleteBatchHardFollowUser(followerID uuid.UUID, fo
 	}
 	return nil
 }
-func (r *FollowersRepository) DeleteHardFollowUser(follower uuid.UUID) error {
-	data, err := r.GetFollowerByID(follower)
+func (r *FollowersRepository) DeleteHardFollowUser(ctx context.Context, follower uuid.UUID) error {
+	data, err := r.GetFollowerByID(ctx, follower)
 	if err != nil {
 		return err
 	}
@@ -79,8 +79,8 @@ func (r *FollowersRepository) DeleteHardFollowUser(follower uuid.UUID) error {
 	return nil
 }
 
-func (r *FollowersRepository) UpdatateMuteFollowUser(followerUserID uuid.UUID, followedUserID uuid.UUID, isMuted bool) error {
-	data, err := r.GetFollowerBybidirectional(followerUserID, followedUserID)
+func (r *FollowersRepository) UpdatateMuteFollowUser(ctx context.Context, followerUserID uuid.UUID, followedUserID uuid.UUID, isMuted bool) error {
+	data, err := r.GetFollowerBybidirectional(ctx, followerUserID, followedUserID)
 	if err != nil {
 		return err
 	}
@@ -89,7 +89,7 @@ func (r *FollowersRepository) UpdatateMuteFollowUser(followerUserID uuid.UUID, f
 	return nil
 }
 
-func (r *FollowersRepository) PaginationFollowers(FollowerUserID uuid.UUID, cursor string, limit int) (*dto.PaginationRes, error) {
+func (r *FollowersRepository) PaginationFollowers(ctx context.Context, FollowerUserID uuid.UUID, cursor string, limit int) (*dto.PaginationRes, error) {
 	// Implementation here
 	var followers = []*entity.Followers{}
 	queryLimit := limit + 1
@@ -99,7 +99,7 @@ func (r *FollowersRepository) PaginationFollowers(FollowerUserID uuid.UUID, curs
 		"follower_cache_hasnext_user_" + FollowerUserID.String(),
 		"follower_cache_limit_user_" + FollowerUserID.String(),
 	}
-	data, cursor, hasNextcache, limit, err := r.redisRepo.CustomizeGetCache(context.Background(), items)
+	data, cursor, hasNextcache, limit, err := r.redisRepo.CustomizeGetCache(ctx, items)
 	if err != nil {
 		return nil, err
 	}
@@ -171,7 +171,7 @@ func (r *FollowersRepository) PaginationFollowers(FollowerUserID uuid.UUID, curs
 		Limit:      limit,
 	}, nil
 }
-func (r *FollowersRepository) PaginationFolloweds(FollowedUserID uuid.UUID, cursor string, limit int) (*dto.PaginationRes, error) {
+func (r *FollowersRepository) PaginationFolloweds(ctx context.Context, FollowedUserID uuid.UUID, cursor string, limit int) (*dto.PaginationRes, error) {
 	// Implementation here
 	queryLimit := limit + 1
 	var followeds = []*entity.Followers{}
@@ -181,7 +181,7 @@ func (r *FollowersRepository) PaginationFolloweds(FollowedUserID uuid.UUID, curs
 		"followed_cache_hasnext_user_" + FollowedUserID.String(),
 		"followed_cache_limit_user_" + FollowedUserID.String(),
 	}
-	data, cursor, hasNextcache, limit, err := r.redisRepo.CustomizeGetCache(context.Background(), items)
+	data, cursor, hasNextcache, limit, err := r.redisRepo.CustomizeGetCache(ctx, items)
 	if err != nil {
 		return nil, err
 	}
@@ -253,7 +253,7 @@ func (r *FollowersRepository) PaginationFolloweds(FollowedUserID uuid.UUID, curs
 		Limit:      limit,
 	}, nil
 }
-func (r *FollowersRepository) GetFollowerByID(follower uuid.UUID) (*entity.Followers, error) {
+func (r *FollowersRepository) GetFollowerByID(ctx context.Context, follower uuid.UUID) (*entity.Followers, error) {
 	// Implementation her
 	data := &entity.Followers{}
 	err := r.db.Where(&entity.Followers{ID: follower}).First(data).Error
@@ -263,7 +263,7 @@ func (r *FollowersRepository) GetFollowerByID(follower uuid.UUID) (*entity.Follo
 	return data, nil
 }
 
-func (r *FollowersRepository) GetFollowerBybidirectional(followerUserID uuid.UUID, followedUserID uuid.UUID) (*entity.Followers, error) {
+func (r *FollowersRepository) GetFollowerBybidirectional(ctx context.Context, followerUserID uuid.UUID, followedUserID uuid.UUID) (*entity.Followers, error) {
 	// Implementation here
 	data := &entity.Followers{}
 	err := r.db.Where(&entity.Followers{Follower_UserID: followerUserID, Followed_UserID: followedUserID}).First(data).Error
@@ -272,7 +272,7 @@ func (r *FollowersRepository) GetFollowerBybidirectional(followerUserID uuid.UUI
 	}
 	return data, nil
 }
-func (r *FollowersRepository) GetFollowerIndiscriminate(followerUserID uuid.UUID, followedUserID uuid.UUID) (*[]entity.Followers, error) {
+func (r *FollowersRepository) GetFollowerIndiscriminate(ctx context.Context, followerUserID uuid.UUID, followedUserID uuid.UUID) (*[]entity.Followers, error) {
 	data := &[]entity.Followers{}
 	err := r.db.Where(&entity.Followers{Follower_UserID: followerUserID, Followed_UserID: followedUserID}).Or(&entity.Followers{Follower_UserID: followedUserID, Followed_UserID: followerUserID}).Find(data).Error
 	if err != nil {

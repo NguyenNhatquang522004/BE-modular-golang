@@ -2,10 +2,7 @@ package mongodb
 
 import (
 	"context"
-	"time"
 
-	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/social/delivery/dto/req"
-	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/social/delivery/mapper"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/social/domain/entity"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -21,13 +18,11 @@ func NewProfileRepository(client *mongo.Database) *ProfileRepository {
 	}
 }
 
-func (r *ProfileRepository) CreateProfile(profileData req.ProfileReq) error {
+func (r *ProfileRepository) CreateProfile(ctx context.Context, profileData *entity.Profiles) error {
 	// Implement logic to create a new profile in MongoDB
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
+
 	collection := r.client.Collection(entity.Profiles{}.CollectionNameProfiles())
-	convertdata, err := mapper.ToEntityProfile(&profileData)
-	_, err = collection.InsertOne(ctx, convertdata)
+	_, err := collection.InsertOne(ctx, profileData)
 	if err != nil {
 		return err
 	}
@@ -35,10 +30,9 @@ func (r *ProfileRepository) CreateProfile(profileData req.ProfileReq) error {
 	return nil
 }
 
-func (r *ProfileRepository) GetProfileByID(profileID string) (*entity.Profiles, error) {
+func (r *ProfileRepository) GetProfileByID(ctx context.Context, profileID string) (*entity.Profiles, error) {
 	// Implement logic to retrieve a profile by ID from MongoDB
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
+
 	collection := r.client.Collection(entity.Profiles{}.CollectionNameProfiles())
 	filter := bson.M{"_id": profileID}
 	var profile entity.Profiles
@@ -49,10 +43,8 @@ func (r *ProfileRepository) GetProfileByID(profileID string) (*entity.Profiles, 
 	return &profile, nil
 }
 
-func (r *ProfileRepository) GetProfileByUserID(userID string) (*entity.Profiles, error) {
+func (r *ProfileRepository) GetProfileByUserID(ctx context.Context, userID string) (*entity.Profiles, error) {
 	// Implement logic to retrieve a profile by UserID from MongoDB
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
 	collection := r.client.Collection(entity.Profiles{}.CollectionNameProfiles())
 	filter := bson.M{"user_id": userID}
 	var profile entity.Profiles
@@ -63,17 +55,19 @@ func (r *ProfileRepository) GetProfileByUserID(userID string) (*entity.Profiles,
 	return &profile, nil
 }
 
-func (r *ProfileRepository) UpdateProfile(profileID string, updateData req.ProfileReq) error {
-	dataprofile, err := r.GetProfileByID(profileID)
+func (r *ProfileRepository) UpdateProfile(ctx context.Context, profileData *entity.Profiles) error {
+	collection := r.client.Collection(entity.Profiles{}.CollectionNameProfiles())
+	filter := bson.M{"_id": profileData.ID}
+	err := collection.FindOneAndReplace(ctx, filter, profileData).Err()
 	if err != nil {
 		return err
 	}
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
+	return nil
+}
+func (r *ProfileRepository) DeleteProfile(ctx context.Context, profileID string) error {
 	collection := r.client.Collection(entity.Profiles{}.CollectionNameProfiles())
-	updatedEntity, err := mapper.ToEntityUpdateProfile(dataprofile, &updateData)
 	filter := bson.M{"_id": profileID}
-	_, err = collection.ReplaceOne(ctx, filter, updatedEntity)
+	_, err := collection.DeleteOne(ctx, filter)
 	if err != nil {
 		return err
 	}
