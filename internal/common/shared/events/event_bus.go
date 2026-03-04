@@ -19,6 +19,7 @@ type IntegrationEvent struct {
 
 // EventHandler là function để xử lý khi nhận được event
 type EventHandler func(ctx context.Context, event IntegrationEvent) error
+type BatchEventHandler func(ctx context.Context, events []IntegrationEvent) error
 
 // EventBus interface (Dependency Inversion)
 type EventBus interface {
@@ -26,5 +27,6 @@ type EventBus interface {
 	Publish(ctx context.Context, topic string, key string, eventType string, payload EventPayload) error
 
 	Subscribe(ctx context.Context, topic string, handler EventHandler) error
+	SubscribeBatch(ctx context.Context, topic string, batchSize int, batchTimeout time.Duration, handler BatchEventHandler) error
 	Close() error
 }

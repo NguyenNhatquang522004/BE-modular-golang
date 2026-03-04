@@ -9,7 +9,7 @@ import (
 )
 
 type IAdCampaignsRepository interface {
-	CreateAdCampaigns(ctx context.Context, campaigns []*entity.AdCampaign) error
+	CreateAdCampaigns(ctx context.Context, campaigns *entity.AdCampaign) error
 	CreateBulkAdCampaigns(ctx context.Context, campaigns []*entity.AdCampaign) ([]*entity.AdCampaign, []*postgresErrors.AdCampaignsBulkError, error)
 	GetAdCampaignByIDDetail(ctx context.Context, campaignID string) (*entity.AdCampaign, error)
 	GetAdCampaign(ctx context.Context, cursor string, limit int) (*dto.PaginationRes, error)

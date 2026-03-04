@@ -53,19 +53,19 @@ type ICreateAdCampainUsecase interface {
 	Execute(ctx context.Context, req *req.CreateAdCampainRequest) (*res.FailedAdCampainResponse, error)
 }
 type IUpdateAdCampainUsecase interface {
-	Execute(ctx context.Context) error
+	Execute(ctx context.Context, req *req.UpdateAdCampainRequest) (*res.FailedAdCampainResponse, error)
 }
 type IDeleteAdCampainUsecase interface {
-	Execute(ctx context.Context) error
+	Execute(ctx context.Context, req *req.DeleteAdCampainRequest) (*res.FailedAdCampainResponse, error)
 }
 type ICreateadsUsecase interface {
-	Execute(ctx context.Context) error
+	Execute(ctx context.Context, req *req.CreateAdsRequest) (*res.FailedAdResponse, error)
 }
 type IUpdateadsUsecase interface {
-	Execute(ctx context.Context) error
+	Execute(ctx context.Context, req *req.UpdateAdsRequest) (*res.FailedAdResponse, error)
 }
 type IDeleteadsUsecase interface {
-	Execute(ctx context.Context) error
+	Execute(ctx context.Context, req *req.DeleteAdsRequest) (*res.FailedAdResponse, error)
 }
 type IRankingAdCampainUsecase interface {
 	Execute(ctx context.Context) error

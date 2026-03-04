@@ -25,8 +25,8 @@ func NewAdCampaignsRepository(db *gorm.DB, redisRepo IRepositoryShare.IRedis) *A
 		redisRepo: redisRepo,
 	}
 }
-func (r *AdCampaignsRepository) CreateAdCampaigns(ctx context.Context, campaigns []*entity.AdCampaign) error {
-	return r.db.WithContext(ctx).Create(campaigns).Error
+func (r *AdCampaignsRepository) CreateAdCampaigns(ctx context.Context, campaign *entity.AdCampaign) error {
+	return r.db.WithContext(ctx).Create(campaign).Error
 }
 func (r *AdCampaignsRepository) CreateBulkAdCampaigns(ctx context.Context, campaigns []*entity.AdCampaign) ([]*entity.AdCampaign, []*postgresErrors.AdCampaignsBulkError, error) {
 	if len(campaigns) == 0 {

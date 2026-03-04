@@ -29,3 +29,9 @@ type FailedAdCampainResponse struct {
 	AccountID    string `json:"account_id"`
 	ErrorMessage string `json:"error_message"`
 }
+type FailedAdResponse struct {
+	AdID         string `json:"ad_id"`
+	UserActionID string `json:"user_action_id"` // ID của hành động người dùng, dùng để tracking
+	CampaignID   string `json:"campaign_id"`
+	ErrorMessage string `json:"error_message"`
+}

@@ -58,5 +58,26 @@ type UpdateBalanceRequest struct {
 }
 type CreateAdCampainRequest struct {
 	UserActionID string `json:"user_action_id" validate:"required"` // ID của hành động người dùng, dùng để tracking
-	*AdCampainReq
+	*AdCampaignReq
+}
+
+type UpdateAdCampainRequest struct {
+	UserActionID string `json:"user_action_id" validate:"required"` // ID của hành động người dùng, dùng để tracking
+	*AdCampaignReq
+}
+type DeleteAdCampainRequest struct {
+	UserActionID string `json:"user_action_id" validate:"required"` // ID của hành động người dùng, dùng để tracking
+	CampaignID   string `json:"campaign_id" validate:"required"`
+}
+type CreateAdsRequest struct {
+	UserActionID string `json:"user_action_id" validate:"required"` // ID của hành động người dùng, dùng để tracking
+	*AdReq
+}
+type UpdateAdsRequest struct {
+	UserActionID string `json:"user_action_id" validate:"required"` // ID của hành động người dùng, dùng để tracking
+	*AdReq
+}
+type DeleteAdsRequest struct {
+	UserActionID string `json:"user_action_id" validate:"required"` // ID của hành động người dùng, dùng để tracking
+	AdID         string `json:"ad_id" validate:"required"`
 }
