@@ -11,7 +11,6 @@ import (
 )
 
 type UpdatePageUsecase struct {
-
 	pageRepo IRepositoryMongodb.IPagesRepository
 	pageRole IRepositoryMongodb.IPageRolesRepository
 }
@@ -22,7 +21,7 @@ func NewUpdatePageUsecase(pageRepo IRepositoryMongodb.IPagesRepository, pageRole
 		pageRole: pageRole,
 	}
 }
-func (u *UpdatePageUsecase) Execute(ctx context.Context, req *req.UpdateAdAccountRequest) (*res.FailedPageResponse, error) {
+func (u *UpdatePageUsecase) Execute(ctx context.Context, req *req.UpdatePageRequest) (*res.FailedPageResponse, error) {
 	datapage, err := u.pageRepo.GetPageByID(ctx, req.ID)
 	if err != nil {
 		return &res.FailedPageResponse{

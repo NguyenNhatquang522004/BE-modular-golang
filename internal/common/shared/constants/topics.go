@@ -65,7 +65,10 @@ const (
 	TopicDeleteCommunityRelationTarget TopicName = "business.delete_relation_target.events" // chưa làm gì cả, dùng chung với communication
 
 	// business
-	TopicStatsPage TopicName = "business.stats_page.events"
+	TopicStatsPage        TopicName = "business.stats_page.events"
+	TopicFollowerPage     TopicName = "business.follower_page.events"
+	TopicDailyMetricsPage TopicName = "business.daily_metrics_page.events"
+	
 )
 
 type TopicConfig struct {
@@ -90,4 +93,5 @@ var SocialTopics = []TopicConfig{
 	{Name: TopicCreateUserNotificationSettings, Partitions: 3},
 	{Name: TopicSendNotificationType, Partitions: 3},
 	{Name: TopicDeleteRelationTarget, Partitions: 3},
+	{Name: TopicDailyMetricsPage, Partitions: 3},
 }

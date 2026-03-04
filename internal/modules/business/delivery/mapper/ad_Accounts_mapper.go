@@ -31,7 +31,7 @@ func ToEntityAdAccount(r req.AdAccountReq) entity.AdAccount {
 
 // UpdateToEntity ánh xạ dữ liệu từ DTO Request sang Entity đang tồn tại (Dùng cho Update).
 // Giả định enum.AccountStatus có underlying type là string.
-func UpdateToEntity(r req.AdAccountReq, e *entity.AdAccount) {
+func UpdateToEntityAdAccount(r req.AdAccountReq, e *entity.AdAccount) {
 	if r.AccountID != uuid.Nil {
 		e.ID = r.AccountID
 	}
@@ -48,9 +48,6 @@ func UpdateToEntity(r req.AdAccountReq, e *entity.AdAccount) {
 	// Lưu ý Best Practice: Nếu client muốn update Balance/CreditLimit về đúng số 0,
 	// điều kiện != 0 sẽ bỏ qua. Để giải quyết triệt để case này trong tương lai,
 	// bạn nên cân nhắc đổi 2 trường này trong file req.AdAccountReq thành con trỏ (*float64).
-	if r.Balance != 0 {
-		e.Balance = r.Balance
-	}
 	if r.CreditLimit != 0 {
 		e.CreditLimit = r.CreditLimit
 	}
@@ -73,7 +70,7 @@ func UpdateToEntity(r req.AdAccountReq, e *entity.AdAccount) {
 // ==========================================
 
 // ToResFromReq chuyển đổi trực tiếp từ Req sang Res.
-func ToResFromReq(r req.AdAccountReq) res.AdAccountRes {
+func ToResFromReqAdAccount(r req.AdAccountReq) res.AdAccountRes {
 	return res.AdAccountRes{
 		AccountID:   r.AccountID,
 		OwnerUserID: r.OwnerUserID,
@@ -89,7 +86,7 @@ func ToResFromReq(r req.AdAccountReq) res.AdAccountRes {
 }
 
 // ToResFromEntity chuyển đổi từ Entity sang Res để trả dữ liệu chuẩn từ DB về cho Client.
-func ToResFromEntity(e entity.AdAccount) res.AdAccountRes {
+func ToResFromEntityAdAccount(e entity.AdAccount) res.AdAccountRes {
 	return res.AdAccountRes{
 		AccountID:   e.ID,
 		OwnerUserID: e.OwnerUserID,

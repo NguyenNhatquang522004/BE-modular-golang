@@ -14,6 +14,7 @@ type IPageFollowersRepository interface {
 	CreateBulkFollowers(ctx context.Context, followers []*entity.PageFollower) (int64, []*mongodbErrors.BulkError, error)
 	GetFollowersByPageID(ctx context.Context, pageID string, cursor string, limit int) (*dto.PaginationRes, error)
 	GetFollowerByUserID(ctx context.Context, userID string, cursor string, limit int) (*dto.PaginationRes, error)
+	GetFollowerByPageIDAndUserID(ctx context.Context, pageID string, userID string) (*entity.PageFollower, error)
 	UpdateFollower(ctx context.Context, follower *entity.PageFollower) error
 	UpdateBulkFollowers(ctx context.Context, followers []*entity.PageFollower) (int64, []*mongodbErrors.BulkError, error)
 	DeleteFollower(ctx context.Context, pageID string, userID string) error

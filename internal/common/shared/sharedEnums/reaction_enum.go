@@ -16,6 +16,7 @@ const (
 	ReactionTargetUnknown                          // 'unknown'
 	ReactionTargetLive                             // 'live'
 	ReactionTargetFollowPage                       // 'follow_page'
+	ReactionTargetUnFollowPage 
 )
 
 // =============================================================================

@@ -354,3 +354,20 @@ func (r *PageFollowersRepository) DeleteFollowerByPageID(ctx context.Context, pa
 	}
 	return nil
 }
+func (r *PageFollowersRepository) GetFollowerByPageIDAndUserID(ctx context.Context, pageID string, userID string) (*entity.PageFollower, error) {
+	collection := r.client.Collection(entity.PageFollower{}.CollectionName())
+	parsepageID, err := primitive.ObjectIDFromHex(pageID)
+	if err != nil {
+		return nil, fmt.Errorf("invalid page ID: %w", err)
+	}
+	if parsepageID.IsZero() {
+		return nil, fmt.Errorf("invalid page ID: %w", parsepageID)
+	}
+	query := bson.M{"page_id": parsepageID, "user_id": userID}
+	var follower *entity.PageFollower
+	err = collection.FindOne(ctx, query).Decode(&follower)
+	if err != nil {
+		return nil, fmt.Errorf("database error: %w", err)
+	}
+	return follower, nil
+}

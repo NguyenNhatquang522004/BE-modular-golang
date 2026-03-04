@@ -69,6 +69,40 @@ func (c *ConsumerStats) ConsumerStatsPage(ctx context.Context) error {
 			// Xử lý event ở đây
 			return nil
 		case constants.Updated.String():
+			datapage, err := c.pageRepo.GetPageByID(ctx, data.PageID)
+			if err != nil {
+				return err
+			}
+			if datapage == nil {
+				return errors.New("Page not found for StatsPage event")
+			}
+			// Cập nhật thống kê cho trang ở đây, ví dụ:
+			datapage.Stats.FollowersCount = datapage.Stats.FollowersCount + data.FollowersCount
+			datapage.Stats.LikesCount = datapage.Stats.LikesCount + data.LikesCount
+			datapage.Stats.RatingScore = datapage.Stats.RatingScore + data.RatingScore
+			datapage.Stats.ReviewCount = datapage.Stats.ReviewCount + data.ReviewCount
+			err = c.pageRepo.UpdatePage(ctx, datapage)
+			if err != nil {
+				return err
+			}
+			convertuserIDcql, err := gocql.ParseUUID(data.UserID)
+			if err != nil {
+				return err
+			}
+			payload := &interactionEvent.EntityReactionPayload{
+				TargetID:     data.PageID,
+				UserID:       convertuserIDcql,
+				TargetType:   sharedEnums.ReactionTargetUnFollowPage,
+				ReactionCode: sharedEnums.ReactionUnknown,
+				CreatedAt:    data.CreatedAt,
+				Topic:        constants.Created,
+			}
+			err = c.events.Publish(ctx, constants.TopicEntityReaction.String(), data.UserID, constants.Created.String(), payload)
+			if err != nil {
+				return err
+			}
+			// Xử lý event ở đây
+			return nil
 
 		case constants.Deleted.String():
 		default:

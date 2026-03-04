@@ -14,22 +14,25 @@ import (
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/sharedEnums"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/business/delivery/dto/req"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/business/delivery/dto/res"
+	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/business/domain/IRepository/IRepositoryCassandra"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/business/domain/IRepository/IRepositoryMongodb"
 )
 
 type DeletePageUsecase struct {
-	pageRepo   IRepositoryMongodb.IPagesRepository
-	pageRole   IRepositoryMongodb.IPageRolesRepository
-	pageFollow IRepositoryMongodb.IPageFollowersRepository
-	events     events.EventBus
+	pageRepo       IRepositoryMongodb.IPagesRepository
+	pageRole       IRepositoryMongodb.IPageRolesRepository
+	pageFollow     IRepositoryMongodb.IPageFollowersRepository
+	pageMetricRepo IRepositoryCassandra.IPageDailyMetricsRepository
+	events         events.EventBus
 }
 
-func NewDeletePageUsecase(pageRepo IRepositoryMongodb.IPagesRepository, pageRole IRepositoryMongodb.IPageRolesRepository, pageFollow IRepositoryMongodb.IPageFollowersRepository, events events.EventBus) *DeletePageUsecase {
+func NewDeletePageUsecase(pageRepo IRepositoryMongodb.IPagesRepository, pageRole IRepositoryMongodb.IPageRolesRepository, pageFollow IRepositoryMongodb.IPageFollowersRepository, pageMetricRepo IRepositoryCassandra.IPageDailyMetricsRepository, events events.EventBus) *DeletePageUsecase {
 	return &DeletePageUsecase{
-		pageRepo:   pageRepo,
-		pageRole:   pageRole,
-		pageFollow: pageFollow,
-		events:     events,
+		pageRepo:       pageRepo,
+		pageRole:       pageRole,
+		pageFollow:     pageFollow,
+		pageMetricRepo: pageMetricRepo,
+		events:         events,
 	}
 }
 
@@ -95,6 +98,14 @@ func (u *DeletePageUsecase) Execute(ctx context.Context, req *req.DeletePageRequ
 			PageID:       req.PageID,
 			UserActionID: req.UserActionID,
 			ErrorMessage: "Failed to delete page followers: " + err.Error(),
+		}, err
+	}
+	err = u.pageMetricRepo.DeletePageDailyMetricsByPageID(ctx, req.PageID)
+	if err != nil {
+		return &res.FailedPageResponse{
+			PageID:       req.PageID,
+			UserActionID: req.UserActionID,
+			ErrorMessage: "Failed to delete page daily metrics: " + err.Error(),
 		}, err
 	}
 	payload := &communicationEvent.DeletePrivateConversationGroupPayload{
@@ -166,6 +177,6 @@ func (u *DeletePageUsecase) Execute(ctx context.Context, req *req.DeletePageRequ
 	return &res.FailedPageResponse{
 		PageID:       req.PageID,
 		UserActionID: req.UserActionID,
-		ErrorMessage: "Delete page ",
+		ErrorMessage: "Delete page successfully",
 	}, nil
 }

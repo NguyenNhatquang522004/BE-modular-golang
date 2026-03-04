@@ -16,6 +16,7 @@ type IPageDailyMetricsRepository interface {
 	GetPageDailyMetricsByPageID(ctx context.Context, pageID string, metricDate time.Time, cursor string, limit int) (*dto.PaginationRes, error)
 	UpdatePageDailyMetric(ctx context.Context, metric *entity.PageDailyMetric) error
 	UpdateBulkPageDailyMetrics(ctx context.Context, metrics []*entity.PageDailyMetric) (int64, []*cassandraErrors.PageDailyMetricsBulkError, error)
+	DeletePageDailyMetricsByPageID(ctx context.Context, pageID string) error
 	DeletePageDailyMetric(ctx context.Context, pageID string, metricDate time.Time) error
 	DeleteBulkPageDailyMetrics(ctx context.Context, pageID string, metricDates []time.Time) (int64, []*cassandraErrors.PageDailyMetricsBulkError, error)
 }

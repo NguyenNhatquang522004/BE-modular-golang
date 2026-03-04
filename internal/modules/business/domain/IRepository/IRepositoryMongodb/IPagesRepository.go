@@ -13,6 +13,7 @@ type IPagesRepository interface {
 	CreatePage(ctx context.Context, page *entity.Page) error
 	CreateBulkPages(ctx context.Context, pages []*entity.Page) (int64, []*mongodbErrors.BulkError, error)
 	GetPageByID(ctx context.Context, pageID string) (*entity.Page, error)
+	GetAllPagesByUserID(ctx context.Context, userID string) ([]*entity.Page, error)
 	GetPageCursorByID(ctx context.Context, pageID string, cursor string, limit int) (*dto.PaginationRes, error)
 	UpdatePage(ctx context.Context, page *entity.Page) error
 	UpdateBulkPages(ctx context.Context, pages []*entity.Page) (int64, []*mongodbErrors.BulkError, error)

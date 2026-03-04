@@ -216,3 +216,13 @@ func (r *AdAccountsRepository) DeleteBulkAdAccounts(ctx context.Context, account
 	}
 	return int64(len(accountIDs) - len(bulkErrors)), bulkErrors, nil
 }
+
+func (r *AdAccountsRepository) GetAdAccountsByOwnerUserIDDetail(ctx context.Context, ownerUserID string) (*entity.AdAccount, error) {
+	parseOwnerUserID := uuid.MustParse(ownerUserID)
+	var account entity.AdAccount
+	err := r.db.WithContext(ctx).Where(&entity.AdAccount{OwnerUserID: parseOwnerUserID}).First(&account).Error
+	if err != nil {
+		return nil, err
+	}
+	return &account, nil
+}

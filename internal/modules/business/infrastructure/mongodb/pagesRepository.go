@@ -261,3 +261,17 @@ func (r *PagesRepository) DeleteBulkPages(ctx context.Context, pageIDs []string)
 	}
 	return result.DeletedCount, nil, nil
 }
+
+func (r *PagesRepository) GetAllPagesByUserID(ctx context.Context, userID string) ([]*entity.Page, error) {
+	collection := r.client.Collection(entity.Page{}.CollectionName())
+	var pages []*entity.Page
+	cursor, err := collection.Find(ctx, bson.M{"creator_user_id": userID})
+	if err != nil {
+		return nil, fmt.Errorf("database error: %w", err)
+	}
+	defer cursor.Close(ctx)
+	if err = cursor.All(ctx, &pages); err != nil {
+		return nil, fmt.Errorf("error decoding results: %w", err)
+	}
+	return pages, nil
+}

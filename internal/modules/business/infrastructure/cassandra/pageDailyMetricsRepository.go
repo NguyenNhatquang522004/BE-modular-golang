@@ -411,3 +411,16 @@ func (r *PageDailyMetricsRepository) DeleteBulkPageDailyMetrics(ctx context.Cont
 	}
 	return successCount, bulkErrors, nil
 }
+func (r *PageDailyMetricsRepository) DeletePageDailyMetricsByPageID(ctx context.Context, pageID string) error {
+	tableName := entity.PageDailyMetric{}.TableName()
+	query := fmt.Sprintf(`DELETE FROM %s WHERE page_id = ?`, tableName)
+	finalid, err := gocql.ParseUUID(pageID)
+	if err != nil {
+		return fmt.Errorf("invalid pageID: %w", err)
+	}
+	err = r.session.Query(query, finalid).WithContext(ctx).Exec()
+	if err != nil {
+		return fmt.Errorf("failed to delete page daily metrics for page %s: %w", pageID, err)
+	}
+	return nil
+}
