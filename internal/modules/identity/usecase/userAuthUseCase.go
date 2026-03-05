@@ -10,11 +10,12 @@ import (
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/server/http/response"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/IRepositoryShare"
 	irepositoryshare "github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/IRepositoryShare"
+	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/constants"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/events"
-	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/events/identityEvent/notificationEvent"
+	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/events/notificationEvent"
+	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/sharedEnums"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/identity/delivery/dto/res"
 
-	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/identity/domain/IRepository/IProducer/IProducerNotification"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/identity/domain/IRepository/IRepositoryKeyCloak"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/identity/domain/IRepository/IRepositoryPostgres"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/identity/domain/entity"
@@ -24,23 +25,21 @@ import (
 )
 
 type UserAuthUseCase struct {
-	eventBus             events.EventBus
-	userRepo             IRepositoryPostgres.IUserRepository
-	keycloakClient       IRepositoryKeyCloak.IKeycloakRepository
-	redisRepo            irepositoryshare.IRedis
-	notificationProducer IProducerNotification.IProducerNotification
-	emailRepo            IRepositoryShare.IEmail
+	eventBus       events.EventBus
+	userRepo       IRepositoryPostgres.IUserRepository
+	keycloakClient IRepositoryKeyCloak.IKeycloakRepository
+	redisRepo      irepositoryshare.IRedis
+	emailRepo      IRepositoryShare.IEmail
 }
 
 func NewUserAuthUseCase(userRepo IRepositoryPostgres.IUserRepository,
 	keycloakClient IRepositoryKeyCloak.IKeycloakRepository,
-	redisRepo irepositoryshare.IRedis, notificationProducer IProducerNotification.IProducerNotification, emailRepo IRepositoryShare.IEmail) *UserAuthUseCase {
+	redisRepo irepositoryshare.IRedis, emailRepo IRepositoryShare.IEmail) *UserAuthUseCase {
 	return &UserAuthUseCase{
-		userRepo:             userRepo,
-		keycloakClient:       keycloakClient,
-		redisRepo:            redisRepo,
-		notificationProducer: notificationProducer,
-		emailRepo:            emailRepo,
+		userRepo:       userRepo,
+		keycloakClient: keycloakClient,
+		redisRepo:      redisRepo,
+		emailRepo:      emailRepo,
 	}
 }
 
@@ -158,11 +157,13 @@ func (u *UserAuthUseCase) RegisterOne(ctx context.Context, email string) (*respo
 		if err != nil {
 			return err
 		}
+		return nil
 		//tạo CreateUserNotificationSettingsPayload với UserID và gửi qua event bus
-		payload := &notificationEvent.CreateUserNotificationSettingsPayload{
-			UserID: user.ID.String(),
-		}
-		return u.notificationProducer.CreateUserNotificationSettings(ctx, payload)
+		// payload := &notificationEvent.NotificationChangePayload{
+		// 	UserID: user.ID.String(),
+		// 	Name : checkEmail.Email,
+		// }
+		// return u.eventBus.Publish(ctx, constants.TopicUserNotificationSettings.String(), user.ID.String(), constants.Created.String(), payload)
 	}
 	err := callNotification()
 	if err != nil {
@@ -279,6 +280,27 @@ func (u *UserAuthUseCase) RegisterThree(ctx context.Context, email string, usern
 	}
 	checkEmail.KeycloakID = keycloakID
 	updateUserErr := u.userRepo.UpdateUser(ctx, checkEmail)
+	callNotification := func() error {
+		//tạo CreateUserNotificationSettingsPayload với UserID và gửi qua event bus
+		EmailFrequencypayload := sharedEnums.EmailDaily
+		payload := &notificationEvent.NotificationChangePayload{
+			UserID:      checkEmail.ID.String(),
+			Name:        checkEmail.Username,
+			DateOfBirth: "",
+			Avatar:      "",
+			Settings: &notificationEvent.GeneralSettingsPayload{
+				PushEnabled:      true,
+				EmailFrequency:   &EmailFrequencypayload,
+				PushInteractions: true,
+				PushFriends:      true,
+				PushGroups:       true,
+				PushEvents:       true,
+				PushBirthdays:    true,
+			},
+		}
+		return u.eventBus.Publish(ctx, constants.TopicUserNotificationSettings.String(), checkEmail.ID.String(), constants.Created.String(), payload)
+	}
+	err = callNotification()
 	if updateUserErr != nil {
 		return response.NewResponse(
 			response.WithMessage("Error updating user"),

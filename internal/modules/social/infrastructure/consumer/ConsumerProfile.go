@@ -2,7 +2,6 @@ package consumer
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"log"
@@ -14,6 +13,7 @@ import (
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/events"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/events/socialEvent"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/infrastructure/kafka"
+	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/utils"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/social/delivery/mapper"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/social/domain/IRepsitory/IRepositoryMongodb"
 )
@@ -41,7 +41,7 @@ func (c *ConsumerProfile) ConsumerProfile(ctx context.Context) error {
 			// 1. Thử khóa event này trong Redis để đảm bảo chỉ 1 worker xử lý 1 eventID nhất định (Distributed Lock)
 			status, acquired, err := c.redisRepo.Lock(ctx, redisKeyPrefix)
 			if err != nil {
-				if status != "" && status != constants.StatusProcessing {
+				if status != constants.StatusProcessing {
 					log.Printf("Event %s is already processed with status %s. Skipping.\n", event.ID, status)
 					return err
 				}
@@ -97,7 +97,6 @@ func (c *ConsumerProfile) ConsumerProfile(ctx context.Context) error {
 				batchErr = errors.Join(batchErr, err)
 			}
 		}
-
 		return batchErr
 	})
 	if err != nil {
@@ -106,23 +105,9 @@ func (c *ConsumerProfile) ConsumerProfile(ctx context.Context) error {
 	return err
 }
 
-// Helper function dùng chung cho các handler
-func parseProfilePayload(payload any) (*socialEvent.ProfilePayload, error) {
-	// Cách dễ nhất và an toàn nhất: Marshal về byte, rồi Unmarshal thẳng vào Struct
-	bytes, err := json.Marshal(payload)
-	if err != nil {
-		return nil, err
-	}
-
-	var data socialEvent.ProfilePayload
-	if err := json.Unmarshal(bytes, &data); err != nil {
-		return nil, err
-	}
-	return &data, nil
-}
 func (c *ConsumerProfile) handleCreatedProfile(ctx context.Context, event events.IntegrationEvent) error {
 	// Gọi hàm parse chuẩn
-	data, err := parseProfilePayload(event.Payload)
+	data, err := utils.ParsePayload[socialEvent.ProfilePayload](event.Payload)
 	if err != nil {
 		return kafka.NewNonRetryableError(fmt.Errorf("invalid payload format: %w", err))
 	}
@@ -136,7 +121,7 @@ func (c *ConsumerProfile) handleCreatedProfile(ctx context.Context, event events
 	return c.profileRepo.CreateProfile(ctx, entity)
 }
 func (c *ConsumerProfile) handleUpdatedProfile(ctx context.Context, event events.IntegrationEvent) error {
-	data, err := parseProfilePayload(event.Payload)
+	data, err := utils.ParsePayload[socialEvent.ProfilePayload](event.Payload)
 	if err != nil {
 		return kafka.NewNonRetryableError(fmt.Errorf("invalid payload format: %w", err))
 	}
@@ -160,11 +145,11 @@ func (c *ConsumerProfile) handleUpdatedProfile(ctx context.Context, event events
 	return c.profileRepo.UpdateProfile(ctx, entity)
 }
 func (c *ConsumerProfile) handleDeletedProfile(ctx context.Context, event events.IntegrationEvent) error {
-	data, ok := event.Payload.(*socialEvent.ProfilePayload)
-	if !ok {
-		return kafka.NewNonRetryableError(errors.New("invalid event payload for profile event"))
+	data, err := utils.ParsePayload[socialEvent.ProfilePayload](event.Payload)
+	if err != nil {
+		return kafka.NewNonRetryableError(fmt.Errorf("invalid payload format: %w", err))
 	}
-	err := c.profileRepo.DeleteProfile(ctx, data.UserID)
+	err = c.profileRepo.DeleteProfile(ctx, data.UserID)
 	if err != nil {
 		return err
 	}

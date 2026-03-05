@@ -3,7 +3,7 @@ package entity
 import (
 	"time"
 
-	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/notification/enum"
+	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/sharedEnums"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -42,13 +42,13 @@ type FCMToken struct {
 
 // --- GENERAL SETTINGS ---
 type GeneralSettings struct {
-	PushEnabled      bool                `bson:"push_enabled" json:"push_enabled"` // Master switch (Tắt tất cả push)
-	EmailFrequency   enum.EmailFrequency `bson:"email_frequency" json:"email_frequency"`
-	PushInteractions bool                `bson:"push_interactions" json:"push_interactions"`
-	PushFriends      bool                `bson:"push_friends" json:"push_friends"`
-	PushGroups       bool                `bson:"push_groups" json:"push_groups"`
-	PushEvents       bool                `bson:"push_events" json:"push_events"`
-	PushBirthdays    bool                `bson:"push_birthdays" json:"push_birthdays"`
+	PushEnabled      bool                       `bson:"push_enabled" json:"push_enabled"` // Master switch (Tắt tất cả push)
+	EmailFrequency   sharedEnums.EmailFrequency `bson:"email_frequency" json:"email_frequency"`
+	PushInteractions bool                       `bson:"push_interactions" json:"push_interactions"`
+	PushFriends      bool                       `bson:"push_friends" json:"push_friends"`
+	PushGroups       bool                       `bson:"push_groups" json:"push_groups"`
+	PushEvents       bool                       `bson:"push_events" json:"push_events"`
+	PushBirthdays    bool                       `bson:"push_birthdays" json:"push_birthdays"`
 }
 
 func (UserNotificationSetting) CollectionName() string {

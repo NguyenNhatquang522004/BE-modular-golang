@@ -1,14 +1,13 @@
 package req
 
-type CreateUserNotificationSettingsRequest struct {
-	*CreateUserNotificationSettingReq
-}
-type UpdateUserNotificationSettingsRequest struct {
-	UserID string `json:"user_id" binding:"required,uuid"`
-	*UpdateUserNotificationSettingReq
-}
-type DeleteUserNotificationSettingsRequest struct {
-	UserID string `json:"user_id" binding:"required,uuid"`
+import (
+	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/constants"
+	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/events/notificationEvent"
+)
+
+type UseSettingNotificationRequest struct {
+	*notificationEvent.NotificationChangePayload
+	EventType constants.EventType `json:"event_type" binding:"required"`
 }
 type CreateDeleteNotificationTemplateRequest struct {
 	Type       int    `json:"type" binding:"required"`

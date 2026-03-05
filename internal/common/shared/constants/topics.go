@@ -26,6 +26,8 @@ type TopicName string
 const (
 	//DQL chung
 	TopicDLQ TopicName = "dlq.events"
+	//identity
+	TopicUserSettings TopicName = "identity.user_settings.events"
 	//socials
 	TopicFriendship                 TopicName = "social.friendship.events"
 	TopicBlock                      TopicName = "social.block.events"
@@ -43,7 +45,7 @@ const (
 
 	// notification
 	TopicUserNotificationSettings TopicName = "notification.create_user_notification_settings.events"
-	TopicSendNotificationType           TopicName = "notification.send_notification.events"
+	TopicSendNotificationType     TopicName = "notification.send_notification.events"
 
 	//interaction
 	TopicReactComment                    TopicName = "interaction.react_comment.events"

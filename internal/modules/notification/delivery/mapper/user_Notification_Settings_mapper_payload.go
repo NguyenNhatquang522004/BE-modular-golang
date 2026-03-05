@@ -1,14 +1,14 @@
 package mapper
 
 import (
-	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/notification/delivery/dto/req"
+	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/events/notificationEvent"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/notification/delivery/dto/res"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/notification/domain/entity"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-// ToEntityUserNotificationSetting: Ánh xạ từ Create Req sang Entity mới
-func ToEntityUserNotificationSetting(r *req.CreateUserNotificationSettingReq) *entity.UserNotificationSetting {
+// ToEntityUserNotificationSettingPayload	: Ánh xạ từ Create Req sang Entity mới
+func ToEntityUserNotificationSettingPayload(r *notificationEvent.NotificationChangePayload) *entity.UserNotificationSetting {
 	if r == nil {
 		return nil
 	}
@@ -19,23 +19,23 @@ func ToEntityUserNotificationSetting(r *req.CreateUserNotificationSettingReq) *e
 		UserID:      r.UserID,
 		Avatar:      r.Avatar,
 		DateOfBirth: r.DateOfBirth,
-		Settings:    mapGeneralSettingsReqToEntity(r.Settings),
-		FCMTokens:   mapFCMTokensReqToEntity(r.FCMTokens),
+		Settings:    mapGeneralSettingsReqToEntityPayload(r.Settings),
+		FCMTokens:   mapFCMTokensReqToEntityPayload(r.FCMTokens),
 	}
 }
 
-// UpdateToEntityUserNotificationSetting: Cập nhật từ Update Req vào Entity hiện có (Partial Update)
-func UpdateToEntityUserNotificationSetting(r *req.UpdateUserNotificationSettingReq, ent *entity.UserNotificationSetting) {
+// UpdateToEntityUserNotificationSettingPayload: Cập nhật từ Update Req vào Entity hiện có (Partial Update)
+func UpdateToEntityUserNotificationSettingPayload(r *notificationEvent.NotificationChangePayload, ent *entity.UserNotificationSetting) {
 	if r == nil || ent == nil {
 		return
 	}
 
 	if r.Settings != nil {
-		ent.Settings = mapGeneralSettingsReqToEntity(r.Settings)
+		ent.Settings = mapGeneralSettingsReqToEntityPayload(r.Settings)
 	}
 
 	if r.FCMTokens != nil {
-		ent.FCMTokens = mapFCMTokensReqToEntity(r.FCMTokens)
+		ent.FCMTokens = mapFCMTokensReqToEntityPayload(r.FCMTokens)
 	}
 
 	if r.DateOfBirth != "" {
@@ -50,7 +50,7 @@ func UpdateToEntityUserNotificationSetting(r *req.UpdateUserNotificationSettingR
 }
 
 // EntityToResUserNotificationSetting: Ánh xạ từ Entity sang Response DTO
-func EntityToResUserNotificationSetting(ent *entity.UserNotificationSetting) *res.UserNotificationSettingRes {
+func EntityToResUserNotificationSettingPayload(ent *entity.UserNotificationSetting) *res.UserNotificationSettingRes {
 	if ent == nil {
 		return nil
 	}
@@ -61,14 +61,14 @@ func EntityToResUserNotificationSetting(ent *entity.UserNotificationSetting) *re
 		Name:        ent.Name,
 		Avatar:      ent.Avatar,
 		DateOfBirth: ent.DateOfBirth,
-		Settings:    mapGeneralSettingsEntityToRes(ent.Settings),
-		FCMTokens:   mapFCMTokensEntityToRes(ent.FCMTokens),
+		Settings:    mapGeneralSettingsEntityToResPayload(ent.Settings),
+		FCMTokens:   mapFCMTokensEntityToResPayload(ent.FCMTokens),
 	}
 }
 
 // ================= INTERNAL HELPERS =================
 
-func mapGeneralSettingsReqToEntity(s *req.GeneralSettingsReq) *entity.GeneralSettings {
+func mapGeneralSettingsReqToEntityPayload(s *notificationEvent.GeneralSettingsPayload) *entity.GeneralSettings {
 	if s == nil {
 		return nil
 	}
@@ -83,7 +83,7 @@ func mapGeneralSettingsReqToEntity(s *req.GeneralSettingsReq) *entity.GeneralSet
 	}
 }
 
-func mapGeneralSettingsEntityToRes(s *entity.GeneralSettings) *res.GeneralSettingsRes {
+func mapGeneralSettingsEntityToResPayload(s *entity.GeneralSettings) *res.GeneralSettingsRes {
 	if s == nil {
 		return nil
 	}
@@ -98,7 +98,7 @@ func mapGeneralSettingsEntityToRes(s *entity.GeneralSettings) *res.GeneralSettin
 	}
 }
 
-func mapFCMTokensReqToEntity(tokens []*req.FCMTokenReq) []*entity.FCMToken {
+func mapFCMTokensReqToEntityPayload(tokens []*notificationEvent.FCMTokenPayload) []*entity.FCMToken {
 	if tokens == nil {
 		return nil
 	}
@@ -114,7 +114,7 @@ func mapFCMTokensReqToEntity(tokens []*req.FCMTokenReq) []*entity.FCMToken {
 	return resTokens
 }
 
-func mapFCMTokensEntityToRes(tokens []*entity.FCMToken) []*res.FCMTokenRes {
+func mapFCMTokensEntityToResPayload(tokens []*entity.FCMToken) []*res.FCMTokenRes {
 	if tokens == nil {
 		return nil
 	}

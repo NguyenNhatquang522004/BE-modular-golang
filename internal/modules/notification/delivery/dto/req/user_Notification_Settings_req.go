@@ -3,7 +3,7 @@ package req
 import (
 	"time"
 
-	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/notification/enum"
+	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/sharedEnums"
 )
 
 // --- FCM TOKEN REQ ---
@@ -15,13 +15,13 @@ type FCMTokenReq struct {
 
 // --- GENERAL SETTINGS REQ ---
 type GeneralSettingsReq struct {
-	PushEnabled      bool                 `json:"push_enabled"`
-	EmailFrequency   *enum.EmailFrequency `json:"email_frequency" binding:"required"`
-	PushInteractions bool                 `json:"push_interactions"`
-	PushFriends      bool                 `json:"push_friends"`
-	PushGroups       bool                 `json:"push_groups"`
-	PushEvents       bool                 `json:"push_events"`
-	PushBirthdays    bool                 `json:"push_birthdays"`
+	PushEnabled      bool                        `json:"push_enabled"`
+	EmailFrequency   *sharedEnums.EmailFrequency `json:"email_frequency" binding:"required"`
+	PushInteractions bool                        `json:"push_interactions"`
+	PushFriends      bool                        `json:"push_friends"`
+	PushGroups       bool                        `json:"push_groups"`
+	PushEvents       bool                        `json:"push_events"`
+	PushBirthdays    bool                        `json:"push_birthdays"`
 }
 
 // --- CREATE REQ ---
