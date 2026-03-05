@@ -189,7 +189,7 @@ func (r *SeaweedfsAdapter) Exists(ctx context.Context, filePath string) (bool, e
 	cleanPath := "/" + strings.Trim(filePath, "/")
 
 	// Gọi hàm Head mới thêm vào
-	statusCode, _ := r.client.Head(cleanPath, nil, nil)
+	_, statusCode, _ := r.client.Get(cleanPath, nil, nil)
 
 	if statusCode == 200 {
 		return true, nil

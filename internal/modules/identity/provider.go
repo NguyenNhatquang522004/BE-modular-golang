@@ -28,14 +28,12 @@ var RepositorySet = wire.NewSet(
 
 var UseCaseSet = wire.NewSet(
 	usecase.NewUserSessionUseCase,
-	usecase.NewUserSettingUseCase,
 	usecase.NewUserAuthUseCase,
 	usecase.NewGoogleAuthUseCase,
 	usecase.NewUserRoleUseCase,
 	usecase.NewUserUseCase,
 	usecase.NewAdminUseCase,
 	wire.Bind(new(usecase.IUserSessionService), new(*usecase.UserSessionUseCase)),
-	wire.Bind(new(usecase.IUserSettingService), new(*usecase.UserSettingUseCase)),
 	wire.Bind(new(usecase.IUserAuthService), new(*usecase.UserAuthUseCase)),
 	wire.Bind(new(usecase.IGoogleAuthUseCase), new(*usecase.GoogleAuthUseCase)),
 	wire.Bind(new(usecase.IUserRoleUseCase), new(*usecase.UserRoleUseCase)),

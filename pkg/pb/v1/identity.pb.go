@@ -10,6 +10,7 @@ import (
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	emptypb "google.golang.org/protobuf/types/known/emptypb"
+	timestamppb "google.golang.org/protobuf/types/known/timestamppb"
 	reflect "reflect"
 	sync "sync"
 	unsafe "unsafe"
@@ -22,6 +23,94 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
+type UserIDRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	UserId        string                 `protobuf:"bytes,1,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *UserIDRequest) Reset() {
+	*x = UserIDRequest{}
+	mi := &file_v1_identity_proto_msgTypes[0]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *UserIDRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*UserIDRequest) ProtoMessage() {}
+
+func (x *UserIDRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_v1_identity_proto_msgTypes[0]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use UserIDRequest.ProtoReflect.Descriptor instead.
+func (*UserIDRequest) Descriptor() ([]byte, []int) {
+	return file_v1_identity_proto_rawDescGZIP(), []int{0}
+}
+
+func (x *UserIDRequest) GetUserId() string {
+	if x != nil {
+		return x.UserId
+	}
+	return ""
+}
+
+type UserIDExistenceResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Exists        bool                   `protobuf:"varint,1,opt,name=exists,proto3" json:"exists,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *UserIDExistenceResponse) Reset() {
+	*x = UserIDExistenceResponse{}
+	mi := &file_v1_identity_proto_msgTypes[1]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *UserIDExistenceResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*UserIDExistenceResponse) ProtoMessage() {}
+
+func (x *UserIDExistenceResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_v1_identity_proto_msgTypes[1]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use UserIDExistenceResponse.ProtoReflect.Descriptor instead.
+func (*UserIDExistenceResponse) Descriptor() ([]byte, []int) {
+	return file_v1_identity_proto_rawDescGZIP(), []int{1}
+}
+
+func (x *UserIDExistenceResponse) GetExists() bool {
+	if x != nil {
+		return x.Exists
+	}
+	return false
+}
+
 type UserIDResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	UserId        string                 `protobuf:"bytes,1,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
@@ -31,7 +120,7 @@ type UserIDResponse struct {
 
 func (x *UserIDResponse) Reset() {
 	*x = UserIDResponse{}
-	mi := &file_v1_identity_proto_msgTypes[0]
+	mi := &file_v1_identity_proto_msgTypes[2]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -43,7 +132,7 @@ func (x *UserIDResponse) String() string {
 func (*UserIDResponse) ProtoMessage() {}
 
 func (x *UserIDResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_identity_proto_msgTypes[0]
+	mi := &file_v1_identity_proto_msgTypes[2]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -56,7 +145,7 @@ func (x *UserIDResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UserIDResponse.ProtoReflect.Descriptor instead.
 func (*UserIDResponse) Descriptor() ([]byte, []int) {
-	return file_v1_identity_proto_rawDescGZIP(), []int{0}
+	return file_v1_identity_proto_rawDescGZIP(), []int{2}
 }
 
 func (x *UserIDResponse) GetUserId() string {
@@ -66,16 +155,321 @@ func (x *UserIDResponse) GetUserId() string {
 	return ""
 }
 
+type UserSettingIDRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	UserId        string                 `protobuf:"bytes,1,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *UserSettingIDRequest) Reset() {
+	*x = UserSettingIDRequest{}
+	mi := &file_v1_identity_proto_msgTypes[3]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *UserSettingIDRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*UserSettingIDRequest) ProtoMessage() {}
+
+func (x *UserSettingIDRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_v1_identity_proto_msgTypes[3]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use UserSettingIDRequest.ProtoReflect.Descriptor instead.
+func (*UserSettingIDRequest) Descriptor() ([]byte, []int) {
+	return file_v1_identity_proto_rawDescGZIP(), []int{3}
+}
+
+func (x *UserSettingIDRequest) GetUserId() string {
+	if x != nil {
+		return x.UserId
+	}
+	return ""
+}
+
+type NotificationSettings struct {
+	state            protoimpl.MessageState `protogen:"open.v1"`
+	EmailFrequency   string                 `protobuf:"bytes,1,opt,name=email_frequency,json=emailFrequency,proto3" json:"email_frequency,omitempty"`
+	PushInteractions bool                   `protobuf:"varint,2,opt,name=push_interactions,json=pushInteractions,proto3" json:"push_interactions,omitempty"`
+	PushFriends      bool                   `protobuf:"varint,3,opt,name=push_friends,json=pushFriends,proto3" json:"push_friends,omitempty"`
+	PushGroups       bool                   `protobuf:"varint,4,opt,name=push_groups,json=pushGroups,proto3" json:"push_groups,omitempty"`
+	PushEvents       bool                   `protobuf:"varint,5,opt,name=push_events,json=pushEvents,proto3" json:"push_events,omitempty"`
+	PushBirthdays    bool                   `protobuf:"varint,6,opt,name=push_birthdays,json=pushBirthdays,proto3" json:"push_birthdays,omitempty"`
+	unknownFields    protoimpl.UnknownFields
+	sizeCache        protoimpl.SizeCache
+}
+
+func (x *NotificationSettings) Reset() {
+	*x = NotificationSettings{}
+	mi := &file_v1_identity_proto_msgTypes[4]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *NotificationSettings) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*NotificationSettings) ProtoMessage() {}
+
+func (x *NotificationSettings) ProtoReflect() protoreflect.Message {
+	mi := &file_v1_identity_proto_msgTypes[4]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use NotificationSettings.ProtoReflect.Descriptor instead.
+func (*NotificationSettings) Descriptor() ([]byte, []int) {
+	return file_v1_identity_proto_rawDescGZIP(), []int{4}
+}
+
+func (x *NotificationSettings) GetEmailFrequency() string {
+	if x != nil {
+		return x.EmailFrequency
+	}
+	return ""
+}
+
+func (x *NotificationSettings) GetPushInteractions() bool {
+	if x != nil {
+		return x.PushInteractions
+	}
+	return false
+}
+
+func (x *NotificationSettings) GetPushFriends() bool {
+	if x != nil {
+		return x.PushFriends
+	}
+	return false
+}
+
+func (x *NotificationSettings) GetPushGroups() bool {
+	if x != nil {
+		return x.PushGroups
+	}
+	return false
+}
+
+func (x *NotificationSettings) GetPushEvents() bool {
+	if x != nil {
+		return x.PushEvents
+	}
+	return false
+}
+
+func (x *NotificationSettings) GetPushBirthdays() bool {
+	if x != nil {
+		return x.PushBirthdays
+	}
+	return false
+}
+
+type UserSettingResponse struct {
+	state  protoimpl.MessageState `protogen:"open.v1"`
+	Id     string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"` // Map từ primitive.ObjectID
+	UserId string                 `protobuf:"bytes,2,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
+	// 2. PRIVACY DEFAULTS
+	DefaultPostAudience  string `protobuf:"bytes,9,opt,name=default_post_audience,json=defaultPostAudience,proto3" json:"default_post_audience,omitempty"`     // Map từ sharedEnums.PrivacyScope
+	DefaultStoryAudience string `protobuf:"bytes,10,opt,name=default_story_audience,json=defaultStoryAudience,proto3" json:"default_story_audience,omitempty"` // Map từ sharedEnums.PrivacyScope
+	// 3. ACCESS CONTROL
+	AllowFriendRequestFrom    string `protobuf:"bytes,11,opt,name=allow_friend_request_from,json=allowFriendRequestFrom,proto3" json:"allow_friend_request_from,omitempty"`
+	AllowFriendListViewFrom   string `protobuf:"bytes,12,opt,name=allow_friend_list_view_from,json=allowFriendListViewFrom,proto3" json:"allow_friend_list_view_from,omitempty"`
+	AllowSearchEngineIndexing bool   `protobuf:"varint,15,opt,name=allow_search_engine_indexing,json=allowSearchEngineIndexing,proto3" json:"allow_search_engine_indexing,omitempty"`
+	Allow_Profile_View_From   bool   `protobuf:"varint,13,opt,name=Allow_Profile_View_From,json=AllowProfileViewFrom,proto3" json:"Allow_Profile_View_From,omitempty"`
+	// 4. TIMELINE & TAGGING
+	AllowTimelinePostingFrom   string `protobuf:"bytes,16,opt,name=allow_timeline_posting_from,json=allowTimelinePostingFrom,proto3" json:"allow_timeline_posting_from,omitempty"`
+	ReviewTagsEnabled          bool   `protobuf:"varint,17,opt,name=review_tags_enabled,json=reviewTagsEnabled,proto3" json:"review_tags_enabled,omitempty"`
+	ReviewTimelinePostsEnabled bool   `protobuf:"varint,18,opt,name=review_timeline_posts_enabled,json=reviewTimelinePostsEnabled,proto3" json:"review_timeline_posts_enabled,omitempty"`
+	// 5. NOTIFICATIONS
+	Notifications *NotificationSettings  `protobuf:"bytes,19,opt,name=notifications,proto3" json:"notifications,omitempty"`
+	UpdatedAt     *timestamppb.Timestamp `protobuf:"bytes,20,opt,name=updated_at,json=updatedAt,proto3" json:"updated_at,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *UserSettingResponse) Reset() {
+	*x = UserSettingResponse{}
+	mi := &file_v1_identity_proto_msgTypes[5]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *UserSettingResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*UserSettingResponse) ProtoMessage() {}
+
+func (x *UserSettingResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_v1_identity_proto_msgTypes[5]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use UserSettingResponse.ProtoReflect.Descriptor instead.
+func (*UserSettingResponse) Descriptor() ([]byte, []int) {
+	return file_v1_identity_proto_rawDescGZIP(), []int{5}
+}
+
+func (x *UserSettingResponse) GetId() string {
+	if x != nil {
+		return x.Id
+	}
+	return ""
+}
+
+func (x *UserSettingResponse) GetUserId() string {
+	if x != nil {
+		return x.UserId
+	}
+	return ""
+}
+
+func (x *UserSettingResponse) GetDefaultPostAudience() string {
+	if x != nil {
+		return x.DefaultPostAudience
+	}
+	return ""
+}
+
+func (x *UserSettingResponse) GetDefaultStoryAudience() string {
+	if x != nil {
+		return x.DefaultStoryAudience
+	}
+	return ""
+}
+
+func (x *UserSettingResponse) GetAllowFriendRequestFrom() string {
+	if x != nil {
+		return x.AllowFriendRequestFrom
+	}
+	return ""
+}
+
+func (x *UserSettingResponse) GetAllowFriendListViewFrom() string {
+	if x != nil {
+		return x.AllowFriendListViewFrom
+	}
+	return ""
+}
+
+func (x *UserSettingResponse) GetAllowSearchEngineIndexing() bool {
+	if x != nil {
+		return x.AllowSearchEngineIndexing
+	}
+	return false
+}
+
+func (x *UserSettingResponse) GetAllow_Profile_View_From() bool {
+	if x != nil {
+		return x.Allow_Profile_View_From
+	}
+	return false
+}
+
+func (x *UserSettingResponse) GetAllowTimelinePostingFrom() string {
+	if x != nil {
+		return x.AllowTimelinePostingFrom
+	}
+	return ""
+}
+
+func (x *UserSettingResponse) GetReviewTagsEnabled() bool {
+	if x != nil {
+		return x.ReviewTagsEnabled
+	}
+	return false
+}
+
+func (x *UserSettingResponse) GetReviewTimelinePostsEnabled() bool {
+	if x != nil {
+		return x.ReviewTimelinePostsEnabled
+	}
+	return false
+}
+
+func (x *UserSettingResponse) GetNotifications() *NotificationSettings {
+	if x != nil {
+		return x.Notifications
+	}
+	return nil
+}
+
+func (x *UserSettingResponse) GetUpdatedAt() *timestamppb.Timestamp {
+	if x != nil {
+		return x.UpdatedAt
+	}
+	return nil
+}
+
 var File_v1_identity_proto protoreflect.FileDescriptor
 
 const file_v1_identity_proto_rawDesc = "" +
 	"\n" +
-	"\x11v1/identity.proto\x12\fapi.proto.v1\x1a\x1bgoogle/protobuf/empty.proto\")\n" +
+	"\x11v1/identity.proto\x12\fapi.proto.v1\x1a\x1bgoogle/protobuf/empty.proto\x1a\x1fgoogle/protobuf/timestamp.proto\"(\n" +
+	"\rUserIDRequest\x12\x17\n" +
+	"\auser_id\x18\x01 \x01(\tR\x06userId\"1\n" +
+	"\x17UserIDExistenceResponse\x12\x16\n" +
+	"\x06exists\x18\x01 \x01(\bR\x06exists\")\n" +
 	"\x0eUserIDResponse\x12\x17\n" +
-	"\auser_id\x18\x01 \x01(\tR\x06userId2U\n" +
+	"\auser_id\x18\x01 \x01(\tR\x06userId\"/\n" +
+	"\x14UserSettingIDRequest\x12\x17\n" +
+	"\auser_id\x18\x01 \x01(\tR\x06userId\"\xf8\x01\n" +
+	"\x14NotificationSettings\x12'\n" +
+	"\x0femail_frequency\x18\x01 \x01(\tR\x0eemailFrequency\x12+\n" +
+	"\x11push_interactions\x18\x02 \x01(\bR\x10pushInteractions\x12!\n" +
+	"\fpush_friends\x18\x03 \x01(\bR\vpushFriends\x12\x1f\n" +
+	"\vpush_groups\x18\x04 \x01(\bR\n" +
+	"pushGroups\x12\x1f\n" +
+	"\vpush_events\x18\x05 \x01(\bR\n" +
+	"pushEvents\x12%\n" +
+	"\x0epush_birthdays\x18\x06 \x01(\bR\rpushBirthdays\"\xd0\x05\n" +
+	"\x13UserSettingResponse\x12\x0e\n" +
+	"\x02id\x18\x01 \x01(\tR\x02id\x12\x17\n" +
+	"\auser_id\x18\x02 \x01(\tR\x06userId\x122\n" +
+	"\x15default_post_audience\x18\t \x01(\tR\x13defaultPostAudience\x124\n" +
+	"\x16default_story_audience\x18\n" +
+	" \x01(\tR\x14defaultStoryAudience\x129\n" +
+	"\x19allow_friend_request_from\x18\v \x01(\tR\x16allowFriendRequestFrom\x12<\n" +
+	"\x1ballow_friend_list_view_from\x18\f \x01(\tR\x17allowFriendListViewFrom\x12?\n" +
+	"\x1callow_search_engine_indexing\x18\x0f \x01(\bR\x19allowSearchEngineIndexing\x125\n" +
+	"\x17Allow_Profile_View_From\x18\r \x01(\bR\x14AllowProfileViewFrom\x12=\n" +
+	"\x1ballow_timeline_posting_from\x18\x10 \x01(\tR\x18allowTimelinePostingFrom\x12.\n" +
+	"\x13review_tags_enabled\x18\x11 \x01(\bR\x11reviewTagsEnabled\x12A\n" +
+	"\x1dreview_timeline_posts_enabled\x18\x12 \x01(\bR\x1areviewTimelinePostsEnabled\x12H\n" +
+	"\rnotifications\x18\x13 \x01(\v2\".api.proto.v1.NotificationSettingsR\rnotifications\x129\n" +
+	"\n" +
+	"updated_at\x18\x14 \x01(\v2\x1a.google.protobuf.TimestampR\tupdatedAt2\x8e\x02\n" +
 	"\x0fIdentityService\x12B\n" +
 	"\n" +
-	"GetUserOTP\x12\x16.google.protobuf.Empty\x1a\x1c.api.proto.v1.UserIDResponseB.Z,github.com/quang/social-network/pkg/pb/v1;pbb\x06proto3"
+	"GetUserOTP\x12\x16.google.protobuf.Empty\x1a\x1c.api.proto.v1.UserIDResponse\x12[\n" +
+	"\x12GetUserSettingByID\x12\".api.proto.v1.UserSettingIDRequest\x1a!.api.proto.v1.UserSettingResponse\x12Z\n" +
+	"\x14CheckUSERIDExistence\x12\x1b.api.proto.v1.UserIDRequest\x1a%.api.proto.v1.UserIDExistenceResponseB.Z,github.com/quang/social-network/pkg/pb/v1;pbb\x06proto3"
 
 var (
 	file_v1_identity_proto_rawDescOnce sync.Once
@@ -89,19 +483,31 @@ func file_v1_identity_proto_rawDescGZIP() []byte {
 	return file_v1_identity_proto_rawDescData
 }
 
-var file_v1_identity_proto_msgTypes = make([]protoimpl.MessageInfo, 1)
+var file_v1_identity_proto_msgTypes = make([]protoimpl.MessageInfo, 6)
 var file_v1_identity_proto_goTypes = []any{
-	(*UserIDResponse)(nil), // 0: api.proto.v1.UserIDResponse
-	(*emptypb.Empty)(nil),  // 1: google.protobuf.Empty
+	(*UserIDRequest)(nil),           // 0: api.proto.v1.UserIDRequest
+	(*UserIDExistenceResponse)(nil), // 1: api.proto.v1.UserIDExistenceResponse
+	(*UserIDResponse)(nil),          // 2: api.proto.v1.UserIDResponse
+	(*UserSettingIDRequest)(nil),    // 3: api.proto.v1.UserSettingIDRequest
+	(*NotificationSettings)(nil),    // 4: api.proto.v1.NotificationSettings
+	(*UserSettingResponse)(nil),     // 5: api.proto.v1.UserSettingResponse
+	(*timestamppb.Timestamp)(nil),   // 6: google.protobuf.Timestamp
+	(*emptypb.Empty)(nil),           // 7: google.protobuf.Empty
 }
 var file_v1_identity_proto_depIdxs = []int32{
-	1, // 0: api.proto.v1.IdentityService.GetUserOTP:input_type -> google.protobuf.Empty
-	0, // 1: api.proto.v1.IdentityService.GetUserOTP:output_type -> api.proto.v1.UserIDResponse
-	1, // [1:2] is the sub-list for method output_type
-	0, // [0:1] is the sub-list for method input_type
-	0, // [0:0] is the sub-list for extension type_name
-	0, // [0:0] is the sub-list for extension extendee
-	0, // [0:0] is the sub-list for field type_name
+	4, // 0: api.proto.v1.UserSettingResponse.notifications:type_name -> api.proto.v1.NotificationSettings
+	6, // 1: api.proto.v1.UserSettingResponse.updated_at:type_name -> google.protobuf.Timestamp
+	7, // 2: api.proto.v1.IdentityService.GetUserOTP:input_type -> google.protobuf.Empty
+	3, // 3: api.proto.v1.IdentityService.GetUserSettingByID:input_type -> api.proto.v1.UserSettingIDRequest
+	0, // 4: api.proto.v1.IdentityService.CheckUSERIDExistence:input_type -> api.proto.v1.UserIDRequest
+	2, // 5: api.proto.v1.IdentityService.GetUserOTP:output_type -> api.proto.v1.UserIDResponse
+	5, // 6: api.proto.v1.IdentityService.GetUserSettingByID:output_type -> api.proto.v1.UserSettingResponse
+	1, // 7: api.proto.v1.IdentityService.CheckUSERIDExistence:output_type -> api.proto.v1.UserIDExistenceResponse
+	5, // [5:8] is the sub-list for method output_type
+	2, // [2:5] is the sub-list for method input_type
+	2, // [2:2] is the sub-list for extension type_name
+	2, // [2:2] is the sub-list for extension extendee
+	0, // [0:2] is the sub-list for field type_name
 }
 
 func init() { file_v1_identity_proto_init() }
@@ -115,7 +521,7 @@ func file_v1_identity_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_v1_identity_proto_rawDesc), len(file_v1_identity_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   1,
+			NumMessages:   6,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

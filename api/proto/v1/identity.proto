@@ -4,6 +4,7 @@ package api.proto.v1;
 
 option go_package = "github.com/quang/social-network/pkg/pb/v1;pb";
 import "google/protobuf/empty.proto";
+import "google/protobuf/timestamp.proto";
 service IdentityService {
   rpc GetUserOTP (google.protobuf.Empty) returns (UserIDResponse);
   rpc GetUserSettingByID (UserSettingIDRequest) returns (UserSettingResponse);
@@ -35,31 +36,18 @@ message NotificationSettings {
 message UserSettingResponse {
   string id = 1; // Map từ primitive.ObjectID
   string user_id = 2;
-
-  // 1. APP CONFIGURATION
-  string theme_mode = 3;    // Map từ enum.ThemeMode
-  string font_size = 4;     // Map từ enum.FontSize
-  bool compact_mode = 5;
-  string lang_code = 6;     // Map từ enum.LangCode
-  string timezone = 7;      // Map từ enum.Timezone
-  bool auto_translate = 8;
-
   // 2. PRIVACY DEFAULTS
   string default_post_audience = 9;  // Map từ sharedEnums.PrivacyScope
   string default_story_audience = 10; // Map từ sharedEnums.PrivacyScope
-
   // 3. ACCESS CONTROL
   string allow_friend_request_from = 11;
   string allow_friend_list_view_from = 12;
-  string allow_email_lookup_from = 13;
-  string allow_phone_lookup_from = 14;
   bool allow_search_engine_indexing = 15;
-
+  bool Allow_Profile_View_From = 13;
   // 4. TIMELINE & TAGGING
   string allow_timeline_posting_from = 16;
   bool review_tags_enabled = 17;
   bool review_timeline_posts_enabled = 18;
-
   // 5. NOTIFICATIONS
   NotificationSettings notifications = 19;
   google.protobuf.Timestamp updated_at = 20;

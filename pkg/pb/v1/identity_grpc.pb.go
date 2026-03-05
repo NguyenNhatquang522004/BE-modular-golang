@@ -20,7 +20,9 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	IdentityService_GetUserOTP_FullMethodName = "/api.proto.v1.IdentityService/GetUserOTP"
+	IdentityService_GetUserOTP_FullMethodName           = "/api.proto.v1.IdentityService/GetUserOTP"
+	IdentityService_GetUserSettingByID_FullMethodName   = "/api.proto.v1.IdentityService/GetUserSettingByID"
+	IdentityService_CheckUSERIDExistence_FullMethodName = "/api.proto.v1.IdentityService/CheckUSERIDExistence"
 )
 
 // IdentityServiceClient is the client API for IdentityService service.
@@ -28,6 +30,8 @@ const (
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type IdentityServiceClient interface {
 	GetUserOTP(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*UserIDResponse, error)
+	GetUserSettingByID(ctx context.Context, in *UserSettingIDRequest, opts ...grpc.CallOption) (*UserSettingResponse, error)
+	CheckUSERIDExistence(ctx context.Context, in *UserIDRequest, opts ...grpc.CallOption) (*UserIDExistenceResponse, error)
 }
 
 type identityServiceClient struct {
@@ -48,11 +52,33 @@ func (c *identityServiceClient) GetUserOTP(ctx context.Context, in *emptypb.Empt
 	return out, nil
 }
 
+func (c *identityServiceClient) GetUserSettingByID(ctx context.Context, in *UserSettingIDRequest, opts ...grpc.CallOption) (*UserSettingResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(UserSettingResponse)
+	err := c.cc.Invoke(ctx, IdentityService_GetUserSettingByID_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *identityServiceClient) CheckUSERIDExistence(ctx context.Context, in *UserIDRequest, opts ...grpc.CallOption) (*UserIDExistenceResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(UserIDExistenceResponse)
+	err := c.cc.Invoke(ctx, IdentityService_CheckUSERIDExistence_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // IdentityServiceServer is the server API for IdentityService service.
 // All implementations must embed UnimplementedIdentityServiceServer
 // for forward compatibility.
 type IdentityServiceServer interface {
 	GetUserOTP(context.Context, *emptypb.Empty) (*UserIDResponse, error)
+	GetUserSettingByID(context.Context, *UserSettingIDRequest) (*UserSettingResponse, error)
+	CheckUSERIDExistence(context.Context, *UserIDRequest) (*UserIDExistenceResponse, error)
 	mustEmbedUnimplementedIdentityServiceServer()
 }
 
@@ -65,6 +91,12 @@ type UnimplementedIdentityServiceServer struct{}
 
 func (UnimplementedIdentityServiceServer) GetUserOTP(context.Context, *emptypb.Empty) (*UserIDResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method GetUserOTP not implemented")
+}
+func (UnimplementedIdentityServiceServer) GetUserSettingByID(context.Context, *UserSettingIDRequest) (*UserSettingResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method GetUserSettingByID not implemented")
+}
+func (UnimplementedIdentityServiceServer) CheckUSERIDExistence(context.Context, *UserIDRequest) (*UserIDExistenceResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method CheckUSERIDExistence not implemented")
 }
 func (UnimplementedIdentityServiceServer) mustEmbedUnimplementedIdentityServiceServer() {}
 func (UnimplementedIdentityServiceServer) testEmbeddedByValue()                         {}
@@ -105,6 +137,42 @@ func _IdentityService_GetUserOTP_Handler(srv interface{}, ctx context.Context, d
 	return interceptor(ctx, in, info, handler)
 }
 
+func _IdentityService_GetUserSettingByID_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UserSettingIDRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(IdentityServiceServer).GetUserSettingByID(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: IdentityService_GetUserSettingByID_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(IdentityServiceServer).GetUserSettingByID(ctx, req.(*UserSettingIDRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _IdentityService_CheckUSERIDExistence_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UserIDRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(IdentityServiceServer).CheckUSERIDExistence(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: IdentityService_CheckUSERIDExistence_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(IdentityServiceServer).CheckUSERIDExistence(ctx, req.(*UserIDRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // IdentityService_ServiceDesc is the grpc.ServiceDesc for IdentityService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -115,6 +183,14 @@ var IdentityService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetUserOTP",
 			Handler:    _IdentityService_GetUserOTP_Handler,
+		},
+		{
+			MethodName: "GetUserSettingByID",
+			Handler:    _IdentityService_GetUserSettingByID_Handler,
+		},
+		{
+			MethodName: "CheckUSERIDExistence",
+			Handler:    _IdentityService_CheckUSERIDExistence_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

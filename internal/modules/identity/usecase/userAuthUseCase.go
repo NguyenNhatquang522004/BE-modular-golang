@@ -280,32 +280,36 @@ func (u *UserAuthUseCase) RegisterThree(ctx context.Context, email string, usern
 	}
 	checkEmail.KeycloakID = keycloakID
 	updateUserErr := u.userRepo.UpdateUser(ctx, checkEmail)
-	callNotification := func() error {
-		//tạo CreateUserNotificationSettingsPayload với UserID và gửi qua event bus
-		EmailFrequencypayload := sharedEnums.EmailDaily
-		payload := &notificationEvent.NotificationChangePayload{
-			UserID:      checkEmail.ID.String(),
-			Name:        checkEmail.Username,
-			DateOfBirth: "",
-			Avatar:      "",
-			Settings: &notificationEvent.GeneralSettingsPayload{
-				PushEnabled:      true,
-				EmailFrequency:   &EmailFrequencypayload,
-				PushInteractions: true,
-				PushFriends:      true,
-				PushGroups:       true,
-				PushEvents:       true,
-				PushBirthdays:    true,
-			},
-		}
-		return u.eventBus.Publish(ctx, constants.TopicUserNotificationSettings.String(), checkEmail.ID.String(), constants.Created.String(), payload)
-	}
-	err = callNotification()
+
 	if updateUserErr != nil {
 		return response.NewResponse(
 			response.WithMessage("Error updating user"),
 			response.WithStatus("500"),
 		), errors.New("error updating user")
+	}
+	EmailFrequencypayload := sharedEnums.EmailDaily
+	payload := &notificationEvent.NotificationChangePayload{
+		UserID:      checkEmail.ID.String(),
+		Name:        checkEmail.Username,
+		DateOfBirth: "",
+		Avatar:      "",
+		Settings: &notificationEvent.GeneralSettingsPayload{
+			PushEnabled:      true,
+			EmailFrequency:   &EmailFrequencypayload,
+			PushInteractions: true,
+			PushFriends:      true,
+			PushGroups:       true,
+			PushEvents:       true,
+			PushBirthdays:    true,
+		},
+	}
+	err = u.eventBus.Publish(ctx, constants.TopicUserNotificationSettings.String(), checkEmail.ID.String(), constants.Created.String(), payload)
+	
+	if err != nil {
+		return response.NewResponse(
+			response.WithMessage("Error publishing event"),
+			response.WithStatus("500"),
+		), errors.New("error publishing event")
 	}
 	return response.NewResponse(
 		response.WithMessage("Registration step three not implemented yet"),

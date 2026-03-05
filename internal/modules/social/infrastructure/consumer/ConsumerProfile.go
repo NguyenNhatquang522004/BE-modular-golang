@@ -16,6 +16,7 @@ import (
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/utils"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/social/delivery/mapper"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/social/domain/IRepsitory/IRepositoryMongodb"
+	"github.com/NguyenNhatquang522004/BE-modular-golang/pkg/pb/v1"
 )
 
 type ConsumerProfile struct {
@@ -23,12 +24,14 @@ type ConsumerProfile struct {
 	events      events.EventBus
 	pool        IRepositoryShare.IWorkerPool
 	redisRepo   IRepositoryShare.IRedis
+	pb          pb.IdentityServiceClient
 }
 
-func NewConsumerProfile(profileRepo IRepositoryMongodb.IProfileRepositoryMongodb, events events.EventBus) *ConsumerProfile {
+func NewConsumerProfile(profileRepo IRepositoryMongodb.IProfileRepositoryMongodb, events events.EventBus, pbClient pb.IdentityServiceClient) *ConsumerProfile {
 	return &ConsumerProfile{
 		profileRepo: profileRepo,
 		events:      events,
+		pb:          pbClient,
 	}
 }
 
@@ -111,12 +114,16 @@ func (c *ConsumerProfile) handleCreatedProfile(ctx context.Context, event events
 	if err != nil {
 		return kafka.NewNonRetryableError(fmt.Errorf("invalid payload format: %w", err))
 	}
-
 	entity, err := mapper.ToEntityProfilePayload(data)
 	if err != nil {
 		return kafka.NewNonRetryableError(err) // Lỗi mapper thường là lỗi data sai, cũng ném vào DLQ
 	}
-
+	datausersetting, err := c.pb.GetUserSettingByID(ctx, &pb.UserSettingIDRequest{UserId: data.UserID})
+	if err != nil {
+		return kafka.NewNonRetryableError(fmt.Errorf("invalid payload format: %w", err))
+	}
+	entity.Settings.AllowSearchEngine = datausersetting.AllowSearchEngineIndexing
+	entity.Settings.IsPrivate = datausersetting.Allow_Profile_View_From
 	// Lỗi DB thì cứ trả về bình thường để Retry
 	return c.profileRepo.CreateProfile(ctx, entity)
 }
@@ -125,23 +132,26 @@ func (c *ConsumerProfile) handleUpdatedProfile(ctx context.Context, event events
 	if err != nil {
 		return kafka.NewNonRetryableError(fmt.Errorf("invalid payload format: %w", err))
 	}
-
 	dataprofile, err := c.profileRepo.GetProfileByID(ctx, data.UserID)
 	if err != nil {
 		return err // Lỗi kết nối DB -> Retry
 	}
-
+	datausersetting, err := c.pb.GetUserSettingByID(ctx, &pb.UserSettingIDRequest{UserId: data.UserID})
+	if err != nil {
+		return kafka.NewNonRetryableError(fmt.Errorf("invalid payload format: %w", err))
+	}
+	dataprofile.Settings.AllowSearchEngine = datausersetting.AllowSearchEngineIndexing
+	dataprofile.Settings.IsPrivate = datausersetting.Allow_Profile_View_From
 	if dataprofile == nil {
 		// CẬP NHẬT: Tuỳ vào logic nghiệp vụ của bạn.
 		// Lệnh Update mà user không tồn tại thì không bao giờ thành công được -> NonRetryableError
 		return kafka.NewNonRetryableError(errors.New("profile not found for update"))
 	}
-
 	entity, err := mapper.ToEntityUpdateProfilePayload(dataprofile, data)
+	err = c.profileRepo.UpdateProfile(ctx, entity)
 	if err != nil {
 		return err
 	}
-
 	return c.profileRepo.UpdateProfile(ctx, entity)
 }
 func (c *ConsumerProfile) handleDeletedProfile(ctx context.Context, event events.IntegrationEvent) error {

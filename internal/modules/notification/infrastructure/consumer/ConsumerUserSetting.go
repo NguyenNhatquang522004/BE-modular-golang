@@ -13,9 +13,11 @@ import (
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/events"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/events/notificationEvent"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/infrastructure/kafka"
+	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/sharedEnums"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/utils"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/notification/delivery/mapper"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/notification/domain/IRepository/IRepositoryMongodb"
+	"github.com/NguyenNhatquang522004/BE-modular-golang/pkg/pb/v1"
 )
 
 type ConsumerUserSetting struct {
@@ -23,14 +25,16 @@ type ConsumerUserSetting struct {
 	pool        IRepositoryShare.IWorkerPool
 	UserSetting IRepositoryMongodb.IUserNotificationSettingsRepository
 	redisRepo   IRepositoryShare.IRedis
+	pb          pb.IdentityServiceClient
 }
 
-func NewConsumerUserSetting(events events.EventBus, pool IRepositoryShare.IWorkerPool, userSetting IRepositoryMongodb.IUserNotificationSettingsRepository, redisRepo IRepositoryShare.IRedis) *ConsumerUserSetting {
+func NewConsumerUserSetting(events events.EventBus, pool IRepositoryShare.IWorkerPool, userSetting IRepositoryMongodb.IUserNotificationSettingsRepository, redisRepo IRepositoryShare.IRedis, pbClient pb.IdentityServiceClient) *ConsumerUserSetting {
 	return &ConsumerUserSetting{
 		events:      events,
 		pool:        pool,
 		UserSetting: userSetting,
 		redisRepo:   redisRepo,
+		pb:          pbClient,
 	}
 }
 
@@ -136,6 +140,24 @@ func (c *ConsumerUserSetting) handleUpdatedUserNotificationSettings(ctx context.
 		return fmt.Errorf("no existing user notification setting found for user_id %s in event %s", data.UserID, event.ID)
 	}
 	mapper.UpdateToEntityUserNotificationSettingPayload(data, existing)
+	datausersetting, err := c.pb.GetUserSettingByID(ctx, &pb.UserSettingIDRequest{UserId: data.UserID})
+	if err != nil {
+		return fmt.Errorf("failed to get user setting from identity service for event %s: %w", event.ID, err)
+	}
+	if datausersetting == nil {
+		return fmt.Errorf("no user setting found in identity service for user_id %s in event %s", data.UserID, event.ID)
+	}
+	consvertEmailFrequency, err := sharedEnums.EmailFrequencyString(datausersetting.Notifications.EmailFrequency)
+	if err != nil {
+		return fmt.Errorf("failed to convert email frequency for user_id %s in event %s: %w", data.UserID, event.ID, err)
+	}
+	existing.Settings.EmailFrequency = consvertEmailFrequency
+	existing.Settings.PushEnabled = datausersetting.Notifications.PushInteractions
+	existing.Settings.PushInteractions = datausersetting.Notifications.PushInteractions
+	existing.Settings.PushFriends = datausersetting.Notifications.PushFriends
+	existing.Settings.PushGroups = datausersetting.Notifications.PushGroups
+	existing.Settings.PushEvents = datausersetting.Notifications.PushEvents
+	existing.Settings.PushBirthdays = datausersetting.Notifications.PushBirthdays
 	err = c.UserSetting.UpdateUserNotificationSettings(ctx, existing)
 	if err != nil {
 		return fmt.Errorf("failed to update user notification setting for event %s: %w", event.ID, err)

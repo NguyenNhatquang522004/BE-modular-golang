@@ -32,9 +32,8 @@ type UserSetting struct {
 	// --- 3. ACCESS CONTROL ---
 	Allow_Friend_Request_From    sharedEnums.PrivacyScope `bson:"allow_friend_request_from" json:"allow_friend_request_from"`       // 'everyone', 'friends_of_friends'
 	Allow_Friend_List_View_From  sharedEnums.PrivacyScope `bson:"allow_friend_list_view_from" json:"allow_friend_list_view_from"`   // 'public', 'friends', 'only_me'
-	Allow_Email_Lookup_From      sharedEnums.PrivacyScope `bson:"allow_email_lookup_from" json:"allow_email_lookup_from"`           // 'everyone', 'friends'
-	Allow_Phone_Lookup_From      sharedEnums.PrivacyScope `bson:"allow_phone_lookup_from" json:"allow_phone_lookup_from"`           // 'everyone', 'friends'
 	Allow_Search_Engine_Indexing bool                     `bson:"allow_search_engine_indexing" json:"allow_search_engine_indexing"` //
+	Allow_Profile_View_From      bool                     `bson:"allow_profile_view_from" json:"allow_profile_view_from"`           // 'public', 'friends', 'only_me'
 	// --- 4. TIMELINE & TAGGING ---
 	Allow_Timeline_Posting_From   sharedEnums.PrivacyScope `bson:"allow_timeline_posting_from" json:"allow_timeline_posting_from"`     // 'friends', 'only_me'
 	Review_Tags_Enabled           bool                     `bson:"review_tags_enabled" json:"review_tags_enabled"`                     //
@@ -47,12 +46,12 @@ type UserSetting struct {
 
 // NotificationSettings defines user notification preferences
 type NotificationSettings struct {
-	EmailFrequency   string `bson:"email_frequency" json:"email_frequency"`
-	PushInteractions bool   `bson:"push_interactions" json:"push_interactions"`
-	PushFriends      bool   `bson:"push_friends" json:"push_friends"`
-	PushGroups       bool   `bson:"push_groups" json:"push_groups"`
-	PushEvents       bool   `bson:"push_events" json:"push_events"`
-	PushBirthdays    bool   `bson:"push_birthdays" json:"push_birthdays"`
+	EmailFrequency   sharedEnums.EmailFrequency `bson:"email_frequency" json:"email_frequency"`
+	PushInteractions bool                       `bson:"push_interactions" json:"push_interactions"`
+	PushFriends      bool                       `bson:"push_friends" json:"push_friends"`
+	PushGroups       bool                       `bson:"push_groups" json:"push_groups"`
+	PushEvents       bool                       `bson:"push_events" json:"push_events"`
+	PushBirthdays    bool                       `bson:"push_birthdays" json:"push_birthdays"`
 }
 
 // Helper Method để lấy tên Collection chuẩn
