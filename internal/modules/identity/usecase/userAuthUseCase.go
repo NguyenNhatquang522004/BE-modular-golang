@@ -13,7 +13,9 @@ import (
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/constants"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/events"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/events/notificationEvent"
+	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/events/socialEvent"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/sharedEnums"
+	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/identity/delivery/dto/req"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/identity/delivery/dto/res"
 
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/identity/domain/IRepository/IRepositoryKeyCloak"
@@ -304,7 +306,14 @@ func (u *UserAuthUseCase) RegisterThree(ctx context.Context, email string, usern
 		},
 	}
 	err = u.eventBus.Publish(ctx, constants.TopicUserNotificationSettings.String(), checkEmail.ID.String(), constants.Created.String(), payload)
-	
+	payloadusersetting := &req.UserSettingReq{
+		User_ID: checkEmail.ID.String(),
+	}
+	err = u.eventBus.Publish(ctx, constants.TopicUserSettings.String(), checkEmail.ID.String(), constants.Created.String(), payloadusersetting)
+	payloadProfile := &socialEvent.ProfilePayload{
+		UserID: checkEmail.ID.String(),
+	}
+	err = u.eventBus.Publish(ctx, constants.TopicProfile.String(), checkEmail.ID.String(), constants.Created.String(), payloadProfile)
 	if err != nil {
 		return response.NewResponse(
 			response.WithMessage("Error publishing event"),
@@ -312,8 +321,8 @@ func (u *UserAuthUseCase) RegisterThree(ctx context.Context, email string, usern
 		), errors.New("error publishing event")
 	}
 	return response.NewResponse(
-		response.WithMessage("Registration step three not implemented yet"),
-		response.WithStatus("501"),
+		response.WithMessage("Registration step three completed successfully"),
+		response.WithStatus("200"),
 	), nil
 }
 func (u *UserAuthUseCase) CheckResendOTP(ctx context.Context, user *entity.User) (*response.Response, error) {

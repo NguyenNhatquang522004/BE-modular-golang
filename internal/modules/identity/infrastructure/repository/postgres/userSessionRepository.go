@@ -3,8 +3,6 @@ package postgres
 import (
 	"context"
 
-	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/server/http/response"
-	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/identity/delivery/dto/req"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/identity/domain/entity"
 	"gorm.io/gorm"
 )
@@ -18,27 +16,25 @@ func NewUserSessionRepository(db *gorm.DB) *UserSessionRepository {
 		db: db,
 	}
 }
-func (r *UserSessionRepository) CreateSession(ctx context.Context, session *entity.UserSession) (*response.Response, error) {
-	err := r.db.WithContext(ctx).Create(session).Error
+
+func (r *UserSessionRepository) CreateSession(ctx context.Context, session *entity.UserSession) error {
+	return r.db.WithContext(ctx).Create(session).Error
+}
+
+func (r *UserSessionRepository) GetAllUserSessions(ctx context.Context, userID string) ([]*entity.UserSession, error) {
+	var sessions []*entity.UserSession
+	err := r.db.WithContext(ctx).Where("user_id = ?", userID).Find(&sessions).Error
 	if err != nil {
 		return nil, err
 	}
-	return response.NewResponse(response.WithData(session), response.WithMessage("success"), response.WithStatus("success")), nil
+	return sessions, nil
 }
 
-func (r *UserSessionRepository) GetAllUserSessions(ctx context.Context, userID string) (*response.Response, error) {
-	var sessions = []*req.UserSessionReq{}
-	err := r.db.WithContext(ctx).Where("user_id = ?", userID).Find(&sessions).Error
+func (r *UserSessionRepository) GetUserSessionPast(ctx context.Context, userID string) (*entity.UserSession, error) {
+	var session entity.UserSession
+	err := r.db.WithContext(ctx).Where("user_id = ?", userID).Order("created_at DESC").Offset(1).Limit(1).First(&session).Error
 	if err != nil {
-		return response.NewResponse(response.WithData(""), response.WithMessage(err.Error()), response.WithStatus("")), err
+		return nil, err
 	}
-	return response.NewResponse(response.WithData(sessions), response.WithMessage("success"), response.WithStatus("success")), nil
-}
-func (r *UserSessionRepository) GetUserSessionPast(ctx context.Context, userID string) (*response.Response, error) {
-	var sessions = &req.UserSessionReq{}
-	err := r.db.WithContext(ctx).Where("user_id = ?", userID).Order("created_at DESC").Offset(1).Limit(1).First(&sessions).Error
-	if err != nil {
-		return response.NewResponse(response.WithData(""), response.WithMessage(err.Error()), response.WithStatus("")), err
-	}
-	return response.NewResponse(response.WithData(sessions), response.WithMessage("success"), response.WithStatus("success")), nil
+	return &session, nil
 }

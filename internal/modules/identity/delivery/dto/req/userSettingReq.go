@@ -33,7 +33,7 @@ type UserSettingReq struct {
 	Allow_Friend_Request_From    sharedEnums.PrivacyScope `bson:"allow_friend_request_from" json:"allow_friend_request_from"`       // 'everyone', 'friends_of_friends'
 	Allow_Friend_List_View_From  sharedEnums.PrivacyScope `bson:"allow_friend_list_view_from" json:"allow_friend_list_view_from"`   // 'public', 'friends', 'only_me'
 	Allow_Search_Engine_Indexing bool                     `bson:"allow_search_engine_indexing" json:"allow_search_engine_indexing"` //
-	Allow_Profile_View_From      sharedEnums.PrivacyScope `bson:"allow_profile_view_from" json:"allow_profile_view_from"`           // 'public', 'friends', 'only_me'
+	Allow_Profile_View_From      bool                     `bson:"allow_profile_view_from" json:"allow_profile_view_from"`           // 'public', 'friends', 'only_me'
 	// --- 4. TIMELINE & TAGGING ---
 	Allow_Timeline_Posting_From   sharedEnums.PrivacyScope `bson:"allow_timeline_posting_from" json:"allow_timeline_posting_from"`     // 'friends', 'only_me'
 	Review_Tags_Enabled           bool                     `bson:"review_tags_enabled" json:"review_tags_enabled"`                     //

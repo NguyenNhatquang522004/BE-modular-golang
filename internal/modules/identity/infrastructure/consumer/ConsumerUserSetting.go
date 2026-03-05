@@ -114,7 +114,7 @@ func (c *ConsumerUserSetting) handleCreatedUserSetting(ctx context.Context, even
 	if data == nil {
 		return kafka.NewNonRetryableError(errors.New("invalid parse payload for created user setting event: " + err.Error()))
 	}
-	entity := mapper.ToEntityUserSetting(data)
+	entity := mapper.ToCreateIniEntityUserSetting(data.User_ID)
 	err = c.usersettingRepo.CreateUserSettingDefault(ctx, entity)
 	if err != nil {
 		return errors.New("failed to create default user settings: " + err.Error())

@@ -36,7 +36,7 @@ func NewConsumerProfile(profileRepo IRepositoryMongodb.IProfileRepositoryMongodb
 }
 
 func (c *ConsumerProfile) ConsumerProfile(ctx context.Context) error {
-	err := c.events.SubscribeBatch(ctx, constants.TopicProfile.String(), 100, time.Duration(5)*time.Second, func(ctx context.Context, events []events.IntegrationEvent) error {
+	err := c.events.SubscribeBatch(ctx, constants.TopicProfile.String(), 100, time.Duration(5)*time.Minute, func(ctx context.Context, events []events.IntegrationEvent) error {
 		var wg sync.WaitGroup
 		errchan := make(chan error, len(events))
 		for _, event := range events {

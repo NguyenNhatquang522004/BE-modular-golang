@@ -3,9 +3,7 @@ package postgres
 import (
 	"context"
 
-	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/server/http/response"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/sharedEnums"
-	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/identity/delivery/dto/res"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/identity/domain/entity"
 	"github.com/google/uuid"
 	"gorm.io/gorm"
@@ -21,121 +19,99 @@ func NewUserRoleRepository(db *gorm.DB) *UserRoleRepository {
 	}
 }
 
-func (u *UserRoleRepository) CreateRole(ctx context.Context, role sharedEnums.RoleType, description string) (*response.Response, error) {
-	err := u.db.WithContext(ctx).Create(&entity.UserRole{
+func (u *UserRoleRepository) CreateRole(ctx context.Context, role sharedEnums.RoleType, description string) error {
+	return u.db.WithContext(ctx).Create(&entity.UserRole{
 		Role:        role,
 		Description: description,
 	}).Error
-	if err != nil {
-		return nil, err
-	}
-	return response.NewResponse(response.WithData(err), response.WithMessage(""), response.WithStatus("200")), nil
 }
 
-func (u *UserRoleRepository) DeleteRole(ctx context.Context, roleID string) (*response.Response, error) {
-	// Implementation goes here
-	data, err := u.FindRoleWithID(ctx, roleID)
+func (u *UserRoleRepository) DeleteRole(ctx context.Context, roleID string) error {
+	role, err := u.FindRoleWithID(ctx, roleID)
 	if err != nil {
-		return nil, err
+		return err
 	}
-	role := data.Data.(*entity.UserRole)
-	err = u.db.WithContext(ctx).Delete(&role).Error
-	if err != nil {
-		return nil, err
-	}
-	return response.NewResponse(response.WithData(nil), response.WithMessage("Role deleted successfully"), response.WithStatus("200")), nil
+	return u.db.WithContext(ctx).Delete(role).Error
 }
 
-func (u *UserRoleRepository) GetAllUserRoles(ctx context.Context, RoleID string) (*response.Response, error) {
-	var user = &[]*entity.User{}
-	result := u.db.WithContext(ctx).Joins("JOIN user_roles on user_roles.user_id = users.id").
-		Joins("JOIN roles on roles.id = user_roles.role_id").Where("roles.id = ?", RoleID).Find(user).Error
-	if result != nil {
-		return response.NewResponse(response.WithData(""), response.WithMessage(result.Error()), response.WithStatus("500")), result
-	}
-
-	return response.NewResponse(response.WithData(user), response.WithMessage(""), response.WithStatus("200")), nil
-
-}
-
-func (u *UserRoleRepository) FindUserwithRole(ctx context.Context, userID string, role sharedEnums.RoleType) (*response.Response, error) {
-	var user = &entity.User{}
-	err := u.db.WithContext(ctx).Joins("JOIN user_roles on user_roles.user_id = users.id").
+func (u *UserRoleRepository) GetAllUserRoles(ctx context.Context, RoleID string) ([]*entity.UserRole, error) {
+	var roles []*entity.UserRole
+	err := u.db.WithContext(ctx).
+		Joins("JOIN user_roles on user_roles.user_id = users.id").
 		Joins("JOIN roles on roles.id = user_roles.role_id").
-		Where("users.id = ? AND roles.role = ?", userID, role).
-		First(user).Error
+		Where("roles.id = ?", RoleID).
+		Find(&roles).Error
 	if err != nil {
-		return response.NewResponse(response.WithData(""),
-			response.WithMessage(err.Error()), response.WithStatus("")), err
+		return nil, err
 	}
-	return response.NewResponse(response.WithData(user), response.WithMessage(""), response.WithStatus("200")), nil
+	return roles, nil
 }
-func (u *UserRoleRepository) FindRoleWithID(ctx context.Context, roleID string) (*response.Response, error) {
+
+func (u *UserRoleRepository) FindUserwithRole(ctx context.Context, userID string, role sharedEnums.RoleType) (*entity.UserRole, error) {
+	var userRole = &entity.UserRole{}
+	err := u.db.WithContext(ctx).
+		Joins("JOIN user_user_roles on user_user_roles.user_role_id = user_roles.id").
+		Where("user_user_roles.user_id = ? AND user_roles.role = ?", userID, role).
+		First(userRole).Error
+	if err != nil {
+		return nil, err
+	}
+	return userRole, nil
+}
+
+func (u *UserRoleRepository) FindRoleWithID(ctx context.Context, roleID string) (*entity.UserRole, error) {
 	var role = &entity.UserRole{}
 	err := u.db.WithContext(ctx).Where("id = ?", roleID).First(role).Error
 	if err != nil {
 		return nil, err
 	}
-	return response.NewResponse(response.WithData(role), response.WithMessage(""), response.WithStatus("200")), nil
+	return role, nil
 }
-func (u *UserRoleRepository) FindRoleWithName(ctx context.Context, role sharedEnums.RoleType) (*response.Response, error) {
+
+func (u *UserRoleRepository) FindRoleWithName(ctx context.Context, role sharedEnums.RoleType) (*entity.UserRole, error) {
 	var userRole = &entity.UserRole{}
 	err := u.db.WithContext(ctx).Where("role = ?", role).First(userRole).Error
 	if err != nil {
 		return nil, err
 	}
-	return response.NewResponse(response.WithData(userRole), response.WithMessage(""), response.WithStatus("200")), nil
-
+	return userRole, nil
 }
 
-func (u *UserRoleRepository) UpdateRoleDescription(ctx context.Context, roleID string, description string) (*response.Response, error) {
+func (u *UserRoleRepository) UpdateRoleDescription(ctx context.Context, roleID string, description string) error {
 	role, err := u.FindRoleWithID(ctx, roleID)
 	if err != nil {
-		return nil, err
+		return err
 	}
-	userRole := role.Data.(*entity.UserRole)
-	userRole.Description = description
-	err = u.db.WithContext(ctx).Save(userRole).Error
-	if err != nil {
-		return nil, err
-	}
-	return response.NewResponse(response.WithData(userRole), response.WithMessage(""), response.WithStatus("200")), nil
-
-}
-func (u *UserRoleRepository) CreateRoleUser(ctx context.Context, userID string, roleID string) (*response.Response, error) {
-	err := u.db.WithContext(ctx).Model(&entity.User{ID: uuid.MustParse(userID)}).Association("Roles").Append(&entity.UserRole{ID: uuid.MustParse(roleID)})
-	if err != nil {
-		return nil, err
-	}
-	return response.NewResponse(response.WithData(nil), response.WithMessage("Role assigned to user successfully"), response.WithStatus("200")), nil
+	role.Description = description
+	return u.db.WithContext(ctx).Save(role).Error
 }
 
-func (u *UserRoleRepository) GetAllRoles(ctx context.Context) (*response.Response, error) {
-	var roles = &[]*res.UserRoleRes{}
-	err := u.db.WithContext(ctx).Raw("SELECT ID , role, description FROM user_roles").Scan(roles).Error
-	if err != nil {
-		return nil, err
-	}
-	return response.NewResponse(response.WithData(roles), response.WithMessage(""), response.WithStatus("200")), nil
+func (u *UserRoleRepository) CreateRoleUser(ctx context.Context, userID string, roleID string) error {
+	return u.db.WithContext(ctx).
+		Model(&entity.User{ID: uuid.MustParse(userID)}).
+		Association("Roles").
+		Append(&entity.UserRole{ID: uuid.MustParse(roleID)})
 }
 
-func (u *UserRoleRepository) DeleteRoleFromUser(ctx context.Context, userID string, roleID string) (*response.Response, error) {
-	err := u.db.WithContext(ctx).Model(&entity.User{ID: uuid.MustParse(userID)}).Association("Roles").Delete(&entity.UserRole{ID: uuid.MustParse(roleID)})
-	if err != nil {
-		return nil, err
-	}
-
-	return response.NewResponse(response.WithData(nil), response.WithMessage("Role removed from user successfully"), response.WithStatus("200")), nil
+func (u *UserRoleRepository) GetAllRoles(ctx context.Context) error {
+	var roles []*entity.UserRole
+	return u.db.WithContext(ctx).Find(&roles).Error
 }
 
-func (u *UserRoleRepository) UpdateRoleOfUser(ctx context.Context, userID string, roleIDs []string) (*response.Response, error) {
-	var roles = []*entity.UserRole{}
+func (u *UserRoleRepository) DeleteRoleFromUser(ctx context.Context, userID string, roleID string) error {
+	return u.db.WithContext(ctx).
+		Model(&entity.User{ID: uuid.MustParse(userID)}).
+		Association("Roles").
+		Delete(&entity.UserRole{ID: uuid.MustParse(roleID)})
+}
+
+func (u *UserRoleRepository) UpdateRoleOfUser(ctx context.Context, userID string, roleIDs []string) error {
+	var roles []*entity.UserRole
 	for _, id := range roleIDs {
 		roles = append(roles, &entity.UserRole{ID: uuid.MustParse(id)})
 	}
-	err := u.db.WithContext(ctx).Model(&entity.User{ID: uuid.MustParse(userID)}).Association("Roles").Replace(roles)
-	if err != nil {
-		return nil, err
-	}
-	return response.NewResponse(response.WithData(nil), response.WithMessage("User roles updated successfully"), response.WithStatus("200")), nil
+	return u.db.WithContext(ctx).
+		Model(&entity.User{ID: uuid.MustParse(userID)}).
+		Association("Roles").
+		Replace(roles)
 }
