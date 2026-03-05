@@ -21,7 +21,7 @@ func NewNotificationProducer(eventBus events.EventBus) *NotificationProducer {
 
 func (p *NotificationProducer) CreateUserNotificationSettings(ctx context.Context, payload *notificationEvent.CreateUserNotificationSettingsPayload) error {
 	// Thực hiện logic gửi thông báo ở đây, ví dụ: gửi message đến Kafka, RabbitMQ, v.v.
-	err := p.eventBus.Publish(ctx, constants.TopicCreateUserNotificationSettings.String(), payload.UserID, constants.Created.String(), payload)
+	err := p.eventBus.Publish(ctx, constants.TopicUserNotificationSettings.String(), payload.UserID, constants.Created.String(), payload)
 	if err != nil {
 		return err
 	}

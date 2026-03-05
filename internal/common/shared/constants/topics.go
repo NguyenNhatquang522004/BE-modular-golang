@@ -13,9 +13,12 @@ const (
 type ProcessStatus string
 
 const (
-	StatusSuccess ProcessStatus = "SUCCESS"
-	StatusFailed  ProcessStatus = "FAILED"
-	StatusSkipped ProcessStatus = "SKIPPED" // Dùng khi message bị trùng (Idempotent) hoặc không hợp lệ để xử lý
+	StatusUndefined  ProcessStatus = "UNDEFINED"
+	StatusProcessing ProcessStatus = "PROCESSING"
+	StatusSuccess    ProcessStatus = "SUCCESS"
+	StatusFailed     ProcessStatus = "FAILED"
+	StatusSkipped    ProcessStatus = "SKIPPED" // Dùng khi message bị trùng (Idempotent) hoặc không hợp lệ để xử lý
+
 )
 
 type TopicName string
@@ -39,7 +42,7 @@ const (
 	TopicDeleteContentRelationTarget     TopicName = "content.delete_relation_target.events" // chưa làm gì cả
 
 	// notification
-	TopicCreateUserNotificationSettings TopicName = "notification.create_user_notification_settings.events"
+	TopicUserNotificationSettings TopicName = "notification.create_user_notification_settings.events"
 	TopicSendNotificationType           TopicName = "notification.send_notification.events"
 
 	//interaction
@@ -103,7 +106,7 @@ var SocialTopics = []TopicConfig{
 	{Name: TopicFollow, Partitions: 3},
 	{Name: TopicContentPostPublish, Partitions: 3},
 	{Name: TopicContentPostPublishMediaAssets, Partitions: 3},
-	{Name: TopicCreateUserNotificationSettings, Partitions: 3},
+	{Name: TopicUserNotificationSettings, Partitions: 3},
 	{Name: TopicSendNotificationType, Partitions: 3},
 	{Name: TopicDeleteRelationTarget, Partitions: 3},
 	{Name: TopicDailyMetricsPage, Partitions: 3},

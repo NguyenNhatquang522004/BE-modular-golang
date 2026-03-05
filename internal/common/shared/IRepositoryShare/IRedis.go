@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/server/http/response"
+	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/constants"
 )
 
 // SetNX: Nếu thiếu cái này, bạn không thể làm Distributed Lock (khóa để ngăn 2 server cùng xử lý 1 đơn hàng).
@@ -85,6 +86,11 @@ type IRedis interface {
 	CustomizeSetCache(ctx context.Context, items map[string]any) error
 	//any, string, bool, int, error : data , nextcursor , hasnext , limit
 	CustomizeGetCache(ctx context.Context, items []string) (any, string, bool, int, error)
+
+	// Các hàm tùy chỉnh khác (nếu cần)
+	Lock(ctx context.Context, eventID string) (constants.ProcessStatus, bool, error) // Hàm khóa để đảm bảo chỉ 1 worker xử lý 1 eventID nhất định (Distributed Lock)
+	Unlock(ctx context.Context, eventID string) error                                // Hàm mở khóa sau khi xử lý xong
+	MarkCompleted(ctx context.Context, eventID string) error                         // Hàm đánh dấu event đã xử lý xong (để các worker khác biết mà không xử lý lại)
 }
 type Z struct {
 	Score  float64

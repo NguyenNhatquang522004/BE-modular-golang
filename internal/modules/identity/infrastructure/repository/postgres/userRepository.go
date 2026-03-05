@@ -24,54 +24,54 @@ func NewUserRepository(db *gorm.DB, redisRepo irepositoryshare.IRedis) *UserRepo
 	}
 }
 
-func (r *UserRepository) CreateUser(user *entity.User) (*entity.User, error) {
-	err := r.DB.Create(user).Error
+func (r *UserRepository) CreateUser(ctx context.Context, user *entity.User) (*entity.User, error) {
+	err := r.DB.WithContext(ctx).Create(user).Error
 	if err != nil {
 		return nil, err
 	}
 	return user, nil
 }
 
-func (r *UserRepository) GetUserByEmail(email string) (*entity.User, error) {
+func (r *UserRepository) GetUserByEmail(ctx context.Context, email string) (*entity.User, error) {
 	var user = &entity.User{}
-	err := r.DB.Where(&entity.User{Email: email}).First(user).Error
+	err := r.DB.WithContext(ctx).Where(&entity.User{Email: email}).First(user).Error
 	if err != nil {
 		return nil, err
 	}
 	return user, nil
 }
-func (r *UserRepository) GetUserByID(userID string) (*entity.User, error) {
+func (r *UserRepository) GetUserByID(ctx context.Context, userID string) (*entity.User, error) {
 	var user = &entity.User{}
-	err := r.DB.Where(&entity.User{ID: uuid.MustParse(userID)}).First(user).Error
+	err := r.DB.WithContext(ctx).Where(&entity.User{ID: uuid.MustParse(userID)}).First(user).Error
 	if err != nil {
 		return nil, err
 	}
 	return user, nil
 }
-func (r *UserRepository) UpdateUser(user *entity.User) error {
-	return r.DB.Save(user).Error
+func (r *UserRepository) UpdateUser(ctx context.Context, user *entity.User) error {
+	return r.DB.WithContext(ctx).Save(user).Error
 }
 
-func (r *UserRepository) DeleteUser(userID string) error {
-	err := r.DB.Where("id = ?", userID).Delete(&entity.User{}).Error
+func (r *UserRepository) DeleteUser(ctx context.Context, userID string) error {
+	err := r.DB.WithContext(ctx).Where("id = ?", userID).Delete(&entity.User{}).Error
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func (r *UserRepository) FindByKeycloakID(keycloakID string) (*entity.User, error) {
+func (r *UserRepository) FindByKeycloakID(ctx context.Context, keycloakID string) (*entity.User, error) {
 	var user = &entity.User{}
-	err := r.DB.Where(&entity.User{KeycloakID: keycloakID}).First(user).Error
+	err := r.DB.WithContext(ctx).Where(&entity.User{KeycloakID: keycloakID}).First(user).Error
 	if err != nil {
 		return nil, err
 	}
 	return user, nil
 }
 
-func (r *UserRepository) Panigation(Cursor string, Limit int) ([]*entity.User, string, bool, int, error) {
+func (r *UserRepository) Panigation(ctx context.Context, Cursor string, Limit int) ([]*entity.User, string, bool, int, error) {
 	var users = []*entity.User{}
-	users, cursor, hasNext, limit, err := r.GetPage1DataFromCache(context.Background())
+	users, cursor, hasNext, limit, err := r.GetPage1DataFromCache(ctx)
 	if err != nil {
 		return nil, "", false, 0, err // Lỗi hệ thống Redis
 	}
@@ -119,7 +119,7 @@ func (r *UserRepository) Panigation(Cursor string, Limit int) ([]*entity.User, s
 	}
 	lastUser := users[len(users)-1]
 	encodecursor := utils.EncodeCursor(lastUser.CreatedAt, lastUser.ID)
-	err = r.CachePage1Data(context.Background(), users, encodecursor, hasNext, Limit)
+	err = r.CachePage1Data(ctx, users, encodecursor, hasNext, Limit)
 	if err != nil {
 		return nil, "", false, 0, err
 	}

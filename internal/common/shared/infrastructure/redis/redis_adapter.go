@@ -2,22 +2,32 @@ package redis
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"strings"
 	"time"
 
+	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/configs"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/server/http/response"
-	 "github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/IRepositoryShare"
+	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/IRepositoryShare"
+	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/constants"
 	"github.com/redis/go-redis/v9"
 )
 
 type RedisAdapter struct {
 	client *redis.Client
+	// Dùng cho Distributed Lock
+	lockTTL      time.Duration // Thời gian giữ khóa (cho phép xử lý xong hoặc tự động hết hạn)
+	completedTTL time.Duration // Thời gian giữ trạng thái completed (để tránh trùng lặp lâu dài)
+	cfg          configs.Config
 }
 
-func NewRedisAdapter(client *redis.Client) IRepositoryShare.IRedis {
+func NewRedisAdapter(client *redis.Client, cfg configs.Config) IRepositoryShare.IRedis {
 	return &RedisAdapter{
-		client: client,
+		client:       client,
+		lockTTL:      time.Duration(cfg.RedisDB.LockTTL) * time.Minute,
+		completedTTL: time.Duration(cfg.RedisDB.CompletedTTL) * time.Hour,
+		cfg:          cfg,
 	}
 }
 func (r *RedisAdapter) Ping(ctx context.Context) (*response.Response, error) {
@@ -414,4 +424,55 @@ func (r *RedisAdapter) CustomizeGetCache(ctx context.Context, items []string) (a
 		}
 	}
 	return data, cursor, hasNext, limit, nil
+}
+
+var ErrAlreadyProcessing = errors.New("event is currently being processed by another worker")
+
+// Lock: Xin phép xử lý Event
+func (r *RedisAdapter) Lock(ctx context.Context, eventID string) (constants.ProcessStatus, bool, error) {
+	key := fmt.Sprintf("idempotency:event:%s", eventID)
+
+	// 1. Thử khóa với trạng thái PROCESSING
+	// Chỉ thành công nếu Key chưa hề tồn tại
+	acquired, err := r.client.SetNX(ctx, key, constants.StatusProcessing, r.lockTTL).Result()
+	if err != nil {
+		return "", false, fmt.Errorf("redis setnx error: %w", err)
+	}
+
+	if acquired {
+		// Lấy được khóa! Cho phép chạy DB.
+		return "", true, nil
+	}
+
+	// 2. Nếu không lấy được khóa, nghĩa là Key ĐÃ TỒN TẠI. Ta phải xem nó đang ở trạng thái nào.
+	state, err := r.client.Get(ctx, key).Result()
+	if err != nil {
+		return "", false, fmt.Errorf("redis get error: %w", err)
+	}
+
+	if state == string(constants.StatusSuccess) {
+		// Đã có người làm XONG. Báo false để Handler bỏ qua (Skipped).
+		return constants.StatusSuccess, false, nil
+	}
+
+	if state == string(constants.StatusProcessing) {
+		// Đã có người ĐANG LÀM (hoặc đang treo). Báo lỗi đặc biệt để kích hoạt Retry.
+		// Tại sao Retry? Vì biết đâu thằng kia bị crash, lát nữa key hết hạn (lockTTL) mình sẽ chui vào được.
+		return constants.StatusProcessing, false, ErrAlreadyProcessing
+	}
+
+	return "", false, nil
+}
+
+// MarkCompleted: Đánh dấu thành công vĩnh viễn (hoặc 24h)
+func (r *RedisAdapter) MarkCompleted(ctx context.Context, eventID string) error {
+	key := fmt.Sprintf("idempotency:event:%s", eventID)
+	// Ghi đè trạng thái thành COMPLETED và kéo dài thời gian sống lên 24 giờ
+	return r.client.Set(ctx, key, constants.StatusSuccess, r.completedTTL).Err()
+}
+
+// Unlock: Gỡ khóa nếu DB bị lỗi để lần sau Kafka gửi lại còn được phép chạy
+func (r *RedisAdapter) Unlock(ctx context.Context, eventID string) error {
+	key := fmt.Sprintf("idempotency:event:%s", eventID)
+	return r.client.Del(ctx, key).Err()
 }

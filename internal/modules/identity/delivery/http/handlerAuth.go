@@ -21,7 +21,7 @@ func NewAuthHandler(ucUserAuth usecase.IUserAuthService, ucGoogleAuth usecase.IG
 	}
 }
 func (h *AuthHandler) HandlerRegisterOne(c *gin.Context, req *req.RegisterOneRequest) *response.Response {
-	data, err := h.ucUserAuth.RegisterOne(req.Email)
+	data, err := h.ucUserAuth.RegisterOne(c.Request.Context(), req.Email)
 	if err != nil {
 		return response.NewResponse(response.WithData(nil), response.WithMessage(err.Error()), response.WithStatus("400"))
 	}
@@ -29,7 +29,7 @@ func (h *AuthHandler) HandlerRegisterOne(c *gin.Context, req *req.RegisterOneReq
 }
 
 func (h *AuthHandler) HandlerRegisterTwo(c *gin.Context, req *req.RegisterTwoRequest) *response.Response {
-	data, err := h.ucUserAuth.RegisterTwo(req.Email, req.OTP)
+	data, err := h.ucUserAuth.RegisterTwo(c.Request.Context(), req.Email, req.OTP)
 	if err != nil {
 		return response.NewResponse(response.WithData(nil), response.WithMessage(err.Error()), response.WithStatus("400"))
 	}
@@ -37,7 +37,7 @@ func (h *AuthHandler) HandlerRegisterTwo(c *gin.Context, req *req.RegisterTwoReq
 }
 
 func (h *AuthHandler) HandlerRegisterThree(c *gin.Context, req *req.RegisterThreeRequest) *response.Response {
-	data, err := h.ucUserAuth.RegisterThree(req.Email, req.Username, req.Password)
+	data, err := h.ucUserAuth.RegisterThree(c.Request.Context(), req.Email, req.Username, req.Password)
 	if err != nil {
 		return response.NewResponse(response.WithData(nil), response.WithMessage(err.Error()), response.WithStatus("400"))
 	}
@@ -45,7 +45,7 @@ func (h *AuthHandler) HandlerRegisterThree(c *gin.Context, req *req.RegisterThre
 }
 
 func (h *AuthHandler) HandlerLogin(c *gin.Context, req *req.LoginRequest) *response.Response {
-	data, err := h.ucUserAuth.Login(req.Email, req.Password)
+	data, err := h.ucUserAuth.Login(c.Request.Context(), req.Email, req.Password)
 	if err != nil {
 		return response.NewResponse(response.WithData(nil), response.WithMessage(err.Error()), response.WithStatus("400"))
 	}
@@ -61,7 +61,7 @@ func (h *AuthHandler) HandlerLogin(c *gin.Context, req *req.LoginRequest) *respo
 
 func (h *AuthHandler) HandlerReSendOTP(c *gin.Context, req *req.ReSendOTPRequest) *response.Response {
 
-	data, err := h.ucUserAuth.ReSendOTP(req.Email)
+	data, err := h.ucUserAuth.ReSendOTP(c.Request.Context(), req.Email)
 	if err != nil {
 		return response.NewResponse(response.WithData(nil), response.WithMessage(err.Error()), response.WithStatus("400"))
 	}
@@ -70,21 +70,21 @@ func (h *AuthHandler) HandlerReSendOTP(c *gin.Context, req *req.ReSendOTPRequest
 
 func (h *AuthHandler) HandlerSendLinkResetPassword(c *gin.Context, req *req.SendLinkResetPasswordRequest) *response.Response {
 
-	data, err := h.ucUserAuth.SendLinkResetPassword(req.Email)
+	data, err := h.ucUserAuth.SendLinkResetPassword(c.Request.Context(), req.Email)
 	if err != nil {
 		return response.NewResponse(response.WithData(nil), response.WithMessage(err.Error()), response.WithStatus("400"))
 	}
 	return data
 }
 func (h *AuthHandler) HandlerResetPassword(c *gin.Context, req *req.ResetPasswordRequest) *response.Response {
-	data, err := h.ucUserAuth.ResetPassword(req.Email, req.NewPassword)
+	data, err := h.ucUserAuth.ResetPassword(c.Request.Context(), req.Email, req.NewPassword)
 	if err != nil {
 		return response.NewResponse(response.WithData(nil), response.WithMessage(err.Error()), response.WithStatus("400"))
 	}
 	return data
 }
 func (h *AuthHandler) Handlerlogout(c *gin.Context, req *req.Logout) *response.Response {
-	data, err := h.ucUserAuth.LogOut(req.UserID, req.AccessToken)
+	data, err := h.ucUserAuth.LogOut(c.Request.Context(), req.UserID, req.AccessToken)
 	if err != nil {
 		return response.NewResponse(response.WithData(nil), response.WithMessage(err.Error()), response.WithStatus("400"))
 	}
@@ -93,14 +93,14 @@ func (h *AuthHandler) Handlerlogout(c *gin.Context, req *req.Logout) *response.R
 
 func (h *AuthHandler) HandlerLoginWithGoogle(c *gin.Context, req *req.GoogleLoginRequest) *response.Response {
 
-	data, err := h.ucGoogleAuth.Login("google", req.Token)
+	data, err := h.ucGoogleAuth.Login(c.Request.Context(), "google", req.Token)
 	if err != nil {
 		return response.NewResponse(response.WithData(nil), response.WithMessage(err.Error()), response.WithStatus("400"))
 	}
 	return data
 }
 func (h *AuthHandler) HandlerGetGoogleLoginURL(c *gin.Context, req *req.GoogleLoginURLRequest) *response.Response {
-	data, err := h.ucGoogleAuth.GetLoginURL(req.RedirectURI)
+	data, err := h.ucGoogleAuth.GetLoginURL(c.Request.Context(), req.RedirectURI)
 	if err != nil {
 		return response.NewResponse(response.WithData(nil), response.WithMessage(err.Error()), response.WithStatus("400"))
 	}

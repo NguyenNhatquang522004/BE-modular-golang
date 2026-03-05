@@ -117,10 +117,12 @@ type CassandraConfig struct {
 	Keyspace string
 }
 type RedisConfig struct {
-	Host     string
-	Port     string
-	Password string
-	DB       int
+	Host         string
+	Port         string
+	Password     string
+	DB           int
+	LockTTL      int
+	CompletedTTL int
 }
 
 type PostgresConfig struct {
@@ -223,10 +225,13 @@ func LoadConfig() (*Config, error) {
 
 		// --- Redis ---
 		RedisDB: RedisConfig{
-			Host:     viper.GetString("REDIS_HOST"),
-			Port:     viper.GetString("REDIS_PORT"),
-			Password: viper.GetString("REDIS_PASSWORD"),
-			DB:       viper.GetInt("REDIS_DB"), // Lưu ý: Field này là int nên dùng GetInt
+			Host:         viper.GetString("REDIS_HOST"),
+			Port:         viper.GetString("REDIS_PORT"),
+			Password:     viper.GetString("REDIS_PASSWORD"),
+			DB:           viper.GetInt("REDIS_DB"), // Lưu ý: Field này là int nên dùng GetInt
+			LockTTL:      viper.GetInt("REDIS_LOCK_TTL"),
+			CompletedTTL: viper.GetInt("REDIS_LOCK_COMPLETED_TTL"),
+			// Thêm các cấu hình khác nếu cần (ví dụ: PoolSize, MinIdleConns...)
 		},
 
 		// --- MongoDB ---

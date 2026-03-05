@@ -44,14 +44,14 @@ func NewUserAuthUseCase(userRepo IRepositoryPostgres.IUserRepository,
 	}
 }
 
-func (u *UserAuthUseCase) Login(email string, password string) (*response.Response, error) {
+func (u *UserAuthUseCase) Login(ctx context.Context, email string, password string) (*response.Response, error) {
 	if email == "" || password == "" {
 		return response.NewResponse(
 			response.WithMessage("Email and password must not be empty"),
 			response.WithStatus("400"),
 		), errors.New("email and password must not be empty")
 	}
-	checkemail, err := u.userRepo.GetUserByEmail(email)
+	checkemail, err := u.userRepo.GetUserByEmail(ctx, email)
 	if err != nil {
 		return response.NewResponse(
 			response.WithMessage("Invalid email "),
@@ -66,7 +66,6 @@ func (u *UserAuthUseCase) Login(email string, password string) (*response.Respon
 			response.WithStatus("401"),
 		), errors.New("invalid password")
 	}
-	ctx := context.Background()
 	// 2. Gọi Keycloak để lấy Token
 	tokenResult, err := u.keycloakClient.LoginWithPassword(ctx, email, checkemail.Password)
 	if err != nil {
@@ -129,9 +128,9 @@ func (u *UserAuthUseCase) Login(email string, password string) (*response.Respon
 		response.WithStatus("200"),
 	), nil
 }
-func (u *UserAuthUseCase) RegisterOne(email string) (*response.Response, error) {
+func (u *UserAuthUseCase) RegisterOne(ctx context.Context, email string) (*response.Response, error) {
 
-	checkEmail, checkEmailErr := u.userRepo.GetUserByEmail(email)
+	checkEmail, checkEmailErr := u.userRepo.GetUserByEmail(ctx, email)
 	if checkEmailErr != nil {
 		return response.NewResponse(
 			response.WithMessage("Error checking email"),
@@ -152,7 +151,7 @@ func (u *UserAuthUseCase) RegisterOne(email string) (*response.Response, error) 
 		OTPCode:      uuid.NewString()[:10],
 		OTPExpiry:    time.Now().Add(30 * time.Minute),
 	}
-	_, createUserErr := u.userRepo.CreateUser(user)
+	_, createUserErr := u.userRepo.CreateUser(ctx, user)
 	callNotification := func() error {
 		// Gọi API của module notification để gửi OTP
 		err := u.SendOTP(email, user.OTPCode)
@@ -163,7 +162,7 @@ func (u *UserAuthUseCase) RegisterOne(email string) (*response.Response, error) 
 		payload := &notificationEvent.CreateUserNotificationSettingsPayload{
 			UserID: user.ID.String(),
 		}
-		return u.notificationProducer.CreateUserNotificationSettings(context.Background(), payload)
+		return u.notificationProducer.CreateUserNotificationSettings(ctx, payload)
 	}
 	err := callNotification()
 	if err != nil {
@@ -185,8 +184,8 @@ func (u *UserAuthUseCase) RegisterOne(email string) (*response.Response, error) 
 	), nil
 }
 
-func (u *UserAuthUseCase) RegisterTwo(email string, otp string) (*response.Response, error) {
-	checkEmail, checkEmailErr := u.userRepo.GetUserByEmail(email)
+func (u *UserAuthUseCase) RegisterTwo(ctx context.Context, email string, otp string) (*response.Response, error) {
+	checkEmail, checkEmailErr := u.userRepo.GetUserByEmail(ctx, email)
 	if checkEmailErr != nil {
 		return response.NewResponse(
 			response.WithMessage("Error checking email"),
@@ -207,7 +206,7 @@ func (u *UserAuthUseCase) RegisterTwo(email string, otp string) (*response.Respo
 	}
 	if checkEmail.OTPCode != otp {
 		checkEmail.OTPAttempts += 1
-		_ = u.userRepo.UpdateUser(checkEmail)
+		_ = u.userRepo.UpdateUser(ctx, checkEmail)
 		return response.NewResponse(
 			response.WithMessage("Invalid OTP code"),
 			response.WithStatus("401"),
@@ -215,7 +214,7 @@ func (u *UserAuthUseCase) RegisterTwo(email string, otp string) (*response.Respo
 	}
 
 	checkEmail.StepRegister = 2
-	updateUserErr := u.userRepo.UpdateUser(checkEmail)
+	updateUserErr := u.userRepo.UpdateUser(ctx, checkEmail)
 	if updateUserErr != nil {
 		return response.NewResponse(
 			response.WithMessage("Error updating user"),
@@ -229,8 +228,8 @@ func (u *UserAuthUseCase) RegisterTwo(email string, otp string) (*response.Respo
 	), nil
 }
 
-func (u *UserAuthUseCase) RegisterThree(email string, username string, password string) (*response.Response, error) {
-	checkEmail, checkEmailErr := u.userRepo.GetUserByEmail(email)
+func (u *UserAuthUseCase) RegisterThree(ctx context.Context, email string, username string, password string) (*response.Response, error) {
+	checkEmail, checkEmailErr := u.userRepo.GetUserByEmail(ctx, email)
 	if checkEmailErr != nil {
 		return response.NewResponse(
 			response.WithMessage("Error checking email"),
@@ -271,7 +270,6 @@ func (u *UserAuthUseCase) RegisterThree(email string, username string, password 
 		Enabled:       &enabled,
 		EmailVerified: &enabled,
 	}
-	ctx := context.Background()
 	keycloakID, err := u.keycloakClient.CreateUser(ctx, &userKC, passwordhash)
 	if err != nil {
 		return response.NewResponse(
@@ -280,7 +278,7 @@ func (u *UserAuthUseCase) RegisterThree(email string, username string, password 
 		), errors.New("error creating user in Keycloak")
 	}
 	checkEmail.KeycloakID = keycloakID
-	updateUserErr := u.userRepo.UpdateUser(checkEmail)
+	updateUserErr := u.userRepo.UpdateUser(ctx, checkEmail)
 	if updateUserErr != nil {
 		return response.NewResponse(
 			response.WithMessage("Error updating user"),
@@ -292,7 +290,7 @@ func (u *UserAuthUseCase) RegisterThree(email string, username string, password 
 		response.WithStatus("501"),
 	), nil
 }
-func (u *UserAuthUseCase) CheckResendOTP(user *entity.User) (*response.Response, error) {
+func (u *UserAuthUseCase) CheckResendOTP(ctx context.Context, user *entity.User) (*response.Response, error) {
 
 	if !user.OTPTimeWaitOTP.IsZero() && user.OTPTimeWaitOTP.After(time.Now()) {
 		return response.NewResponse(
@@ -305,8 +303,8 @@ func (u *UserAuthUseCase) CheckResendOTP(user *entity.User) (*response.Response,
 		response.WithStatus("200"),
 	), nil
 }
-func (u *UserAuthUseCase) ReSendOTP(email string) (*response.Response, error) {
-	checkEmail, checkEmailErr := u.userRepo.GetUserByEmail(email)
+func (u *UserAuthUseCase) ReSendOTP(ctx context.Context, email string) (*response.Response, error) {
+	checkEmail, checkEmailErr := u.userRepo.GetUserByEmail(ctx, email)
 	if checkEmailErr != nil {
 		return response.NewResponse(
 			response.WithMessage("Error checking email"),
@@ -325,7 +323,7 @@ func (u *UserAuthUseCase) ReSendOTP(email string) (*response.Response, error) {
 			response.WithStatus("400"),
 		), errors.New("user is not in step 1 of registration")
 	}
-	checkresend, waitOTPRespErr := u.CheckResendOTP(checkEmail)
+	checkresend, waitOTPRespErr := u.CheckResendOTP(ctx, checkEmail)
 	if waitOTPRespErr != nil {
 		return nil, waitOTPRespErr
 	}
@@ -336,7 +334,7 @@ func (u *UserAuthUseCase) ReSendOTP(email string) (*response.Response, error) {
 	checkEmail.OTPCode = uuid.NewString()[:10]
 	checkEmail.OTPExpiry = time.Now().Add(30 * time.Minute)
 	checkEmail.OTPTimeWaitOTP = time.Now().Add(30 * time.Minute)
-	updateUserErr := u.userRepo.UpdateUser(checkEmail)
+	updateUserErr := u.userRepo.UpdateUser(ctx, checkEmail)
 	if updateUserErr != nil {
 		return response.NewResponse(
 			response.WithMessage("Error updating user with new OTP"),
@@ -371,8 +369,8 @@ func (u *UserAuthUseCase) SendOTP(toEmail string, otpCode string) error {
 	return u.emailRepo.SendEmail(toEmail, subject, body)
 }
 
-func (u *UserAuthUseCase) SendLinkResetPassword(email string) (*response.Response, error) {
-	checkEmail, checkEmailErr := u.userRepo.GetUserByEmail(email)
+func (u *UserAuthUseCase) SendLinkResetPassword(ctx context.Context, email string) (*response.Response, error) {
+	checkEmail, checkEmailErr := u.userRepo.GetUserByEmail(ctx, email)
 	if checkEmailErr != nil {
 		return response.NewResponse(
 			response.WithMessage("Error checking email"),
@@ -385,7 +383,7 @@ func (u *UserAuthUseCase) SendLinkResetPassword(email string) (*response.Respons
 			response.WithStatus("400"),
 		), errors.New("email does not exist")
 	}
-	checkresend, waitOTPRespErr := u.CheckResendOTP(checkEmail)
+	checkresend, waitOTPRespErr := u.CheckResendOTP(ctx, checkEmail)
 	if waitOTPRespErr != nil {
 		return nil, waitOTPRespErr
 	}
@@ -396,7 +394,7 @@ func (u *UserAuthUseCase) SendLinkResetPassword(email string) (*response.Respons
 	checkEmail.OTPCode = uuid.NewString()[:10]
 	checkEmail.OTPExpiry = time.Now().Add(30 * time.Minute)
 	checkEmail.OTPTimeWaitOTP = time.Now().Add(30 * time.Minute)
-	updateUserErr := u.userRepo.UpdateUser(checkEmail)
+	updateUserErr := u.userRepo.UpdateUser(ctx, checkEmail)
 	if updateUserErr != nil {
 		return response.NewResponse(
 			response.WithMessage("Error updating user with new OTP"),
@@ -409,8 +407,8 @@ func (u *UserAuthUseCase) SendLinkResetPassword(email string) (*response.Respons
 		response.WithStatus("200"),
 	), nil
 }
-func (u *UserAuthUseCase) ResetPassword(email string, newPassword string) (*response.Response, error) {
-	checkEmail, checkEmailErr := u.userRepo.GetUserByEmail(email)
+func (u *UserAuthUseCase) ResetPassword(ctx context.Context, email string, newPassword string) (*response.Response, error) {
+	checkEmail, checkEmailErr := u.userRepo.GetUserByEmail(ctx, email)
 	if checkEmailErr != nil {
 		return response.NewResponse(
 			response.WithMessage("Error checking email"),
@@ -431,7 +429,7 @@ func (u *UserAuthUseCase) ResetPassword(email string, newPassword string) (*resp
 		), errors.New("error hashing new password")
 	}
 	checkEmail.Password = hashedPassword
-	updateUserErr := u.userRepo.UpdateUser(checkEmail)
+	updateUserErr := u.userRepo.UpdateUser(ctx, checkEmail)
 	if updateUserErr != nil {
 		return response.NewResponse(
 			response.WithMessage("Error updating user password"),
@@ -444,8 +442,8 @@ func (u *UserAuthUseCase) ResetPassword(email string, newPassword string) (*resp
 	), nil
 }
 
-func (u *UserAuthUseCase) LogOut(userID string, accessToken string) (*response.Response, error) {
-	user, err := u.userRepo.GetUserByID(userID)
+func (u *UserAuthUseCase) LogOut(ctx context.Context, userID string, accessToken string) (*response.Response, error) {
+	user, err := u.userRepo.GetUserByID(ctx, userID)
 	if err != nil {
 		return response.NewResponse(
 			response.WithMessage("Error retrieving user"),

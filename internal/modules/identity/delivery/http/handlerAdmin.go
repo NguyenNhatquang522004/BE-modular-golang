@@ -17,8 +17,8 @@ func NewAdminHandler(ucAdmin usecase.AdminUseCase) *AdminHandler {
 	}
 }
 
-func (h *AdminHandler) HandlerLoadAllUsers(c *gin.Context, req *req.PanigationUsersReq) *response.Response {
-	data, err := h.ucAdmin.LoadAllUsers(req.Cursor, req.Limit)
+func (h *AdminHandler) HandlerLoadAllUsers( c *gin.Context, req *req.PanigationUsersReq) *response.Response {
+	data, err := h.ucAdmin.LoadAllUsers(c.Request.Context(), req.Cursor, req.Limit)
 	if err != nil {
 		return response.NewResponse(response.WithData(""),
 			response.WithMessage("error load all users"), response.WithStatus("500"))
@@ -26,7 +26,7 @@ func (h *AdminHandler) HandlerLoadAllUsers(c *gin.Context, req *req.PanigationUs
 	return data
 }
 func (h *AdminHandler) HandlerGetUserByID(c *gin.Context, req *req.GetUserByIDReq) *response.Response {
-	data, err := h.ucAdmin.GetUserByID(req.UserID)
+	data, err := h.ucAdmin.GetUserByID(c.Request.Context(), req.UserID)
 	if err != nil {
 		return response.NewResponse(response.WithData(""),
 			response.WithMessage("error get user by id"), response.WithStatus("500"))
@@ -34,7 +34,7 @@ func (h *AdminHandler) HandlerGetUserByID(c *gin.Context, req *req.GetUserByIDRe
 	return data
 }
 func (h *AdminHandler) HandlerUpdateUser(c *gin.Context, req *req.UpdateUserReq) *response.Response {
-	data, err := h.ucAdmin.UpdateUser(req)
+	data, err := h.ucAdmin.UpdateUser(c.Request.Context(), req)
 	if err != nil {
 		return response.NewResponse(response.WithData(""),
 			response.WithMessage("error update user"), response.WithStatus("500"))
@@ -42,7 +42,7 @@ func (h *AdminHandler) HandlerUpdateUser(c *gin.Context, req *req.UpdateUserReq)
 	return data
 }
 func (h *AdminHandler) HandlerDeleteUser(c *gin.Context, req *req.DeleteUserReq) *response.Response {
-	data, err := h.ucAdmin.DeleteUser(req.UserID)
+	data, err := h.ucAdmin.DeleteUser(c.Request.Context(), req.UserID)
 	if err != nil {
 		return response.NewResponse(response.WithData(""),
 			response.WithMessage("error delete user"), response.WithStatus("500"))
@@ -50,7 +50,7 @@ func (h *AdminHandler) HandlerDeleteUser(c *gin.Context, req *req.DeleteUserReq)
 	return data
 }
 func (h *AdminHandler) HandlerCreateUser(c *gin.Context, req *req.AdminCreateUserReq) *response.Response {
-	data, err := h.ucAdmin.CreateUser(req.RoleName, req.RoleID, &req.CreateUserReq)
+	data, err := h.ucAdmin.CreateUser(c.Request.Context(), req.RoleName, req.RoleID, &req.CreateUserReq)
 	if err != nil {
 		return response.NewResponse(response.WithData(""),
 			response.WithMessage("error create user"), response.WithStatus("500"))
@@ -58,7 +58,7 @@ func (h *AdminHandler) HandlerCreateUser(c *gin.Context, req *req.AdminCreateUse
 	return data
 }
 func (h *AdminHandler) HandlerAssignRoleToUser(c *gin.Context, req *req.IDFusionRoleReq) *response.Response {
-	data, err := h.ucAdmin.AssignRoleToUser(req.UserID, req.RoleName, req.RoleID)
+	data, err := h.ucAdmin.AssignRoleToUser(c.Request.Context(), req.UserID, req.RoleName, req.RoleID)
 	if err != nil {
 		return response.NewResponse(response.WithData(""),
 			response.WithMessage("error assign role to user"), response.WithStatus("500"))

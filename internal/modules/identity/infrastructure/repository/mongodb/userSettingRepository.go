@@ -24,9 +24,7 @@ func NewUserSettingRepository(client *mongo.Database) *UserSettingRepository {
 	}
 }
 
-func (r *UserSettingRepository) GetUserSettings(userID string) (*response.Response, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
+func (r *UserSettingRepository) GetUserSettings(ctx context.Context, userID string) (*response.Response, error) {
 	collection := r.client.Collection(entity.UserSetting{}.CollectionName())
 	filter := bson.M{"User_ID": userID}
 	var userdata entity.UserSetting
@@ -42,9 +40,7 @@ func (r *UserSettingRepository) GetUserSettings(userID string) (*response.Respon
 		response.WithStatus("200")), nil
 }
 
-func (r *UserSettingRepository) UpdateUserSettings(userID string, settings *entity.UserSetting) (*response.Response, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
+func (r *UserSettingRepository) UpdateUserSettings(ctx context.Context, userID string, settings *entity.UserSetting) (*response.Response, error) {
 	collection := r.client.Collection(entity.UserSetting{}.CollectionName())
 	filter := bson.M{"User_ID": userID}
 	update := bson.M{"$set": settings}
@@ -65,9 +61,7 @@ func (r *UserSettingRepository) UpdateUserSettings(userID string, settings *enti
 		response.WithMessage("User settings updated successfully"),
 		response.WithStatus("200")), nil
 }
-func (r *UserSettingRepository) DeleteUserSettings(userID string) (*response.Response, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
+func (r *UserSettingRepository) DeleteUserSettings(ctx context.Context, userID string) (*response.Response, error) {
 	collection := r.client.Collection(entity.UserSetting{}.CollectionName())
 	filter := bson.M{"User_ID": userID}
 	result, err := collection.DeleteOne(ctx, filter)
@@ -85,9 +79,7 @@ func (r *UserSettingRepository) DeleteUserSettings(userID string) (*response.Res
 		response.WithMessage("User settings deleted successfully"),
 		response.WithStatus("200")), nil
 }
-func (r *UserSettingRepository) CreateUserSettingDefault(userID string) (*response.Response, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
+func (r *UserSettingRepository) CreateUserSettingDefault(ctx context.Context, userID string) (*response.Response, error) {
 	collection := r.client.Collection(entity.UserSetting{}.CollectionName())
 
 	defaultSettings := &entity.UserSetting{

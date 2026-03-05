@@ -17,14 +17,14 @@ func NewSettingHandler(ucSetting usecase.IUserSettingService) *SettingHandler {
 	}
 }
 func (h *SettingHandler) HandlerCreateUserSetting(c *gin.Context, req *req.CreateUserSettingReq) *response.Response {
-	data, err := h.ucSetting.CreateUserSetting(req.User_ID)
+	data, err := h.ucSetting.CreateUserSetting(c.Request.Context(), req.User_ID)
 	if err != nil {
 		return response.NewResponse(response.WithData(""), response.WithMessage(""), response.WithStatus(""))
 	}
 	return data
 }
 func (h *SettingHandler) HandlerUpdateUserSettings(c *gin.Context, req *req.UserSettingReq) *response.Response {
-	data, err := h.ucSetting.UpdateUserSettings(c.GetString("user_id"), req)
+	data, err := h.ucSetting.UpdateUserSettings(c.Request.Context(), c.GetString("user_id"), req)
 	if err != nil {
 		return response.NewResponse(response.WithData(""), response.WithMessage(""), response.WithStatus(""))
 	}

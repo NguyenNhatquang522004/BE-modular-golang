@@ -17,7 +17,7 @@ func NewRoleHandler(ucRole usecase.IUserRoleUseCase) *RoleHandler {
 	}
 }
 func (h *RoleHandler) HandlerAssignRoleToUserWithName(c *gin.Context, req *req.AssignRoleToUserWithNameReq) *response.Response {
-	data, err := h.ucRole.AssignRoleToUserWithName(c.GetString("user_id"), req.RoleName)
+	data, err := h.ucRole.AssignRoleToUserWithName(c.Request.Context(), c.GetString("user_id"), req.RoleName)
 	if err != nil {
 		return response.NewResponse(response.WithData(""), response.WithMessage(""), response.WithStatus(""))
 	}
@@ -25,14 +25,14 @@ func (h *RoleHandler) HandlerAssignRoleToUserWithName(c *gin.Context, req *req.A
 }
 
 func (h *RoleHandler) HandlerAssignRoleToUserWithID(c *gin.Context, req *req.AssignRoleToUserWithIDReq) *response.Response {
-	data, err := h.ucRole.AssignRoleToUserWithID(c.GetString("user_id"), req.RoleID)
+	data, err := h.ucRole.AssignRoleToUserWithID(c.Request.Context(), c.GetString("user_id"), req.RoleID)
 	if err != nil {
 		return response.NewResponse(response.WithData(""), response.WithMessage(""), response.WithStatus(""))
 	}
 	return data
 }
 func (h *RoleHandler) HandlerUpdateRoleOfUser(c *gin.Context, req *req.UpdateRoleofUserReq) *response.Response {
-	data, err := h.ucRole.UpdateRoleOfUser(req.UserID, req.RoleID)
+	data, err := h.ucRole.UpdateRoleOfUser(c.Request.Context(), req.UserID, req.RoleID)
 	if err != nil {
 		return response.NewResponse(response.WithData(""), response.WithMessage(""), response.WithStatus(""))
 	}
@@ -40,7 +40,7 @@ func (h *RoleHandler) HandlerUpdateRoleOfUser(c *gin.Context, req *req.UpdateRol
 }
 
 func (h *RoleHandler) HandlerGetUserRoles(c *gin.Context, req *req.GetUserRolesReq) *response.Response {
-	data, err := h.ucRole.GetUserRoles(c.GetString("user_id"), req.RoleName)
+	data, err := h.ucRole.GetUserRoles(c.Request.Context(), c.GetString("user_id"), req.RoleName)
 	if err != nil {
 		return response.NewResponse(response.WithData(""), response.WithMessage(""), response.WithStatus(""))
 	}
@@ -48,7 +48,7 @@ func (h *RoleHandler) HandlerGetUserRoles(c *gin.Context, req *req.GetUserRolesR
 }
 
 func (h *RoleHandler) HandlerUpdateRoleDescription(c *gin.Context, req *req.UpdateRoleDescriptionReq) *response.Response {
-	data, err := h.ucRole.UpdateRoleDescription(req.RoleID, req.Description)
+	data, err := h.ucRole.UpdateRoleDescription(c.Request.Context(), req.RoleID, req.Description)
 	if err != nil {
 		return response.NewResponse(response.WithData(""), response.WithMessage(""), response.WithStatus(""))
 	}
@@ -56,7 +56,7 @@ func (h *RoleHandler) HandlerUpdateRoleDescription(c *gin.Context, req *req.Upda
 }
 
 func (h *RoleHandler) HandlerCreateRole(c *gin.Context, req *req.CreateRoleReq) *response.Response {
-	data, err := h.ucRole.CreateRole(req.Role, req.Description)
+	data, err := h.ucRole.CreateRole(c.Request.Context(), req.Role, req.Description)
 	if err != nil {
 		return response.NewResponse(response.WithData(""), response.WithMessage(""), response.WithStatus(""))
 	}
@@ -64,7 +64,7 @@ func (h *RoleHandler) HandlerCreateRole(c *gin.Context, req *req.CreateRoleReq) 
 }
 
 func (h *RoleHandler) HandlerDeleteRole(c *gin.Context, req *req.DeleteRoleReq) *response.Response {
-	data, err := h.ucRole.DeleteRole(req.RoleID)
+	data, err := h.ucRole.DeleteRole(c.Request.Context(), req.RoleID)
 	if err != nil {
 		return response.NewResponse(response.WithData(""), response.WithMessage(""), response.WithStatus(""))
 	}
@@ -72,7 +72,7 @@ func (h *RoleHandler) HandlerDeleteRole(c *gin.Context, req *req.DeleteRoleReq) 
 }
 
 func (h *RoleHandler) HandlerGetAllUserRoles(c *gin.Context, req *req.GetAllRoleReq) *response.Response {
-	data, err := h.ucRole.GetAllUserRoles(req.RoleID)
+	data, err := h.ucRole.GetAllUserRoles(c.Request.Context(), req.RoleID)
 	if err != nil {
 		return response.NewResponse(response.WithData(""), response.WithMessage(""), response.WithStatus(""))
 	}
@@ -80,7 +80,7 @@ func (h *RoleHandler) HandlerGetAllUserRoles(c *gin.Context, req *req.GetAllRole
 }
 
 func (h *RoleHandler) HandlerGetAllRoles(c *gin.Context) *response.Response {
-	data, err := h.ucRole.GetAllRoles()
+	data, err := h.ucRole.GetAllRoles(c.Request.Context())
 	if err != nil {
 		return response.NewResponse(response.WithData(""), response.WithMessage(""), response.WithStatus(""))
 	}

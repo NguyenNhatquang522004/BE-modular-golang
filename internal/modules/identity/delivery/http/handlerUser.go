@@ -18,7 +18,7 @@ func NewUserHandler(ucUser usecase.IUserService) *UserHandler {
 }
 
 func (h *UserHandler) HandlerGetUserByID(c *gin.Context, req *req.GetUserByIDReq) *response.Response {
-	data, err := h.ucUser.GetUserByID(req.UserID)
+	data, err := h.ucUser.GetUserByID(c.Request.Context(), req.UserID)
 	if err != nil {
 		return response.NewResponse(response.WithData(nil), response.WithMessage(err.Error()), response.WithStatus("400"))
 	}
@@ -26,7 +26,7 @@ func (h *UserHandler) HandlerGetUserByID(c *gin.Context, req *req.GetUserByIDReq
 
 }
 func (h *UserHandler) HandlerGetUserByEmail(c *gin.Context, req *req.GetUserByEmailReq) *response.Response {
-	data, err := h.ucUser.GetUserByEmail(req.Email)
+	data, err := h.ucUser.GetUserByEmail(c.Request.Context(), req.Email)
 	if err != nil {
 		return response.NewResponse(response.WithData(nil), response.WithMessage(err.Error()), response.WithStatus("400"))
 	}
@@ -34,10 +34,9 @@ func (h *UserHandler) HandlerGetUserByEmail(c *gin.Context, req *req.GetUserByEm
 }
 
 func (h *UserHandler) HandlerPanigationUsers(c *gin.Context, req *req.PanigationUsersReq) *response.Response {
-	data, err := h.ucUser.PanigationUsers(req.Cursor, req.Limit)
+	data, err := h.ucUser.PanigationUsers(c.Request.Context(), req.Cursor, req.Limit)
 	if err != nil {
 		return response.NewResponse(response.WithData(nil), response.WithMessage(err.Error()), response.WithStatus("400"))
 	}
 	return data
 }
-

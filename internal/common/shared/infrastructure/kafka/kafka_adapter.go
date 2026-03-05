@@ -187,7 +187,7 @@ func (k *KafkaEventBus) SubscribeBatch(ctx context.Context, topic string, batchS
 				}
 				msgChan <- m
 			}
-		}()
+		}()	
 
 		var batchMsgs []kafka.Message
 		var batchEvents []events.IntegrationEvent

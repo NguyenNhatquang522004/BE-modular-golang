@@ -27,7 +27,7 @@ func NewGoogleAuthUseCase(userRepo IRepositoryPostgres.IUserRepository, keycloak
 		cfg:            cfg,
 	}
 }
-func (u *GoogleAuthUseCase) GetUserInfoByToken(claim *jwt.MapClaims) (*response.Response, error) {
+func (u *GoogleAuthUseCase) GetUserInfoByToken(ctx context.Context, claim *jwt.MapClaims) (*response.Response, error) {
 	mapClaims := *claim
 	email, _ := mapClaims["email"].(string)
 	name, _ := mapClaims["name"].(string)
@@ -45,23 +45,22 @@ func (u *GoogleAuthUseCase) GetUserInfoByToken(claim *jwt.MapClaims) (*response.
 
 	return response.NewResponse(response.WithData(userInfo), response.WithMessage("Get user info by token successful"), response.WithStatus("200")), nil
 }
-func (u *GoogleAuthUseCase) Login(provider string, token string) (*response.Response, error) {
+func (u *GoogleAuthUseCase) Login(ctx context.Context, provider string, token string) (*response.Response, error) {
 	// provider: "google", "facebook"... (Phải khớp với Alias trong Keycloak)
 	// token: Chuỗi ID Token mà Frontend gửi lên
 
 	// 1. Gọi Keycloak để đổi Token
-	tokenResult, err := u.keycloakClient.ExchangeExternalToken(context.Background(), provider, token)
+	tokenResult, err := u.keycloakClient.ExchangeExternalToken(ctx, provider, token)
 	if err != nil {
 		return nil, errors.New("failed to exchange token with keycloak: " + err.Error())
 	}
-	ctx := context.Background()
 	// 2. Decode token để lấy User ID (sub)
 	claims, err := u.keycloakClient.DecodeAccessToken(ctx, tokenResult.AccessToken)
 	if err != nil {
 		return nil, err
 	}
 	mapClaims := *claims
-	userdata, datausererr := u.GetUserInfoByToken(claims)
+	userdata, datausererr := u.GetUserInfoByToken(ctx, claims)
 	if datausererr != nil {
 		return nil, datausererr
 	}
@@ -71,7 +70,7 @@ func (u *GoogleAuthUseCase) Login(provider string, token string) (*response.Resp
 	}
 	// 3. Đồng bộ User vào DB Postgres (Giống hệt luồng Login thường)
 	// Tìm xem user này có trong DB chưa
-	user, err := u.userRepo.FindByKeycloakID(sub)
+	user, err := u.userRepo.FindByKeycloakID(ctx, sub)
 	if err != nil || user == nil {
 		// Nếu chưa có -> Tạo mới user trong DB nội bộ (Auto Register)
 		// Lưu ý: Lúc này password để trống, vì user này login bằng Google
@@ -80,7 +79,7 @@ func (u *GoogleAuthUseCase) Login(provider string, token string) (*response.Resp
 			Email:      userdata.Data.(map[string]interface{})["email"].(string),
 			IsActive:   true,
 		}
-		_, err = u.userRepo.CreateUser(newUser)
+		_, err = u.userRepo.CreateUser(ctx, newUser)
 		if err != nil {
 			return nil, err
 		}
@@ -93,15 +92,14 @@ func (u *GoogleAuthUseCase) Login(provider string, token string) (*response.Resp
 		ExpiresIn:    tokenResult.ExpiresIn,
 	}), response.WithMessage("Login with Google successful"), response.WithStatus("200")), nil
 }
-func (u *GoogleAuthUseCase) LoginStandard(code string) (*response.Response, error) {
+func (u *GoogleAuthUseCase) LoginStandard(ctx context.Context, code string) (*response.Response, error) {
 	// 1. Gọi Keycloak để đổi "Code" lấy "Token"
 	// Endpoint chuẩn: POST /realms/{realm}/protocol/openid-connect/token
-	tokenResult, err := u.keycloakClient.ExchangeAuthCode(context.Background(), code)
+	tokenResult, err := u.keycloakClient.ExchangeAuthCode(ctx, code)
 	if err != nil {
 		return nil, errors.New("failed to exchange code with keycloak: " + err.Error())
 	}
 
-	ctx := context.Background()
 	claims, err := u.keycloakClient.DecodeAccessToken(ctx, tokenResult.AccessToken)
 	if err != nil {
 		return nil, err
@@ -115,7 +113,7 @@ func (u *GoogleAuthUseCase) LoginStandard(code string) (*response.Response, erro
 		return nil, errors.New("invalid token: missing sub claim")
 	}
 	// 3. Đồng bộ User vào DB Postgres (Giống hệt luồng cũ)
-	user, err := u.userRepo.FindByKeycloakID(sub)
+	user, err := u.userRepo.FindByKeycloakID(ctx, sub)
 	if err != nil || user == nil {
 		// Tạo user mới nếu chưa có
 		newUser := &entity.User{
@@ -123,7 +121,7 @@ func (u *GoogleAuthUseCase) LoginStandard(code string) (*response.Response, erro
 			Email:      email,
 			IsActive:   true,
 		}
-		_, err = u.userRepo.CreateUser(newUser)
+		_, err = u.userRepo.CreateUser(ctx, newUser)
 		if err != nil {
 			return nil, err
 		}
@@ -137,7 +135,7 @@ func (u *GoogleAuthUseCase) LoginStandard(code string) (*response.Response, erro
 	}), response.WithMessage("Login with Google (SSO) successful"), response.WithStatus("200")), nil
 }
 
-func (u *GoogleAuthUseCase) GetLoginURL(redirectURI string) (*response.Response, error) {
+func (u *GoogleAuthUseCase) GetLoginURL(ctx context.Context, redirectURI string) (*response.Response, error) {
 	return response.NewResponse(response.WithData(map[string]any{
 		"login_url": u.cfg.KeyCloak.KEYCLOAK_AUTH_URL + "?client_id=" + u.cfg.KeyCloak.KEYCLOAK_CLIENT_ID + "&response_type=code&scope=openid email&redirect_uri=http://myapp.com/callback&kc_idp_hint=google",
 	}), response.WithMessage("Get Google login URL successful"), response.WithStatus("200")), nil

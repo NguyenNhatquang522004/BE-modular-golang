@@ -29,7 +29,7 @@ func NewCreateDeleteUserNotificationSettingsUseCase(userNotificationRepo IReposi
 	}
 }
 func (uc *CreateDeleteUserNotificationSettingsUseCase) Execute(ctx context.Context) error {
-	err := uc.eventBus.Subscribe(ctx, string(constants.TopicCreateUserNotificationSettings), func(ctx context.Context, event events.IntegrationEvent) error {
+	err := uc.eventBus.Subscribe(ctx, string(constants.TopicUserNotificationSettings), func(ctx context.Context, event events.IntegrationEvent) error {
 		errs := uc.pool.Run(ctx, func() {
 			payload, ok := event.Payload.(notificationEvent.CreateUserNotificationSettingsPayload)
 			if !ok {

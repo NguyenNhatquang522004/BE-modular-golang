@@ -1,6 +1,8 @@
 package usecase
 
 import (
+	"context"
+
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/server/http/response"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/IRepositoryShare"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/identity/delivery/dto/req"
@@ -17,13 +19,13 @@ type UserUseCase struct {
 
 func NewUserUseCase(userRepo IRepositoryPostgres.IUserRepository, redisRepo IRepositoryShare.IRedis) *UserUseCase {
 	return &UserUseCase{
-		userRepo: userRepo,
+		userRepo:  userRepo,
 		redisRepo: redisRepo,
 	}
 }
-func (u *UserUseCase) GetUserByID(userID string) (*response.Response, error) {
+func (u *UserUseCase) GetUserByID(ctx context.Context, userID string) (*response.Response, error) {
 	var user *entity.User
-	user, _ = u.userRepo.GetUserByID(userID)
+	user, _ = u.userRepo.GetUserByID(ctx, userID)
 	if user == nil {
 		return response.NewResponse(response.WithData(""),
 			response.WithMessage("user not found"), response.WithStatus("404")), nil
@@ -33,9 +35,9 @@ func (u *UserUseCase) GetUserByID(userID string) (*response.Response, error) {
 	}), response.WithMessage("success"), response.WithStatus("200")), nil
 }
 
-func (u *UserUseCase) GetUserByEmail(email string) (*response.Response, error) {
+func (u *UserUseCase) GetUserByEmail(ctx context.Context, email string) (*response.Response, error) {
 	var user *entity.User
-	user, err := u.userRepo.GetUserByEmail(email)
+	user, err := u.userRepo.GetUserByEmail(ctx, email)
 	if err != nil {
 		return response.NewResponse(response.WithData(""),
 			response.WithMessage("user not found"), response.WithStatus("404")), nil
@@ -46,8 +48,8 @@ func (u *UserUseCase) GetUserByEmail(email string) (*response.Response, error) {
 
 }
 
-func (u *UserUseCase) PanigationUsers(Cursor string, Limit int) (*response.Response, error) {
-	users, nextCursor, err := u.userRepo.Panigation(Cursor, Limit)
+func (u *UserUseCase) PanigationUsers(ctx context.Context, Cursor string, Limit int) (*response.Response, error) {
+	users, nextCursor, err := u.userRepo.Panigation(ctx, Cursor, Limit)
 	if err != nil {
 		return response.NewResponse(response.WithData(""),
 			response.WithMessage("error panigation users"), response.WithStatus("500")), err
@@ -58,8 +60,8 @@ func (u *UserUseCase) PanigationUsers(Cursor string, Limit int) (*response.Respo
 	}), response.WithMessage("success"), response.WithStatus("200")), nil
 }
 
-func (u *UserUseCase) DeleteUser(userID string) (*response.Response, error) {
-	err := u.userRepo.DeleteUser(userID)
+func (u *UserUseCase) DeleteUser(ctx context.Context, userID string) (*response.Response, error) {
+	err := u.userRepo.DeleteUser(ctx, userID)
 	if err != nil {
 		return response.NewResponse(response.WithData(""),
 			response.WithMessage("error delete user"), response.WithStatus("500")), err
@@ -69,9 +71,9 @@ func (u *UserUseCase) DeleteUser(userID string) (*response.Response, error) {
 
 }
 
-func (u *UserUseCase) UpdateUser(req *req.UpdateUserReq) (*response.Response, error) {
+func (u *UserUseCase) UpdateUser(ctx context.Context, req *req.UpdateUserReq) (*response.Response, error) {
 	user := req.ToEntity()
-	err := u.userRepo.UpdateUser(user)
+	err := u.userRepo.UpdateUser(ctx, user)
 	if err != nil {
 		return response.NewResponse(response.WithData(""),
 			response.WithMessage("error update user"), response.WithStatus("500")), err
@@ -81,7 +83,7 @@ func (u *UserUseCase) UpdateUser(req *req.UpdateUserReq) (*response.Response, er
 	}), response.WithMessage("success"), response.WithStatus("200")), nil
 }
 
-func (u *UserUseCase) CreateUser(req *req.CreateUserReq) (*response.Response, error) {
+func (u *UserUseCase) CreateUser(ctx context.Context, req *req.CreateUserReq) (*response.Response, error) {
 	user := req.ToEntity()
 	passwordhash, checkPasswordErr := utils.HashPassword(req.Password)
 	if checkPasswordErr != nil {
@@ -89,7 +91,7 @@ func (u *UserUseCase) CreateUser(req *req.CreateUserReq) (*response.Response, er
 			response.WithMessage("error hash password"), response.WithStatus("500")), checkPasswordErr
 	}
 	user.Password = passwordhash
-	data, err := u.userRepo.CreateUser(user)
+	data, err := u.userRepo.CreateUser(ctx, user)
 	if err != nil {
 		return response.NewResponse(response.WithData(data),
 			response.WithMessage("error create user"), response.WithStatus("500")), err

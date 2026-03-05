@@ -17,7 +17,7 @@ func NewSessionHandler(ucSession usecase.IUserSessionService) *SessionHandler {
 	}
 }
 func (h *SessionHandler) HandlerCreateSessionLogin(c *gin.Context, req *req.UserSessionReq) *response.Response {
-	data, err := h.ucSession.CreateSessionLogin(req)
+	data, err := h.ucSession.CreateSessionLogin(c.Request.Context(), req)
 	if err != nil {
 		return response.NewResponse(response.WithData(""), response.WithMessage(""), response.WithStatus(""))
 	}
@@ -25,14 +25,14 @@ func (h *SessionHandler) HandlerCreateSessionLogin(c *gin.Context, req *req.User
 }
 func (h *SessionHandler) HandlerGetAllUserSessions(c *gin.Context, req *req.UserSessionReq) *response.Response {
 
-	data, err := h.ucSession.GetAllUserSessions(req)
+	data, err := h.ucSession.GetAllUserSessions(c.Request.Context(), req)
 	if err != nil {
 		return response.NewResponse(response.WithData(""), response.WithMessage(""), response.WithStatus(""))
 	}
 	return data
 }
 func (h *SessionHandler) HandlerGetUserSessionPast(c *gin.Context, req *req.UserSessionReq) *response.Response {
-	data, err := h.ucSession.GetUserSessionPast(req)
+	data, err := h.ucSession.GetUserSessionPast(c.Request.Context(), req)
 	if err != nil {
 		return response.NewResponse(response.WithData(""), response.WithMessage(""), response.WithStatus(""))
 	}

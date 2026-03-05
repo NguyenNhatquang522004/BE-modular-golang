@@ -1,6 +1,7 @@
 package usecase
 
 import (
+	"context"
 	"strings"
 
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/server/http/response"
@@ -20,7 +21,7 @@ func NewUserRoleUseCase(userRoleRepo IRepositoryPostgres.IUserRoleRepository, us
 		userRepo:     userRepo,
 	}
 }
-func (u *UserRoleUseCase) convertEnum(roleName string) (*response.Response, error) {
+func (u *UserRoleUseCase) convertEnum(ctx context.Context, roleName string) (*response.Response, error) {
 	normalizedRole := strings.ToLower(strings.TrimSpace(roleName))
 	convert, err := sharedEnums.RoleTypeString(normalizedRole)
 	if err != nil {
@@ -30,18 +31,18 @@ func (u *UserRoleUseCase) convertEnum(roleName string) (*response.Response, erro
 	return response.NewResponse(response.WithData(convert), response.WithMessage(""), response.WithStatus("200")), nil
 }
 
-func (u *UserRoleUseCase) AssignRoleToUserWithName(userID string, roleName string) (*response.Response, error) {
-	convertResp, err := u.convertEnum(roleName)
+func (u *UserRoleUseCase) AssignRoleToUserWithName(ctx context.Context, userID string, roleName string) (*response.Response, error) {
+	convertResp, err := u.convertEnum(ctx, roleName)
 	if err != nil {
 		return response.NewResponse(response.WithData(""),
 			response.WithMessage("invalid role name"), response.WithStatus("400")), err
 	}
-	Role, err := u.userRoleRepo.FindRoleWithName(convertResp.Data.(sharedEnums.RoleType))
+	Role, err := u.userRoleRepo.FindRoleWithName(ctx, convertResp.Data.(sharedEnums.RoleType))
 	if err != nil {
 		return response.NewResponse(response.WithData(""),
 			response.WithMessage("role not found"), response.WithStatus("404")), err
 	}
-	_, err = u.userRoleRepo.CreateRoleUser(userID, Role.Data.(*entity.UserRole).ID.String())
+	_, err = u.userRoleRepo.CreateRoleUser(ctx, userID, Role.Data.(*entity.UserRole).ID.String())
 
 	if err != nil {
 		return response.NewResponse(response.WithData(""),
@@ -49,8 +50,8 @@ func (u *UserRoleUseCase) AssignRoleToUserWithName(userID string, roleName strin
 	}
 	return response.NewResponse(response.WithData(nil), response.WithMessage("Role assigned to user successfully"), response.WithStatus("200")), nil
 }
-func (u *UserRoleUseCase) AssignRoleToUserWithID(userID string, roleID string) (*response.Response, error) {
-	_, err := u.userRoleRepo.CreateRoleUser(userID, roleID)
+func (u *UserRoleUseCase) AssignRoleToUserWithID(ctx context.Context, userID string, roleID string) (*response.Response, error) {
+	_, err := u.userRoleRepo.CreateRoleUser(ctx, userID, roleID)
 
 	if err != nil {
 		return response.NewResponse(response.WithData(""),
@@ -59,36 +60,36 @@ func (u *UserRoleUseCase) AssignRoleToUserWithID(userID string, roleID string) (
 	return response.NewResponse(response.WithData(nil), response.WithMessage("Role assigned to user successfully"), response.WithStatus("200")), nil
 }
 
-func (u *UserRoleUseCase) UpdateRoleOfUser(userID string, roleIDs []string) (*response.Response, error) {
-	return u.userRoleRepo.UpdateRoleOfUser(userID, roleIDs)
+func (u *UserRoleUseCase) UpdateRoleOfUser(ctx context.Context, userID string, roleIDs []string) (*response.Response, error) {
+	return u.userRoleRepo.UpdateRoleOfUser(ctx, userID, roleIDs)
 }
 
-func (u *UserRoleUseCase) GetUserRoles(userID string, roleName string) (*response.Response, error) {
-	convertResp, err := u.convertEnum(roleName)
+func (u *UserRoleUseCase) GetUserRoles(ctx context.Context, userID string, roleName string) (*response.Response, error) {
+	convertResp, err := u.convertEnum(ctx, roleName)
 	if err != nil {
 		return convertResp, err
 	}
-	return u.userRoleRepo.FindUserwithRole(userID, convertResp.Data.(sharedEnums.RoleType))
+	return u.userRoleRepo.FindUserwithRole(ctx, userID, convertResp.Data.(sharedEnums.RoleType))
 }
 
-func (u *UserRoleUseCase) UpdateRoleDescription(roleID string, description string) (*response.Response, error) {
-	return u.userRoleRepo.UpdateRoleDescription(roleID, description)
+func (u *UserRoleUseCase) UpdateRoleDescription(ctx context.Context, roleID string, description string) (*response.Response, error) {
+	return u.userRoleRepo.UpdateRoleDescription(ctx, roleID, description)
 }
 
-func (u *UserRoleUseCase) CreateRole(role sharedEnums.RoleType, description string) (*response.Response, error) {
-	return u.userRoleRepo.CreateRole(role, description)
+func (u *UserRoleUseCase) CreateRole(ctx context.Context, role sharedEnums.RoleType, description string) (*response.Response, error) {
+	return u.userRoleRepo.CreateRole(ctx, role, description)
 }
 
-func (u *UserRoleUseCase) DeleteRole(roleID string) (*response.Response, error) {
-	return u.userRoleRepo.DeleteRole(roleID)
+func (u *UserRoleUseCase) DeleteRole(ctx context.Context, roleID string) (*response.Response, error) {
+	return u.userRoleRepo.DeleteRole(ctx, roleID)
 }
 
-func (u *UserRoleUseCase) GetAllUserRoles(RoleID string) (*response.Response, error) {
-	return u.userRoleRepo.GetAllUserRoles(RoleID)
+func (u *UserRoleUseCase) GetAllUserRoles(ctx context.Context, RoleID string) (*response.Response, error) {
+	return u.userRoleRepo.GetAllUserRoles(ctx, RoleID)
 }
 
-func (u *UserRoleUseCase) GetAllRoles() (*response.Response, error) {
-	resp, err := u.userRoleRepo.GetAllRoles()
+func (u *UserRoleUseCase) GetAllRoles(ctx context.Context) (*response.Response, error) {
+	resp, err := u.userRoleRepo.GetAllRoles(ctx)
 	if err != nil {
 		return nil, err
 	}

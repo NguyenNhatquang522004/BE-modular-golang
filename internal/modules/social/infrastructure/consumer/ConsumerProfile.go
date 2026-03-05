@@ -2,7 +2,10 @@ package consumer
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
+	"fmt"
+	"log"
 	"sync"
 	"time"
 
@@ -19,6 +22,7 @@ type ConsumerProfile struct {
 	profileRepo IRepositoryMongodb.IProfileRepositoryMongodb
 	events      events.EventBus
 	pool        IRepositoryShare.IWorkerPool
+	redisRepo   IRepositoryShare.IRedis
 }
 
 func NewConsumerProfile(profileRepo IRepositoryMongodb.IProfileRepositoryMongodb, events events.EventBus) *ConsumerProfile {
@@ -33,87 +37,127 @@ func (c *ConsumerProfile) ConsumerProfile(ctx context.Context) error {
 		var wg sync.WaitGroup
 		errchan := make(chan error, len(events))
 		for _, event := range events {
+			redisKeyPrefix := "consumer_profile_lock:" + event.ID
+			// 1. Thử khóa event này trong Redis để đảm bảo chỉ 1 worker xử lý 1 eventID nhất định (Distributed Lock)
+			status, acquired, err := c.redisRepo.Lock(ctx, redisKeyPrefix)
+			if err != nil {
+				if status != "" && status != constants.StatusProcessing {
+					log.Printf("Event %s is already processed with status %s. Skipping.\n", event.ID, status)
+					return err
+				}
+				return err
+			}
+			if !acquired {
+				if status == constants.StatusProcessing {
+					log.Printf("Event %s is currently being processed by another worker. Skipping.\n", event.ID)
+					errchan <- errors.New("event is being processed by another worker")
+				} else {
+					log.Printf("Event %s has already been processed with status %s. Skipping.\n", event.ID, status)
+				}
+				continue
+			}
 			ev := event
 			wg.Add(1)
-			err := c.pool.Run(ctx, func() {
+			var processErr error
+			err = c.pool.Run(ctx, func() {
+				defer wg.Done()
 				switch ev.Type {
 				case constants.Created.String():
-					err := c.handleCreatedProfile(ctx, ev)
-					if err != nil {
-						errchan <- err
-					}
-					errchan <- nil
+					processErr = c.handleCreatedProfile(ctx, ev)
 				case constants.Updated.String():
-					err := c.handleUpdatedProfile(ctx, ev)
-					if err != nil {
-						errchan <- err
-					}
-					errchan <- nil
+					processErr = c.handleUpdatedProfile(ctx, ev)
 				case constants.Deleted.String():
-					err := c.handleDeletedProfile(ctx, ev)
-					if err != nil {
-						errchan <- err
-					}
-					errchan <- nil
+					processErr = c.handleDeletedProfile(ctx, ev)
+				default:
+					log.Printf("Unsupported event type %s for event ID %s. Marking as failed.\n", ev.Type, ev.ID)
+
 				}
+
 			})
+			if processErr != nil {
+				c.redisRepo.Unlock(ctx, redisKeyPrefix) // Thất bại -> Mở khoá để lần sau làm lại
+				errchan <- fmt.Errorf("event %s failed: %w", ev.ID, processErr)
+			} else {
+				// CỰC KỲ QUAN TRỌNG: Thành công -> Đánh dấu Vĩnh viễn (Hoặc 24h)
+				c.redisRepo.MarkCompleted(ctx, redisKeyPrefix)
+				errchan <- nil
+			}
 			if err != nil {
 				errchan <- err
+				c.redisRepo.Unlock(ctx, redisKeyPrefix) // Mở khóa ngay nếu có lỗi khi chạy goroutine
 				wg.Done()
+
 			}
 		}
 		wg.Wait()
 		close(errchan)
+		var batchErr error
 		for err := range errchan {
 			if err != nil {
-				return err
+				batchErr = errors.Join(batchErr, err)
 			}
 		}
 
-		return nil
+		return batchErr
 	})
 	if err != nil {
 		return err
 	}
-	return nil
+	return err
+}
+
+// Helper function dùng chung cho các handler
+func parseProfilePayload(payload any) (*socialEvent.ProfilePayload, error) {
+	// Cách dễ nhất và an toàn nhất: Marshal về byte, rồi Unmarshal thẳng vào Struct
+	bytes, err := json.Marshal(payload)
+	if err != nil {
+		return nil, err
+	}
+
+	var data socialEvent.ProfilePayload
+	if err := json.Unmarshal(bytes, &data); err != nil {
+		return nil, err
+	}
+	return &data, nil
 }
 func (c *ConsumerProfile) handleCreatedProfile(ctx context.Context, event events.IntegrationEvent) error {
-	data, ok := event.Payload.(*socialEvent.ProfilePayload)
-	if !ok {
-		return kafka.NewNonRetryableError(errors.New("invalid event payload for profile event"))
+	// Gọi hàm parse chuẩn
+	data, err := parseProfilePayload(event.Payload)
+	if err != nil {
+		return kafka.NewNonRetryableError(fmt.Errorf("invalid payload format: %w", err))
 	}
+
 	entity, err := mapper.ToEntityProfilePayload(data)
 	if err != nil {
-		return err
+		return kafka.NewNonRetryableError(err) // Lỗi mapper thường là lỗi data sai, cũng ném vào DLQ
 	}
-	err = c.profileRepo.CreateProfile(ctx, entity)
-	if err != nil {
-		return err
-	}
-	return nil
+
+	// Lỗi DB thì cứ trả về bình thường để Retry
+	return c.profileRepo.CreateProfile(ctx, entity)
 }
 func (c *ConsumerProfile) handleUpdatedProfile(ctx context.Context, event events.IntegrationEvent) error {
-	data, ok := event.Payload.(*socialEvent.ProfilePayload)
-	if !ok {
-		kafka.NewNonRetryableError(errors.New("invalid event payload for profile event"))
-		return kafka.NewNonRetryableError(errors.New("invalid event payload for profile event"))
+	data, err := parseProfilePayload(event.Payload)
+	if err != nil {
+		return kafka.NewNonRetryableError(fmt.Errorf("invalid payload format: %w", err))
 	}
+
 	dataprofile, err := c.profileRepo.GetProfileByID(ctx, data.UserID)
 	if err != nil {
-		return err
+		return err // Lỗi kết nối DB -> Retry
 	}
+
 	if dataprofile == nil {
-		return errors.New("profile not found for update")
+		// CẬP NHẬT: Tuỳ vào logic nghiệp vụ của bạn.
+		// Lệnh Update mà user không tồn tại thì không bao giờ thành công được -> NonRetryableError
+		return kafka.NewNonRetryableError(errors.New("profile not found for update"))
 	}
+
 	entity, err := mapper.ToEntityUpdateProfilePayload(dataprofile, data)
 	if err != nil {
 		return err
 	}
-	err = c.profileRepo.UpdateProfile(ctx, entity)
-	if err != nil {
-		return err
-	}
-	return nil
+
+	return c.profileRepo.UpdateProfile(ctx, entity)
 }
 func (c *ConsumerProfile) handleDeletedProfile(ctx context.Context, event events.IntegrationEvent) error {
 	data, ok := event.Payload.(*socialEvent.ProfilePayload)

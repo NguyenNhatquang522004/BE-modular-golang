@@ -8,8 +8,8 @@ import (
 
 // --- FCM TOKEN REQ ---
 type FCMTokenReq struct {
-	Token     string    `json:"token" binding:"required"`
-	DeviceID  string    `json:"device_id" binding:"required"`
+	Token     string    `json:"token"`
+	DeviceID  string    `json:"device_id"`
 	UpdatedAt time.Time `json:"updated_at"`
 }
 

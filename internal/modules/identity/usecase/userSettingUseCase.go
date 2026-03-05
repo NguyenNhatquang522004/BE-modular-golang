@@ -1,6 +1,7 @@
 package usecase
 
 import (
+	"context"
 	"errors"
 
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/server/http/response"
@@ -17,8 +18,8 @@ func NewUserSettingUseCase(userSettingRepo IRepositoryMongodb.IUserSettingReposi
 		userSettingRepo: userSettingRepo,
 	}
 }
-func (k *UserSettingUseCase) CreateUserSetting(userID string) (*response.Response, error) {
-	user, err := k.userSettingRepo.CreateUserSettingDefault(userID)
+func (k *UserSettingUseCase) CreateUserSetting(ctx context.Context, userID string) (*response.Response, error) {
+	user, err := k.userSettingRepo.CreateUserSettingDefault(ctx, userID)
 	if err != nil {
 		return response.NewResponse(response.WithData(""), response.WithMessage(err.Error()), response.WithStatus("500")), errors.New(err.Error())
 	}
@@ -27,9 +28,9 @@ func (k *UserSettingUseCase) CreateUserSetting(userID string) (*response.Respons
 		response.WithStatus("200")), nil
 
 }
-func (k *UserSettingUseCase) UpdateUserSettings(userID string, settings *req.UserSettingReq) (*response.Response, error) {
+func (k *UserSettingUseCase) UpdateUserSettings(ctx context.Context, userID string, settings *req.UserSettingReq) (*response.Response, error) {
 	data := settings.ToEntity(userID)
-	user, err := k.userSettingRepo.UpdateUserSettings(userID, data)
+	user, err := k.userSettingRepo.UpdateUserSettings(ctx, userID, data)
 	if err != nil {
 		return response.NewResponse(response.WithData(""), response.WithMessage(err.Error()), response.WithStatus("500")), errors.New(err.Error())
 	}
