@@ -24,71 +24,34 @@ func NewFollowersRepository(db *gorm.DB, redisRepo IRepositoryShare.IRedis) *Fol
 	}
 }
 
-func (r *FollowersRepository) CreateFollowUser(ctx context.Context, followerUserID uuid.UUID, followedUserID uuid.UUID) error {
-	return r.db.Create(&entity.Followers{
-		Follower_UserID: followerUserID,
-		Followed_UserID: followedUserID,
-		IsMuted:         false,
-	}).Error
+func (r *FollowersRepository) CreateFollower(ctx context.Context, req *entity.Followers) error {
+	return r.db.WithContext(ctx).Model(&entity.Followers{}).Create(req).Error
 }
-
-func (r *FollowersRepository) DeleteSoftFollowUser(ctx context.Context, follower uuid.UUID) error {
-	data, err := r.GetFollowerByID(ctx, follower)
-	if err != nil {
-		return err
-	}
-	err = r.db.Model(&data).Update("deleted_at", gorm.DeletedAt{Time: data.UpdatedAt, Valid: true}).Error
-	if err != nil {
-		return err
-	}
-	return nil
+func (r *FollowersRepository) UpdateFollower(ctx context.Context, req *entity.Followers) error {
+	return r.db.WithContext(ctx).Model(&entity.Followers{}).Where(&entity.Followers{ID: req.ID}).Updates(req).Error
 }
-func (r *FollowersRepository) DeleteBatchSoftFollowUser(ctx context.Context, followerID uuid.UUID, followedUserID uuid.UUID) error {
-	// Implementation here
-	err := r.db.Where(&entity.Followers{Follower_UserID: followerID, Followed_UserID: followedUserID}).
-		Or(&entity.Followers{Follower_UserID: followedUserID, Followed_UserID: followerID}).
-		Update("deleted_at", gorm.Expr("updated_at")).
-		Error
-
-	if err != nil {
-		return err
-	}
-	return nil
+func (r *FollowersRepository) DeleteFollower(ctx context.Context, ID string) error {
+	return r.db.WithContext(ctx).Model(&entity.Followers{}).Where(&entity.Followers{ID: uuid.MustParse(ID)}).Delete(&entity.Followers{}).Error
 }
-func (r *FollowersRepository) DeleteBatchHardFollowUser(ctx context.Context, followerID uuid.UUID, followedUserID uuid.UUID) error {
-	// Implementation here
-	err := r.db.Where(&entity.Followers{Follower_UserID: followerID, Followed_UserID: followedUserID}).
-		Or(&entity.Followers{Follower_UserID: followedUserID, Followed_UserID: followerID}).
-		Delete(&entity.Followers{}).
-		Error
-
-	if err != nil {
-		return err
-	}
-	return nil
+func (r *FollowersRepository) DeleteFollowerByUserID(ctx context.Context, FollowerUserID uuid.UUID, FollowedUserID uuid.UUID) error {
+	return r.db.WithContext(ctx).Model(&entity.Followers{}).Where(&entity.Followers{Follower_UserID: FollowerUserID, Followed_UserID: FollowedUserID}).Delete(&entity.Followers{}).Error
 }
-func (r *FollowersRepository) DeleteHardFollowUser(ctx context.Context, follower uuid.UUID) error {
-	data, err := r.GetFollowerByID(ctx, follower)
+func (r *FollowersRepository) GetFollowerByID(ctx context.Context, ID string) (*entity.Followers, error) {
+	var follower *entity.Followers
+	err := r.db.WithContext(ctx).Model(&entity.Followers{}).Where(&entity.Followers{ID: uuid.MustParse(ID)}).First(&follower).Error
 	if err != nil {
-		return err
+		return nil, err
 	}
-	err = r.db.Delete(&data).Error
-	if err != nil {
-		return err
-	}
-	return nil
+	return follower, nil
 }
-
-func (r *FollowersRepository) UpdatateMuteFollowUser(ctx context.Context, followerUserID uuid.UUID, followedUserID uuid.UUID, isMuted bool) error {
-	data, err := r.GetFollowerBybidirectional(ctx, followerUserID, followedUserID)
+func (r *FollowersRepository) GetFollowerByUserIDs(ctx context.Context, FollowerUserID uuid.UUID, FollowedUserID uuid.UUID) (*entity.Followers, error) {
+	var follower *entity.Followers
+	err := r.db.WithContext(ctx).Model(&entity.Followers{}).Where(&entity.Followers{Follower_UserID: FollowerUserID, Followed_UserID: FollowedUserID}).First(&follower).Error
 	if err != nil {
-		return err
+		return nil, err
 	}
-	data.IsMuted = isMuted
-	r.db.Save(data)
-	return nil
+	return follower, nil
 }
-
 func (r *FollowersRepository) PaginationFollowers(ctx context.Context, FollowerUserID uuid.UUID, cursor string, limit int) (*dto.PaginationRes, error) {
 	// Implementation here
 	var followers = []*entity.Followers{}
@@ -252,31 +215,4 @@ func (r *FollowersRepository) PaginationFolloweds(ctx context.Context, FollowedU
 		Data:       followeds,
 		Limit:      limit,
 	}, nil
-}
-func (r *FollowersRepository) GetFollowerByID(ctx context.Context, follower uuid.UUID) (*entity.Followers, error) {
-	// Implementation her
-	data := &entity.Followers{}
-	err := r.db.Where(&entity.Followers{ID: follower}).First(data).Error
-	if err != nil {
-		return nil, err
-	}
-	return data, nil
-}
-
-func (r *FollowersRepository) GetFollowerBybidirectional(ctx context.Context, followerUserID uuid.UUID, followedUserID uuid.UUID) (*entity.Followers, error) {
-	// Implementation here
-	data := &entity.Followers{}
-	err := r.db.Where(&entity.Followers{Follower_UserID: followerUserID, Followed_UserID: followedUserID}).First(data).Error
-	if err != nil {
-		return nil, err
-	}
-	return data, nil
-}
-func (r *FollowersRepository) GetFollowerIndiscriminate(ctx context.Context, followerUserID uuid.UUID, followedUserID uuid.UUID) (*[]entity.Followers, error) {
-	data := &[]entity.Followers{}
-	err := r.db.Where(&entity.Followers{Follower_UserID: followerUserID, Followed_UserID: followedUserID}).Or(&entity.Followers{Follower_UserID: followedUserID, Followed_UserID: followerUserID}).Find(data).Error
-	if err != nil {
-		return nil, err
-	}
-	return data, nil
 }

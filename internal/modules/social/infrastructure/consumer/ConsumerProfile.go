@@ -44,11 +44,8 @@ func (c *ConsumerProfile) ConsumerProfile(ctx context.Context) error {
 			// 1. Thử khóa event này trong Redis để đảm bảo chỉ 1 worker xử lý 1 eventID nhất định (Distributed Lock)
 			status, acquired, err := c.redisRepo.Lock(ctx, redisKeyPrefix)
 			if err != nil {
-				if status != constants.StatusProcessing {
-					log.Printf("Event %s is already processed with status %s. Skipping.\n", event.ID, status)
-					return err
-				}
-				return err
+				errchan <- fmt.Errorf("failed to acquire lock for event %s: %w", event.ID, err)
+				continue
 			}
 			if !acquired {
 				if status == constants.StatusProcessing {
@@ -86,10 +83,9 @@ func (c *ConsumerProfile) ConsumerProfile(ctx context.Context) error {
 				errchan <- nil
 			}
 			if err != nil {
-				errchan <- err
-				c.redisRepo.Unlock(ctx, redisKeyPrefix) // Mở khóa ngay nếu có lỗi khi chạy goroutine
 				wg.Done()
-
+				errchan <- fmt.Errorf("failed to run event %s in worker pool: %w", ev.ID, err)
+				c.redisRepo.Unlock(ctx, redisKeyPrefix) // Mở khóa ngay nếu có lỗi khi chạy goroutine
 			}
 		}
 		wg.Wait()

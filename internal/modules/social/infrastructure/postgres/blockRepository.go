@@ -24,54 +24,22 @@ func NewBlockRepository(db *gorm.DB, redisRepo IRepositoryShare.IRedis) *BlockRe
 		redisRepo: redisRepo,
 	}
 }
-
-func (r *BlockRepository) CreateBlockUser(ctx context.Context, blockerUserID uuid.UUID, blockedUserID uuid.UUID, statusBlock enum.Type_Block) error {
-	// Implementation here
-
-	return r.db.Create(&entity.UserBlock{
-		Blocker_UserID: blockerUserID,
-		Blocked_UserID: blockedUserID,
-		Type_Block:     statusBlock,
-	}).Error
+func (r *BlockRepository) CreateBlock(ctx context.Context, req *entity.UserBlock) error {
+	return r.db.WithContext(ctx).Model(&entity.UserBlock{}).Create(req).Error
 }
-func (r *BlockRepository) DeleteBlockUser(ctx context.Context, blockerUserID uuid.UUID, blockedUserID uuid.UUID) error {
-	// Implementation here
-	return r.db.Where(&entity.UserBlock{Blocker_UserID: blockerUserID, Blocked_UserID: blockedUserID}).Delete(&entity.UserBlock{}).Error
+func (r *BlockRepository) UpdateBlock(ctx context.Context, req *entity.UserBlock) error {
+	return r.db.WithContext(ctx).Model(&entity.UserBlock{}).Where(&entity.UserBlock{ID: req.ID}).Updates(req).Error
 }
-func (r *BlockRepository) UpdateBlockUser(ctx context.Context, blockerUserID uuid.UUID, blockedUserID uuid.UUID, statusBlock enum.Type_Block) error {
-	// Implementation here
-	data, err := r.GetBlockedUsers(ctx, blockerUserID, blockedUserID)
-	if err != nil {
-		return err
-	}
-	data.Type_Block = statusBlock
-	err = r.db.Save(data).Error
-	if err != nil {
-		return err
-	}
-	return nil
+func (r *BlockRepository) DeleteBlock(ctx context.Context, ID string) error {
+	return r.db.WithContext(ctx).Model(&entity.UserBlock{}).Where(&entity.UserBlock{ID: uuid.MustParse(ID)}).Delete(&entity.UserBlock{}).Error
 }
-
-func (r *BlockRepository) IsBlocked(ctx context.Context, blockerUserID uuid.UUID, blockedUserID uuid.UUID) (bool, error) {
-	// Implementation here
-	data, err := r.GetBlockIndiscriminate(ctx, blockerUserID, blockedUserID)
-	if err != nil {
-		return false, err
-	}
-	if data != nil {
-		return true, nil
-	}
-	return false, nil
-}
-
-func (r *BlockRepository) GetBlockedUsers(ctx context.Context, blockerUserID uuid.UUID, blockedUserID uuid.UUID) (*entity.UserBlock, error) {
-	// Implementation here
-	var data = &entity.UserBlock{}
-	err := r.db.Where(&entity.UserBlock{Blocker_UserID: blockerUserID, Blocked_UserID: blockedUserID}).Or(&entity.UserBlock{Blocker_UserID: blockedUserID, Blocked_UserID: blockerUserID}).First(data).Error
+func (r *BlockRepository) GetBlockByID(ctx context.Context, ID string) (*entity.UserBlock, error) {
+	var block *entity.UserBlock
+	err := r.db.WithContext(ctx).Model(&entity.UserBlock{}).Where(&entity.UserBlock{ID: uuid.MustParse(ID)}).First(&block).Error
 	if err != nil {
 		return nil, err
 	}
-	return data, nil
+	return block, nil
 }
 
 func (r *BlockRepository) GetPaginationTypeBlock(ctx context.Context, BlockerUserID uuid.UUID, cursor string, limit int, blocktype enum.Type_Block) (*dto.PaginationRes, error) {
@@ -144,13 +112,4 @@ func (r *BlockRepository) GetPaginationTypeBlock(ctx context.Context, BlockerUse
 		Data:       data,
 		Limit:      limit,
 	}, nil
-}
-
-func (r *BlockRepository) GetBlockIndiscriminate(ctx context.Context, requesterID uuid.UUID, recipientID uuid.UUID) (*entity.UserBlock, error) {
-	data := &entity.UserBlock{}
-	err := r.db.Where(&entity.UserBlock{Blocker_UserID: requesterID, Blocked_UserID: recipientID}).Or(&entity.UserBlock{Blocker_UserID: recipientID, Blocked_UserID: requesterID}).First(data).Error
-	if err != nil {
-		return nil, err
-	}
-	return data, nil
 }

@@ -10,11 +10,9 @@ import (
 )
 
 type IBlockRepository interface {
-	CreateBlockUser(ctx context.Context, blockerUserID uuid.UUID, blockedUserID uuid.UUID, statusBlock enum.Type_Block) error
-	DeleteBlockUser(ctx context.Context, blockerUserID uuid.UUID, blockedUserID uuid.UUID) error
-	UpdateBlockUser(ctx context.Context, blockerUserID uuid.UUID, blockedUserID uuid.UUID, statusBlock enum.Type_Block) error
-	IsBlocked(ctx context.Context, blockerUserID uuid.UUID, blockedUserID uuid.UUID) (bool, error)
-	GetBlockedUsers(ctx context.Context, blockerUserID uuid.UUID, blockedUserID uuid.UUID) (*entity.UserBlock, error)
+	CreateBlock(ctx context.Context, req *entity.UserBlock) error
+	UpdateBlock(ctx context.Context, req *entity.UserBlock) error
+	DeleteBlock(ctx context.Context, ID string) error
+	GetBlockByID(ctx context.Context, ID string) (*entity.UserBlock, error)
 	GetPaginationTypeBlock(ctx context.Context, BlockerUserID uuid.UUID, cursor string, limit int, blocktype enum.Type_Block) (*dto.PaginationRes, error)
-	GetBlockIndiscriminate(ctx context.Context, requesterID uuid.UUID, recipientID uuid.UUID) (*entity.UserBlock, error)
 }

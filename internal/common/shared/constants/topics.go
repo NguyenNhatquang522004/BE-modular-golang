@@ -30,8 +30,8 @@ const (
 	TopicUserSettings TopicName = "identity.user_settings.events"
 	//socials
 	TopicFriendship                 TopicName = "social.friendship.events"
-	TopicBlock                      TopicName = "social.block.events"
-	TopicFollow                     TopicName = "social.follow.events"
+	TopicBlockUser                  TopicName = "social.block_user.events"
+	TopicFollowUser                 TopicName = "social.follow_user.events"
 	TopicProfile                    TopicName = "social.profile.events"
 	TopicDeleteSocialRelationTarget TopicName = "social.delete_relation_target.events" // chưa làm gì cả
 
@@ -104,8 +104,8 @@ func (t EventType) String() string {
 
 var SocialTopics = []TopicConfig{
 	{Name: TopicFriendship, Partitions: 6}, // Gom 3 cái Create/Update/Delete vào 1
-	{Name: TopicBlock, Partitions: 6},
-	{Name: TopicFollow, Partitions: 3},
+	{Name: TopicBlockUser, Partitions: 6},
+	{Name: TopicFollowUser, Partitions: 3},
 	{Name: TopicContentPostPublish, Partitions: 3},
 	{Name: TopicContentPostPublishMediaAssets, Partitions: 3},
 	{Name: TopicUserNotificationSettings, Partitions: 3},

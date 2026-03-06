@@ -1,34 +1,11 @@
 package req
 
-type followerUseridRequest struct {
-	FollowerUserID string `json:"follower_user_id" validate:"required,uuid4"`
-}
+import "github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/constants"
 
-type followedUserIDRequest struct {
-	FollowedUserID string `json:"followed_user_id" validate:"required,uuid4"`
+type FollowerRequest struct {
+	ID              string              `json:"id"`
+	Follower_UserID string              `json:"follower_user_id"`
+	Followed_UserID string              `json:"followed_user_id"`
+	IsMuted         bool                `json:"is_muted"`
+	EventType       constants.EventType `json:"event_type"`
 }
-type FollowCreateRequest struct {
-	followerUseridRequest
-	followedUserIDRequest
-}
-
-type FollowDeleteSoftRequest struct {
-	followerUseridRequest
-}
-
-type FollowDeleteHardRequest struct {
-	followerUseridRequest
-}
-
-type FollowUpdateMuteRequest struct {
-	followerUseridRequest
-	followedUserIDRequest
-	IsMuted bool `json:"is_muted" validate:"required"`
-}
-
-type FollowPaginationRequest struct {
-	UserID string `form:"user_id" validate:"required,uuid4"`
-	Cursor string `form:"cursor"`
-	Limit  int    `form:"limit" validate:"gte=1,lte=100"`
-}
-

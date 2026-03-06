@@ -21,44 +21,24 @@ type FriendshipsRepository struct {
 func NewFriendshipsRepository(db *gorm.DB, redisRepo IRepositoryShare.IRedis) *FriendshipsRepository {
 	return &FriendshipsRepository{db: db, redisRepo: redisRepo}
 }
-
-func (r *FriendshipsRepository) CreateFriendship(Requester_ID uuid.UUID, Recipient_ID uuid.UUID) error {
-
-	return r.db.Create(&entity.Friendships{
-		Requester_ID: Requester_ID,
-		Recipient_ID: Recipient_ID,
-		Status:       enum.StatusFriendship_Pending,
-	}).Error
+func (r *FriendshipsRepository) CreateFriendship(ctx context.Context, req *entity.Friendships) error {
+	return r.db.WithContext(ctx).Model(&entity.Friendships{}).Create(req).Error
+}
+func (r *FriendshipsRepository) UpdateFriendship(ctx context.Context, req *entity.Friendships) error {
+	return r.db.WithContext(ctx).Model(&entity.Friendships{}).Where(&entity.Friendships{ID: req.ID}).Updates(req).Error
+}
+func (r *FriendshipsRepository) DeleteFriendship(ctx context.Context, ID string) error {
+	return r.db.WithContext(ctx).Model(&entity.Friendships{}).Where(&entity.Friendships{ID: uuid.MustParse(ID)}).Delete(&entity.Friendships{}).Error
+}
+func (r *FriendshipsRepository) GetFriendshipByID(ctx context.Context, ID string) (*entity.Friendships, error) {
+	var friendship *entity.Friendships
+	err := r.db.WithContext(ctx).Model(&entity.Friendships{}).Where(&entity.Friendships{ID: uuid.MustParse(ID)}).First(&friendship).Error
+	if err != nil {
+		return nil, err
+	}
+	return friendship, nil
 }
 
-func (r *FriendshipsRepository) UpdateFriendship(data *entity.Friendships) error {
-	r.db.Save(data)
-	return nil
-}
-
-func (r *FriendshipsRepository) DeleteHardFriendship(friendshipID uuid.UUID) error {
-	data, err := r.GetFriendshipByUserIDs(friendshipID)
-	if err != nil {
-		return err
-	}
-	err = r.db.Delete(&data).Error
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-func (r *FriendshipsRepository) DeleteSoftFriendship(friendshipID uuid.UUID) error {
-	data, err := r.GetFriendshipByUserIDs(friendshipID)
-	if err != nil {
-		return err
-	}
-	err = r.db.Model(&data).Update("deleted_at", gorm.DeletedAt{Time: data.Updated_At, Valid: true}).Error
-	if err != nil {
-		return err
-	}
-	return nil
-}
 func (r *FriendshipsRepository) PanigationStatusFriendship(userID uuid.UUID, cursor string, limit int, status enum.StatusFriendship) (*dto.PaginationRes, error) {
 	var data = []*entity.Friendships{}
 	items := []string{
@@ -138,29 +118,4 @@ func (r *FriendshipsRepository) PanigationStatusFriendship(userID uuid.UUID, cur
 		Data:       data,
 		Limit:      limit,
 	}, nil
-}
-
-func (r *FriendshipsRepository) GetFriendshipByUserIDs(friendshipID uuid.UUID) (*entity.Friendships, error) {
-	var data = &entity.Friendships{}
-	err := r.db.Where(&entity.Friendships{ID: friendshipID}).First(data).Error
-	if err != nil {
-		return nil, err
-	}
-	return data, nil
-}
-func (r *FriendshipsRepository) GetFriendshipBybidirectional(requesterID uuid.UUID, recipientID uuid.UUID) (*entity.Friendships, error) {
-	data := &entity.Friendships{}
-	err := r.db.Where(&entity.Friendships{Requester_ID: requesterID, Recipient_ID: recipientID}).First(data).Error
-	if err != nil {
-		return nil, err
-	}
-	return data, nil
-}
-func (r *FriendshipsRepository) GetFriendshipIndiscriminate(requesterID uuid.UUID, recipientID uuid.UUID) (*entity.Friendships, error) {
-	data := &entity.Friendships{}
-	err := r.db.Where(&entity.Friendships{Requester_ID: requesterID, Recipient_ID: recipientID}).Or(&entity.Friendships{Requester_ID: recipientID, Recipient_ID: requesterID}).First(data).Error
-	if err != nil {
-		return nil, err
-	}
-	return data, nil
 }

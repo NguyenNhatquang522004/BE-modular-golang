@@ -9,15 +9,12 @@ import (
 )
 
 type IFollowersRepository interface {
-	CreateFollowUser(ctx context.Context, followerUserID uuid.UUID, followedUserID uuid.UUID) error
-	DeleteSoftFollowUser(ctx context.Context, follower uuid.UUID) error
-	DeleteHardFollowUser(ctx context.Context, follower uuid.UUID) error
-	DeleteBatchSoftFollowUser(ctx context.Context, followerID uuid.UUID, followedUserID uuid.UUID) error
-	DeleteBatchHardFollowUser(ctx context.Context, followerID uuid.UUID, followedUserID uuid.UUID) error
-	UpdatateMuteFollowUser(ctx context.Context, followerUserID uuid.UUID, followedUserID uuid.UUID, isMuted bool) error
+	CreateFollower(ctx context.Context, req *entity.Followers) error
+	UpdateFollower(ctx context.Context, req *entity.Followers) error
+	DeleteFollower(ctx context.Context, ID string) error
+	DeleteFollowerByUserID(ctx context.Context, FollowerUserID uuid.UUID, FollowedUserID uuid.UUID) error
+	GetFollowerByID(ctx context.Context, ID string) (*entity.Followers, error)
+	GetFollowerByUserIDs(ctx context.Context, FollowerUserID uuid.UUID, FollowedUserID uuid.UUID) (*entity.Followers, error)
 	PaginationFollowers(ctx context.Context, userID uuid.UUID, cursor string, limit int) (*dto.PaginationRes, error)
 	PaginationFolloweds(ctx context.Context, FollowedUserID uuid.UUID, cursor string, limit int) (*dto.PaginationRes, error)
-	GetFollowerTableByID(ctx context.Context, follower uuid.UUID) (*entity.Followers, error)
-	GetFollowerTableBybidirectional(ctx context.Context, followerUserID uuid.UUID, followedUserID uuid.UUID) (*entity.Followers, error)
-	GetFollowerIndiscriminate(ctx context.Context, requesterID uuid.UUID, recipientID uuid.UUID) ([]*entity.Followers, error)
 }

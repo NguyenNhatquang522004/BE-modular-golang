@@ -47,10 +47,8 @@ func (c *ConsumerUserSetting) ConsumerUserNotificationSettings(ctx context.Conte
 			// 1. Thử khóa event này trong Redis để đảm bảo chỉ 1 worker xử lý 1 eventID nhất định (Distributed Lock)
 			status, acquired, err := c.redisRepo.Lock(ctx, redisKeyPrefix)
 			if err != nil {
-				if status != "" && status != constants.StatusProcessing {
-					return err
-				}
-				return err
+				errchan <- fmt.Errorf("failed to acquire lock for event %s: %w", event.ID, err)
+				continue
 			}
 			if !acquired {
 				if status == constants.StatusProcessing {

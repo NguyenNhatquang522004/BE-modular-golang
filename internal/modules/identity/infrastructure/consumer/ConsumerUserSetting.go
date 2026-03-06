@@ -45,11 +45,8 @@ func (c *ConsumerUserSetting) ConsumerUserSettingEvent(ctx context.Context) erro
 			redisKeyPrefix := "consumer_user_setting_lock" + event.ID
 			status, can, err := c.redisRepo.Lock(ctx, redisKeyPrefix)
 			if err != nil {
-				if status == constants.StatusProcessing {
-					log.Printf("Event %s is currently being processed by another worker. Skipping.\n", event.ID)
-					return err
-				}
-				return err
+				errchan <- fmt.Errorf("failed to acquire lock for event %s: %w", event.ID, err)
+				continue
 			}
 			if !can {
 				if status == constants.StatusProcessing {

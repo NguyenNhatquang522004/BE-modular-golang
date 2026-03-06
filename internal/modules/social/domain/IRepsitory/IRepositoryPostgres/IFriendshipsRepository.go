@@ -10,12 +10,9 @@ import (
 )
 
 type IFriendshipsRepository interface {
-	CreateFriendship(ctx context.Context, requesterID uuid.UUID, recipientID uuid.UUID) error
-	UpdateFriendshipStatus(ctx context.Context, data *entity.Friendships) error
-	DeleteHardFriendship(ctx context.Context, friendshipID uuid.UUID) error
-	DeleteSoftFriendship(ctx context.Context, friendshipID uuid.UUID) error
+	CreateFriendship(ctx context.Context, req *entity.Friendships) error
+	UpdateFriendship(ctx context.Context, req *entity.Friendships) error
+	DeleteFriendship(ctx context.Context, ID string) error
+	GetFriendshipByID(ctx context.Context, ID string) (*entity.Friendships, error)
 	PanigationStatusFriendship(ctx context.Context, userID uuid.UUID, cursor string, limit int, status enum.StatusFriendship) (*dto.PaginationRes, error)
-	GetFriendshipTableByTableId(ctx context.Context, friendshipID uuid.UUID) (*entity.Friendships, error)
-	GetFriendshipTableBybidirectional(ctx context.Context, requesterID uuid.UUID, recipientID uuid.UUID) (*entity.Friendships, error)
-	GetFriendshipIndiscriminate(ctx context.Context, requesterID uuid.UUID, recipientID uuid.UUID) (*entity.Friendships, error)
 }
