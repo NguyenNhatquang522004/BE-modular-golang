@@ -84,6 +84,8 @@ func (c *ConsumerFriendship) ConsumerFriendUser(ctx context.Context) error {
 				c.redisRepo.Unlock(ctx, ev.ID) // Mở khóa ngay nếu có lỗi khi chạy goroutine
 			}
 		}
+		wg.Wait()
+		close(errchan)
 		var finalErr error
 		for err := range errchan {
 			if err != nil {

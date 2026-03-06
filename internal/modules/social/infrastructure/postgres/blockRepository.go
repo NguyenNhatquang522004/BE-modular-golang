@@ -41,7 +41,20 @@ func (r *BlockRepository) GetBlockByID(ctx context.Context, ID string) (*entity.
 	}
 	return block, nil
 }
-
+func (r *BlockRepository) GetBlockByUserIDs(ctx context.Context, blockerUserID string, blockedUserID string) (*entity.UserBlock, error) {
+	var user *entity.UserBlock
+	err := r.db.WithContext(ctx).Model(&entity.UserBlock{}).
+		Where(&entity.UserBlock{Blocker_UserID: uuid.MustParse(blockerUserID), Blocked_UserID: uuid.MustParse(blockedUserID)}).
+		Or(&entity.UserBlock{Blocker_UserID: uuid.MustParse(blockedUserID), Blocked_UserID: uuid.MustParse(blockerUserID)}).
+		First(&user).Error
+	if err != nil {
+		return nil, err
+	}
+	return user, nil
+}
+func (r *BlockRepository) DeleteBlockByUserIDs(ctx context.Context, blockerUserID string, blockedUserID string) error {
+	return r.db.WithContext(ctx).Model(&entity.UserBlock{}).Where(&entity.UserBlock{Blocker_UserID: uuid.MustParse(blockerUserID), Blocked_UserID: uuid.MustParse(blockedUserID)}).Or(&entity.UserBlock{Blocker_UserID: uuid.MustParse(blockedUserID), Blocked_UserID: uuid.MustParse(blockerUserID)}).Delete(&entity.UserBlock{}).Error
+}
 func (r *BlockRepository) GetPaginationTypeBlock(ctx context.Context, BlockerUserID uuid.UUID, cursor string, limit int, blocktype sharedEnums.Type_Block) (*dto.PaginationRes, error) {
 	// Implementation here
 	data := []*entity.UserBlock{}
@@ -64,7 +77,7 @@ func (r *BlockRepository) GetPaginationTypeBlock(ctx context.Context, BlockerUse
 			Limit:      cacheLimit,
 		}, nil
 	}
-	query := r.db.Where(&entity.UserBlock{Blocker_UserID: BlockerUserID, Type_Block: blocktype}).Order("created_at DESC ,id DESC").Limit(querylimit)
+	query := r.db.Where(&entity.UserBlock{Blocker_UserID: BlockerUserID}).Order("created_at DESC ,id DESC").Limit(querylimit)
 	if cursor != "" {
 		time, id, err := utils.DecodeCursor(cursor)
 		if err != nil {

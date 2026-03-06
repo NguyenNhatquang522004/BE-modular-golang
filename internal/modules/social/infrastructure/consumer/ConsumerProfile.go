@@ -69,8 +69,7 @@ func (c *ConsumerProfile) ConsumerProfile(ctx context.Context) error {
 				case constants.Deleted.String():
 					processErr = c.handleDeletedProfile(ctx, ev)
 				default:
-					log.Printf("Unsupported event type %s for event ID %s. Marking as failed.\n", ev.Type, ev.ID)
-
+					errchan <- fmt.Errorf("unsupported event type %s for event ID %s. Marking as failed", ev.Type, ev.ID)
 				}
 
 			})

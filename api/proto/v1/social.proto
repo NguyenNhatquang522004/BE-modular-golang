@@ -1,0 +1,18 @@
+syntax = "proto3";
+
+package api.proto.v1;
+
+option go_package = "github.com/quang/social-network/pkg/pb/v1;pb";
+import "google/protobuf/empty.proto";
+import "google/protobuf/timestamp.proto";
+
+service SocialService {
+rpc GetListBlockByUserID (UserblockIDRequest) returns (ListBlockByUserIDResponse);
+}
+message UserblockIDRequest {
+    string user_id = 1;
+    string user_id2 = 2;
+}
+message ListBlockByUserIDResponse {
+    repeated string typeblock = 1;
+}

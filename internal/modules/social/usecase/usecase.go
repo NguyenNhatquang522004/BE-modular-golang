@@ -13,6 +13,7 @@ type IFriendshipUseCase interface {
 	Execute(ctx context.Context, req *req.FriendShipRequest) error
 }
 type IBlockUseCase interface {
+	Execute(ctx context.Context, req *req.BlockRequest) error
 }
 type UseCase struct {
 }
