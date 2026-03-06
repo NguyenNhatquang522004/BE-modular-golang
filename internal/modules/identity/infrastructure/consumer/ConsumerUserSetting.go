@@ -42,8 +42,7 @@ func (c *ConsumerUserSetting) ConsumerUserSettingEvent(ctx context.Context) erro
 		var wg sync.WaitGroup
 		errchan := make(chan error, len(events))
 		for _, event := range events {
-			redisKeyPrefix := "consumer_user_setting_lock" + event.ID
-			status, can, err := c.redisRepo.Lock(ctx, redisKeyPrefix)
+			status, can, err := c.redisRepo.Lock(ctx, event.ID)
 			if err != nil {
 				errchan <- fmt.Errorf("failed to acquire lock for event %s: %w", event.ID, err)
 				continue
@@ -74,16 +73,16 @@ func (c *ConsumerUserSetting) ConsumerUserSettingEvent(ctx context.Context) erro
 			})
 			wg.Add(1)
 			if processErr != nil {
-				c.redisRepo.Unlock(ctx, redisKeyPrefix)
+				c.redisRepo.Unlock(ctx, ev.ID)
 				errchan <- fmt.Errorf("event %s failed: %w", ev.ID, processErr)
 			} else {
 				// Thành công -> Giữ khoá để tránh các worker khác xử lý lại
 				log.Printf("Event %s processed successfully. Keeping lock to prevent reprocessing.\n", event.ID)
-				c.redisRepo.Set(ctx, redisKeyPrefix, constants.StatusProcessing, 30*time.Minute) // Cập nhật lại khoá với status processing và TTL mới
+				c.redisRepo.Set(ctx, ev.ID, constants.StatusProcessing, 30*time.Minute) // Cập nhật lại khoá với status processing và TTL mới
 				errchan <- nil
 			}
 			if err != nil {
-				c.redisRepo.Unlock(ctx, redisKeyPrefix)
+				c.redisRepo.Unlock(ctx, ev.ID)
 				errchan <- err
 				wg.Done()
 			}

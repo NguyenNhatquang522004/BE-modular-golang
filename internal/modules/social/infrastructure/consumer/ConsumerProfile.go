@@ -40,9 +40,9 @@ func (c *ConsumerProfile) ConsumerProfile(ctx context.Context) error {
 		var wg sync.WaitGroup
 		errchan := make(chan error, len(events))
 		for _, event := range events {
-			redisKeyPrefix := "consumer_profile_lock:" + event.ID
+
 			// 1. Thử khóa event này trong Redis để đảm bảo chỉ 1 worker xử lý 1 eventID nhất định (Distributed Lock)
-			status, acquired, err := c.redisRepo.Lock(ctx, redisKeyPrefix)
+			status, acquired, err := c.redisRepo.Lock(ctx, event.ID)
 			if err != nil {
 				errchan <- fmt.Errorf("failed to acquire lock for event %s: %w", event.ID, err)
 				continue
@@ -75,17 +75,17 @@ func (c *ConsumerProfile) ConsumerProfile(ctx context.Context) error {
 
 			})
 			if processErr != nil {
-				c.redisRepo.Unlock(ctx, redisKeyPrefix) // Thất bại -> Mở khoá để lần sau làm lại
+				c.redisRepo.Unlock(ctx, ev.ID) // Thất bại -> Mở khoá để lần sau làm lại
 				errchan <- fmt.Errorf("event %s failed: %w", ev.ID, processErr)
 			} else {
 				// CỰC KỲ QUAN TRỌNG: Thành công -> Đánh dấu Vĩnh viễn (Hoặc 24h)
-				c.redisRepo.MarkCompleted(ctx, redisKeyPrefix)
+				c.redisRepo.MarkCompleted(ctx, ev.ID)
 				errchan <- nil
 			}
 			if err != nil {
 				wg.Done()
 				errchan <- fmt.Errorf("failed to run event %s in worker pool: %w", ev.ID, err)
-				c.redisRepo.Unlock(ctx, redisKeyPrefix) // Mở khóa ngay nếu có lỗi khi chạy goroutine
+				c.redisRepo.Unlock(ctx, ev.ID) // Mở khóa ngay nếu có lỗi khi chạy goroutine
 			}
 		}
 		wg.Wait()

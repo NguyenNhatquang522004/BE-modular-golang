@@ -1,4 +1,4 @@
-package enum
+package sharedEnums
 
 //go:generate enumer -type=StatusFriendship -json -sql -transform=snake -trimprefix=Type_Block
 

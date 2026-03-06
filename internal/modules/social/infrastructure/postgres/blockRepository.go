@@ -5,9 +5,9 @@ import (
 
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/IRepositoryShare"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/dto"
+	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/sharedEnums"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/utils"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/social/domain/entity"
-	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/social/enum"
 	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
@@ -42,7 +42,7 @@ func (r *BlockRepository) GetBlockByID(ctx context.Context, ID string) (*entity.
 	return block, nil
 }
 
-func (r *BlockRepository) GetPaginationTypeBlock(ctx context.Context, BlockerUserID uuid.UUID, cursor string, limit int, blocktype enum.Type_Block) (*dto.PaginationRes, error) {
+func (r *BlockRepository) GetPaginationTypeBlock(ctx context.Context, BlockerUserID uuid.UUID, cursor string, limit int, blocktype sharedEnums.Type_Block) (*dto.PaginationRes, error) {
 	// Implementation here
 	data := []*entity.UserBlock{}
 	querylimit := limit + 1

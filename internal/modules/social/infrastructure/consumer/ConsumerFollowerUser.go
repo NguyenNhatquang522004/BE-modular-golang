@@ -38,9 +38,8 @@ func (c *ConsumerFollowerUser) ConsumerFollowUser(ctx context.Context) error {
 		var wg sync.WaitGroup
 		errchan := make(chan error, len(events))
 		for _, event := range events {
-			redisprefix := "consumer_follow_user_lock:" + event.ID
 			// 1. Thử khóa event này trong Redis để đảm bảo chỉ 1 worker xử lý 1 eventID nhất định (Distributed Lock)
-			status, acquired, err := c.redisRepo.Lock(ctx, redisprefix)
+			status, acquired, err := c.redisRepo.Lock(ctx, event.ID)
 			if err != nil {
 				errchan <- fmt.Errorf("failed to acquire lock for event %s: %w", event.ID, err)
 				continue
@@ -83,7 +82,7 @@ func (c *ConsumerFollowerUser) ConsumerFollowUser(ctx context.Context) error {
 			if err != nil {
 				wg.Done()
 				errchan <- fmt.Errorf("failed to run event %s in worker pool: %w", ev.ID, err)
-				c.redisRepo.Unlock(ctx, redisprefix) // Mở khóa ngay nếu có lỗi khi chạy goroutine
+				c.redisRepo.Unlock(ctx, ev.ID) // Mở khóa ngay nếu có lỗi khi chạy goroutine
 			}
 		}
 		wg.Wait()
@@ -116,6 +115,8 @@ func (c *ConsumerFollowerUser) handleCreateFollowerUserEvent(ctx context.Context
 		Follower_UserID: uuid.MustParse(data.FollowerUserID),
 		Followed_UserID: uuid.MustParse(data.FollowedUserID),
 		IsMuted:         false,
+		CreatedAt:       data.CreatedAt,
+		UpdatedAt:       data.UpdatedAt,
 	}
 	err = c.followRepo.CreateFollower(ctx, entity)
 	if err != nil {
@@ -131,11 +132,33 @@ func (c *ConsumerFollowerUser) handleUpdateFollowerUserEvent(ctx context.Context
 	if data == nil {
 		return kafka.NewNonRetryableError(fmt.Errorf("payload is nil for event %s", event.ID))
 	}
-	
+	datauser, err := c.followRepo.GetFollowerByUserIDs(ctx, data.FollowerUserID, data.FollowedUserID)
+	if err != nil {
+		return fmt.Errorf("failed to get existing follower relationship for event %s: %w", event.ID, err)
+	}
+	if datauser == nil {
+		return fmt.Errorf("no existing follower relationship found for follower_user_id %s and followed_user_id %s in event %s", data.FollowerUserID, data.FollowedUserID, event.ID)
+	}
+	datauser.IsMuted = data.IsMuted
+	datauser.UpdatedAt = data.UpdatedAt
+	err = c.followRepo.UpdateFollower(ctx, datauser)
+	if err != nil {
+		return fmt.Errorf("failed to update follower relationship for event %s: %w", event.ID, err)
+	}
 	return nil
 }
 func (c *ConsumerFollowerUser) handleDeleteFollowerUserEvent(ctx context.Context, event events.IntegrationEvent) error {
-
+	data, err := utils.ParsePayload[socialEvent.FollowerUserPayload](event.Payload)
+	if err != nil {
+		return kafka.NewNonRetryableError(fmt.Errorf("failed to parse payload for event %s: %w", event.ID, err))
+	}
+	if data == nil {
+		return kafka.NewNonRetryableError(fmt.Errorf("payload is nil for event %s", event.ID))
+	}
+	err = c.followRepo.DeleteFollowerByUserIDs(ctx, data.FollowerUserID, data.FollowedUserID)
+	if err != nil {
+		return fmt.Errorf("failed to delete follower relationship for event %s: %w", event.ID, err)
+	}
 	return nil
 }
 func (c *ConsumerFollowerUser) ConsumerFailedFollowUser(ctx context.Context) error {

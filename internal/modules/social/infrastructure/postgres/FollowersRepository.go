@@ -33,8 +33,8 @@ func (r *FollowersRepository) UpdateFollower(ctx context.Context, req *entity.Fo
 func (r *FollowersRepository) DeleteFollower(ctx context.Context, ID string) error {
 	return r.db.WithContext(ctx).Model(&entity.Followers{}).Where(&entity.Followers{ID: uuid.MustParse(ID)}).Delete(&entity.Followers{}).Error
 }
-func (r *FollowersRepository) DeleteFollowerByUserID(ctx context.Context, FollowerUserID uuid.UUID, FollowedUserID uuid.UUID) error {
-	return r.db.WithContext(ctx).Model(&entity.Followers{}).Where(&entity.Followers{Follower_UserID: FollowerUserID, Followed_UserID: FollowedUserID}).Delete(&entity.Followers{}).Error
+func (r *FollowersRepository) DeleteFollowerByUserID(ctx context.Context, FollowerUserID string, FollowedUserID string) error {
+	return r.db.WithContext(ctx).Model(&entity.Followers{}).Where(&entity.Followers{Follower_UserID: uuid.MustParse(FollowerUserID), Followed_UserID: uuid.MustParse(FollowedUserID)}).Or(&entity.Followers{Follower_UserID: uuid.MustParse(FollowedUserID), Followed_UserID: uuid.MustParse(FollowerUserID)}).Delete(&entity.Followers{}).Error
 }
 func (r *FollowersRepository) GetFollowerByID(ctx context.Context, ID string) (*entity.Followers, error) {
 	var follower *entity.Followers
@@ -44,23 +44,23 @@ func (r *FollowersRepository) GetFollowerByID(ctx context.Context, ID string) (*
 	}
 	return follower, nil
 }
-func (r *FollowersRepository) GetFollowerByUserIDs(ctx context.Context, FollowerUserID uuid.UUID, FollowedUserID uuid.UUID) (*entity.Followers, error) {
+func (r *FollowersRepository) GetFollowerByUserIDs(ctx context.Context, FollowerUserID string, FollowedUserID string) (*entity.Followers, error) {
 	var follower *entity.Followers
-	err := r.db.WithContext(ctx).Model(&entity.Followers{}).Where(&entity.Followers{Follower_UserID: FollowerUserID, Followed_UserID: FollowedUserID}).First(&follower).Error
+	err := r.db.WithContext(ctx).Model(&entity.Followers{}).Where(&entity.Followers{Follower_UserID: uuid.MustParse(FollowerUserID), Followed_UserID: uuid.MustParse(FollowedUserID)}).First(&follower).Error
 	if err != nil {
 		return nil, err
 	}
 	return follower, nil
 }
-func (r *FollowersRepository) PaginationFollowers(ctx context.Context, FollowerUserID uuid.UUID, cursor string, limit int) (*dto.PaginationRes, error) {
+func (r *FollowersRepository) PaginationFollowers(ctx context.Context, FollowerUserID string, cursor string, limit int) (*dto.PaginationRes, error) {
 	// Implementation here
 	var followers = []*entity.Followers{}
 	queryLimit := limit + 1
 	items := []string{
-		"follower_cache_user_" + FollowerUserID.String(),
-		"follower_cache_nextcursor_user_" + FollowerUserID.String(),
-		"follower_cache_hasnext_user_" + FollowerUserID.String(),
-		"follower_cache_limit_user_" + FollowerUserID.String(),
+		"follower_cache_user_" + FollowerUserID,
+		"follower_cache_nextcursor_user_" + FollowerUserID,
+		"follower_cache_hasnext_user_" + FollowerUserID,
+		"follower_cache_limit_user_" + FollowerUserID,
 	}
 	data, cursor, hasNextcache, limit, err := r.redisRepo.CustomizeGetCache(ctx, items)
 	if err != nil {
@@ -75,7 +75,7 @@ func (r *FollowersRepository) PaginationFollowers(ctx context.Context, FollowerU
 		}, nil
 	}
 
-	query := r.db.Where(&entity.Followers{Follower_UserID: FollowerUserID}).Order("created_at DESC ,id DESC").Limit(queryLimit)
+	query := r.db.Where(&entity.Followers{Follower_UserID: uuid.MustParse(FollowerUserID)}).Order("created_at DESC ,id DESC").Limit(queryLimit)
 	if cursor != "" {
 		time, id, err := utils.DecodeCursor(cursor)
 		if err != nil {
@@ -118,10 +118,10 @@ func (r *FollowersRepository) PaginationFollowers(ctx context.Context, FollowerU
 		nextCursor = utils.EncodeCursor(lastFollower.CreatedAt, lastFollower.Followed_UserID)
 	}
 	itemsSet := map[string]any{
-		"follower_cache_user_" + FollowerUserID.String():            followers,
-		"follower_cache_nextcursor_user_" + FollowerUserID.String(): nextCursor,
-		"follower_cache_hasnext_user_" + FollowerUserID.String():    hasNext,
-		"follower_cache_limit_user_" + FollowerUserID.String():      limit,
+		"follower_cache_user_" + FollowerUserID:            followers,
+		"follower_cache_nextcursor_user_" + FollowerUserID: nextCursor,
+		"follower_cache_hasnext_user_" + FollowerUserID:    hasNext,
+		"follower_cache_limit_user_" + FollowerUserID:      limit,
 	}
 	err = r.redisRepo.CustomizeSetCache(context.Background(), itemsSet)
 	if err != nil {
@@ -134,15 +134,15 @@ func (r *FollowersRepository) PaginationFollowers(ctx context.Context, FollowerU
 		Limit:      limit,
 	}, nil
 }
-func (r *FollowersRepository) PaginationFolloweds(ctx context.Context, FollowedUserID uuid.UUID, cursor string, limit int) (*dto.PaginationRes, error) {
+func (r *FollowersRepository) PaginationFolloweds(ctx context.Context, FollowedUserID string, cursor string, limit int) (*dto.PaginationRes, error) {
 	// Implementation here
 	queryLimit := limit + 1
 	var followeds = []*entity.Followers{}
 	items := []string{
-		"followed_cache_user_" + FollowedUserID.String(),
-		"followed_cache_nextcursor_user_" + FollowedUserID.String(),
-		"followed_cache_hasnext_user_" + FollowedUserID.String(),
-		"followed_cache_limit_user_" + FollowedUserID.String(),
+		"followed_cache_user_" + FollowedUserID,
+		"followed_cache_nextcursor_user_" + FollowedUserID,
+		"followed_cache_hasnext_user_" + FollowedUserID,
+		"followed_cache_limit_user_" + FollowedUserID,
 	}
 	data, cursor, hasNextcache, limit, err := r.redisRepo.CustomizeGetCache(ctx, items)
 	if err != nil {
@@ -156,7 +156,7 @@ func (r *FollowersRepository) PaginationFolloweds(ctx context.Context, FollowedU
 			Limit:      limit,
 		}, nil
 	}
-	query := r.db.Where(&entity.Followers{Followed_UserID: FollowedUserID}).Order("created_at DESC ,id DESC  ").Limit(queryLimit)
+	query := r.db.Where(&entity.Followers{Followed_UserID: uuid.MustParse(FollowedUserID)}).Order("created_at DESC ,id DESC  ").Limit(queryLimit)
 	if cursor != "" {
 		time, id, err := utils.DecodeCursor(cursor)
 		if err != nil {
@@ -200,10 +200,10 @@ func (r *FollowersRepository) PaginationFolloweds(ctx context.Context, FollowedU
 		nextCursor = utils.EncodeCursor(lastFollower.CreatedAt, lastFollower.ID)
 	}
 	itemsSet := map[string]any{
-		"followed_cache_user_" + FollowedUserID.String():            followeds,
-		"followed_cache_nextcursor_user_" + FollowedUserID.String(): nextCursor,
-		"followed_cache_hasnext_user_" + FollowedUserID.String():    hasNext,
-		"followed_cache_limit_user_" + FollowedUserID.String():      limit,
+		"followed_cache_user_" + FollowedUserID:            followeds,
+		"followed_cache_nextcursor_user_" + FollowedUserID: nextCursor,
+		"followed_cache_hasnext_user_" + FollowedUserID:    hasNext,
+		"followed_cache_limit_user_" + FollowedUserID:      limit,
 	}
 	err = r.redisRepo.CustomizeSetCache(context.Background(), itemsSet)
 	if err != nil {

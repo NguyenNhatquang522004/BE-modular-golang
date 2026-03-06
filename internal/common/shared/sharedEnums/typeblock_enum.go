@@ -1,4 +1,4 @@
-package enum
+package sharedEnums
 
 //go:generate enumer -type=Type_Block -json -sql -transform=snake -trimprefix=Type_Block
 type Type_Block int

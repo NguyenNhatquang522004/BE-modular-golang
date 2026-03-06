@@ -25,6 +25,8 @@ func (c *FollowUseCase) Execute(ctx context.Context, req *req.FollowerRequest) e
 		FollowerUserID: req.Follower_UserID,
 		FollowedUserID: req.Followed_UserID,
 		IsMuted:        req.IsMuted,
+		CreatedAt:      req.CreatedAt,
+		UpdatedAt:      req.UpdatedAt,
 		EventType:      req.EventType,
 	}
 	err := c.events.Publish(ctx, constants.TopicFollowUser.String(), req.Follower_UserID, req.EventType.String(), payload)

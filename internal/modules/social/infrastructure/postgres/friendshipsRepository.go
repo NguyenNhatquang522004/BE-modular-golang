@@ -5,9 +5,9 @@ import (
 
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/IRepositoryShare"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/dto"
+	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/sharedEnums"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/utils"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/social/domain/entity"
-	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/social/enum"
 	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
@@ -38,8 +38,10 @@ func (r *FriendshipsRepository) GetFriendshipByID(ctx context.Context, ID string
 	}
 	return friendship, nil
 }
-
-func (r *FriendshipsRepository) PanigationStatusFriendship(userID uuid.UUID, cursor string, limit int, status enum.StatusFriendship) (*dto.PaginationRes, error) {
+func (r *FriendshipsRepository) DeleteFriendshipByUserIDs(ctx context.Context, userID1 string, userID2 string) error {
+	return r.db.WithContext(ctx).Model(&entity.Friendships{}).Where(&entity.Friendships{Requester_ID: uuid.MustParse(userID1), Recipient_ID: uuid.MustParse(userID2)}).Or(&entity.Friendships{Requester_ID: uuid.MustParse(userID2), Recipient_ID: uuid.MustParse(userID1)}).Delete(&entity.Friendships{}).Error
+}
+func (r *FriendshipsRepository) PanigationStatusFriendship(userID uuid.UUID, cursor string, limit int, status sharedEnums.StatusFriendship) (*dto.PaginationRes, error) {
 	var data = []*entity.Friendships{}
 	items := []string{
 		"friendship_" + string(status) + "_cache_user_" + userID.String(),
@@ -61,7 +63,7 @@ func (r *FriendshipsRepository) PanigationStatusFriendship(userID uuid.UUID, cur
 
 	}
 	querylimit := limit + 1
-	query := r.db.Where(&entity.Friendships{Status: enum.StatusFriendship_Accepted}).
+	query := r.db.Where(&entity.Friendships{Status: sharedEnums.StatusFriendship_Accepted}).
 		Where("requester_id = ? OR recipient_id = ?", userID, userID).
 		Order("created_at DESC ,id DESC").Limit(querylimit)
 	if cursor != "" {
