@@ -37,7 +37,7 @@ type PostSchedule struct {
 	PublisherUserID string `bson:"publisher_user_id" json:"publisher_user_id"`
 
 	// Vai trò của người đó tại thời điểm đăng (Snapshot lại để audit log)
-	AuthorRoleSnapshot sharedEnums.PublisherRole `bson:"author_role_snapshot" json:"author_role_snapshot"`
+	AuthorRoleSnapshot sharedEnums.RoleType `bson:"author_role_snapshot" json:"author_role_snapshot"`
 }
 
 // --- 2. ADS INFO (Quản lý quảng cáo) ---

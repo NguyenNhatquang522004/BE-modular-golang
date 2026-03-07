@@ -70,15 +70,18 @@ type MediaItemPayload struct {
 	ThumbnailURL string                `json:"thumbnail_url,omitempty" validate:"omitempty,url"`
 
 	// Chỉ gửi thông tin cơ bản, backend/cloud tự lấy width/height chính xác sau
-	Width    int     `json:"width,omitempty"`
-	Height   int     `json:"height,omitempty"`
-	Duration float64 `json:"duration,omitempty"` // Cho video
+	Width     int     `json:"width,omitempty"`
+	Height    int     `json:"height,omitempty"`
+	Duration  float64 `json:"duration,omitempty"` // Cho video
+	SizeBytes int64   `json:"size_bytes,omitempty"`
+	MimeType  string  `json:"mime_type,omitempty"`
 
 	TaggedUsers []TaggedUserPayload `json:"tagged_users,omitempty"`
 }
 
 type TaggedUserPayload struct {
 	UserID string  `json:"user_id" validate:"required,uuid"`
+	Name   string  `json:"name" validate:"required"`
 	X      float64 `json:"x" validate:"min=0,max=1"` // Tọa độ phải từ 0->1
 	Y      float64 `json:"y" validate:"min=0,max=1"`
 }
@@ -132,4 +135,6 @@ type TargetingPayload struct {
 	AgeMin    int      `json:"age_min,omitempty" validate:"omitempty,min=13"`
 	AgeMax    int      `json:"age_max,omitempty" validate:"omitempty,gtefield=AgeMin"`
 	Genders   []string `json:"genders,omitempty"`
+	Languages []string `json:"languages,omitempty"`
+	Interests []string `json:"interests,omitempty"`
 }

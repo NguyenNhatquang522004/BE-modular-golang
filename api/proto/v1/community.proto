@@ -1,0 +1,5 @@
+syntax = "proto3";
+package api.proto.v1;
+option go_package = "github.com/quang/social-network/pkg/pb/v1;pb";
+
+rpc  

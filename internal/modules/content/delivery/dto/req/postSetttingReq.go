@@ -11,7 +11,7 @@ type PostScheduleReq struct {
 	IsScheduled        bool                      `json:"is_scheduled"`
 	PublishTime        time.Time                 `json:"publish_time" validate:"required"`
 	PublisherUserID    string                    `json:"publisher_user_id" validate:"required"`
-	AuthorRoleSnapshot sharedEnums.PublisherRole `json:"author_role_snapshot" validate:"required"`
+	AuthorRoleSnapshot sharedEnums.RoleType `json:"author_role_snapshot" validate:"required"`
 }
 
 type AdsInfoReq struct {

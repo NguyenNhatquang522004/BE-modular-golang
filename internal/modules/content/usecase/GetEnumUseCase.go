@@ -22,7 +22,7 @@ func (uc *GetEnumUseCase) Execute(ctx context.Context) (*response.Response, erro
 		"PrivacyScope":     toEnumReponse(toAny(sharedEnums.PrivacyScopeValues())),
 		"PostStatus":       toEnumReponse(toAny(sharedEnums.PostStatusValues())),
 		"ActivityType":     toEnumReponse(toAny(sharedEnums.ActivityTypeValues())),
-		"PublisherRole":    toEnumReponse(toAny(sharedEnums.PublisherRoleValues())),
+		"PublisherRole":    toEnumReponse(toAny(sharedEnums.RoleTypeValues())),
 		"TargetCollection": toEnumReponse(toAny(sharedEnums.TargetCollectionValues())),
 	}
 	return response.NewResponse(response.WithData(data)), nil

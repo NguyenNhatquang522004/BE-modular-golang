@@ -11,7 +11,7 @@ type PostScheduleRes struct {
 	IsScheduled        bool                      `json:"is_scheduled"`
 	PublishTime        time.Time                 `json:"publish_time"`
 	PublisherUserID    string                    `json:"publisher_user_id"`
-	AuthorRoleSnapshot sharedEnums.PublisherRole `json:"author_role_snapshot"`
+	AuthorRoleSnapshot sharedEnums.RoleType `json:"author_role_snapshot"`
 }
 
 type AdsInfoRes struct {

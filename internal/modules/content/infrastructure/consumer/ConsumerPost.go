@@ -117,6 +117,7 @@ func (c *ConsumerPost) handleCreatedPost(ctx context.Context, event events.Integ
 
 	return nil
 }
+
 func (c *ConsumerPost) handleUpdatedPost(ctx context.Context, event events.IntegrationEvent) error {
 	// Xử lý logic khi tiêu thụ sự kiện cập nhật bài viết, ví dụ: cập nhật nội dung bài viết trong DB, xử lý thay đổi media/extension/setting, v.v.
 	data, err := utils.ParsePayload[contentEvent.UpdatePostReq](event.Payload)
