@@ -1,4 +1,4 @@
-package enum
+package sharedEnums
 
 import (
 	"fmt"
@@ -29,52 +29,30 @@ func (e *PostType) UnmarshalBSONValue(t bsontype.Type, data []byte) error {
 	return nil
 }
 
-// =============================================================================
-// 2. ENUM: ContextType
-// =============================================================================
 
-// MarshalBSONValue: Int -> String
-func (e ContextType) MarshalBSONValue() (bsontype.Type, []byte, error) {
-	return bsontype.String, []byte(e.String()), nil
-}
-
-// UnmarshalBSONValue: String -> Int
-func (e *ContextType) UnmarshalBSONValue(t bsontype.Type, data []byte) error {
-	if t != bsontype.String {
-		return fmt.Errorf("expected string for ContextType, got %v", t)
-	}
-	val, err := ContextTypeString(string(data))
-	if err != nil {
-		return err
-	}
-	*e = val
-	return nil
-}
 
 // =============================================================================
 // 3. ENUM: PrivacyScope
 // =============================================================================
-
-
 
 // =============================================================================
 // 4. ENUM: PostStatus
 // =============================================================================
 
 // MarshalBSONValue: Int -> String
-func (e PostStatus) MarshalBSONValue() (bsontype.Type, []byte, error) {
-	return bsontype.String, []byte(e.String()), nil
-}
+// func (e PostStatus) MarshalBSONValue() (bsontype.Type, []byte, error) {
+// 	return bsontype.String, []byte(e.String()), nil
+// }
 
-// UnmarshalBSONValue: String -> Int
-func (e *PostStatus) UnmarshalBSONValue(t bsontype.Type, data []byte) error {
-	if t != bsontype.String {
-		return fmt.Errorf("expected string for PostStatus, got %v", t)
-	}
-	val, err := PostStatusString(string(data))
-	if err != nil {
-		return err
-	}
-	*e = val
-	return nil
-}
+// // UnmarshalBSONValue: String -> Int
+// func (e *PostStatus) UnmarshalBSONValue(t bsontype.Type, data []byte) error {
+// 	if t != bsontype.String {
+// 		return fmt.Errorf("expected string for PostStatus, got %v", t)
+// 	}
+// 	val, err := PostStatusString(string(data))
+// 	if err != nil {
+// 		return err
+// 	}
+// 	*e = val
+// 	return nil
+// }

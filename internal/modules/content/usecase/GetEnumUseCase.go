@@ -6,7 +6,6 @@ import (
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/server/http/response"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/sharedEnums"
 	res "github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/content/delivery/dto/res"
-	enumcontent "github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/content/enum"
 )
 
 type GetEnumUseCase struct{}
@@ -18,11 +17,11 @@ func NewGetEnumUseCase() *GetEnumUseCase {
 func (uc *GetEnumUseCase) Execute(ctx context.Context) (*response.Response, error) {
 	data := map[string][]*res.EnumReponse{
 		"MediaType":        toEnumReponse(toAny(sharedEnums.MediaTypeValues())),
-		"PostType":         toEnumReponse(toAny(enumcontent.PostTypeValues())),
-		"ContextType":      toEnumReponse(toAny(enumcontent.ContextTypeValues())),
+		"PostType":         toEnumReponse(toAny(sharedEnums.PostTypeValues())),
+		"ContextType":      toEnumReponse(toAny(sharedEnums.ContextTypeValues())),
 		"PrivacyScope":     toEnumReponse(toAny(sharedEnums.PrivacyScopeValues())),
-		"PostStatus":       toEnumReponse(toAny(enumcontent.PostStatusValues())),
-		"ActivityType":     toEnumReponse(toAny(enumcontent.ActivityTypeValues())),
+		"PostStatus":       toEnumReponse(toAny(sharedEnums.PostStatusValues())),
+		"ActivityType":     toEnumReponse(toAny(sharedEnums.ActivityTypeValues())),
 		"PublisherRole":    toEnumReponse(toAny(sharedEnums.PublisherRoleValues())),
 		"TargetCollection": toEnumReponse(toAny(sharedEnums.TargetCollectionValues())),
 	}

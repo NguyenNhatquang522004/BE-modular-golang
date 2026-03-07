@@ -4,13 +4,12 @@ import (
 	"time"
 
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/sharedEnums"
-	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/content/enum"
 )
 
 // --- NESTED DTOs ---
 type PostContextRes struct {
-	Type     enum.ContextType `json:"type"`
-	TargetID string           `json:"target_id,omitempty"`
+	Type     sharedEnums.ContextType `json:"type"`
+	TargetID string                  `json:"target_id,omitempty"`
 }
 
 type PostSummaryRes struct {
@@ -47,7 +46,7 @@ type PostStatsRes struct {
 type PostRes struct {
 	ID          string                       `json:"id"` // Trả về dạng string cho client
 	UserID      string                       `json:"user_id"`
-	Type        enum.PostType                `json:"type"`
+	Type        sharedEnums.PostType                `json:"type"`
 	Context     *PostContextRes              `json:"context,omitempty"`
 	Content     string                       `json:"content"`
 	Slug        string                       `json:"slug"`

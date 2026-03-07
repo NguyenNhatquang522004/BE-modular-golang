@@ -4,13 +4,12 @@ import (
 	"time"
 
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/sharedEnums"
-	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/content/enum"
 )
 
 // --- NESTED DTOs ---
 type PostContextReq struct {
-	Type     enum.ContextType `json:"type" validate:"required"`
-	TargetID string           `json:"target_id,omitempty"`
+	Type     sharedEnums.ContextType `json:"type" validate:"required"`
+	TargetID string                  `json:"target_id,omitempty"`
 }
 
 type PostSummaryReq struct {
@@ -45,22 +44,22 @@ type PostStatsReq struct {
 
 // --- MAIN DTO ---
 type PostReq struct {
-	ID          string          `json:"id,omitempty"` // String thay vì ObjectID cho HTTP Request
-	UserID      string          `json:"user_id" validate:"required"`
-	Type        enum.PostType   `json:"type" validate:"required"`
-	Context     *PostContextReq `json:"context,omitempty"`
-	Content     string          `json:"content" validate:"required"`
-	Slug        string          `json:"slug"`
-	Summary     *PostSummaryReq `json:"summary,omitempty"`
-	Privacy     PostPrivacyReq  `json:"privacy"`
+	ID          string                       `json:"id,omitempty"` // String thay vì ObjectID cho HTTP Request
+	UserID      string                       `json:"user_id" validate:"required"`
+	Type        sharedEnums.PostType         `json:"type" validate:"required"`
+	Context     *PostContextReq              `json:"context,omitempty"`
+	Content     string                       `json:"content" validate:"required"`
+	Slug        string                       `json:"slug"`
+	Summary     *PostSummaryReq              `json:"summary,omitempty"`
+	Privacy     PostPrivacyReq               `json:"privacy"`
 	Status      sharedEnums.ProcessingStatus `json:"status" validate:"required"`
-	IsPinned    bool            `json:"is_pinned"`
-	IsEdited    bool            `json:"is_edited"`
-	Stats       PostStatsReq    `json:"stats"`
-	Hashtags    []string        `json:"hashtags,omitempty"`
-	Mentions    []string        `json:"mentions,omitempty"`
-	PublishedAt *time.Time      `json:"published_at,omitempty"`
-	CreatedAt   time.Time       `json:"created_at"`
-	UpdatedAt   time.Time       `json:"updated_at"`
-	DeletedAt   *time.Time      `json:"deleted_at,omitempty"`
+	IsPinned    bool                         `json:"is_pinned"`
+	IsEdited    bool                         `json:"is_edited"`
+	Stats       PostStatsReq                 `json:"stats"`
+	Hashtags    []string                     `json:"hashtags,omitempty"`
+	Mentions    []string                     `json:"mentions,omitempty"`
+	PublishedAt *time.Time                   `json:"published_at,omitempty"`
+	CreatedAt   time.Time                    `json:"created_at"`
+	UpdatedAt   time.Time                    `json:"updated_at"`
+	DeletedAt   *time.Time                   `json:"deleted_at,omitempty"`
 }

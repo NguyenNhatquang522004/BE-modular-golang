@@ -3,7 +3,7 @@ package req
 import (
 	"time"
 
-	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/content/enum"
+	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/sharedEnums"
 )
 
 // --- SUB DTOs ---
@@ -33,7 +33,7 @@ type QnADataReq struct {
 }
 
 type ActivityDataReq struct {
-	Type       enum.ActivityType `json:"type" validate:"required"`
+	Type       sharedEnums.ActivityType `json:"type" validate:"required"`
 	ObjectID   string            `json:"object_id,omitempty"`
 	ObjectName string            `json:"object_name" validate:"required"`
 }

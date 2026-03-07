@@ -3,7 +3,7 @@ package res
 import (
 	"time"
 
-	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/content/enum"
+	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/sharedEnums"
 )
 
 // --- SUB DTOs ---
@@ -33,9 +33,9 @@ type QnADataRes struct {
 }
 
 type ActivityDataRes struct {
-	Type       enum.ActivityType `json:"type"`
-	ObjectID   string            `json:"object_id,omitempty"`
-	ObjectName string            `json:"object_name"`
+	Type       sharedEnums.ActivityType `json:"type"`
+	ObjectID   string                   `json:"object_id,omitempty"`
+	ObjectName string                   `json:"object_name"`
 }
 
 type LocationDetailRes struct {

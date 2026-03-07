@@ -1,4 +1,4 @@
-package enum
+package sharedEnums
 
 //go:generate enumer -type=ActivityType -json -transform=snake -trimprefix=Activity
 type ActivityType int

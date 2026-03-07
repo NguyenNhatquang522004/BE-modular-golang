@@ -4,7 +4,6 @@ import (
 	"time"
 
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/sharedEnums"
-	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/content/enum"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -21,8 +20,8 @@ type Post struct {
 	UserID string `bson:"user_id" json:"user_id"`
 
 	// 2. PHÂN LOẠI & NGỮ CẢNH
-	Type    enum.PostType `bson:"type" json:"type"`
-	Context *PostContext  `bson:"context,omitempty" json:"context,omitempty"`
+	Type    sharedEnums.PostType `bson:"type" json:"type"`
+	Context *PostContext         `bson:"context,omitempty" json:"context,omitempty"`
 
 	// 3. NỘI DUNG
 	Content string       `bson:"content" json:"content"`
@@ -31,10 +30,10 @@ type Post struct {
 
 	// 4. LOGIC & TRẠNG THÁI
 	// Privacy nên khởi tạo mặc định, không để null
-	Privacy  PostPrivacy     `bson:"privacy" json:"privacy"`
+	Privacy  PostPrivacy                  `bson:"privacy" json:"privacy"`
 	Status   sharedEnums.ProcessingStatus `bson:"status" json:"status"`
-	IsPinned bool            `bson:"is_pinned" json:"is_pinned"`
-	IsEdited bool            `bson:"is_edited" json:"is_edited"`
+	IsPinned bool                         `bson:"is_pinned" json:"is_pinned"`
+	IsEdited bool                         `bson:"is_edited" json:"is_edited"`
 
 	// 5. COUNTERS (Thường xuyên update -> Tách struct giúp code rõ ràng)
 	Stats PostStats `bson:"stats" json:"stats"`
@@ -53,7 +52,7 @@ type Post struct {
 
 // --- 1. CONTEXT (Ngữ cảnh bài viết) ---
 type PostContext struct {
-	Type enum.ContextType `bson:"type" json:"type"`
+	Type sharedEnums.ContextType `bson:"type" json:"type"`
 
 	// TargetID có thể là GroupID (ObjectId) hoặc UserID (UUID) tùy context.
 	// Lưu String là an toàn nhất để chứa cả 2 loại.
@@ -87,13 +86,12 @@ type PostStats struct {
 	Comments       int `bson:"comments" json:"comments"`
 	Shares         int `bson:"shares" json:"shares"`
 	Views          int `bson:"views" json:"views"`
-
-	Like  int `bson:"like" json:"like"`
-	Love  int `bson:"love" json:"love"`
-	Haha  int `bson:"haha" json:"haha"`
-	Wow   int `bson:"wow" json:"wow"`
-	Sad   int `bson:"sad" json:"sad"`
-	Angry int `bson:"angry" json:"angry"`
+	Like           int `bson:"like" json:"like"`
+	Love           int `bson:"love" json:"love"`
+	Haha           int `bson:"haha" json:"haha"`
+	Wow            int `bson:"wow" json:"wow"`
+	Sad            int `bson:"sad" json:"sad"`
+	Angry          int `bson:"angry" json:"angry"`
 
 	// Cache top 2 reaction icon nhiều nhất để hiển thị (VD: ["👍", "❤️"])
 	TopReactionTypes []string `bson:"top_reaction_types" json:"top_reaction_types"`

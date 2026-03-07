@@ -1,4 +1,4 @@
-package IConsumercontent
+package IConsumer
 
 import "context"
 

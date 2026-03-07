@@ -3,7 +3,7 @@ package entity
 import (
 	"time"
 
-	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/content/enum"
+	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/sharedEnums"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -64,9 +64,9 @@ type QnAData struct {
 
 // --- D. ACTIVITY DATA ---
 type ActivityData struct {
-	Type       enum.ActivityType `bson:"type" json:"type"`                               // Enum: watching, traveling...
-	ObjectID   string            `bson:"object_id,omitempty" json:"object_id,omitempty"` // ID phim/sách (nếu có)
-	ObjectName string            `bson:"object_name" json:"object_name"`                 // "Phim Mai", "Hà Nội"
+	Type       sharedEnums.ActivityType `bson:"type" json:"type"`                               // Enum: watching, traveling...
+	ObjectID   string                   `bson:"object_id,omitempty" json:"object_id,omitempty"` // ID phim/sách (nếu có)
+	ObjectName string                   `bson:"object_name" json:"object_name"`                 // "Phim Mai", "Hà Nội"
 }
 
 // --- E. LOCATION DETAIL (GEOJSON) ---
