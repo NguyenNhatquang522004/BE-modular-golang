@@ -19,13 +19,12 @@ func NewHandlerCommunityGRPC(memberRepo IRepositoryMongodb.IGroupMembersReposito
 }
 
 func (h *HandlerCommunityGRPC) GetRoleUserInGroup(ctx context.Context, req *pb.GetRoleUserInGroupRequest) (*pb.GetRoleUserInGroupResponse, error) {
-	groupMember, err := h.memberRepo.GetGroupMembersByUserIDAndGroupID(ctx, req.GetUserId(), req.GetGroupId())
+	groupMember, err := h.memberRepo.GetGroupMemberByUserIDAndGroupID(ctx, req.GetUserId(), req.GetGroupId())
 	if err != nil {
 		return nil, err
 	}
-	res := &pb.GetRoleUserInGroupResponse{}
-	for _, role := range groupMember {
-		res.Role = append(res.Role, role.Role.String())
-	}
-	return res, nil
+
+	return &pb.GetRoleUserInGroupResponse{
+		Role: groupMember.Role.String(),
+	}, nil
 }

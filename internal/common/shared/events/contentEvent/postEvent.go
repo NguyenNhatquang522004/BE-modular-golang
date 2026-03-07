@@ -6,15 +6,14 @@ import (
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/sharedEnums"
 )
 
-type PostDeletePayload struct {
-	PostID string `json:"post_id"`
-}
+
 
 type DeletePostPayload struct {
 	PostID string `json:"post_id"`
 	Reason string `json:"reason,omitempty"`
 }
-type UpdatePostReq struct {
+type UpdatePostPayload struct {
+	PostID   string                `json:"post_id"`
 	Content  *string               `json:"content,omitempty"`
 	Privacy  *UpdatePrivacyPayload `json:"privacy,omitempty"`
 	Hashtags *[]string             `json:"hashtags,omitempty" validate:"omitempty,dive,max=50"`

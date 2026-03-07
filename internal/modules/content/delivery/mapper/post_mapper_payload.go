@@ -158,3 +158,104 @@ func ToCreateEntityPostSettingPayload(postID string, userID string, role sharedE
 
 	return postSetting
 }
+
+func UpdateEntityPostFromPayload(post *entity.Post, r *contentEvent.UpdatePostPayload) {
+	if r.Content != nil {
+		post.Content = *r.Content
+	}
+	if r.Privacy != nil {
+		post.Privacy.Scope = *r.Privacy.Scope
+		post.Privacy.AllowComment = *r.Privacy.AllowComment
+		post.Privacy.AllowShare = *r.Privacy.AllowShare
+	}
+	if r.Hashtags != nil {
+		post.Hashtags = *r.Hashtags
+	}
+	if r.Mentions != nil {
+		post.Mentions = *r.Mentions
+	}
+	post.IsEdited = true
+	post.UpdatedAt = time.Now()
+}
+
+func UpdateEntityPostMediaFromPayload(postMedia *entity.PostMedia, r *contentEvent.UpdatePostPayload) {
+	var taggedUsers []entity.TaggedUser
+	for _, item := range *r.Media {
+		for _, tagged := range item.TaggedUsers {
+			taggedUser := entity.TaggedUser{
+				UserID: tagged.UserID,
+				Name:   tagged.Name,
+				X:      tagged.X,
+				Y:      tagged.Y,
+			}
+			taggedUsers = append(taggedUsers, taggedUser)
+		}
+	}
+	var items []*entity.MediaItem
+	for index, item := range *r.Media {
+		mediaItem := &entity.MediaItem{
+			ID:           primitive.NewObjectID(),
+			MediaType:    item.MediaType,
+			URL:          item.URL,
+			ThumbnailURL: item.ThumbnailURL,
+			Metadata: entity.MediaMetadata{
+				Width:     item.Width,
+				Height:    item.Height,
+				Duration:  item.Duration,
+				SizeBytes: item.SizeBytes,
+				MimeType:  item.MimeType,
+			},
+			Order:       index,
+			TaggedUsers: taggedUsers,
+		}
+		items = append(items, mediaItem)
+	}
+	postMedia.Items = items
+	postMedia.UpdatedAt = time.Now()
+}
+
+func UpdateEntityPostExtensionFromPayload(postExtension *entity.PostExtension, r *contentEvent.UpdatePostPayload) {
+	if r.Extension != nil {
+		postExtension.BackgroundData = &entity.BackgroundData{
+			ThemeID:   r.Extension.BackgroundData.ThemeID,
+			TextColor: r.Extension.BackgroundData.TextColor,
+		}
+		postExtension.QnAData = &entity.QnAData{
+			Question:   r.Extension.QnAData.Question,
+			ButtonText: r.Extension.QnAData.ButtonText,
+		}
+		postExtension.ActivityData = &entity.ActivityData{
+			Type:       r.Extension.ActivityData.Type,
+			ObjectID:   r.Extension.ActivityData.ObjectID,
+			ObjectName: r.Extension.ActivityData.ObjectName,
+		}
+		postExtension.LocationDetail = &entity.LocationDetail{
+			Type:        "Point",                                                                              // Luôn là "Point" theo chuẩn GeoJSON
+			Coordinates: []float64{r.Extension.LocationDetail.Longitude, r.Extension.LocationDetail.Latitude}, // Cần map chính xác nếu có dữ liệu tọa độ
+			Address:     r.Extension.LocationDetail.Address,
+		}
+		postExtension.UpdatedAt = time.Now()
+	}
+}
+func UpdateEntityPostSettingFromPayload(postSetting *entity.PostSetting, r *contentEvent.UpdatePostPayload) {
+	if r.Setting != nil {
+		if r.Setting.Schedule != nil {
+			postSetting.Schedule = &entity.PostSchedule{
+				IsScheduled:        true,
+				PublishTime:        r.Setting.Schedule.PublishTime,
+				PublisherUserID:    postSetting.Schedule.PublisherUserID,    // Giữ nguyên PublisherUserID
+				AuthorRoleSnapshot: postSetting.Schedule.AuthorRoleSnapshot, // Giữ nguyên AuthorRoleSnapshot
+			}
+		}
+		if r.Setting.Targeting != nil {
+			postSetting.Targeting = &entity.PostTargeting{
+				Locations: r.Setting.Targeting.Locations,
+				AgeMin:    r.Setting.Targeting.AgeMin,
+				AgeMax:    r.Setting.Targeting.AgeMax,
+				Languages: r.Setting.Targeting.Languages,
+				Interests: r.Setting.Targeting.Interests,
+			}
+		}
+		postSetting.UpdatedAt = time.Now()
+	}
+}

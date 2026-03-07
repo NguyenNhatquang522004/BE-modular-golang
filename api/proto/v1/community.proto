@@ -10,5 +10,5 @@ message GetRoleUserInGroupRequest {
  string user_id = 2;
 }
 message GetRoleUserInGroupResponse {
- repeated string role = 1;
+  string role = 1;
 }

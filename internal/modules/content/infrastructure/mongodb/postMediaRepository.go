@@ -378,3 +378,18 @@ func (r *PostMediaRepository) PanigationPostMediaByUserid(ctx context.Context, u
 		Limit:      limit,
 	}, nil
 }
+
+func (r *PostMediaRepository) GetsByPostID(ctx context.Context, postID string) ([]*entity.PostMedia, error) {
+	collection := r.client.Collection(entity.PostMedia{}.CollectionNamePostMedia())
+	var postMedia []*entity.PostMedia
+	query := bson.M{"post_id": postID}
+	cursorDB, err := collection.Find(ctx, query)
+	if err != nil {
+		return nil, fmt.Errorf("database error: %w", err)
+	}
+	defer cursorDB.Close(ctx)
+	if err = cursorDB.All(ctx, &postMedia); err != nil {
+		return nil, fmt.Errorf("error decoding results: %w", err)
+	}
+	return postMedia, nil
+}

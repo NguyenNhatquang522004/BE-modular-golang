@@ -75,7 +75,7 @@ func (x *GetRoleUserInGroupRequest) GetUserId() string {
 
 type GetRoleUserInGroupResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	Role          []string               `protobuf:"bytes,1,rep,name=role,proto3" json:"role,omitempty"`
+	Role          string                 `protobuf:"bytes,1,opt,name=role,proto3" json:"role,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -110,11 +110,11 @@ func (*GetRoleUserInGroupResponse) Descriptor() ([]byte, []int) {
 	return file_v1_community_proto_rawDescGZIP(), []int{1}
 }
 
-func (x *GetRoleUserInGroupResponse) GetRole() []string {
+func (x *GetRoleUserInGroupResponse) GetRole() string {
 	if x != nil {
 		return x.Role
 	}
-	return nil
+	return ""
 }
 
 var File_v1_community_proto protoreflect.FileDescriptor
@@ -126,7 +126,7 @@ const file_v1_community_proto_rawDesc = "" +
 	"\bgroup_id\x18\x01 \x01(\tR\agroupId\x12\x17\n" +
 	"\auser_id\x18\x02 \x01(\tR\x06userId\"0\n" +
 	"\x1aGetRoleUserInGroupResponse\x12\x12\n" +
-	"\x04role\x18\x01 \x03(\tR\x04role2{\n" +
+	"\x04role\x18\x01 \x01(\tR\x04role2{\n" +
 	"\x10CommunityService\x12g\n" +
 	"\x12GetRoleUserInGroup\x12'.api.proto.v1.GetRoleUserInGroupRequest\x1a(.api.proto.v1.GetRoleUserInGroupResponseB.Z,github.com/quang/social-network/pkg/pb/v1;pbb\x06proto3"
 

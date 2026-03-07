@@ -75,7 +75,7 @@ func (x *GetRoleUserInPageRequest) GetUserId() string {
 
 type GetRoleUserInPageResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	Role          []string               `protobuf:"bytes,1,rep,name=role,proto3" json:"role,omitempty"`
+	Role          string                 `protobuf:"bytes,1,opt,name=role,proto3" json:"role,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -110,11 +110,11 @@ func (*GetRoleUserInPageResponse) Descriptor() ([]byte, []int) {
 	return file_v1_business_proto_rawDescGZIP(), []int{1}
 }
 
-func (x *GetRoleUserInPageResponse) GetRole() []string {
+func (x *GetRoleUserInPageResponse) GetRole() string {
 	if x != nil {
 		return x.Role
 	}
-	return nil
+	return ""
 }
 
 var File_v1_business_proto protoreflect.FileDescriptor
@@ -126,7 +126,7 @@ const file_v1_business_proto_rawDesc = "" +
 	"\apage_id\x18\x01 \x01(\tR\x06pageId\x12\x17\n" +
 	"\auser_id\x18\x02 \x01(\tR\x06userId\"/\n" +
 	"\x19GetRoleUserInPageResponse\x12\x12\n" +
-	"\x04role\x18\x01 \x03(\tR\x04role2w\n" +
+	"\x04role\x18\x01 \x01(\tR\x04role2w\n" +
 	"\x0fBusinessService\x12d\n" +
 	"\x11GetRoleUserInPage\x12&.api.proto.v1.GetRoleUserInPageRequest\x1a'.api.proto.v1.GetRoleUserInPageResponseB.Z,github.com/quang/social-network/pkg/pb/v1;pbb\x06proto3"
 

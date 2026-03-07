@@ -18,20 +18,15 @@ func NewHandlerBusinessGRPC(pageRoleRepo IRepositoryMongodb.IPageRolesRepository
 	}
 }
 func (h *HandlerBusinessGRPC) GetRoleUserInPage(ctx context.Context, req *pb.GetRoleUserInPageRequest) (*pb.GetRoleUserInPageResponse, error) {
-	data, err := h.pageRoleRepo.GetPageRolesByPageIDAndUserID(ctx, req.PageId, req.UserId)
+	data, err := h.pageRoleRepo.GetPageRoleByPageIDAndUserID(ctx, req.PageId, req.UserId)
 	if err != nil {
 		return nil, err
 	}
 	if data == nil {
-		return &pb.GetRoleUserInPageResponse{
-			Role: []string{},
-		}, nil
+		return nil, nil
 	}
-	var roles []string
-	for _, role := range data {
-		roles = append(roles, role.Role.String())
-	}
+
 	return &pb.GetRoleUserInPageResponse{
-		Role: roles,
+		Role: data.Role.String(),
 	}, nil
 }

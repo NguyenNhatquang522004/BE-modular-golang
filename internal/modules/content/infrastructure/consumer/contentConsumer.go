@@ -43,7 +43,7 @@ func (c *ContentConsumer) ConsumeContentPostStats(ctx context.Context) error {
 }
 func (c *ContentConsumer) ConsumeContentDeletePublishPost(ctx context.Context) error {
 	err := c.eventBus.Subscribe(ctx, constants.TopicContentPostPublish.String(), func(ctx context.Context, event events.IntegrationEvent) error {
-		data, ok := event.Payload.(*contentEvent.PostDeletePayload)
+		data, ok := event.Payload.(*contentEvent.DeletePostPayload)
 		if !ok {
 			log.Printf("❌ Lỗi khi chuyển đổi payload: %v", event.Payload)
 			return nil // Hoặc trả về lỗi nếu muốn dừng việc xử lý

@@ -12,6 +12,7 @@ type IPostMediaRepository interface {
 	CreatePostMedia(ctx context.Context, postMedia *entity.PostMedia) error
 	CreateBulkPostMedia(ctx context.Context, postMedias []*entity.PostMedia) (int64, []*mongodbErrors.BulkError, error)
 	GetByPostID(ctx context.Context, postID string) (*entity.PostMedia, error)
+	GetsByPostID(ctx context.Context, postID string) ([]*entity.PostMedia, error)
 	GetBulkByPostIDs(ctx context.Context, postIDs []string) ([]*entity.PostMedia, error)
 	UpdatePostMedia(ctx context.Context, postMedia *entity.PostMedia) error
 	UpdateBulkPostMedia(ctx context.Context, postMedias []*entity.PostMedia) (int64, []*mongodbErrors.BulkError, error)
