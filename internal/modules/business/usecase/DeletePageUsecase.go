@@ -52,7 +52,7 @@ func (u *DeletePageUsecase) Execute(ctx context.Context, req *req.DeletePageRequ
 			ErrorMessage: "Page not found",
 		}, nil
 	}
-	datauseraction, err := u.pageRole.GetPageRolesByPageIDAndUserID(ctx, datapage.ID.Hex(), req.UserActionID)
+	datauseraction, err := u.pageRole.GetPageRoleByPageIDAndUserID(ctx, datapage.ID.Hex(), req.UserActionID)
 	if err != nil {
 		return &res.FailedPageResponse{
 			PageID:       req.PageID,

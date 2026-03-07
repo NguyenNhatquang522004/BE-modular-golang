@@ -169,6 +169,24 @@ func (r *PagesRolesRepository) GetPageRolesByPageID(ctx context.Context, pageID 
 		Limit:      limit,
 	}, nil
 }
+func (r *PagesRolesRepository) GetPageRolesByPageIDAndUserID(ctx context.Context, pageID string, userID string) ([]*entity.PageRole, error) {
+	collection := r.client.Collection(entity.PageRole{}.CollectionName())
+	finalpageID, _ := primitive.ObjectIDFromHex(pageID)
+	query := bson.M{
+		"page_id": finalpageID,
+		"user_id": userID,
+	}
+	var pageRoles []*entity.PageRole
+	cursorDB, err := collection.Find(ctx, query)
+	if err != nil {
+		return nil, fmt.Errorf("database error: %w", err)
+	}
+	defer cursorDB.Close(ctx)
+	if err = cursorDB.All(ctx, &pageRoles); err != nil {
+		return nil, fmt.Errorf("error decoding results: %w", err)
+	}
+	return pageRoles, nil
+}
 func (r *PagesRolesRepository) GetPageRolesByUserID(ctx context.Context, userID string, cursor string, limit int) (*dto.PaginationRes, error) {
 	collection := r.client.Collection(entity.PageRole{}.CollectionName())
 	var pageRoles []*entity.PageRole
@@ -248,7 +266,7 @@ func (r *PagesRolesRepository) GetPageRolesByUserID(ctx context.Context, userID 
 		Limit:      limit,
 	}, nil
 }
-func (r *PagesRolesRepository) GetPageRolesByPageIDAndUserID(ctx context.Context, pageID string, userID string) (*entity.PageRole, error) {
+func (r *PagesRolesRepository) GetPageRoleByPageIDAndUserID(ctx context.Context, pageID string, userID string) (*entity.PageRole, error) {
 	collection := r.client.Collection(entity.PageRole{}.CollectionName())
 	finalpageID, _ := primitive.ObjectIDFromHex(pageID)
 	query := bson.M{

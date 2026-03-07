@@ -41,7 +41,7 @@ func (u *UpdatePageRoleUsecase) Execute(ctx context.Context, req *req.UpdatePage
 			ErrorMessage: "Page not found",
 		}, nil
 	}
-	dataUserAction, err := u.pageRoleRepo.GetPageRolesByPageIDAndUserID(ctx, datapage.ID.Hex(), req.UserActionID)
+	dataUserAction, err := u.pageRoleRepo.GetPageRoleByPageIDAndUserID(ctx, datapage.ID.Hex(), req.UserActionID)
 	if err != nil {
 		return &res.FailedPageRoleResponse{
 			PageID:       req.PageID,
@@ -58,7 +58,7 @@ func (u *UpdatePageRoleUsecase) Execute(ctx context.Context, req *req.UpdatePage
 			}, nil
 		}
 	}
-	datauser, err := u.pageRoleRepo.GetPageRolesByPageIDAndUserID(ctx, datapage.ID.Hex(), req.UserID)
+	datauser, err := u.pageRoleRepo.GetPageRoleByPageIDAndUserID(ctx, datapage.ID.Hex(), req.UserID)
 	if err != nil {
 		return &res.FailedPageRoleResponse{
 			PageID:       req.PageID,

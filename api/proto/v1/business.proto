@@ -1,0 +1,14 @@
+syntax = "proto3";
+package api.proto.v1;
+option go_package = "github.com/quang/social-network/pkg/pb/v1;pb";
+
+service BusinessService {
+ rpc  GetRoleUserInPage (GetRoleUserInPageRequest) returns (GetRoleUserInPageResponse);
+}
+message GetRoleUserInPageRequest {
+ string page_id = 1;
+ string user_id = 2;
+}
+message GetRoleUserInPageResponse {
+ repeated string role = 1;
+}

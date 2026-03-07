@@ -512,3 +512,18 @@ func (r *GroupMembersRepository) DeleteBulkGroupMemberByManyUserIDAndGroupID(ctx
 	// Thành công toàn bộ
 	return result.DeletedCount, nil, nil
 }
+func (r *GroupMembersRepository) GetGroupMembersByUserIDAndGroupID(ctx context.Context, userID string, groupID string) ([]*entity.GroupMember, error) {
+	collection := r.client.Collection(entity.GroupMember{}.CollectionName())
+	finalgroupID, _ := primitive.ObjectIDFromHex(groupID)
+	query := bson.M{"user_id": userID, "group_id": finalgroupID}
+	var groupMembers []*entity.GroupMember
+	cursorDB, err := collection.Find(ctx, query)
+	if err != nil {
+		return nil, fmt.Errorf("database error: %w", err)
+	}
+	defer cursorDB.Close(ctx)
+	if err = cursorDB.All(ctx, &groupMembers); err != nil {
+		return nil, fmt.Errorf("error decoding results: %w", err)
+	}
+	return groupMembers, nil
+}

@@ -41,7 +41,7 @@ datapage, err := u.pageRepo.GetPageByID(ctx, req.PageID)
 			ErrorMessage: "Page not found",
 		}, nil
 	}
-	dataUserAction, err := u.pageRoleRepo.GetPageRolesByPageIDAndUserID(ctx, datapage.ID.Hex(), req.UserActionID)
+	dataUserAction, err := u.pageRoleRepo.GetPageRoleByPageIDAndUserID(ctx, datapage.ID.Hex(), req.UserActionID)
 	if err != nil {
 		return &res.FailedPageRoleResponse{
 			PageID:       req.PageID,

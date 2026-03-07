@@ -14,6 +14,7 @@ type IGroupMembersRepository interface {
 	GetGroupMemberByID(ctx context.Context, groupID string, cursor string, limit int) (*dto.PaginationRes, error)
 	GetGroupMemberByUserID(ctx context.Context, userID string, cursor string, limit int) (*dto.PaginationRes, error)
 	GetGroupMemberByUserIDAndGroupID(ctx context.Context, userID string, groupID string) (*entity.GroupMember, error)
+	GetGroupMembersByUserIDAndGroupID(ctx context.Context, userID string, groupID string) ([]*entity.GroupMember, error)
 	UpdateGroupMember(ctx context.Context, groupMember *entity.GroupMember) error
 	UpdateBulkGroupMembers(ctx context.Context, groupMembers []*entity.GroupMember) (int64, []*mongodbErrors.BulkError, error)
 	DeleteGroupMember(ctx context.Context, groupID string) error

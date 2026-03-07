@@ -2,4 +2,13 @@ syntax = "proto3";
 package api.proto.v1;
 option go_package = "github.com/quang/social-network/pkg/pb/v1;pb";
 
-rpc  
+service CommunityService {
+ rpc GetRoleUserInGroup (GetRoleUserInGroupRequest) returns (GetRoleUserInGroupResponse);
+}
+message GetRoleUserInGroupRequest {
+ string group_id = 1;
+ string user_id = 2;
+}
+message GetRoleUserInGroupResponse {
+ repeated string role = 1;
+}

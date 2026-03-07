@@ -15,7 +15,8 @@ type IPageRolesRepository interface {
 	GetPageRoleByID(ctx context.Context, pageRoleID string) (*entity.PageRole, error)
 	GetPageRolesByPageID(ctx context.Context, pageID string, cursor string, limit int) (*dto.PaginationRes, error)
 	GetPageRolesByUserID(ctx context.Context, userID string, cursor string, limit int) (*dto.PaginationRes, error)
-	GetPageRolesByPageIDAndUserID(ctx context.Context, pageID string, userID string) (*entity.PageRole, error)
+	GetPageRoleByPageIDAndUserID(ctx context.Context, pageID string, userID string) (*entity.PageRole, error)
+	GetPageRolesByPageIDAndUserID(ctx context.Context, pageID string, userID string) ([]*entity.PageRole, error)
 	UpdatePageRole(ctx context.Context, pageRole *entity.PageRole) error
 	UpdateBulkPageRoles(ctx context.Context, pageRoles []*entity.PageRole) (int64, []*mongodbErrors.BulkError, error)
 	DeletePageRole(ctx context.Context, pageRoleID string) error
