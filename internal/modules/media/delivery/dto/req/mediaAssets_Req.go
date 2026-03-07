@@ -52,6 +52,7 @@ type MediaAssetReq struct {
 	AlbumID        string                `json:"album_id,omitempty"`
 	PostID         string                `json:"post_id,omitempty"`
 	GroupID        string                `json:"group_id,omitempty"`
+	PageID         string                `json:"page_id,omitempty"`
 	StorageFileID  string                `json:"url" validate:"required"` // Map chuẩn JSON "url"
 	OriginalURL    string                `json:"original_url"`
 	ThumbnailURL   string                `json:"thumbnail_url"`
@@ -74,6 +75,7 @@ type UpdateMediaAssetReq struct {
 	AlbumID        *string                `json:"album_id,omitempty"`
 	PostID         *string                `json:"post_id,omitempty"`
 	GroupID        *string                `json:"group_id,omitempty"`
+	PageID         *string                `json:"page_id,omitempty"`
 	StorageFileID  *string                `json:"url,omitempty"`
 	OriginalURL    *string                `json:"original_url,omitempty"`
 	ThumbnailURL   *string                `json:"thumbnail_url,omitempty"`

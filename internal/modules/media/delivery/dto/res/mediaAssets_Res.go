@@ -51,6 +51,7 @@ type MediaAssetRes struct {
 	AlbumID        string                `json:"album_id,omitempty"`
 	PostID         string                `json:"post_id,omitempty"`
 	GroupID        string                `json:"group_id,omitempty"`
+	PageID         string                `json:"page_id,omitempty"`
 	StorageFileID  string                `json:"url"` // Map với "url"
 	OriginalURL    string                `json:"original_url"`
 	ThumbnailURL   string                `json:"thumbnail_url"`

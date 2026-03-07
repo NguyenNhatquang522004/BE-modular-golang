@@ -102,3 +102,74 @@ type ReactAlbumPayload struct {
 type DeleteMediaRelationTargetPayload struct {
 	TargetID string `json:"target_id"`
 }
+
+// /
+type CreateMediaAssetsPayload struct {
+	// Chuyển toàn bộ primitive.ObjectID của MongoDB thành string
+	UserID string             `json:"user_id"` // ID người upload (UUID từ Postgres)
+	Items  []MediaItemPayload `json:"items"`
+}
+
+// --- 3. SUB-STRUCT: MEDIA ITEM ---
+type MediaItemPayload struct {
+	PostID       string                `json:"post_id"`
+	AlbumID      string                `json:"album_id,omitempty"`
+	GroupID      string                `json:"group_id,omitempty"`
+	PageID       string                `json:"page_id,omitempty"`
+	MediaID      string                `json:"media_id,omitempty"` // Nếu client gửi lên có nghĩa là update, nếu không có nghĩa là create mới
+	MediaType    sharedEnums.MediaType `json:"media_type"`         // Sử dụng Enum đã định nghĩa
+	URL          string                `json:"url"`
+	ThumbnailURL string                `json:"thumbnail_url"`
+	Metadata     MetadataPayload       `json:"metadata"`
+	Order        int                   `json:"order"`
+	Hashtags     []string              `json:"hashtags,omitempty"`
+	// Lưu ý: Nếu module Media KHÔNG quan tâm đến TaggedUser (chỉ quan tâm xử lý file/ảnh),
+	// bạn hoàn toàn có thể lược bỏ TaggedUsers ở đây để giữ payload nhẹ (Thin Payload).
+	// Dưới đây vẫn giữ lại để đảm bảo đủ 100% data như entity của bạn.
+	TaggedUsers []TaggedUserPayload `json:"tagged_users,omitempty"`
+}
+
+// --- 4. SUB-STRUCT: METADATA ---
+type MetadataPayload struct {
+	Width     int     `json:"width,omitempty"`
+	Height    int     `json:"height,omitempty"`
+	Duration  float64 `json:"duration,omitempty"`
+	SizeBytes int64   `json:"size_bytes"`
+	MimeType  string  `json:"mime_type"`
+}
+
+// --- 5. SUB-STRUCT: TAGGED USER ---
+type TaggedUserPayload struct {
+	UserID string  `json:"user_id"` // Đã là string từ Postgres UUID
+	Name   string  `json:"name"`
+	X      float64 `json:"x"`
+	Y      float64 `json:"y"`
+}
+
+type UpdateMediaAssetsPayload struct {
+	MediaID string `json:"media_id"`
+	// Các trường có thể cập nhật
+	URL          *string              `json:"url,omitempty"`
+	ThumbnailURL *string              `json:"thumbnail_url,omitempty"`
+	Order        *int                 `json:"order,omitempty"`
+	Hashtags     *[]string            `json:"hashtags,omitempty"`
+	Metadata     *MetadataPayload     `json:"metadata,omitempty"`
+	TaggedUsers  *[]TaggedUserPayload `json:"tagged_users,omitempty"`
+	Privacy      *MediaPrivacyPayload `json:"privacy,omitempty"`
+}
+
+type DeleteMediaAssetsPayload struct {
+	MediaID string `json:"media_id"`
+}
+type MediaPrivacyPayload struct {
+	// Level string hoặc dùng Enum PrivacyScope tái sử dụng
+	Level            sharedEnums.PrivacyScope `bson:"level" json:"level"`
+	InheritFromAlbum bool                     `bson:"inherit_from_album" json:"inherit_from_album"`
+}
+type DeleteMediaByTargetPayload struct {
+	TargetID string `json:"target_id"`
+}
+
+// =====================================================================
+// 2. HÀM XỬ LÝ RIÊNG CHO TỪNG LOẠI SỰ KIỆN
+// =====================================================================

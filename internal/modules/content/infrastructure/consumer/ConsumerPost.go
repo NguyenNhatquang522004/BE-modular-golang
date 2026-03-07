@@ -11,6 +11,7 @@ import (
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/constants"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/events"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/events/contentEvent"
+	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/events/mediaEvent"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/infrastructure/kafka"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/sharedEnums"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/utils"
@@ -19,6 +20,7 @@ import (
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/content/domain/IRepository/IRepositoryMongodb"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/content/domain/entity"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/pkg/pb/v1"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 type ConsumerPost struct {
@@ -122,78 +124,173 @@ func (c *ConsumerPost) handleCreatedPost(ctx context.Context, event events.Integ
 	if data == nil {
 		return kafka.NewNonRetryableError(fmt.Errorf("payload is nil"))
 	}
-	entitypost := mapper.ToCreateEntityPostPayload(data)
-	if entitypost == nil {
-		return kafka.NewNonRetryableError(fmt.Errorf("failed to map payload to entity"))
+	var wg sync.WaitGroup
+	workercount := 5
+	type taskResult struct {
+		datapost      *entity.Post
+		datamedia     *entity.PostMedia
+		dataextension *entity.PostExtension
+		datasetting   *entity.PostSetting
+		err           error
 	}
-	a, err := c.postRepo.CreatePost(ctx, entitypost)
-	if err != nil {
-		return fmt.Errorf("failed to create post in repository: %w", err)
-	}
-	if a == nil {
-		return fmt.Errorf("repository returned nil after creating post")
-	}
-	entitymedia := mapper.ToCreateEntityPostMediaPayload(entitypost.ID.Hex(), data.Media)
-	if entitymedia == nil {
-		return kafka.NewNonRetryableError(fmt.Errorf("failed to map media payload to entity"))
-	}
-	err = c.mediaRepo.CreatePostMedia(ctx, entitymedia)
-	if err != nil {
-		return fmt.Errorf("failed to create post media in repository: %w", err)
-	}
-	entityextension := mapper.ToCreateEntityPostExtensionPayload(entitypost.ID.Hex(), data.Extension)
-	if data.Extension != nil && entityextension == nil {
-		return kafka.NewNonRetryableError(fmt.Errorf("failed to map extension payload to entity"))
-	}
-	err = c.extensionRepo.CreatePostExtension(ctx, entityextension)
-	if err != nil {
-		return fmt.Errorf("failed to create post extension in repository: %w", err)
-	}
-	var entitysetting *entity.PostSetting
-	switch data.Context.Type {
-	case sharedEnums.ContextTypeGroup:
-		res, err := c.pbcommunity.GetRoleUserInGroup(ctx, &pb.GetRoleUserInGroupRequest{
-			GroupId: data.Context.TargetID,
-			UserId:  entitypost.UserID,
+	postid := primitive.NewObjectID()
+	taskResultchan := make(chan taskResult, workercount)
+	for i := 0; i < workercount; i++ {
+		wg.Add(1)
+		err := c.pool.Run(ctx, func() {
+			defer wg.Done()
+			switch i {
+			case 0:
+				entitypost := mapper.ToCreateEntityPostPayload(postid, data)
+				if entitypost == nil {
+					taskResultchan <- taskResult{err: fmt.Errorf("failed to map payload to entity")}
+					return
+				}
+				_, err := c.postRepo.CreatePost(ctx, entitypost)
+				if err != nil {
+					taskResultchan <- taskResult{err: fmt.Errorf("failed to create post in repository: %w", err)}
+					return
+				}
+
+				taskResultchan <- taskResult{datapost: entitypost, err: nil}
+			case 1:
+				entitymedia := mapper.ToCreateEntityPostMediaPayload(postid.Hex(), data.Media) // PostID sẽ được gán sau khi tạo post
+				if entitymedia == nil {
+					taskResultchan <- taskResult{err: fmt.Errorf("failed to map media payload to entity")}
+					return
+				}
+				err = c.mediaRepo.CreatePostMedia(ctx, entitymedia)
+				if err != nil {
+					taskResultchan <- taskResult{err: fmt.Errorf("failed to create post media in repository: %w", err)}
+					return
+				}
+				var payloads []mediaEvent.CreateMediaAssetsPayload
+				for _, item := range entitymedia.Items {
+					mediaid := primitive.NewObjectID()
+					itemmediaitempayload := mediaEvent.MediaItemPayload{
+						PostID:       postid.Hex(),
+						AlbumID:      "",          // Chưa có album trong yêu cầu tạo post, để trống hoặc gán sau nếu có
+						GroupID:      *data.Group, // Chưa có group trong yêu cầu tạo post, để trống hoặc gán sau nếu có
+						MediaID:      mediaid.Hex(),
+						MediaType:    item.MediaType,
+						URL:          item.URL,
+						ThumbnailURL: item.ThumbnailURL,
+						Metadata: mediaEvent.MetadataPayload{
+							Width:     item.Metadata.Width,
+							Height:    item.Metadata.Height,
+							Duration:  item.Metadata.Duration,
+							SizeBytes: item.Metadata.SizeBytes,
+							MimeType:  item.Metadata.MimeType,
+						},
+						Order:    item.Order,
+						Hashtags: data.Hashtags,
+						TaggedUsers: func() []mediaEvent.TaggedUserPayload {
+							var taggedUsers []mediaEvent.TaggedUserPayload
+							for _, user := range item.TaggedUsers {
+								taggedUsers = append(taggedUsers, mediaEvent.TaggedUserPayload{
+									UserID: user.UserID,
+									Name:   user.Name,
+									X:      user.X,
+									Y:      user.Y,
+								})
+							}
+							return taggedUsers
+						}(),
+					}
+					itempayload := mediaEvent.CreateMediaAssetsPayload{
+						UserID: data.UserID,
+						Items:  []mediaEvent.MediaItemPayload{itemmediaitempayload},
+					}
+					payloads = append(payloads, itempayload)
+					err := c.events.Publish(ctx, constants.TopicMediaAsset.String(), postid.Hex(), constants.Created.String(), itempayload)
+					if err != nil {
+						taskResultchan <- taskResult{err: fmt.Errorf("failed to publish media asset event: %w", err)}
+						return
+					}
+				}
+				taskResultchan <- taskResult{datamedia: entitymedia, err: nil}
+			case 2:
+				entityextension := mapper.ToCreateEntityPostExtensionPayload(postid.Hex(), data.Extension) // PostID sẽ được gán sau khi tạo post
+				if data.Extension != nil && entityextension == nil {
+					taskResultchan <- taskResult{err: fmt.Errorf("failed to map extension payload to entity")}
+					return
+				}
+				err = c.extensionRepo.CreatePostExtension(ctx, entityextension)
+				if err != nil {
+					taskResultchan <- taskResult{err: fmt.Errorf("failed to create post extension in repository: %w", err)}
+					return
+				}
+				taskResultchan <- taskResult{dataextension: entityextension, err: nil}
+			case 3:
+				// PostSetting cần thông tin role của user để map đúng, nên phải xử lý sau khi có
+				var entitysetting *entity.PostSetting
+				switch data.Context.Type {
+				case sharedEnums.ContextTypeGroup:
+					res, err := c.pbcommunity.GetRoleUserInGroup(ctx, &pb.GetRoleUserInGroupRequest{
+						GroupId: data.Context.TargetID,
+						UserId:  data.UserID,
+					})
+					if err != nil {
+						taskResultchan <- taskResult{err: fmt.Errorf("%s", "failed to call GetRoleUserInGroup: "+err.Error())}
+						return
+					}
+					if res == nil {
+						taskResultchan <- taskResult{err: fmt.Errorf("%s", "failed to get role user in group: "+err.Error())}
+						return
+					}
+					convertrole, err := sharedEnums.RoleTypeString(res.Role)
+					if err != nil {
+						taskResultchan <- taskResult{err: fmt.Errorf("%s", "failed to convert role string to enum: "+err.Error())}
+						return
+					}
+
+					entitysetting = mapper.ToCreateEntityPostSettingPayload(postid.Hex(), data.UserID, convertrole, data.Setting)
+				case sharedEnums.ContextTypeUserWall:
+					entitysetting = mapper.ToCreateEntityPostSettingPayload(postid.Hex(), data.UserID, sharedEnums.RoleTypeUser, data.Setting)
+					if data.Setting != nil && entitysetting == nil {
+						taskResultchan <- taskResult{err: fmt.Errorf("failed to map setting payload to entity")}
+						return
+					}
+				case sharedEnums.ContextTypePage:
+					res, err := c.pbbusiness.GetRoleUserInPage(ctx, &pb.GetRoleUserInPageRequest{
+						PageId: data.Context.TargetID,
+						UserId: data.UserID,
+					})
+					if err != nil {
+						taskResultchan <- taskResult{err: fmt.Errorf("%s", "failed to call GetRoleUserInPage: "+err.Error())}
+						return
+					}
+					if res == nil {
+						taskResultchan <- taskResult{err: fmt.Errorf("%s", "failed to get role user in page: "+err.Error())}
+						return
+					}
+					convertrole, err := sharedEnums.RoleTypeString(res.Role)
+					if err != nil {
+						taskResultchan <- taskResult{err: fmt.Errorf("%s", "failed to convert role string to enum: "+err.Error())}
+						return
+					}
+					entitysetting = mapper.ToCreateEntityPostSettingPayload(postid.Hex(), data.UserID, convertrole, data.Setting)
+				default:
+					taskResultchan <- taskResult{err: fmt.Errorf("unknown context type: %s", data.Context.Type.String())}
+					return
+				}
+			}
 		})
 		if err != nil {
-			return kafka.NewNonRetryableError(fmt.Errorf("failed to call GetRoleUserInGroup: " + err.Error()))
+			wg.Done()
+			taskResultchan <- taskResult{err: fmt.Errorf("failed to run worker: %w", err)}
+			return fmt.Errorf("failed to run worker: %w", err)
 		}
-		if res == nil {
-			return kafka.NewNonRetryableError(fmt.Errorf("failed to get role user in group: " + err.Error()))
-		}
-		convertrole, err := sharedEnums.RoleTypeString(res.Role)
-		if err != nil {
-			return kafka.NewNonRetryableError(fmt.Errorf("failed to convert role string to enum: " + err.Error()))
-		}
-
-		entitysetting = mapper.ToCreateEntityPostSettingPayload(entitypost.ID.Hex(), entitypost.UserID, convertrole, data.Setting)
-	case sharedEnums.ContextTypeUserWall:
-		entitysetting = mapper.ToCreateEntityPostSettingPayload(entitypost.ID.Hex(), entitypost.UserID, sharedEnums.RoleTypeUser, data.Setting)
-		if data.Setting != nil && entitysetting == nil {
-			return kafka.NewNonRetryableError(fmt.Errorf("failed to map setting payload to entity"))
-		}
-	case sharedEnums.ContextTypePage:
-		res, err := c.pbbusiness.GetRoleUserInPage(ctx, &pb.GetRoleUserInPageRequest{
-			PageId: data.Context.TargetID,
-			UserId: entitypost.UserID,
-		})
-		if err != nil {
-			return kafka.NewNonRetryableError(fmt.Errorf("failed to call GetRoleUserInPage: " + err.Error()))
-		}
-		if res == nil {
-			return kafka.NewNonRetryableError(fmt.Errorf("failed to get role user in page: " + err.Error()))
-		}
-		convertrole, err := sharedEnums.RoleTypeString(res.Role)
-		if err != nil {
-			return kafka.NewNonRetryableError(fmt.Errorf("failed to convert role string to enum: " + err.Error()))
-		}
-		entitysetting = mapper.ToCreateEntityPostSettingPayload(entitypost.ID.Hex(), entitypost.UserID, convertrole, data.Setting)
-	default:
-		return kafka.NewNonRetryableError(fmt.Errorf("unknown context type: " + string(data.Context.Type)))
 	}
-
-	return nil
+	wg.Wait()
+	close(taskResultchan)
+	var finalErr error
+	for result := range taskResultchan {
+		if result.err != nil {
+			finalErr = errors.Join(finalErr, result.err)
+		}
+	}
+	return finalErr
 }
 
 func (c *ConsumerPost) handleUpdatedPost(ctx context.Context, event events.IntegrationEvent) error {
@@ -312,6 +409,29 @@ func (c *ConsumerPost) handleUpdatedPost(ctx context.Context, event events.Integ
 						errchan <- fmt.Errorf("failed to update post media in repository: %w", err)
 						return
 					}
+					errchan <- nil
+					if data.Deletemedia != nil {
+						_, _, err = c.mediaRepo.DeleteBulkByIDs(ctx, *data.Deletemedia)
+						if err != nil {
+							errchan <- fmt.Errorf("failed to delete post media in repository: %w", err)
+							return
+						}
+						for _, mediaID := range *data.Deletemedia {
+							payload := mediaEvent.DeleteMediaAssetsPayload{
+								MediaID: mediaID,
+							}
+							err := c.events.Publish(ctx, constants.TopicMediaAsset.String(), data.PostID, constants.Deleted.String(), payload)
+							if err != nil {
+								errchan <- fmt.Errorf("failed to publish media asset deletion event: %w", err)
+								return
+							}
+						}
+						if err != nil {
+							errchan <- fmt.Errorf("failed to publish media asset deletion event: %w", err)
+							return
+						}
+					}
+					errchan <- nil
 				}
 			case 2:
 				if data.Extension != nil {
@@ -325,6 +445,7 @@ func (c *ConsumerPost) handleUpdatedPost(ctx context.Context, event events.Integ
 						errchan <- fmt.Errorf("failed to update post extension in repository: %w", err)
 						return
 					}
+					errchan <- nil
 				}
 			case 3:
 				if data.Setting != nil {
@@ -338,6 +459,7 @@ func (c *ConsumerPost) handleUpdatedPost(ctx context.Context, event events.Integ
 						errchan <- fmt.Errorf("failed to update post setting in repository: %w", err)
 						return
 					}
+					errchan <- nil
 				}
 			default:
 				errchan <- nil // Các worker còn lại không làm gì

@@ -6,19 +6,17 @@ import (
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/sharedEnums"
 )
 
-
-
 type DeletePostPayload struct {
 	PostID string `json:"post_id"`
 	Reason string `json:"reason,omitempty"`
 }
 type UpdatePostPayload struct {
-	PostID   string                `json:"post_id"`
-	Content  *string               `json:"content,omitempty"`
-	Privacy  *UpdatePrivacyPayload `json:"privacy,omitempty"`
-	Hashtags *[]string             `json:"hashtags,omitempty" validate:"omitempty,dive,max=50"`
-	Mentions *[]string             `json:"mentions,omitempty" validate:"omitempty,dive,uuid"`
-
+	PostID      string                `json:"post_id"`
+	Content     *string               `json:"content,omitempty"`
+	Privacy     *UpdatePrivacyPayload `json:"privacy,omitempty"`
+	Hashtags    *[]string             `json:"hashtags,omitempty" validate:"omitempty,dive,max=50"`
+	Mentions    *[]string             `json:"mentions,omitempty" validate:"omitempty,dive,uuid"`
+	Deletemedia *[]string             `json:"delete_media,omitempty"` // Danh sách media_id cần xoá khỏi post, nếu client muốn xoá media nào đó thì gửi lên ID của nó, backend sẽ xoá khỏi post. Nếu client muốn xoá tất cả media thì gửi lên tất cả media_id hiện có của post.
 	// Media thay vì update lẻ tẻ, thường Best Practice là client sẽ gửi lại MẢNG MỚI HOÀN TOÀN
 	// Backend sẽ xoá media cũ và insert media mới để tránh rác logic
 	Media *[]MediaItemPayload `json:"media,omitempty" validate:"omitempty,max=10"`
@@ -35,6 +33,8 @@ type UpdatePrivacyPayload struct {
 
 // CreatePostPayload là payload duy nhất Client cần gửi lên
 type CreatePostPayload struct {
+	UserID  string               // Trường này không lấy từ payload, sẽ được gán sau khi giải mã token
+	Group   *string               `json:"group_id,omitempty"`       // Nếu có group_id thì sẽ là post nhóm, không có thì sẽ là post cá nhân
 	Type    sharedEnums.PostType `json:"type" validate:"required"` // Bắt buộc
 	Content string               `json:"content"`                  // Có thể rỗng nếu chỉ đăng ảnh
 	Privacy PostPrivacyPayload   `json:"privacy" validate:"required"`

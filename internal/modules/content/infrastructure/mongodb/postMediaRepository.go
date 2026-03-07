@@ -393,3 +393,50 @@ func (r *PostMediaRepository) GetsByPostID(ctx context.Context, postID string) (
 	}
 	return postMedia, nil
 }
+func (r *PostMediaRepository) DeleteByID(ctx context.Context, id string) error {
+	collection := r.client.Collection(entity.PostMedia{}.CollectionNamePostMedia())
+	finalid, _ := primitive.ObjectIDFromHex(id)
+	filter := bson.M{"_id": finalid}
+	_, err := collection.DeleteOne(ctx, filter)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+func (r *PostMediaRepository) DeleteBulkByIDs(ctx context.Context, ids []string) (int64, []*mongodbErrors.BulkError, error) {
+	for _, id := range ids {
+		if _, err := primitive.ObjectIDFromHex(id); err != nil {
+			return 0, nil, fmt.Errorf("invalid post media ID: %s", id)
+		}
+	}
+	collection := r.client.Collection(entity.PostMedia{}.CollectionNamePostMedia())
+	objectIDs := make([]primitive.ObjectID, 0, len(ids))
+	for _, id := range ids {
+		objID, _ := primitive.ObjectIDFromHex(id)
+		objectIDs = append(objectIDs, objID)
+	}
+	filter := bson.M{"_id": bson.M{"$in": objectIDs}}
+	result, err := collection.DeleteMany(ctx, filter)
+	if result == nil && err != nil {
+		return 0, nil, fmt.Errorf("bulk delete system error: %w", err)
+	}
+	var failedDocs []*mongodbErrors.BulkError
+	if err != nil {
+		var bulkErr mongo.BulkWriteException
+		if errors.As(err, &bulkErr) {
+			for _, we := range bulkErr.WriteErrors {
+				failedIndex := we.Index
+				if failedIndex < len(ids) {
+					failedID := ids[failedIndex]
+					failedDocs = append(failedDocs, &mongodbErrors.BulkError{
+						ID:     failedID,
+						Reason: we.Message,
+					})
+				}
+			}
+			return result.DeletedCount, failedDocs, nil
+		}
+		return 0, nil, err
+	}
+	return result.DeletedCount, nil, nil
+}

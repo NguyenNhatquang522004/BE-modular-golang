@@ -36,11 +36,10 @@ const (
 	TopicDeleteSocialRelationTarget TopicName = "social.delete_relation_target.events" // chưa làm gì cả
 
 	//content
-	TopicPost                            TopicName = "content.post.events"
-	TopicContentPostPublish              TopicName = "content.post.publish.events"
-	TopicContentPostPublishMediaAssets   TopicName = "content.post.publish_media_assets.events"
-	TopicSharePost                       TopicName = "content.post.share.events"
-	TopicDeleteContentRelationTarget     TopicName = "content.delete_relation_target.events" // chưa làm gì cả
+	TopicPost                          TopicName = "content.post.events"
+	TopicContentPostPublishMediaAssets TopicName = "content.post.publish_media_assets.events"
+	TopicSharePost                     TopicName = "content.post.share.events"
+	TopicDeleteContentRelationTarget   TopicName = "content.delete_relation_target.events" // chưa làm gì cả
 
 	// notification
 	TopicUserNotificationSettings TopicName = "notification.create_user_notification_settings.events"
@@ -56,6 +55,7 @@ const (
 	TopicDeleteInteractionRelationTarget TopicName = "interaction.delete_relation_target.events" // chưa làm gì cả
 
 	// media
+	TopicMediaAsset     TopicName = "media.asset.events"
 	TopicReactAlbum     TopicName = "media.react_album.events"
 	TopicViewCountStory TopicName = "media.view_count_story.events"
 	TopicReactStory     TopicName = "media.react_story.events"
@@ -105,7 +105,7 @@ var SocialTopics = []TopicConfig{
 	{Name: TopicFriendship, Partitions: 6}, // Gom 3 cái Create/Update/Delete vào 1
 	{Name: TopicBlockUser, Partitions: 6},
 	{Name: TopicFollowUser, Partitions: 3},
-	{Name: TopicContentPostPublish, Partitions: 3},
+
 	{Name: TopicContentPostPublishMediaAssets, Partitions: 3},
 	{Name: TopicUserNotificationSettings, Partitions: 3},
 	{Name: TopicSendNotificationType, Partitions: 3},

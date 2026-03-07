@@ -9,12 +9,13 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-func ToCreateEntityPostPayload(r *contentEvent.CreatePostPayload) *entity.Post {
+func ToCreateEntityPostPayload(id primitive.ObjectID, r *contentEvent.CreatePostPayload) *entity.Post {
 	if r == nil {
 		return nil
 	}
 	post := &entity.Post{
-		UserID:  "", // UserID sẽ được gán sau khi giải mã token, không lấy từ payload
+		ID:      id,
+		UserID:  r.UserID, // UserID sẽ được gán sau khi giải mã token, không lấy từ payload
 		Type:    r.Type,
 		Content: r.Content,
 		// Map explicitly to avoid conversion errors

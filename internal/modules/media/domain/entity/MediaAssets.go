@@ -30,6 +30,8 @@ type MediaAsset struct {
 	// Index: { group_id: 1, created_at: -1 } -> Tab Media của nhóm
 	GroupID primitive.ObjectID `bson:"group_id,omitempty" json:"group_id,omitempty"`
 
+	PageID primitive.ObjectID `bson:"page_id,omitempty" json:"page_id,omitempty"`
+
 	// 2. STORAGE LINKS
 	// ID file trong hệ thống lưu trữ (GridFS / SeaweedFS / S3)
 	StorageFileID string `bson:"url" json:"url"` // Mapping với trường "url" trong JSON đề bài

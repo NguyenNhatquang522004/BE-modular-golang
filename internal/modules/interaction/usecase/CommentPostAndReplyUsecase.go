@@ -9,7 +9,6 @@ import (
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/IRepositoryShare"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/constants"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/events"
-	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/events/contentEvent/mediaInContent"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/events/interactionEvent"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/events/notificationEvent"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/interaction/delivery/dto/req"
@@ -96,34 +95,28 @@ func (u *CommentPostAndReplyUsecase) Execute(ctx context.Context, req *req.Comme
 					return
 				}
 			case 3:
-				item := &mediaInContent.MediaItemPayload{
-					MediaID:      entity.AssetID.Hex(),
-					MediaType:    *req.Media.Type,
-					URL:          req.Media.URL,
-					ThumbnailURL: "",
-					Order:        0,
-					Metadata: mediaInContent.MetadataPayload{
-						Width:     req.Media.DisplayMeta.Width,
-						Height:    req.Media.DisplayMeta.Height,
-						Duration:  req.Duration,
-						SizeBytes: req.SizeBytes,
-						MimeType:  req.MimeType,
-					},
-					TaggedUsers: []mediaInContent.TaggedUserPayload{},
-				}
-				mediaAssetpayload := &mediaInContent.CreateMediaAssetsPayload{
-					PostID: entity.TargetID.String(),
-					UserID: entity.UserID,
-					Items:  []mediaInContent.MediaItemPayload{*item},
-				}
+				// item := &mediaInContent.MediaItemPayload{
+				// 	MediaID:      entity.AssetID.Hex(),
+				// 	MediaType:    *req.Media.Type,
+				// 	URL:          req.Media.URL,
+				// 	ThumbnailURL: "",
+				// 	Order:        0,
+				// 	Metadata: mediaInContent.MetadataPayload{
+				// 		Width:     req.Media.DisplayMeta.Width,
+				// 		Height:    req.Media.DisplayMeta.Height,
+				// 		Duration:  req.Duration,
+				// 		SizeBytes: req.SizeBytes,
+				// 		MimeType:  req.MimeType,
+				// 	},
+				// 	TaggedUsers: []mediaInContent.TaggedUserPayload{},
+				// }
+				// mediaAssetpayload := &mediaInContent.CreateMediaAssetsPayload{
+				// 	PostID: entity.TargetID.String(),
+				// 	UserID: entity.UserID,
+				// 	Items:  []mediaInContent.MediaItemPayload{*item},
+				// }
 				if req.Media != nil {
-					err = u.eventBus.Publish(ctx, string(constants.TopicContentPostPublishMediaAssets), entity.UserID, string(constants.Created), mediaAssetpayload)
-					if err != nil {
-						log.Printf("Failed to publish media asset event: %v", err)
-						resultschan <- err
-						return
-					}
-					log.Printf("Published media asset event for MediaID: %s", item.MediaID)
+
 				}
 			default:
 				log.Printf("No case for worker index: %d", i)

@@ -66,7 +66,11 @@ func ToEntityMediaAsset(r *req.MediaAssetReq) (*entity.MediaAsset, error) {
 			e.GroupID = id
 		}
 	}
-
+	if r.PageID != "" {
+		if id, err := primitive.ObjectIDFromHex(r.PageID); err == nil {
+			e.PageID = id
+		}
+	}
 	// Xử lý mảng TaggedUsers
 	if len(r.TaggedUsers) > 0 {
 		e.TaggedUsers = make([]entity.MediaTag, len(r.TaggedUsers))
@@ -126,6 +130,11 @@ func UpdateToEntityMediaAsset(r *req.UpdateMediaAssetReq, e *entity.MediaAsset) 
 	if r.GroupID != nil && *r.GroupID != "" {
 		if id, err := primitive.ObjectIDFromHex(*r.GroupID); err == nil {
 			e.GroupID = id
+		}
+	}
+	if r.PageID != nil && *r.PageID != "" {
+		if id, err := primitive.ObjectIDFromHex(*r.PageID); err == nil {
+			e.PageID = id
 		}
 	}
 	if r.StorageFileID != nil {

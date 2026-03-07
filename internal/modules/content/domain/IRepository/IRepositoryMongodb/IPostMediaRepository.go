@@ -16,6 +16,8 @@ type IPostMediaRepository interface {
 	GetBulkByPostIDs(ctx context.Context, postIDs []string) ([]*entity.PostMedia, error)
 	UpdatePostMedia(ctx context.Context, postMedia *entity.PostMedia) error
 	UpdateBulkPostMedia(ctx context.Context, postMedias []*entity.PostMedia) (int64, []*mongodbErrors.BulkError, error)
+	DeleteByID(ctx context.Context, id string) error
+	DeleteBulkByIDs(ctx context.Context, ids []string) (int64, []*mongodbErrors.BulkError, error)
 	DeleteByPostID(ctx context.Context, postID string) error
 	DeleteBulkByPostIDs(ctx context.Context, postIDs []string) (int64, []*mongodbErrors.BulkError, error)
 	PanigationPostMedia(ctx context.Context, postID string, cursor string, limit int) (*dto.PaginationRes, error)
