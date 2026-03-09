@@ -309,3 +309,28 @@ func (r *SavedItemsRepository) PaginationSaveItem(ctx context.Context, userID st
 		Limit:      limit,
 	}, nil
 }
+
+func (r *SavedItemsRepository) GetSaveItemByTargetID(ctx context.Context, userID string, targetID string) (*entity.UserSavedItem, error) {
+	collection := r.client.Collection(entity.UserSavedItem{}.CollectionnamUserSavedItem())
+	finalTargetID, _ := primitive.ObjectIDFromHex(targetID)
+	query := bson.M{"user_id": userID, "target_id": finalTargetID}
+	var saveItem entity.UserSavedItem
+	err := collection.FindOne(ctx, query).Decode(&saveItem)
+	if err != nil {
+		if err == mongo.ErrNoDocuments {
+			return nil, nil
+		}
+		return nil, fmt.Errorf("database error: %w", err)
+	}
+	return &saveItem, nil
+}
+func (r *SavedItemsRepository) DeleteSaveItemByUserIDAndTargetID(ctx context.Context, userID string, targetID string) error {
+	collection := r.client.Collection(entity.UserSavedItem{}.CollectionnamUserSavedItem())
+	finalTargetID, _ := primitive.ObjectIDFromHex(targetID)
+	query := bson.M{"user_id": userID, "target_id": finalTargetID}
+	_, err := collection.DeleteOne(ctx, query)
+	if err != nil {
+		return fmt.Errorf("failed to delete bookmark in database: %w", err)
+	}
+	return nil
+}

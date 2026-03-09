@@ -29,6 +29,22 @@ type CommentStatsPayload struct {
 	Angry        int                 `json:"angry"`
 	Type         constants.EventType `json:"type" validate:"required"` // CREATED, UPDATED, DELETED
 }
+type BookmarkPayload struct {
+	UserID         string                      `json:"user_id" validate:"required"`
+	TargetID       string                      `json:"target_id" validate:"required"`
+	TargetType     sharedEnums.SavedTargetType `json:"target_type" validate:"required"`
+	Snapshot       SavedItemSnapshotPayload    `json:"snapshot"`
+	CollectionName string                      `json:"collection_name"`
+	CreatedAt      time.Time                   `json:"created_at"`
+	UpdatedAt      time.Time                   `json:"updated_at"`
+	Type           constants.EventType         `json:"type" validate:"required"` // CREATED, DELETED
+}
+type SavedItemSnapshotPayload struct {
+	AuthorName     string `bson:"author_name" json:"author_name"`
+	ContentPreview string `bson:"content_preview" json:"content_preview"` // Cắt ngắn 100 ký tự đầu
+	ThumbnailURL   string `bson:"thumbnail_url" json:"thumbnail_url"`
+}
+
 type DeleteInteractionRelationTargetPayload struct {
 	TargetID string `json:"target_id"`
 }
