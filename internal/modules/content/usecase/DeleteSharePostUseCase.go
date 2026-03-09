@@ -8,7 +8,7 @@ import (
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/server/http/response"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/IRepositoryShare"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/events"
-	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/content/delivery/dto/req"
+	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/events/contentEvent"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/content/domain/IRepository/IRepositoryCassandra"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/content/domain/IRepository/IRepositoryMongodb"
 )
@@ -32,7 +32,7 @@ func NewDeleteSharePostUseCase(eventbus events.EventBus, postRepo IRepositoryMon
 		pool:              pool,
 	}
 }
-func (s *DeleteSharePostUseCase) Execute(ctx context.Context, req *req.SharePostRequest) (*response.Response, error) {
+func (s *DeleteSharePostUseCase) Execute(ctx context.Context, req *contentEvent.SharePostPayload) (*response.Response, error) {
 	datapost, err := s.postRepo.GetPostByID(ctx, req.PostID)
 	if err != nil {
 		return nil, err

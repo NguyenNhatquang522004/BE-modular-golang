@@ -4,6 +4,7 @@ option go_package = "github.com/quang/social-network/pkg/pb/v1;pb";
 
 service CommunityService {
  rpc GetRoleUserInGroup (GetRoleUserInGroupRequest) returns (GetRoleUserInGroupResponse);
+ rpc GetGroupInfo (GetGroupInfoRequest) returns (GetGroupInfoResponse);
 }
 message GetRoleUserInGroupRequest {
  string group_id = 1;
@@ -11,4 +12,11 @@ message GetRoleUserInGroupRequest {
 }
 message GetRoleUserInGroupResponse {
   string role = 1;
+}
+message GetGroupInfoRequest {
+ string group_id = 1;
+}
+message GetGroupInfoResponse {
+ string group_id = 1;
+ string protected = 2;
 }

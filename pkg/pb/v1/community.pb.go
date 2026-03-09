@@ -117,6 +117,102 @@ func (x *GetRoleUserInGroupResponse) GetRole() string {
 	return ""
 }
 
+type GetGroupInfoRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	GroupId       string                 `protobuf:"bytes,1,opt,name=group_id,json=groupId,proto3" json:"group_id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GetGroupInfoRequest) Reset() {
+	*x = GetGroupInfoRequest{}
+	mi := &file_v1_community_proto_msgTypes[2]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetGroupInfoRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetGroupInfoRequest) ProtoMessage() {}
+
+func (x *GetGroupInfoRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_v1_community_proto_msgTypes[2]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetGroupInfoRequest.ProtoReflect.Descriptor instead.
+func (*GetGroupInfoRequest) Descriptor() ([]byte, []int) {
+	return file_v1_community_proto_rawDescGZIP(), []int{2}
+}
+
+func (x *GetGroupInfoRequest) GetGroupId() string {
+	if x != nil {
+		return x.GroupId
+	}
+	return ""
+}
+
+type GetGroupInfoResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	GroupId       string                 `protobuf:"bytes,1,opt,name=group_id,json=groupId,proto3" json:"group_id,omitempty"`
+	Protected     string                 `protobuf:"bytes,2,opt,name=protected,proto3" json:"protected,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GetGroupInfoResponse) Reset() {
+	*x = GetGroupInfoResponse{}
+	mi := &file_v1_community_proto_msgTypes[3]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetGroupInfoResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetGroupInfoResponse) ProtoMessage() {}
+
+func (x *GetGroupInfoResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_v1_community_proto_msgTypes[3]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetGroupInfoResponse.ProtoReflect.Descriptor instead.
+func (*GetGroupInfoResponse) Descriptor() ([]byte, []int) {
+	return file_v1_community_proto_rawDescGZIP(), []int{3}
+}
+
+func (x *GetGroupInfoResponse) GetGroupId() string {
+	if x != nil {
+		return x.GroupId
+	}
+	return ""
+}
+
+func (x *GetGroupInfoResponse) GetProtected() string {
+	if x != nil {
+		return x.Protected
+	}
+	return ""
+}
+
 var File_v1_community_proto protoreflect.FileDescriptor
 
 const file_v1_community_proto_rawDesc = "" +
@@ -126,9 +222,15 @@ const file_v1_community_proto_rawDesc = "" +
 	"\bgroup_id\x18\x01 \x01(\tR\agroupId\x12\x17\n" +
 	"\auser_id\x18\x02 \x01(\tR\x06userId\"0\n" +
 	"\x1aGetRoleUserInGroupResponse\x12\x12\n" +
-	"\x04role\x18\x01 \x01(\tR\x04role2{\n" +
+	"\x04role\x18\x01 \x01(\tR\x04role\"0\n" +
+	"\x13GetGroupInfoRequest\x12\x19\n" +
+	"\bgroup_id\x18\x01 \x01(\tR\agroupId\"O\n" +
+	"\x14GetGroupInfoResponse\x12\x19\n" +
+	"\bgroup_id\x18\x01 \x01(\tR\agroupId\x12\x1c\n" +
+	"\tprotected\x18\x02 \x01(\tR\tprotected2\xd2\x01\n" +
 	"\x10CommunityService\x12g\n" +
-	"\x12GetRoleUserInGroup\x12'.api.proto.v1.GetRoleUserInGroupRequest\x1a(.api.proto.v1.GetRoleUserInGroupResponseB.Z,github.com/quang/social-network/pkg/pb/v1;pbb\x06proto3"
+	"\x12GetRoleUserInGroup\x12'.api.proto.v1.GetRoleUserInGroupRequest\x1a(.api.proto.v1.GetRoleUserInGroupResponse\x12U\n" +
+	"\fGetGroupInfo\x12!.api.proto.v1.GetGroupInfoRequest\x1a\".api.proto.v1.GetGroupInfoResponseB.Z,github.com/quang/social-network/pkg/pb/v1;pbb\x06proto3"
 
 var (
 	file_v1_community_proto_rawDescOnce sync.Once
@@ -142,16 +244,20 @@ func file_v1_community_proto_rawDescGZIP() []byte {
 	return file_v1_community_proto_rawDescData
 }
 
-var file_v1_community_proto_msgTypes = make([]protoimpl.MessageInfo, 2)
+var file_v1_community_proto_msgTypes = make([]protoimpl.MessageInfo, 4)
 var file_v1_community_proto_goTypes = []any{
 	(*GetRoleUserInGroupRequest)(nil),  // 0: api.proto.v1.GetRoleUserInGroupRequest
 	(*GetRoleUserInGroupResponse)(nil), // 1: api.proto.v1.GetRoleUserInGroupResponse
+	(*GetGroupInfoRequest)(nil),        // 2: api.proto.v1.GetGroupInfoRequest
+	(*GetGroupInfoResponse)(nil),       // 3: api.proto.v1.GetGroupInfoResponse
 }
 var file_v1_community_proto_depIdxs = []int32{
 	0, // 0: api.proto.v1.CommunityService.GetRoleUserInGroup:input_type -> api.proto.v1.GetRoleUserInGroupRequest
-	1, // 1: api.proto.v1.CommunityService.GetRoleUserInGroup:output_type -> api.proto.v1.GetRoleUserInGroupResponse
-	1, // [1:2] is the sub-list for method output_type
-	0, // [0:1] is the sub-list for method input_type
+	2, // 1: api.proto.v1.CommunityService.GetGroupInfo:input_type -> api.proto.v1.GetGroupInfoRequest
+	1, // 2: api.proto.v1.CommunityService.GetRoleUserInGroup:output_type -> api.proto.v1.GetRoleUserInGroupResponse
+	3, // 3: api.proto.v1.CommunityService.GetGroupInfo:output_type -> api.proto.v1.GetGroupInfoResponse
+	2, // [2:4] is the sub-list for method output_type
+	0, // [0:2] is the sub-list for method input_type
 	0, // [0:0] is the sub-list for extension type_name
 	0, // [0:0] is the sub-list for extension extendee
 	0, // [0:0] is the sub-list for field type_name
@@ -168,7 +274,7 @@ func file_v1_community_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_v1_community_proto_rawDesc), len(file_v1_community_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   2,
+			NumMessages:   4,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

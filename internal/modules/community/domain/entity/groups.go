@@ -4,7 +4,6 @@ import (
 	"time"
 
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/sharedEnums"
-	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/community/enum"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -35,8 +34,8 @@ type Group struct {
 
 	// 3. PHÂN LOẠI
 	// Index: { privacy: 1, category_id: 1 } -> Filter nhóm
-	Privacy    enum.GroupPrivacy `bson:"privacy" json:"privacy"`
-	CategoryID string            `bson:"category_id" json:"category_id"`
+	Privacy    sharedEnums.PrivacyScope `bson:"privacy" json:"privacy"`
+	CategoryID string                   `bson:"category_id" json:"category_id"`
 
 	// 4. NỘI QUY (Embedded Array)
 	Rules []GroupRule `bson:"rules,omitempty" json:"rules,omitempty"`

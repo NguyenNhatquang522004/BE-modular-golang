@@ -10,11 +10,13 @@ import (
 type HandlerCommunityGRPC struct {
 	pb.UnimplementedCommunityServiceServer
 	memberRepo IRepositoryMongodb.IGroupMembersRepository
+	groupRepo  IRepositoryMongodb.IGroupRepository
 }
 
-func NewHandlerCommunityGRPC(memberRepo IRepositoryMongodb.IGroupMembersRepository) *HandlerCommunityGRPC {
+func NewHandlerCommunityGRPC(memberRepo IRepositoryMongodb.IGroupMembersRepository, groupRepo IRepositoryMongodb.IGroupRepository) *HandlerCommunityGRPC {
 	return &HandlerCommunityGRPC{
 		memberRepo: memberRepo,
+		groupRepo:  groupRepo,
 	}
 }
 
@@ -26,5 +28,18 @@ func (h *HandlerCommunityGRPC) GetRoleUserInGroup(ctx context.Context, req *pb.G
 
 	return &pb.GetRoleUserInGroupResponse{
 		Role: groupMember.Role.String(),
+	}, nil
+}
+func (h *HandlerCommunityGRPC) GetGroupInfo(ctx context.Context, req *pb.GetGroupInfoRequest) (*pb.GetGroupInfoResponse, error) {
+	data, err := h.groupRepo.GetGroupByID(ctx, req.GetGroupId())
+	if err != nil {
+		return nil, err
+	}
+	if data == nil {
+		return nil, err
+	}
+	return &pb.GetGroupInfoResponse{
+		GroupId:   data.ID.Hex(),
+		Protected: data.Privacy.String(),
 	}, nil
 }

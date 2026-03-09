@@ -13,6 +13,7 @@ func ToCreateEntityPostPayload(id primitive.ObjectID, r *contentEvent.CreatePost
 	if r == nil {
 		return nil
 	}
+
 	post := &entity.Post{
 		ID:      id,
 		UserID:  r.UserID, // UserID sẽ được gán sau khi giải mã token, không lấy từ payload
@@ -90,13 +91,13 @@ func ToCreateEntityPostExtensionPayload(postID string, extension *contentEvent.E
 		// Xử lý lỗi nếu postID không hợp lệ
 		return nil
 	}
-	convertoriginalPostID, err := primitive.ObjectIDFromHex(extension.ShareData.OriginalPostID)
+
 	entity := &entity.PostExtension{
 		ID:     primitive.NewObjectID(),
 		PostID: convertedPostID,
 		ShareData: &entity.ShareData{
-			ParentPostID:   convertedPostID,
-			OriginalPostID: convertoriginalPostID,
+			ParentPostID:   primitive.ObjectID{},
+			OriginalPostID: convertedPostID,
 		}, // Cần map chi tiết nếu ShareData có cấu trúc phức tạp
 		BackgroundData: &entity.BackgroundData{
 			ThemeID:   extension.BackgroundData.ThemeID,

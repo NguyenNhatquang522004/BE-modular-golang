@@ -20,6 +20,7 @@ const _ = grpc.SupportPackageIsVersion9
 
 const (
 	CommunityService_GetRoleUserInGroup_FullMethodName = "/api.proto.v1.CommunityService/GetRoleUserInGroup"
+	CommunityService_GetGroupInfo_FullMethodName       = "/api.proto.v1.CommunityService/GetGroupInfo"
 )
 
 // CommunityServiceClient is the client API for CommunityService service.
@@ -27,6 +28,7 @@ const (
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type CommunityServiceClient interface {
 	GetRoleUserInGroup(ctx context.Context, in *GetRoleUserInGroupRequest, opts ...grpc.CallOption) (*GetRoleUserInGroupResponse, error)
+	GetGroupInfo(ctx context.Context, in *GetGroupInfoRequest, opts ...grpc.CallOption) (*GetGroupInfoResponse, error)
 }
 
 type communityServiceClient struct {
@@ -47,11 +49,22 @@ func (c *communityServiceClient) GetRoleUserInGroup(ctx context.Context, in *Get
 	return out, nil
 }
 
+func (c *communityServiceClient) GetGroupInfo(ctx context.Context, in *GetGroupInfoRequest, opts ...grpc.CallOption) (*GetGroupInfoResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GetGroupInfoResponse)
+	err := c.cc.Invoke(ctx, CommunityService_GetGroupInfo_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // CommunityServiceServer is the server API for CommunityService service.
 // All implementations must embed UnimplementedCommunityServiceServer
 // for forward compatibility.
 type CommunityServiceServer interface {
 	GetRoleUserInGroup(context.Context, *GetRoleUserInGroupRequest) (*GetRoleUserInGroupResponse, error)
+	GetGroupInfo(context.Context, *GetGroupInfoRequest) (*GetGroupInfoResponse, error)
 	mustEmbedUnimplementedCommunityServiceServer()
 }
 
@@ -64,6 +77,9 @@ type UnimplementedCommunityServiceServer struct{}
 
 func (UnimplementedCommunityServiceServer) GetRoleUserInGroup(context.Context, *GetRoleUserInGroupRequest) (*GetRoleUserInGroupResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method GetRoleUserInGroup not implemented")
+}
+func (UnimplementedCommunityServiceServer) GetGroupInfo(context.Context, *GetGroupInfoRequest) (*GetGroupInfoResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method GetGroupInfo not implemented")
 }
 func (UnimplementedCommunityServiceServer) mustEmbedUnimplementedCommunityServiceServer() {}
 func (UnimplementedCommunityServiceServer) testEmbeddedByValue()                          {}
@@ -104,6 +120,24 @@ func _CommunityService_GetRoleUserInGroup_Handler(srv interface{}, ctx context.C
 	return interceptor(ctx, in, info, handler)
 }
 
+func _CommunityService_GetGroupInfo_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetGroupInfoRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(CommunityServiceServer).GetGroupInfo(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: CommunityService_GetGroupInfo_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(CommunityServiceServer).GetGroupInfo(ctx, req.(*GetGroupInfoRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // CommunityService_ServiceDesc is the grpc.ServiceDesc for CommunityService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -114,6 +148,10 @@ var CommunityService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetRoleUserInGroup",
 			Handler:    _CommunityService_GetRoleUserInGroup_Handler,
+		},
+		{
+			MethodName: "GetGroupInfo",
+			Handler:    _CommunityService_GetGroupInfo_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

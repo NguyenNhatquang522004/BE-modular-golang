@@ -4,29 +4,28 @@ import (
 	"time"
 
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/sharedEnums"
-	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/community/enum"
 )
 
 // GroupRes - Trả về 100% dữ liệu của Entity cho Client
 type GroupRes struct {
-	ID                  string            `json:"id"` // ObjectID chuyển thành string
-	CreatorID           string            `json:"creator_id"`
-	Name                string            `json:"name"`
-	Slug                string            `json:"slug"`
-	Description         string            `json:"description"`
-	Tags                []string          `json:"tags,omitempty"`
-	Cover               ResGroupCover     `json:"cover"`
-	Avatar              ResGroupAvatar    `json:"avatar"`
-	Privacy             enum.GroupPrivacy `json:"privacy"`
-	CategoryID          string            `json:"category_id"`
-	Rules               []ResGroupRule    `json:"rules,omitempty"`
-	Settings            ResGroupSettings  `json:"settings"`
-	CommunityChats      ResFeatureFlag    `json:"community_chats"`
-	MembershipQuestions ResFeatureFlag    `json:"membership_questions"`
-	Stats               ResGroupStats     `json:"stats"`
-	CreatedAt           time.Time         `json:"created_at"`
-	UpdatedAt           time.Time         `json:"updated_at"`
-	DeletedAt           *time.Time        `json:"deleted_at,omitempty"`
+	ID                  string                   `json:"id"` // ObjectID chuyển thành string
+	CreatorID           string                   `json:"creator_id"`
+	Name                string                   `json:"name"`
+	Slug                string                   `json:"slug"`
+	Description         string                   `json:"description"`
+	Tags                []string                 `json:"tags,omitempty"`
+	Cover               ResGroupCover            `json:"cover"`
+	Avatar              ResGroupAvatar           `json:"avatar"`
+	Privacy             sharedEnums.PrivacyScope `json:"privacy"`
+	CategoryID          string                   `json:"category_id"`
+	Rules               []ResGroupRule           `json:"rules,omitempty"`
+	Settings            ResGroupSettings         `json:"settings"`
+	CommunityChats      ResFeatureFlag           `json:"community_chats"`
+	MembershipQuestions ResFeatureFlag           `json:"membership_questions"`
+	Stats               ResGroupStats            `json:"stats"`
+	CreatedAt           time.Time                `json:"created_at"`
+	UpdatedAt           time.Time                `json:"updated_at"`
+	DeletedAt           *time.Time               `json:"deleted_at,omitempty"`
 }
 
 // --- Nested Structs cho Response ---

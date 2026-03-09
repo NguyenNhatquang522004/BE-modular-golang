@@ -8,4 +8,6 @@ const (
 	ScopeFriends                     // 'friends'
 	ScopeOnlyMe                      // 'only_me'
 	ScopeCustom                      // 'custom'
+	ScopePrivate                     // 'private'
+	ScopeSecret                      // 'secret'
 )

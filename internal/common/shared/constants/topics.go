@@ -37,7 +37,6 @@ const (
 
 	//content
 	TopicPost                          TopicName = "content.post.events"
-	TopicContentPostPublishMediaAssets TopicName = "content.post.publish_media_assets.events"
 	TopicSharePost                     TopicName = "content.post.share.events"
 	TopicDeleteContentRelationTarget   TopicName = "content.delete_relation_target.events" // chưa làm gì cả
 
@@ -105,8 +104,6 @@ var SocialTopics = []TopicConfig{
 	{Name: TopicFriendship, Partitions: 6}, // Gom 3 cái Create/Update/Delete vào 1
 	{Name: TopicBlockUser, Partitions: 6},
 	{Name: TopicFollowUser, Partitions: 3},
-
-	{Name: TopicContentPostPublishMediaAssets, Partitions: 3},
 	{Name: TopicUserNotificationSettings, Partitions: 3},
 	{Name: TopicSendNotificationType, Partitions: 3},
 	{Name: TopicDeleteRelationTarget, Partitions: 3},
