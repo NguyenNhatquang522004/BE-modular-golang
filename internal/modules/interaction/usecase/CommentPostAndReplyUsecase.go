@@ -9,7 +9,7 @@ import (
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/IRepositoryShare"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/constants"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/events"
-	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/events/interactionEvent"
+	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/events/contentEvent"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/events/notificationEvent"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/interaction/delivery/dto/req"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/interaction/delivery/mapper"
@@ -84,11 +84,21 @@ func (u *CommentPostAndReplyUsecase) Execute(ctx context.Context, req *req.Comme
 					return
 				}
 			case 2:
-				conterpost := &interactionEvent.CounterPostPayload{
-					PostID: entity.TargetID.String(),
-					UserID: entity.UserID,
+				conterpost := &contentEvent.PostStatsPayload{
+					PostID:         entity.TargetID.String(),
+					UserID:         entity.UserID,
+					TotalReactions: 0,
+					Comments:       1,
+					Shares:         0,
+					Views:          0,
+					Like:           0,
+					Love:           0,
+					Haha:           0,
+					Wow:            0,
+					Sad:            0,
+					Angry:          0,
 				}
-				err = u.eventBus.Publish(ctx, constants.TopicCounterPost.String(), entity.UserID, constants.Created.String(), conterpost)
+				err = u.eventBus.Publish(ctx, constants.TopicPostStats.String(), entity.UserID, constants.Created.String(), conterpost)
 				if err != nil {
 					log.Printf("Failed to publish counter post event: %v", err)
 					resultschan <- err

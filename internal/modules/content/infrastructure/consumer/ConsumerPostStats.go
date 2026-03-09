@@ -114,7 +114,7 @@ func (c *ConsumerPostStats) handleCreateStats(ctx context.Context, event events.
 	if datapost == nil {
 		return fmt.Errorf("post not found for ID %s", data.PostID)
 	}
-	datapost.Stats.TotalReactions = datapost.Stats.TotalReactions + data.TotalReactions
+	datapost.Stats.TotalReactions = datapost.Stats.TotalReactions + c.handleTotalReactions(ctx, *data)
 	datapost.Stats.Comments = datapost.Stats.Comments + data.Comments
 	datapost.Stats.Shares = datapost.Stats.Shares + data.Shares
 	datapost.Stats.Views = datapost.Stats.Views + data.Views
@@ -132,6 +132,9 @@ func (c *ConsumerPostStats) handleCreateStats(ctx context.Context, event events.
 	}
 	return nil
 
+}
+func (c *ConsumerPostStats) handleTotalReactions(ctx context.Context, data contentEvent.PostStatsPayload) int {
+	return data.Like + data.Love + data.Haha + data.Wow + data.Sad + data.Angry
 }
 func (c *ConsumerPostStats) handleTopReactionTypes(ctx context.Context, data entity.PostStats) []string {
 	val := reflect.ValueOf(data)

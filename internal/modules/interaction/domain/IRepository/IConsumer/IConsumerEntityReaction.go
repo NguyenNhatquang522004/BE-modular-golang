@@ -2,9 +2,7 @@ package IConsumer
 
 import "context"
 
-type InteractionConsumer interface {
-	ConsumerReactionComment(ctx context.Context) error
-	ConsumerFailedReactionComment(ctx context.Context) error
+type IConsumerEntityReaction interface {
 	ConsumerEntityReaction(ctx context.Context) error
 	ConsumerFailedEntityReaction(ctx context.Context) error
 }

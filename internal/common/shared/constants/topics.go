@@ -46,11 +46,7 @@ const (
 	TopicSendNotificationType     TopicName = "notification.send_notification.events"
 
 	//interaction
-	TopicReactComment                    TopicName = "interaction.react_comment.events"
-	TopicReactPost                       TopicName = "interaction.react_post.events"
-	TopicCommentPost                     TopicName = "interaction.comment_post.events"
-	TopicCounterPost                     TopicName = "interaction.counter_post.events"
-	TopicCounterComment                  TopicName = "interaction.counter_comment.events"
+	TopicCommentStats                    TopicName = "interaction.comment_stats.events"
 	TopicEntityReaction                  TopicName = "interaction.entity_reaction.events"
 	TopicDeleteInteractionRelationTarget TopicName = "interaction.delete_relation_target.events" // chưa làm gì cả
 
