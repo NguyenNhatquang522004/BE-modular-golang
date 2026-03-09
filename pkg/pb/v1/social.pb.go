@@ -119,6 +119,110 @@ func (x *ListBlockByUserIDResponse) GetTypeblock() []string {
 	return nil
 }
 
+type UserSocialIDRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	UserId        string                 `protobuf:"bytes,1,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *UserSocialIDRequest) Reset() {
+	*x = UserSocialIDRequest{}
+	mi := &file_v1_social_proto_msgTypes[2]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *UserSocialIDRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*UserSocialIDRequest) ProtoMessage() {}
+
+func (x *UserSocialIDRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_v1_social_proto_msgTypes[2]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use UserSocialIDRequest.ProtoReflect.Descriptor instead.
+func (*UserSocialIDRequest) Descriptor() ([]byte, []int) {
+	return file_v1_social_proto_rawDescGZIP(), []int{2}
+}
+
+func (x *UserSocialIDRequest) GetUserId() string {
+	if x != nil {
+		return x.UserId
+	}
+	return ""
+}
+
+type InfoUserByIDResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	UserId        string                 `protobuf:"bytes,1,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
+	AuthorName    string                 `protobuf:"bytes,2,opt,name=AuthorName,proto3" json:"AuthorName,omitempty"`
+	AuthorAvatar  string                 `protobuf:"bytes,3,opt,name=AuthorAvatar,proto3" json:"AuthorAvatar,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *InfoUserByIDResponse) Reset() {
+	*x = InfoUserByIDResponse{}
+	mi := &file_v1_social_proto_msgTypes[3]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *InfoUserByIDResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*InfoUserByIDResponse) ProtoMessage() {}
+
+func (x *InfoUserByIDResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_v1_social_proto_msgTypes[3]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use InfoUserByIDResponse.ProtoReflect.Descriptor instead.
+func (*InfoUserByIDResponse) Descriptor() ([]byte, []int) {
+	return file_v1_social_proto_rawDescGZIP(), []int{3}
+}
+
+func (x *InfoUserByIDResponse) GetUserId() string {
+	if x != nil {
+		return x.UserId
+	}
+	return ""
+}
+
+func (x *InfoUserByIDResponse) GetAuthorName() string {
+	if x != nil {
+		return x.AuthorName
+	}
+	return ""
+}
+
+func (x *InfoUserByIDResponse) GetAuthorAvatar() string {
+	if x != nil {
+		return x.AuthorAvatar
+	}
+	return ""
+}
+
 var File_v1_social_proto protoreflect.FileDescriptor
 
 const file_v1_social_proto_rawDesc = "" +
@@ -128,9 +232,18 @@ const file_v1_social_proto_rawDesc = "" +
 	"\auser_id\x18\x01 \x01(\tR\x06userId\x12\x19\n" +
 	"\buser_id2\x18\x02 \x01(\tR\auserId2\"9\n" +
 	"\x19ListBlockByUserIDResponse\x12\x1c\n" +
-	"\ttypeblock\x18\x01 \x03(\tR\ttypeblock2r\n" +
+	"\ttypeblock\x18\x01 \x03(\tR\ttypeblock\".\n" +
+	"\x13UserSocialIDRequest\x12\x17\n" +
+	"\auser_id\x18\x01 \x01(\tR\x06userId\"s\n" +
+	"\x14InfoUserByIDResponse\x12\x17\n" +
+	"\auser_id\x18\x01 \x01(\tR\x06userId\x12\x1e\n" +
+	"\n" +
+	"AuthorName\x18\x02 \x01(\tR\n" +
+	"AuthorName\x12\"\n" +
+	"\fAuthorAvatar\x18\x03 \x01(\tR\fAuthorAvatar2\xcc\x01\n" +
 	"\rSocialService\x12a\n" +
-	"\x14GetListBlockByUserID\x12 .api.proto.v1.UserblockIDRequest\x1a'.api.proto.v1.ListBlockByUserIDResponseB.Z,github.com/quang/social-network/pkg/pb/v1;pbb\x06proto3"
+	"\x14GetListBlockByUserID\x12 .api.proto.v1.UserblockIDRequest\x1a'.api.proto.v1.ListBlockByUserIDResponse\x12X\n" +
+	"\x0fGetInfoUserByID\x12!.api.proto.v1.UserSocialIDRequest\x1a\".api.proto.v1.InfoUserByIDResponseB.Z,github.com/quang/social-network/pkg/pb/v1;pbb\x06proto3"
 
 var (
 	file_v1_social_proto_rawDescOnce sync.Once
@@ -144,16 +257,20 @@ func file_v1_social_proto_rawDescGZIP() []byte {
 	return file_v1_social_proto_rawDescData
 }
 
-var file_v1_social_proto_msgTypes = make([]protoimpl.MessageInfo, 2)
+var file_v1_social_proto_msgTypes = make([]protoimpl.MessageInfo, 4)
 var file_v1_social_proto_goTypes = []any{
 	(*UserblockIDRequest)(nil),        // 0: api.proto.v1.UserblockIDRequest
 	(*ListBlockByUserIDResponse)(nil), // 1: api.proto.v1.ListBlockByUserIDResponse
+	(*UserSocialIDRequest)(nil),       // 2: api.proto.v1.UserSocialIDRequest
+	(*InfoUserByIDResponse)(nil),      // 3: api.proto.v1.InfoUserByIDResponse
 }
 var file_v1_social_proto_depIdxs = []int32{
 	0, // 0: api.proto.v1.SocialService.GetListBlockByUserID:input_type -> api.proto.v1.UserblockIDRequest
-	1, // 1: api.proto.v1.SocialService.GetListBlockByUserID:output_type -> api.proto.v1.ListBlockByUserIDResponse
-	1, // [1:2] is the sub-list for method output_type
-	0, // [0:1] is the sub-list for method input_type
+	2, // 1: api.proto.v1.SocialService.GetInfoUserByID:input_type -> api.proto.v1.UserSocialIDRequest
+	1, // 2: api.proto.v1.SocialService.GetListBlockByUserID:output_type -> api.proto.v1.ListBlockByUserIDResponse
+	3, // 3: api.proto.v1.SocialService.GetInfoUserByID:output_type -> api.proto.v1.InfoUserByIDResponse
+	2, // [2:4] is the sub-list for method output_type
+	0, // [0:2] is the sub-list for method input_type
 	0, // [0:0] is the sub-list for extension type_name
 	0, // [0:0] is the sub-list for extension extendee
 	0, // [0:0] is the sub-list for field type_name
@@ -170,7 +287,7 @@ func file_v1_social_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_v1_social_proto_rawDesc), len(file_v1_social_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   2,
+			NumMessages:   4,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

@@ -82,7 +82,7 @@ func ToCreateEntityPostMediaPayload(postID string, mediaItems []contentEvent.Med
 	return entity
 }
 
-func ToCreateEntityPostExtensionPayload(postID string, extension *contentEvent.ExtensionPayload) *entity.PostExtension {
+func ToCreateEntityPostExtensionPayload(postID string, extension *contentEvent.ExtensionPayload, AuthorID string, AuthorName string, AuthorAvatar string, ContentExcerpt string, MediaThumb string) *entity.PostExtension {
 	if extension == nil {
 		return nil
 	}
@@ -98,6 +98,14 @@ func ToCreateEntityPostExtensionPayload(postID string, extension *contentEvent.E
 		ShareData: &entity.ShareData{
 			ParentPostID:   primitive.ObjectID{},
 			OriginalPostID: convertedPostID,
+			Snapshot: entity.ShareSnapshot{
+				AuthorID:       AuthorID,
+				AuthorName:     AuthorName,
+				AuthorAvatar:   AuthorAvatar,
+				ContentExcerpt: ContentExcerpt,
+				MediaThumb:     MediaThumb,
+				CreatedAt:      time.Now(),
+			},
 		}, // Cần map chi tiết nếu ShareData có cấu trúc phức tạp
 		BackgroundData: &entity.BackgroundData{
 			ThemeID:   extension.BackgroundData.ThemeID,

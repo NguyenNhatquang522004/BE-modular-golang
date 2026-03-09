@@ -8,6 +8,7 @@ import "google/protobuf/timestamp.proto";
 
 service SocialService {
 rpc GetListBlockByUserID (UserblockIDRequest) returns (ListBlockByUserIDResponse);
+rpc GetInfoUserByID (UserSocialIDRequest) returns (InfoUserByIDResponse);
 }
 message UserblockIDRequest {
     string user_id = 1;
@@ -15,4 +16,12 @@ message UserblockIDRequest {
 }
 message ListBlockByUserIDResponse {
     repeated string typeblock = 1;
+}
+message UserSocialIDRequest {
+    string user_id = 1;
+}
+message InfoUserByIDResponse {
+    string user_id = 1;
+    string AuthorName = 2;
+    string AuthorAvatar = 3;
 }

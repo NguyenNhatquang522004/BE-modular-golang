@@ -3,18 +3,21 @@ package grpc
 import (
 	"context"
 
+	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/social/domain/IRepsitory/IRepositoryMongodb"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/social/domain/IRepsitory/IRepositoryPostgres"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/pkg/pb/v1"
 )
 
 type HandlerSocialGRPC struct {
 	pb.UnimplementedSocialServiceServer
-	blockRepo IRepositoryPostgres.IBlockRepository
+	blockRepo   IRepositoryPostgres.IBlockRepository
+	profileRepo IRepositoryMongodb.IProfileRepositoryMongodb
 }
 
-func NewHandlerSocialGRPC(blockRepo IRepositoryPostgres.IBlockRepository) *HandlerSocialGRPC {
+func NewHandlerSocialGRPC(blockRepo IRepositoryPostgres.IBlockRepository, profileRepo IRepositoryMongodb.IProfileRepositoryMongodb) *HandlerSocialGRPC {
 	return &HandlerSocialGRPC{
-		blockRepo: blockRepo,
+		blockRepo:   blockRepo,
+		profileRepo: profileRepo,
 	}
 }
 func (h *HandlerSocialGRPC) GetListBlockByUserID(ctx context.Context, req *pb.UserblockIDRequest) (*pb.ListBlockByUserIDResponse, error) {
@@ -33,5 +36,25 @@ func (h *HandlerSocialGRPC) GetListBlockByUserID(ctx context.Context, req *pb.Us
 	}
 	return &pb.ListBlockByUserIDResponse{
 		Typeblock: typeBlocks,
+	}, nil
+}
+
+func (h *HandlerSocialGRPC) GetInfoUserByID(ctx context.Context, req *pb.UserSocialIDRequest) (*pb.InfoUserByIDResponse, error) {
+	// Giả sử bạn có một phương thức trong blockRepo để lấy thông tin người dùng
+	userInfo, err := h.profileRepo.GetProfileByID(ctx, req.UserId)
+	if err != nil {
+		return nil, err
+	}
+	if userInfo == nil {
+		return &pb.InfoUserByIDResponse{
+			UserId:       "",
+			AuthorName:   "",
+			AuthorAvatar: "",
+		}, nil
+	}
+	return &pb.InfoUserByIDResponse{
+		UserId:       userInfo.UserID,
+		AuthorName:   userInfo.FullName,
+		AuthorAvatar: userInfo.Avatar.URL,
 	}, nil
 }

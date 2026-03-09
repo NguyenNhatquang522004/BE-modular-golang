@@ -36,9 +36,10 @@ const (
 	TopicDeleteSocialRelationTarget TopicName = "social.delete_relation_target.events" // chưa làm gì cả
 
 	//content
-	TopicPost                          TopicName = "content.post.events"
-	TopicSharePost                     TopicName = "content.post.share.events"
-	TopicDeleteContentRelationTarget   TopicName = "content.delete_relation_target.events" // chưa làm gì cả
+	TopicPost                        TopicName = "content.post.events"
+	TopicSharePost                   TopicName = "content.post.share.events"
+	TopicDeleteContentRelationTarget TopicName = "content.delete_relation_target.events" // chưa làm gì cả
+	TopicPostStats                   TopicName = "content.post_stats.events"
 
 	// notification
 	TopicUserNotificationSettings TopicName = "notification.create_user_notification_settings.events"

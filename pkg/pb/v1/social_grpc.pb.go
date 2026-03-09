@@ -20,6 +20,7 @@ const _ = grpc.SupportPackageIsVersion9
 
 const (
 	SocialService_GetListBlockByUserID_FullMethodName = "/api.proto.v1.SocialService/GetListBlockByUserID"
+	SocialService_GetInfoUserByID_FullMethodName      = "/api.proto.v1.SocialService/GetInfoUserByID"
 )
 
 // SocialServiceClient is the client API for SocialService service.
@@ -27,6 +28,7 @@ const (
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type SocialServiceClient interface {
 	GetListBlockByUserID(ctx context.Context, in *UserblockIDRequest, opts ...grpc.CallOption) (*ListBlockByUserIDResponse, error)
+	GetInfoUserByID(ctx context.Context, in *UserSocialIDRequest, opts ...grpc.CallOption) (*InfoUserByIDResponse, error)
 }
 
 type socialServiceClient struct {
@@ -47,11 +49,22 @@ func (c *socialServiceClient) GetListBlockByUserID(ctx context.Context, in *User
 	return out, nil
 }
 
+func (c *socialServiceClient) GetInfoUserByID(ctx context.Context, in *UserSocialIDRequest, opts ...grpc.CallOption) (*InfoUserByIDResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(InfoUserByIDResponse)
+	err := c.cc.Invoke(ctx, SocialService_GetInfoUserByID_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // SocialServiceServer is the server API for SocialService service.
 // All implementations must embed UnimplementedSocialServiceServer
 // for forward compatibility.
 type SocialServiceServer interface {
 	GetListBlockByUserID(context.Context, *UserblockIDRequest) (*ListBlockByUserIDResponse, error)
+	GetInfoUserByID(context.Context, *UserSocialIDRequest) (*InfoUserByIDResponse, error)
 	mustEmbedUnimplementedSocialServiceServer()
 }
 
@@ -64,6 +77,9 @@ type UnimplementedSocialServiceServer struct{}
 
 func (UnimplementedSocialServiceServer) GetListBlockByUserID(context.Context, *UserblockIDRequest) (*ListBlockByUserIDResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method GetListBlockByUserID not implemented")
+}
+func (UnimplementedSocialServiceServer) GetInfoUserByID(context.Context, *UserSocialIDRequest) (*InfoUserByIDResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method GetInfoUserByID not implemented")
 }
 func (UnimplementedSocialServiceServer) mustEmbedUnimplementedSocialServiceServer() {}
 func (UnimplementedSocialServiceServer) testEmbeddedByValue()                       {}
@@ -104,6 +120,24 @@ func _SocialService_GetListBlockByUserID_Handler(srv interface{}, ctx context.Co
 	return interceptor(ctx, in, info, handler)
 }
 
+func _SocialService_GetInfoUserByID_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UserSocialIDRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SocialServiceServer).GetInfoUserByID(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: SocialService_GetInfoUserByID_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SocialServiceServer).GetInfoUserByID(ctx, req.(*UserSocialIDRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // SocialService_ServiceDesc is the grpc.ServiceDesc for SocialService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -114,6 +148,10 @@ var SocialService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetListBlockByUserID",
 			Handler:    _SocialService_GetListBlockByUserID_Handler,
+		},
+		{
+			MethodName: "GetInfoUserByID",
+			Handler:    _SocialService_GetInfoUserByID_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

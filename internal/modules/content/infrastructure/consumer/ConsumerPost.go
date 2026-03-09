@@ -34,9 +34,20 @@ type ConsumerPost struct {
 	insightRepo   IRepositoryCassandra.IPostInsights
 	pbcommunity   pb.CommunityServiceClient
 	pbbusiness    pb.BusinessServiceClient
+	pbSocial      pb.SocialServiceClient
 }
 
-func NewConsumerPost(events events.EventBus, pool IRepositoryShare.IWorkerPool, redisRepo IRepositoryShare.IRedis, postRepo IRepositoryMongodb.IPostRepository, mediaRepo IRepositoryMongodb.IPostMediaRepository, extensionRepo IRepositoryMongodb.IPostExtensionRepository, settingRepo IRepositoryMongodb.IPostSettingRepository, insightRepo IRepositoryCassandra.IPostInsights, pbcommunity pb.CommunityServiceClient, pbbusiness pb.BusinessServiceClient) *ConsumerPost {
+func NewConsumerPost(events events.EventBus,
+	pool IRepositoryShare.IWorkerPool,
+	redisRepo IRepositoryShare.IRedis,
+	postRepo IRepositoryMongodb.IPostRepository,
+	mediaRepo IRepositoryMongodb.IPostMediaRepository,
+	extensionRepo IRepositoryMongodb.IPostExtensionRepository,
+	settingRepo IRepositoryMongodb.IPostSettingRepository,
+	insightRepo IRepositoryCassandra.IPostInsights,
+	pbcommunity pb.CommunityServiceClient,
+	pbbusiness pb.BusinessServiceClient,
+	pbSocial pb.SocialServiceClient) *ConsumerPost {
 	return &ConsumerPost{
 		events:        events,
 		pool:          pool,
@@ -48,6 +59,7 @@ func NewConsumerPost(events events.EventBus, pool IRepositoryShare.IWorkerPool, 
 		insightRepo:   insightRepo,
 		pbcommunity:   pbcommunity,
 		pbbusiness:    pbbusiness,
+		pbSocial:      pbSocial,
 	}
 }
 
@@ -210,7 +222,16 @@ func (c *ConsumerPost) handleCreatedPost(ctx context.Context, event events.Integ
 				}
 				taskResultchan <- taskResult{datamedia: entitymedia, err: nil}
 			case 2:
-				entityextension := mapper.ToCreateEntityPostExtensionPayload(postid.Hex(), data.Extension) // PostID sẽ được gán sau khi tạo post
+				dataprofile, err := c.pbSocial.GetInfoUserByID(ctx, &pb.UserSocialIDRequest{UserId: data.UserID})
+				if err != nil {
+					taskResultchan <- taskResult{err: fmt.Errorf("%s", "failed to call GetInfoUserByID: "+err.Error())}
+					return
+				}
+				if dataprofile == nil {
+					taskResultchan <- taskResult{err: fmt.Errorf("%s", "failed to get user info by ID: "+err.Error())}
+					return
+				}
+				entityextension := mapper.ToCreateEntityPostExtensionPayload(postid.Hex(), data.Extension, dataprofile.UserId, dataprofile.AuthorName, dataprofile.AuthorAvatar, data.Content, "") // PostID sẽ được gán sau khi tạo post
 				if data.Extension != nil && entityextension == nil {
 					taskResultchan <- taskResult{err: fmt.Errorf("failed to map extension payload to entity")}
 					return
