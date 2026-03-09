@@ -28,8 +28,8 @@ func NewCommentEditLogsRepository(client *mongo.Database, redisRepo IRepositoryS
 		redisRepo: redisRepo,
 	}
 }
-func (r *CommentEditLogsRepository) CreateEditLog(ctx context.Context, editlog *entity.CommentEntityEditLog) error {
-	collection := r.client.Collection(entity.CommentEntityEditLog{}.CollectionnamCommentEditLog())
+func (r *CommentEditLogsRepository) CreateEditLog(ctx context.Context, editlog *entity.EntityEditLog) error {
+	collection := r.client.Collection(entity.EntityEditLog{}.CollectionName())
 	editlog.ID = primitive.NewObjectID()
 	_, err := collection.InsertOne(ctx, editlog)
 	if err != nil {
@@ -37,8 +37,8 @@ func (r *CommentEditLogsRepository) CreateEditLog(ctx context.Context, editlog *
 	}
 	return nil
 }
-func (r *CommentEditLogsRepository) CreateBulkEditLogs(ctx context.Context, editLogs []*entity.CommentEntityEditLog) (int64, []*mongodbErrors.BulkError, error) {
-	collection := r.client.Collection(entity.CommentEntityEditLog{}.CollectionnamCommentEditLog())
+func (r *CommentEditLogsRepository) CreateBulkEditLogs(ctx context.Context, editLogs []*entity.EntityEditLog) (int64, []*mongodbErrors.BulkError, error) {
+	collection := r.client.Collection(entity.EntityEditLog{}.CollectionName())
 	for _, editLog := range editLogs {
 		if editLog.ID.IsZero() {
 			editLog.ID = primitive.NewObjectID()
@@ -68,9 +68,9 @@ func (r *CommentEditLogsRepository) CreateBulkEditLogs(ctx context.Context, edit
 	}
 	return int64(len(result.InsertedIDs)), failedDocs, nil
 }
-func (r *CommentEditLogsRepository) GetEditLogByID(ctx context.Context, editLogID string) (*entity.CommentEntityEditLog, error) {
-	collection := r.client.Collection(entity.CommentEntityEditLog{}.CollectionnamCommentEditLog())
-	var editLog entity.CommentEntityEditLog
+func (r *CommentEditLogsRepository) GetEditLogByID(ctx context.Context, editLogID string) (*entity.EntityEditLog, error) {
+	collection := r.client.Collection(entity.EntityEditLog{}.CollectionName())
+	var editLog entity.EntityEditLog
 	objID, err := primitive.ObjectIDFromHex(editLogID)
 	if err != nil {
 		return nil, err
@@ -84,9 +84,9 @@ func (r *CommentEditLogsRepository) GetEditLogByID(ctx context.Context, editLogI
 	}
 	return nil, nil
 }
-func (r *CommentEditLogsRepository) GetBulkEditLogsByID(ctx context.Context, editLogIDs []string) ([]*entity.CommentEntityEditLog, error) {
-	collection := r.client.Collection(entity.CommentEntityEditLog{}.CollectionnamCommentEditLog())
-	var editLogs []*entity.CommentEntityEditLog
+func (r *CommentEditLogsRepository) GetBulkEditLogsByID(ctx context.Context, editLogIDs []string) ([]*entity.EntityEditLog, error) {
+	collection := r.client.Collection(entity.EntityEditLog{}.CollectionName())
+	var editLogs []*entity.EntityEditLog
 	var objIDs []primitive.ObjectID
 	for _, id := range editLogIDs {
 		objID, err := primitive.ObjectIDFromHex(id)
@@ -106,9 +106,9 @@ func (r *CommentEditLogsRepository) GetBulkEditLogsByID(ctx context.Context, edi
 	}
 	return editLogs, nil
 }
-func (r *CommentEditLogsRepository) GetEditLogsByTargetID(ctx context.Context, targetID string) ([]*entity.CommentEntityEditLog, error) {
-	collection := r.client.Collection(entity.CommentEntityEditLog{}.CollectionnamCommentEditLog())
-	var editLogs []*entity.CommentEntityEditLog
+func (r *CommentEditLogsRepository) GetEditLogsByTargetID(ctx context.Context, targetID string) ([]*entity.EntityEditLog, error) {
+	collection := r.client.Collection(entity.EntityEditLog{}.CollectionName())
+	var editLogs []*entity.EntityEditLog
 	cursor, err := collection.Find(ctx, bson.M{"target_id": targetID})
 	if err != nil {
 		return nil, err
@@ -121,9 +121,9 @@ func (r *CommentEditLogsRepository) GetEditLogsByTargetID(ctx context.Context, t
 	return editLogs, nil
 }
 
-func (r *CommentEditLogsRepository) GetLatestEditLogByTargetID(ctx context.Context, targetID string) (*entity.CommentEntityEditLog, error) {
-	collection := r.client.Collection(entity.CommentEntityEditLog{}.CollectionnamCommentEditLog())
-	var editLog entity.CommentEntityEditLog
+func (r *CommentEditLogsRepository) GetLatestEditLogByTargetID(ctx context.Context, targetID string) (*entity.EntityEditLog, error) {
+	collection := r.client.Collection(entity.EntityEditLog{}.CollectionName())
+	var editLog entity.EntityEditLog
 	err := collection.FindOne(ctx, bson.M{"target_id": targetID}, options.FindOne().SetSort(bson.M{"version": -1})).Decode(&editLog)
 	if err != nil {
 		if errors.Is(err, mongo.ErrNoDocuments) {
@@ -133,9 +133,9 @@ func (r *CommentEditLogsRepository) GetLatestEditLogByTargetID(ctx context.Conte
 	}
 	return &editLog, nil
 }
-func (r *CommentEditLogsRepository) GetVersionBulkEditLogsByTargetIDs(ctx context.Context, targetIDs []string) ([]*entity.CommentEntityEditLog, error) {
-	collection := r.client.Collection(entity.CommentEntityEditLog{}.CollectionnamCommentEditLog())
-	var editLogs []*entity.CommentEntityEditLog
+func (r *CommentEditLogsRepository) GetVersionBulkEditLogsByTargetIDs(ctx context.Context, targetIDs []string) ([]*entity.EntityEditLog, error) {
+	collection := r.client.Collection(entity.EntityEditLog{}.CollectionName())
+	var editLogs []*entity.EntityEditLog
 	cursor, err := collection.Find(ctx, bson.M{"target_id": bson.M{"$in": targetIDs}})
 	if err != nil {
 		return nil, err
@@ -147,9 +147,9 @@ func (r *CommentEditLogsRepository) GetVersionBulkEditLogsByTargetIDs(ctx contex
 	}
 	return editLogs, nil
 }
-func (r *CommentEditLogsRepository) GetVersionBulkEditLogsByTargetID(ctx context.Context, targetID string) ([]*entity.CommentEntityEditLog, error) {
-	collection := r.client.Collection(entity.CommentEntityEditLog{}.CollectionnamCommentEditLog())
-	var editLogs []*entity.CommentEntityEditLog
+func (r *CommentEditLogsRepository) GetVersionBulkEditLogsByTargetID(ctx context.Context, targetID string) ([]*entity.EntityEditLog, error) {
+	collection := r.client.Collection(entity.EntityEditLog{}.CollectionName())
+	var editLogs []*entity.EntityEditLog
 	cursor, err := collection.Find(ctx, bson.M{"target_id": targetID})
 	if err != nil {
 		return nil, err
@@ -161,8 +161,8 @@ func (r *CommentEditLogsRepository) GetVersionBulkEditLogsByTargetID(ctx context
 	}
 	return editLogs, nil
 }
-func (r *CommentEditLogsRepository) UpdateEditLog(ctx context.Context, editlog *entity.CommentEntityEditLog) error {
-	collection := r.client.Collection(entity.CommentEntityEditLog{}.CollectionnamCommentEditLog())
+func (r *CommentEditLogsRepository) UpdateEditLog(ctx context.Context, editlog *entity.EntityEditLog) error {
+	collection := r.client.Collection(entity.EntityEditLog{}.CollectionName())
 	filter := bson.M{"comment_id": editlog.ID}
 	update := bson.M{"$set": editlog}
 	opts := options.FindOneAndUpdate().SetReturnDocument(options.After)
@@ -176,8 +176,8 @@ func (r *CommentEditLogsRepository) UpdateEditLog(ctx context.Context, editlog *
 	}
 	return nil
 }
-func (r *CommentEditLogsRepository) UpdateBulkEditLogs(ctx context.Context, editLogs []*entity.CommentEntityEditLog) (int64, []*mongodbErrors.BulkError, error) {
-	collection := r.client.Collection(entity.CommentEntityEditLog{}.CollectionnamCommentEditLog())
+func (r *CommentEditLogsRepository) UpdateBulkEditLogs(ctx context.Context, editLogs []*entity.EntityEditLog) (int64, []*mongodbErrors.BulkError, error) {
+	collection := r.client.Collection(entity.EntityEditLog{}.CollectionName())
 	models := make([]mongo.WriteModel, 0, len(editLogs))
 	for _, ps := range editLogs {
 		filter := bson.M{"comment_id": ps.ID}
@@ -223,7 +223,7 @@ func (r *CommentEditLogsRepository) UpdateBulkEditLogs(ctx context.Context, edit
 	return result.ModifiedCount, nil, nil
 }
 func (r *CommentEditLogsRepository) DeleteEditLog(ctx context.Context, editLogID string) error {
-	collection := r.client.Collection(entity.CommentEntityEditLog{}.CollectionnamCommentEditLog())
+	collection := r.client.Collection(entity.EntityEditLog{}.CollectionName())
 	finalid, _ := primitive.ObjectIDFromHex(editLogID)
 	filter := bson.M{"_id": finalid}
 	_, err := collection.DeleteOne(ctx, filter)
@@ -238,7 +238,7 @@ func (r *CommentEditLogsRepository) DeleteBulkEditLogs(ctx context.Context, edit
 			return 0, nil, fmt.Errorf("invalid edit log ID: %s", id)
 		}
 	}
-	collection := r.client.Collection(entity.CommentEntityEditLog{}.CollectionnamCommentEditLog())
+	collection := r.client.Collection(entity.EntityEditLog{}.CollectionName())
 	objectIDs := make([]primitive.ObjectID, 0, len(editLogsIds))
 	for _, id := range editLogsIds {
 		objID, _ := primitive.ObjectIDFromHex(id)
@@ -271,8 +271,8 @@ func (r *CommentEditLogsRepository) DeleteBulkEditLogs(ctx context.Context, edit
 	return result.DeletedCount, nil, nil
 }
 func (r *CommentEditLogsRepository) PaginationEditLogs(ctx context.Context, targetID string, cursor string, limit int) (*dto.PaginationRes, error) {
-	collection := r.client.Collection(entity.CommentEntityEditLog{}.CollectionnamCommentEditLog())
-	var editLogs []*entity.CommentEntityEditLog
+	collection := r.client.Collection(entity.EntityEditLog{}.CollectionName())
+	var editLogs []*entity.EntityEditLog
 	querylimit := int64(limit + 1)
 	// Check cache first
 	if cursor == "" {
@@ -283,7 +283,7 @@ func (r *CommentEditLogsRepository) PaginationEditLogs(ctx context.Context, targ
 			"comment_edit_log_cache_limit_targetid_" + targetID,
 		})
 		if err == nil && datacache != nil {
-			if editLogsList, ok := datacache.([]*entity.CommentEntityEditLog); ok {
+			if editLogsList, ok := datacache.([]*entity.EntityEditLog); ok {
 				return &dto.PaginationRes{
 					Data:       editLogsList,
 					NextCursor: nextcursor,
@@ -351,7 +351,7 @@ func (r *CommentEditLogsRepository) PaginationEditLogs(ctx context.Context, targ
 	}, nil
 }
 func (r *CommentEditLogsRepository) DeleteEditLogsByTargetID(ctx context.Context, targetID string) error {
-	collection := r.client.Collection(entity.CommentEntityEditLog{}.CollectionnamCommentEditLog())
+	collection := r.client.Collection(entity.EntityEditLog{}.CollectionName())
 	filter := bson.M{"target_id": targetID}
 	update := bson.M{"$set": bson.M{"deleted_at": time.Now()}}
 	_, err := collection.UpdateMany(ctx, filter, update)

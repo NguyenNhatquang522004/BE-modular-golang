@@ -102,7 +102,7 @@ func (m *ModuleInteraction) initCommentIndexes(ctx context.Context, db *mongo.Da
 
 // --- Helper: Comment Edit Log ---
 func (m *ModuleInteraction) initCommentEditLogIndexes(ctx context.Context, db *mongo.Database) error {
-	coll := db.Collection(entity.CommentEntityEditLog{}.CollectionnamCommentEditLog())
+	coll := db.Collection(entity.EntityEditLog{}.CollectionName())
 
 	models := []mongo.IndexModel{
 		// A. VIEW HISTORY: Xem lịch sử sửa của 1 Comment/Post

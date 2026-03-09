@@ -87,9 +87,6 @@ func (m *ModuleContent) InitMongo(db *mongo.Database) error {
 	// =========================================================================
 	// 5. INIT COLLECTION: EDIT LOG (Audit)
 	// =========================================================================
-	if err := m.initEditLogIndexes(ctx, db); err != nil {
-		return err
-	}
 
 	log.Println(">>> Content Module: MongoDB Indexes Initialized Successfully")
 	return nil
@@ -211,36 +208,6 @@ func (m *ModuleContent) initPostSettingIndexes(ctx context.Context, db *mongo.Da
 	_, err := coll.Indexes().CreateMany(ctx, models)
 	if err != nil {
 		return fmt.Errorf("failed to create indexes for PostSetting: %w", err)
-	}
-	return nil
-}
-
-func (m *ModuleContent) initEditLogIndexes(ctx context.Context, db *mongo.Database) error {
-	// Lưu ý: Sửa lại domain PostEntityEditLog để hàm CollectionName là Public
-	coll := db.Collection(entity.PostEntityEditLog{}.Collectionnameposteditlog())
-
-	models := []mongo.IndexModel{
-		// 1. VIEW HISTORY: Lấy lịch sử sửa đổi của 1 Post/Comment
-		// Query: Find({ target_id: "...", target_collection: "posts" }).Sort({ version: -1 })
-		{
-			Keys: bson.D{
-				{Key: "target_id", Value: 1},
-				{Key: "target_collection", Value: 1},
-				{Key: "version", Value: -1},
-			},
-		},
-		// 2. EDITOR TRACKING: Xem user X đã sửa những bài nào (Audit)
-		{
-			Keys: bson.D{
-				{Key: "editor_id", Value: 1},
-				{Key: "edited_at", Value: -1},
-			},
-		},
-	}
-
-	_, err := coll.Indexes().CreateMany(ctx, models)
-	if err != nil {
-		return fmt.Errorf("failed to create indexes for PostEntityEditLog: %w", err)
 	}
 	return nil
 }

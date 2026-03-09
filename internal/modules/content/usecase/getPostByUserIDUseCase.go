@@ -17,7 +17,6 @@ type GetPostByUserIDUseCase struct {
 	postMediaRepo     IRepositoryMongodb.IPostMediaRepository
 	postSetting       IRepositoryMongodb.IPostSettingRepository
 	postExtensionRepo IRepositoryMongodb.IPostExtensionRepository
-	EditLogRepo       IRepositoryMongodb.IPostEditLogsRepository
 	pool              IRepositoryShare.IWorkerPool
 }
 
@@ -25,7 +24,6 @@ func NewGetPostByUserIDUseCase(postRepo IRepositoryMongodb.IPostRepository,
 	postMediaRepo IRepositoryMongodb.IPostMediaRepository,
 	postSetting IRepositoryMongodb.IPostSettingRepository,
 	postExtensionRepo IRepositoryMongodb.IPostExtensionRepository,
-	EditLogRepo IRepositoryMongodb.IPostEditLogsRepository,
 	pool IRepositoryShare.IWorkerPool) *GetPostByUserIDUseCase {
 	return &GetPostByUserIDUseCase{
 		postRepo:          postRepo,
@@ -33,7 +31,7 @@ func NewGetPostByUserIDUseCase(postRepo IRepositoryMongodb.IPostRepository,
 		postSetting:       postSetting,
 		postExtensionRepo: postExtensionRepo,
 		pool:              pool,
-		EditLogRepo:       EditLogRepo,
+
 	}
 }
 
@@ -82,18 +80,13 @@ func (uc *GetPostByUserIDUseCase) Execute(ctx context.Context, req *req.GetPostB
 				return
 			}
 			data3 := mapper.ToPostExtensionResPostExtension(postExtension)
-			postEditlog, err := uc.EditLogRepo.GetByTargetID(ctx, post.ID.Hex())
-			if err != nil {
-				errCh <- err
-				return
-			}
-			data4 := mapper.ToPostEntityEditLogRes(postEditlog)
+		
 			resultCh <- &res.GetPostByUserIDReponse{
 				PostRes:          []*res.PostRes{data},
 				PostMediaRes:     []*res.PostMediaRes{data1},
 				PostSettingRes:   []*res.PostSettingRes{data2},
 				PostExtensionRes: []*res.PostExtensionRes{data3},
-				PostEditlog:      []*res.PostEntityEditLogRes{data4},
+			
 			}
 		})
 		if err != nil {
