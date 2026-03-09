@@ -173,7 +173,7 @@ func (c *ConsumerPostStats) handleStatsWithReflect(ctx context.Context, payload 
 		fieldInfo := typ.Field(i)
 		fieldName := fieldInfo.Name
 		// Bỏ qua PostID và TotalReactions, chỉ lấy từ Comments trở đi
-		if fieldName == "PostID" || fieldName == "TotalReactions" {
+		if fieldName == "PostID" || fieldName == "TotalReactions" || fieldName == "Type" {
 			continue
 		}
 		if fieldName == "comments" {
@@ -187,7 +187,7 @@ func (c *ConsumerPostStats) handleStatsWithReflect(ctx context.Context, payload 
 				TargetType:   sharedEnums.ReactionTargetComment,
 				ReactionCode: sharedEnums.ReactionUnknown,
 				CreatedAt:    time.Now(),
-				Topic:        constants.Created,
+				Type:        constants.Created,
 			}
 			err = c.events.Publish(ctx, constants.TopicEntityReaction.String(), payload.UserID.String(), constants.Created.String(), payload)
 			if err != nil {
@@ -206,7 +206,7 @@ func (c *ConsumerPostStats) handleStatsWithReflect(ctx context.Context, payload 
 				TargetType:   sharedEnums.ReactionTargetSharePost,
 				ReactionCode: sharedEnums.ReactionUnknown,
 				CreatedAt:    time.Now(),
-				Topic:        constants.Created,
+				Type:        constants.Created,
 			}
 			err = c.events.Publish(ctx, constants.TopicEntityReaction.String(), payload.UserID.String(), constants.Created.String(), payload)
 			if err != nil {
@@ -225,7 +225,7 @@ func (c *ConsumerPostStats) handleStatsWithReflect(ctx context.Context, payload 
 				TargetType:   sharedEnums.ReactionTargetViewPost,
 				ReactionCode: sharedEnums.ReactionUnknown,
 				CreatedAt:    time.Now(),
-				Topic:        constants.Created,
+				Type:        constants.Created,
 			}
 			err = c.events.Publish(ctx, constants.TopicEntityReaction.String(), payload.UserID.String(), constants.Created.String(), payload)
 			if err != nil {
@@ -249,7 +249,7 @@ func (c *ConsumerPostStats) handleStatsWithReflect(ctx context.Context, payload 
 				TargetType:   sharedEnums.ReactionTargetPost,
 				ReactionCode: reactionCode,
 				CreatedAt:    time.Now(),
-				Topic:        constants.Created,
+				Type:        constants.Created,
 			}
 			err = c.events.Publish(ctx, constants.TopicEntityReaction.String(), payload.UserID.String(), constants.Created.String(), payload)
 			if err != nil {

@@ -60,7 +60,7 @@ func (c *ConsumerStats) ConsumerStatsPage(ctx context.Context) error {
 				TargetType:   sharedEnums.ReactionTargetFollowPage,
 				ReactionCode: sharedEnums.ReactionUnknown,
 				CreatedAt:    data.CreatedAt,
-				Topic:        constants.Created,
+				Type:         constants.Created,
 			}
 			err = c.events.Publish(ctx, constants.TopicEntityReaction.String(), data.UserID, constants.Created.String(), payload)
 			if err != nil {
@@ -95,7 +95,7 @@ func (c *ConsumerStats) ConsumerStatsPage(ctx context.Context) error {
 				TargetType:   sharedEnums.ReactionTargetUnFollowPage,
 				ReactionCode: sharedEnums.ReactionUnknown,
 				CreatedAt:    data.CreatedAt,
-				Topic:        constants.Created,
+				Type:         constants.Created,
 			}
 			err = c.events.Publish(ctx, constants.TopicEntityReaction.String(), data.UserID, constants.Created.String(), payload)
 			if err != nil {

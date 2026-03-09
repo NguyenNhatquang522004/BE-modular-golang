@@ -19,6 +19,7 @@ const (
 	ReactionTargetUnFollowPage                       // 'unfollow_page'
 	ReactionTargetSharePost                          // 'share_post'
 	ReactionTargetViewPost                           // 'view_post'
+	ReactionTargetReplyComment                       // 'reply_comment'
 )
 
 // =============================================================================

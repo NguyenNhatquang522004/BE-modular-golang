@@ -14,7 +14,7 @@ type EntityReactionPayload struct {
 	TargetType   sharedEnums.ReactionTarget `json:"target_type" validate:"required"`
 	ReactionCode sharedEnums.ReactionCode   `json:"reaction_code" validate:"required"`
 	CreatedAt    time.Time                  `json:"created_at"`
-	Topic        constants.EventType        `json:"topic" validate:"required"`
+	Type         constants.EventType        `json:"topic" validate:"required"`
 }
 type CommentStatsPayload struct {
 	TargetID     string              `json:"target_id" validate:"required"`

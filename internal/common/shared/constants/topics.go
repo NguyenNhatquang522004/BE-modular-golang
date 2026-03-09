@@ -46,6 +46,7 @@ const (
 	TopicSendNotificationType     TopicName = "notification.send_notification.events"
 
 	//interaction
+	TopicUserBookmark                    TopicName = "interaction.user_bookmark.events"
 	TopicCommentStats                    TopicName = "interaction.comment_stats.events"
 	TopicEntityReaction                  TopicName = "interaction.entity_reaction.events"
 	TopicDeleteInteractionRelationTarget TopicName = "interaction.delete_relation_target.events" // chưa làm gì cả

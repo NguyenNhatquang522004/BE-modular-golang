@@ -37,7 +37,7 @@ func (uc *ReactReelUseCase) Execute(ctx context.Context, req *req.ReactReelReque
 		TargetType:   req.TargetType,
 		ReactionCode: req.ReactionCode,
 		CreatedAt:    req.CreatedAt,
-		Topic:        req.EventType,
+		Type:        req.EventType,
 	}
 	payload2 := &mediaEvent.ReactReelPayload{
 		ReelID:       req.ReelID,

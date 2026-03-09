@@ -430,7 +430,7 @@ func (c *ConsumerReact) ConsumerReactLive(ctx context.Context) {
 				TargetType:   data.TargetType,
 				ReactionCode: data.ReactionCode,
 				CreatedAt:    data.CreatedAt,
-				Topic:        constants.Created,
+				Type:        constants.Created,
 			}
 			err = c.eventbus.Publish(ctx, constants.TopicEntityReaction.String(), data.LiveSessionID, constants.Created.String(), payload)
 			if err != nil {
