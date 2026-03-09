@@ -12,12 +12,12 @@ import (
 )
 
 type CommentEditUsecase struct {
-	CommentEditLogRepo IRepositoryMongoDB.ICommentEditLogsRepository
+	CommentEditLogRepo IRepositoryMongoDB.IEditLogsRepository
 	commentRepo        IRepositoryMongoDB.ICommentRepository
 	pool               IRepositoryShare.IWorkerPool
 }
 
-func NewCommentEditUsecase(commentEditLogRepo IRepositoryMongoDB.ICommentEditLogsRepository, commentRepo IRepositoryMongoDB.ICommentRepository, pool IRepositoryShare.IWorkerPool) *CommentEditUsecase {
+func NewCommentEditUsecase(commentEditLogRepo IRepositoryMongoDB.IEditLogsRepository, commentRepo IRepositoryMongoDB.ICommentRepository, pool IRepositoryShare.IWorkerPool) *CommentEditUsecase {
 	return &CommentEditUsecase{
 		CommentEditLogRepo: commentEditLogRepo,
 		commentRepo:        commentRepo,

@@ -102,7 +102,7 @@ func mapDiffReqToEntity(diffReq *req.LogDiffReq) entity.LogDiff {
 // =============================================================================
 
 // ToRes: Chuyển từ Entity trả về Response DTO cho Client
-func ToResCommentEditLogs(ent *entity.EntityEditLog) *res.CommentEditLogRes {
+func ToResEditLogs(ent *entity.EntityEditLog) *res.CommentEditLogRes {
 	if ent == nil {
 		return nil
 	}

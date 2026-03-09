@@ -81,6 +81,8 @@ func (c *ConsumerUserBookmark) ConsumerUserBookmark(ctx context.Context) error {
 				wg.Done()
 			}
 		}
+		wg.Wait()
+		close(errchannel)
 		for err := range errchannel {
 			if err != nil {
 				finalErr = errors.Join(finalErr, err)

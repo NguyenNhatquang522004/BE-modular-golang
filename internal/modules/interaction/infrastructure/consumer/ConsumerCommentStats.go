@@ -81,7 +81,8 @@ func (c *ConsumerCommentStats) ConsumerCommentStats(ctx context.Context) error {
 				wg.Done()
 			}
 		}
-
+		wg.Wait()
+		close(errchan)
 		var finalErr error
 		for err := range errchan {
 			if err != nil {

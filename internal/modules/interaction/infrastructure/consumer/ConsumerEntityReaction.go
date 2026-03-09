@@ -78,6 +78,8 @@ func (c *ConsumerEntityReaction) ConsumerEntityReaction(ctx context.Context) err
 				continue
 			}
 		}
+		wg.Wait()
+		close(errchan)
 		var finalErr error
 		for err := range errchan {
 			if err != nil {

@@ -12,10 +12,10 @@ import (
 type DeleteCommentUsecase struct {
 	eventBus           events.EventBus
 	commentRepo        IRepositoryMongoDB.ICommentRepository
-	commentEditLogRepo IRepositoryMongoDB.ICommentEditLogsRepository
+	commentEditLogRepo IRepositoryMongoDB.IEditLogsRepository
 }
 
-func NewDeleteCommentUsecase(eventBus events.EventBus, commentRepo IRepositoryMongoDB.ICommentRepository, commentEditLogRepo IRepositoryMongoDB.ICommentEditLogsRepository) *DeleteCommentUsecase {
+func NewDeleteCommentUsecase(eventBus events.EventBus, commentRepo IRepositoryMongoDB.ICommentRepository, commentEditLogRepo IRepositoryMongoDB.IEditLogsRepository) *DeleteCommentUsecase {
 	return &DeleteCommentUsecase{
 		eventBus:           eventBus,
 		commentRepo:        commentRepo,

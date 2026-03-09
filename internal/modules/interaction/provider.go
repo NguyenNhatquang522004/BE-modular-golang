@@ -15,7 +15,7 @@ var RepositorySet = wire.NewSet(
 	cassandra.NewReactionsRepository,
 	wire.Bind(new(IRepositoryCassandra.IReactionsRepository), new(*cassandra.ReactionsRepository)),
 	wire.Bind(new(IRepositoryMongoDB.ICommentRepository), new(*mongodb.CommentRepository)),
-	wire.Bind(new(IRepositoryMongoDB.ICommentEditLogsRepository), new(*mongodb.CommentEditLogsRepository)),
+	wire.Bind(new(IRepositoryMongoDB.IEditLogsRepository), new(*mongodb.CommentEditLogsRepository)),
 	wire.Bind(new(IRepositoryMongoDB.ISavedItemsRepository), new(*mongodb.SavedItemsRepository)),
 )
 var UseCaseSet = wire.NewSet()

@@ -15,12 +15,12 @@ import (
 
 type GetCommentDetailUsecase struct {
 	commentRepo  IRepositoryMongoDB.ICommentRepository
-	editLogRepo  IRepositoryMongoDB.ICommentEditLogsRepository
+	editLogRepo  IRepositoryMongoDB.IEditLogsRepository
 	reactionRepo IRepositoryCassandra.IReactionsRepository
 	pool         IRepositoryShare.IWorkerPool
 }
 
-func NewGetCommentDetailUsecase(commentRepo IRepositoryMongoDB.ICommentRepository, editLogRepo IRepositoryMongoDB.ICommentEditLogsRepository, reactionRepo IRepositoryCassandra.IReactionsRepository, pool IRepositoryShare.IWorkerPool) *GetCommentDetailUsecase {
+func NewGetCommentDetailUsecase(commentRepo IRepositoryMongoDB.ICommentRepository, editLogRepo IRepositoryMongoDB.IEditLogsRepository, reactionRepo IRepositoryCassandra.IReactionsRepository, pool IRepositoryShare.IWorkerPool) *GetCommentDetailUsecase {
 	return &GetCommentDetailUsecase{
 		commentRepo:  commentRepo,
 		editLogRepo:  editLogRepo,
@@ -51,7 +51,7 @@ func (u *GetCommentDetailUsecase) Execute(ctx context.Context, req *req.GetComme
 				editLogs, err := u.editLogRepo.GetVersionBulkEditLogsByTargetID(ctx, req.CommentID)
 				var editLogResList []*res.CommentEditLogRes
 				for _, log := range editLogs {
-					logRes := mapper.ToResCommentEditLogs(log)
+					logRes := mapper.ToResEditLogs(log)
 					editLogResList = append(editLogResList, logRes)
 				}
 				resultChan <- taskResult{dataEditLog: editLogResList, err: err}

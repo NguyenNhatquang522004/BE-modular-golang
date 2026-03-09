@@ -8,7 +8,7 @@ import (
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/interaction/domain/entity"
 )
 
-type ICommentEditLogsRepository interface {
+type IEditLogsRepository interface {
 	CreateEditLog(ctx context.Context, editlog *entity.EntityEditLog) error
 	CreateBulkEditLogs(ctx context.Context, editLogs []*entity.EntityEditLog) (int64, []*mongodbErrors.BulkError, error)
 	GetEditLogByID(ctx context.Context, editLogID string) (*entity.EntityEditLog, error)
