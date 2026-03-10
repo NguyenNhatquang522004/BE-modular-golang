@@ -76,5 +76,5 @@ func (uc *DeleteAlbumUseCase) Execute(ctx context.Context, req *req.DeleteAlbumR
 		AlbumsErrorMessage: "",
 		Fail:               failedMediaAssets,
 	}, nil
-	return nil, nil
+
 }

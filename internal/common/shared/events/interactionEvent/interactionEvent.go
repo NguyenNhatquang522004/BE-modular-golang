@@ -37,6 +37,7 @@ type BookmarkPayload struct {
 	CollectionName string                      `json:"collection_name"`
 	CreatedAt      time.Time                   `json:"created_at"`
 	UpdatedAt      time.Time                   `json:"updated_at"`
+	ContextType    sharedEnums.ContextType     `json:"context_type"`
 	Type           constants.EventType         `json:"type" validate:"required"` // CREATED, DELETED
 }
 type SavedItemSnapshotPayload struct {

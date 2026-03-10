@@ -7,4 +7,5 @@ const (
 	ContextTypeUserWall ContextType = iota // 'user_wall'
 	ContextTypeGroup                       // 'group'
 	ContextTypePage                        // 'page'
+	ContextTypeReel                        // 'reel'
 )

@@ -10,9 +10,16 @@ type ReactionTarget int
 const (
 	ReactionTargetPost         ReactionTarget = iota // 'post'
 	ReactionTargetComment                            // 'comment'
+	
 	ReactionTargetAlbum                              // 'album'
 	ReactionTargetStory                              // 'story'
+	ReactionTargetViewStory                          // 'view_story'
+	ReactionTargetReplyStory                         // 'Reply_story'
 	ReactionTargetReel                               // 'reel'
+	ReactionTargetViewReel                           // 'view_reel'
+	ReactionTargetShareReel                          // 'share_reel'
+	ReactionTargetCommentReel                        // 'comment_reel'
+	ReactionTargetSaveReel                           // 'save_reel'
 	ReactionTargetUnknown                            // 'unknown'
 	ReactionTargetLive                               // 'live'
 	ReactionTargetFollowPage                         // 'follow_page'

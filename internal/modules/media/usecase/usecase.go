@@ -43,11 +43,8 @@ type IUpdateReelUseCase interface {
 type IDeleteReelUseCase interface {
 	Execute(ctx context.Context, req *req.DeleteReelRequest) (*res.FailedReelResponse, error)
 }
-type IReactReelUseCase interface {
-	Execute(ctx context.Context, req *req.ReactReelRequest) (*res.FailedReelResponse, error)
-}
-type IReactCounterReelUseCase interface {
-	Execute(ctx context.Context, req *req.ReactCounterReelRequest) (*res.FailedReelResponse, error)
+type IReelStatsUseCase interface {
+	Execute(ctx context.Context, req *req.ReelStatsRequest) (*res.FailedReelResponse, error)
 }
 type IShareReelUseCase interface {
 	Execute(ctx context.Context, req *req.ShareReelRequest) (*res.FailedReelResponse, error)

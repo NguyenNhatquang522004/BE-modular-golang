@@ -11,6 +11,7 @@ import (
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/constants"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/events"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/events/interactionEvent"
+	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/events/mediaEvent"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/infrastructure/kafka"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/utils"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/interaction/domain/IRepository/IRepositoryMongoDB"
@@ -125,6 +126,22 @@ func (c *ConsumerUserBookmark) HandleBookmarkCreated(ctx context.Context, event 
 	if err != nil {
 		return fmt.Errorf("failed to create bookmark in database: %w", err)
 	}
+	payload := mediaEvent.ReelStatsPayload{
+		UserID:    data.UserID,
+		ReelID:    data.TargetID,
+		Like:      0,
+		Love:      0,
+		Haha:      0,
+		Wow:       0,
+		Sad:       0,
+		Angry:     0,
+		Views:     0,
+		Shares:    0,
+		Comments:  0,
+		Saves:     1, // Tăng saves lên 1 vì có thêm bookmark
+		EventType: constants.Created,
+	}
+	err = c.events.Publish(ctx, constants.TopicReelStats.String(), data.TargetID, constants.Created.String(), payload)
 	return nil
 }
 func (c *ConsumerUserBookmark) HandleBookmarkUpdated(ctx context.Context, event events.IntegrationEvent) error {

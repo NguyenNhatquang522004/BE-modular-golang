@@ -334,18 +334,46 @@ func (c *ConsumerStoryStats) handleDeletedStoryStats(ctx context.Context, event 
 }
 
 func (c *ConsumerStoryStats) handlemappingReactionCode(ctx context.Context, data *mediaEvent.StoryStatsPayload) error {
+	convertcql, err := gocql.ParseUUID(data.UserID)
+	if err != nil {
+		return fmt.Errorf("failed to convert user ID %s to CQL UUID: %w", data.UserID, err)
+	}
 	typ := reflect.TypeOf(data)
 	value := reflect.ValueOf(data)
 	for i := 0; i < typ.NumField(); i++ {
 		field := typ.Field(i)
 		fieldName := field.Name
 		fieldValue := value.Field(i).Interface()
-		if fieldName == "asset_count" || fieldName == "user_id" || fieldName == "story_id" || fieldName == "event_type" || fieldName == "reply_count" || fieldName == "views_count" {
+		if fieldName == "asset_count" || fieldName == "user_id" || fieldName == "story_id" || fieldName == "event_type" {
 			continue
 		}
-		convertcql, err := gocql.ParseUUID(data.UserID)
-		if err != nil {
-			return fmt.Errorf("failed to convert user ID %s to CQL UUID: %w", data.UserID, err)
+		if fieldName == "reply_count"  && fieldValue.(int) > 0 {
+			payload := &interactionEvent.EntityReactionPayload{
+				TargetID:     data.StoryID,
+				UserID:       convertcql,
+				TargetType:   sharedEnums.ReactionTargetReplyStory,
+				ReactionCode: sharedEnums.ReactionUnknown,
+				CreatedAt:    time.Now(),
+				Type:         data.EventType,
+			}
+			err = c.events.Publish(ctx, constants.TopicEntityReaction.String(), data.UserID, data.EventType.String(), payload)
+			if err != nil {
+				return fmt.Errorf("failed to publish entity reaction event for story ID %s: %w", data.StoryID, err)
+			}
+		}
+		if fieldName == "views_count"  && fieldValue.(int) > 0 {
+			payload := &interactionEvent.EntityReactionPayload{
+				TargetID:     data.StoryID,
+				UserID:       convertcql,
+				TargetType:   sharedEnums.ReactionTargetViewStory,
+				ReactionCode: sharedEnums.ReactionUnknown,
+				CreatedAt:    time.Now(),
+				Type:         data.EventType,
+			}
+			err = c.events.Publish(ctx, constants.TopicEntityReaction.String(), data.UserID, data.EventType.String(), payload)
+			if err != nil {
+				return fmt.Errorf("failed to publish entity reaction event for story ID %s: %w", data.StoryID, err)
+			}
 		}
 		if fieldValue.(int) != 0 && fieldValue.(int) > 0 {
 			reactionCode := c.mappingreactioncode(fieldName)

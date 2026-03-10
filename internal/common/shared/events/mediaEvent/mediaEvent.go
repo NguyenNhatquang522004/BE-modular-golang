@@ -168,3 +168,19 @@ type StoryStatsPayload struct {
 	Content         string                           `json:"content,omitempty"`           // Chỉ có khi InteractionType là reaction hoặc comment
 	EventType       constants.EventType              `json:"event_type"`                  // "increment" hoặc "decrement"
 }
+
+type ReelStatsPayload struct {
+	UserID    string              `json:"user_id"`
+	ReelID    string              `json:"reel_id"`
+	Views     int                 `json:"views"`
+	Like      int                 `json:"like"`
+	Love      int                 `json:"love"`
+	Haha      int                 `json:"haha"`
+	Wow       int                 `json:"wow"`
+	Sad       int                 `json:"sad"`
+	Angry     int                 `json:"angry"`
+	Shares    int                 `json:"shares"`
+	Saves     int                 `json:"saves"`
+	Comments  int                 `json:"comments"`
+	EventType constants.EventType `json:"event_type"` // "increment" hoặc "decrement"
+}

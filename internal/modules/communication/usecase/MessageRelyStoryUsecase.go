@@ -7,7 +7,6 @@ import (
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/constants"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/events"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/events/communicationEvent"
-	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/events/mediaEvent"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/sharedEnums"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/communication/delivery/dto/req"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/communication/delivery/dto/res"
@@ -103,10 +102,6 @@ func (u *MessageRelyStoryUsecase) Execute(ctx context.Context, reqa *req.Message
 			ErrorMessage: errors.New("failed to publish message rely story event"),
 		}, err
 	}
-	err = u.events.Publish(ctx, string(constants.TopicReplyStory), reqa.StoryID, constants.Created.String(), &mediaEvent.ReplyStoryPayload{
-		StoryID: reqa.StoryID,
-		ReplyID: 1, // Replace with the actual reply ID
-	})
 	if err != nil {
 		return &res.FailedReplyStoryResponse{
 			TargetID:     reqa.StoryID,

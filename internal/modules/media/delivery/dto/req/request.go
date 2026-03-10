@@ -100,30 +100,26 @@ type DeleteReelRequest struct {
 	ReelID string `json:"reel_id"`
 	UserID string `json:"user_id"`
 }
-type ReactReelRequest struct {
-	ReelID       string                     `json:"reel_id"`
-	UserID       string                     `json:"user_id"`
-	Total        int                        `json:"total"`
-	TargetType   sharedEnums.ReactionTarget `json:"target_type" validate:"required"`
-	ReactionCode sharedEnums.ReactionCode   `json:"reaction_code"` // "❤️", "😂" hoặc ID sticker
-	CreatedAt    time.Time                  `json:"created_at"`
-	EventType    constants.EventType        `json:"event_type"` // "view" hoặc "unview"
 
-}
-
-type ReactCounterReelRequest struct {
-	ReelID    string              `json:"reel_id"`
+type ReelStatsRequest struct {
 	UserID    string              `json:"user_id"`
-	Comments  int                 `json:"comments"`
-	Saves     int                 `json:"saves"`
+	ReelID    string              `json:"reel_id"`
+	Views     int                 `json:"views"`
+	Like      int                 `json:"like"`
+	Love      int                 `json:"love"`
+	Haha      int                 `json:"haha"`
+	Wow       int                 `json:"wow"`
+	Sad       int                 `json:"sad"`
+	Angry     int                 `json:"angry"`
 	Shares    int                 `json:"shares"`
-	EventType constants.EventType `json:"event_type"` // "view" hoặc "unview"
-
+	Saves     int                 `json:"saves"`
+	Comments  int                 `json:"comments"`
+	EventType constants.EventType `json:"event_type"` // "increment" hoặc "decrement"
 }
+
 type ShareReelRequest struct {
 	ReelID string `json:"reel_id"`
 	UserID string `json:"user_id"`
-	*ReelReq
 }
 
 type CreateLiveStreamRequest struct {

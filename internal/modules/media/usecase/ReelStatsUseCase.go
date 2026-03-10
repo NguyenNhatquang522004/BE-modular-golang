@@ -10,31 +10,40 @@ import (
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/media/delivery/dto/res"
 )
 
-type ReactCounterReelUseCase struct {
+type ReelStatsUseCase struct {
 	events events.EventBus
 }
 
-func NewReactCounterReelUseCase(events events.EventBus) *ReactCounterReelUseCase {
-	return &ReactCounterReelUseCase{
+func NewReelStatsUseCase(events events.EventBus) *ReelStatsUseCase {
+	return &ReelStatsUseCase{
 		events: events,
 	}
 }
 
-func (u *ReactCounterReelUseCase) Execute(ctx context.Context, req *req.ReactCounterReelRequest) (*res.FailedReelResponse, error) {
-	payload := &mediaEvent.ReactCounterReelPayload{
+func (u *ReelStatsUseCase) Execute(ctx context.Context, req *req.ReelStatsRequest) (*res.FailedReelResponse, error) {
+	// Implement the logic to handle the reel stats request here
+	// This may involve validating the request, processing the data, and returning an appropriate response
+	payload := &mediaEvent.ReelStatsPayload{
 		ReelID:    req.ReelID,
 		UserID:    req.UserID,
+		Views:     req.Views,
+		Like:      req.Like,
+		Love:      req.Love,
+		Haha:      req.Haha,
+		Wow:       req.Wow,
+		Sad:       req.Sad,
+		Angry:     req.Angry,
 		Comments:  req.Comments,
 		Saves:     req.Saves,
 		Shares:    req.Shares,
 		EventType: req.EventType,
 	}
-	err := u.events.Publish(ctx, constants.TopicCounterReel.String(), req.ReelID, constants.Created.String(), payload)
+	err := u.events.Publish(ctx, constants.TopicReelStats.String(), req.ReelID, req.EventType.String(), payload)
 	if err != nil {
 		return &res.FailedReelResponse{
 			ReelID:       req.ReelID,
 			UserID:       req.UserID,
-			ErrorMessage: "Failed to publish counter reel event",
+			ErrorMessage: err.Error(),
 		}, err
 	}
 	return &res.FailedReelResponse{
