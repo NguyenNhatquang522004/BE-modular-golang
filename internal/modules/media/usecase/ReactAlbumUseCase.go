@@ -23,13 +23,19 @@ func NewReactAlbumUseCase(eventbus events.EventBus) *ReactAlbumUseCase {
 
 func (uc *ReactAlbumUseCase) Execute(ctx context.Context, req *req.ReactAlbumRequest) (*res.ReactAlbumResponse, error) {
 	// Implement the logic for reacting to an album here
-	payload := &mediaEvent.ReactAlbumPayload{
-		AlbumID:        req.AlbumID,
-		TotalReactions: req.TotalReactions,
-		ReactionType:   req.ReactionType,
-		EventType:      req.EventType,
+	payload := &mediaEvent.AlbumStatsPayload{
+		AlbumID:    req.AlbumID,
+		UserID:     req.UserID,
+		AssetCount: req.AssetCount,
+		Like:       req.Like,
+		Love:       req.Love,
+		Haha:       req.Haha,
+		Wow:        req.Wow,
+		Sad:        req.Sad,
+		Angry:      req.Angry,
+		EventType:  req.EventType,
 	}
-	err := uc.eventbus.Publish(ctx, constants.TopicReactAlbum.String(), req.AlbumID, req.EventType.String(), payload)
+	err := uc.eventbus.Publish(ctx, constants.TopicAlbumStats.String(), req.AlbumID, req.EventType.String(), payload)
 	if err != nil {
 		return &res.ReactAlbumResponse{
 			AlbumID:            req.AlbumID,

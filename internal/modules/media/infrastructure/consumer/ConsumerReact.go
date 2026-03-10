@@ -54,58 +54,6 @@ func NewConsumerReact(ablumRepo IRepositoryMongodb.IAlbumsRepository,
 		eventbus:        eventbus,
 	}
 }
-
-// Implement the methods defined in the IConsumerReact interface here
-func (c *ConsumerReact) ConsumerReactAlbum(ctx context.Context) {
-	// Implement the logic for consuming react album events here
-	err := c.eventbus.Subscribe(ctx, constants.TopicReactAlbum.String(), func(ctx context.Context, event events.IntegrationEvent) error {
-		data, ok := event.Payload.(*mediaEvent.ReactAlbumPayload)
-		if !ok {
-			// Handle type assertion error
-			return nil
-		}
-		switch event.Type {
-		case constants.Created.String():
-			// Process the react album request here
-			dataAlbum, err := c.ablumRepo.GetAlbumByID(ctx, data.AlbumID)
-			if err != nil {
-				// Handle error
-				return nil
-			}
-			utils.CreateReactAlbumRequestToAlbumReactionStats(dataAlbum, data.ReactionType)
-			err = c.ablumRepo.UpdateAlbum(ctx, dataAlbum)
-			if err != nil {
-				// Handle error
-				return nil
-			}
-
-		case constants.Deleted.String():
-			// Process the react album request here
-			dataAlbum, err := c.ablumRepo.GetAlbumByID(ctx, data.AlbumID)
-			if err != nil {
-				// Handle error
-				return nil
-			}
-			utils.DeleteReactAlbumRequestToAlbumReactionStats(dataAlbum, data.ReactionType)
-			err = c.ablumRepo.UpdateAlbum(ctx, dataAlbum)
-			if err != nil {
-				// Handle error
-				return nil
-			}
-		default:
-			// Handle unknown event type
-		}
-		// Process the react album request here
-		return nil
-	})
-	if err != nil {
-		// Handle subscription error
-	}
-
-}
-func (c *ConsumerReact) ConsumerFailedReactAlbum(ctx context.Context) {
-	// Implement the logic for consuming failed react album events here
-}
 func (c *ConsumerReact) CosumerReactStory(ctx context.Context) {
 
 	workerCount := 2 // Adjust the number of workers as needed
@@ -430,7 +378,7 @@ func (c *ConsumerReact) ConsumerReactLive(ctx context.Context) {
 				TargetType:   data.TargetType,
 				ReactionCode: data.ReactionCode,
 				CreatedAt:    data.CreatedAt,
-				Type:        constants.Created,
+				Type:         constants.Created,
 			}
 			err = c.eventbus.Publish(ctx, constants.TopicEntityReaction.String(), data.LiveSessionID, constants.Created.String(), payload)
 			if err != nil {

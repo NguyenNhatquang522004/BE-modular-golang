@@ -24,11 +24,16 @@ type DeleteAlbumRequest struct {
 }
 
 type ReactAlbumRequest struct {
-	AlbumID        string                   `json:"album_id"`
-	TotalReactions int                      `json:"total_reactions"`
-	ReactionType   sharedEnums.ReactionCode `json:"reaction_type"`
-	EventType      constants.EventType      `json:"event_type"` // "add" hoặc "remove"
-
+	UserID     string              `json:"user_id"`
+	AlbumID    string              `json:"album_id"`
+	AssetCount int                 `json:"asset_count"`
+	Like       int                 `json:"like"`
+	Love       int                 `json:"love"`
+	Haha       int                 `json:"haha"`
+	Wow        int                 `json:"wow"`
+	Sad        int                 `json:"sad"`
+	Angry      int                 `json:"angry"`
+	EventType  constants.EventType `json:"event_type"` // "increment" hoặc "decrement"
 	// Define fields for reacting to an album here
 }
 type CreateStoryRequest struct {

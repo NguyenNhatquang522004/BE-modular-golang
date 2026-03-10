@@ -46,7 +46,7 @@ const (
 	TopicSendNotificationType     TopicName = "notification.send_notification.events"
 
 	//interaction
-	TopicEdit                    TopicName = "interaction.edit_comment.events"
+	TopicEdit                            TopicName = "interaction.edit_comment.events"
 	TopicUserBookmark                    TopicName = "interaction.user_bookmark.events"
 	TopicCommentStats                    TopicName = "interaction.comment_stats.events"
 	TopicEntityReaction                  TopicName = "interaction.entity_reaction.events"
@@ -54,20 +54,20 @@ const (
 
 	// media
 	TopicMediaAsset     TopicName = "media.asset.events"
-	TopicReactAlbum     TopicName = "media.react_album.events"
+	TopicAlbumStats     TopicName = "media.album_stats.events"
 	TopicViewCountStory TopicName = "media.view_count_story.events"
 	TopicReactStory     TopicName = "media.react_story.events"
 	TopicReplyStory     TopicName = "media.rely_story.events"
 	TopicReactReel      TopicName = "media.react_reel.events"
 	TopicCounterReel    TopicName = "media.counter_reel.events"
-	TopicReactLive      TopicName = "media.react_live.events"
+	TopicReactLive      TopicName = "media.react_live.events"	
 	TopicStartStopLive  TopicName = "media.start_stop_live.events"
 	TopicCommentLive    TopicName = "media.comment_live.events"
 	TopicCounterLive    TopicName = "media.counter_live.events"
 	TopicDelete
 	TopicDeleteMediaRelationTarget TopicName = "media.delete_relation_target.events" // chưa làm gì cả
 	// communication
-	TopicMessage              TopicName = "communication.message.events"
+	TopicMessage       	       TopicName = "communication.message.events"
 	TopicStateMessage         TopicName = "communication.state_message.events"
 	TopicReactMessage         TopicName = "communication.react_message.events"
 	TopicDeleteRelationTarget TopicName = "business.delete_relation_target.events"

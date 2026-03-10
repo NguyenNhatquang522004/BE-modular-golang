@@ -92,13 +92,6 @@ type ViewStoryPayload struct {
 	Content         string                           ` json:"content"`
 }
 
-type ReactAlbumPayload struct {
-	AlbumID        string                   `json:"album_id"`
-	TotalReactions int                      `json:"total_reactions"`
-	ReactionType   sharedEnums.ReactionCode `json:"reaction_type"`
-	EventType      constants.EventType      `json:"event_type"` // "add" hoặc "remove"
-}
-
 type DeleteMediaRelationTargetPayload struct {
 	TargetID string `json:"target_id"`
 }
@@ -170,6 +163,15 @@ type DeleteMediaByTargetPayload struct {
 	TargetID string `json:"target_id"`
 }
 
-// =====================================================================
-// 2. HÀM XỬ LÝ RIÊNG CHO TỪNG LOẠI SỰ KIỆN
-// =====================================================================
+type AlbumStatsPayload struct {
+	UserID     string              `json:"user_id"`
+	AlbumID    string              `json:"album_id"`
+	AssetCount int                 `json:"asset_count"`
+	Like       int                 `json:"like"`
+	Love       int                 `json:"love"`
+	Haha       int                 `json:"haha"`
+	Wow        int                 `json:"wow"`
+	Sad        int                 `json:"sad"`
+	Angry      int                 `json:"angry"`
+	EventType  constants.EventType `json:"event_type"` // "increment" hoặc "decrement"
+}
