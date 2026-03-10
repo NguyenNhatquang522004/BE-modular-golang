@@ -52,30 +52,24 @@ type DeleteStoryRequest struct {
 	UserId  string `json:"user_id"`
 }
 
-type ViewCountStoryRequest struct {
-	StoryId         string                           `json:"story_id"`
-	UserId          string                           `json:"user_id"`
-	Avatar          string                           `json:"avatar"`
-	Name            string                           `json:"name"`
-	ViewedAt        time.Time                        `json:"viewed_at"`
-	InteractionType sharedEnums.StoryInteractionType `json:"interaction_type"`  // "view", "reaction", hoặc "poll_vote"
-	ReactionCode    sharedEnums.ReactionCode         `json:"reaction_code"`     // "❤️", "😂" hoặc ID sticker
-	PollOptionIndex *int                             `json:"poll_option_index"` // nil nếu không vote, 0 hoặc 1 nếu có vote
-	EventType       constants.EventType              `json:"event_type"`        // "view" hoặc "unview"
-	Content         string                           ` json:"content"`
+type StoryStatsRequest struct {
+	UserID          string                           `json:"user_id"`
+	StoryID         string                           `json:"story_id"`
+	Views           int                              `json:"views"`
+	Like            int                              `json:"like"`
+	Love            int                              `json:"love"`
+	Haha            int                              `json:"haha"`
+	Wow             int                              `json:"wow"`
+	Sad             int                              `json:"sad"`
+	Angry           int                              `json:"angry"`
+	ReplyCount      int                              `json:"reply_count"`
+	ViewsCount      int                              `json:"views_count"`
+	InteractionType sharedEnums.StoryInteractionType `json:"interaction_type"`
+	PollOptionIndex *int                             `json:"poll_option_index,omitempty"` // Chỉ có khi InteractionType là
+	Content         string                           `json:"content,omitempty"`           // Chỉ có khi InteractionType là reaction hoặc comment
+	EventType       constants.EventType              `json:"event_type"`                  // "increment" hoặc "decrement"
 }
-type ReactStoryRequest struct {
-	StoryId         string                           `json:"story_id"`
-	UserId          string                           `json:"user_id"`
-	Avatar          string                           `json:"avatar"`
-	Name            string                           `json:"name"`
-	ViewedAt        time.Time                        `json:"viewed_at"`
-	InteractionType sharedEnums.StoryInteractionType `json:"interaction_type"`  // "view", "reaction", hoặc "poll_vote"
-	ReactionCode    sharedEnums.ReactionCode         `json:"reaction_code"`     // "❤️", "😂" hoặc ID sticker
-	PollOptionIndex *int                             `json:"poll_option_index"` // nil nếu không vote, 0 hoặc 1 nếu có vote
-	EventType       constants.EventType              `json:"event_type"`        // "view" hoặc "unview"
-	Content         string                           ` json:"content"`
-}
+
 type RelyStoryRequest struct {
 	// Define fields for relying to a story here
 	StoryId         string                           `json:"story_id"`

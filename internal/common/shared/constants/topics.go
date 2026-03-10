@@ -55,8 +55,8 @@ const (
 	// media
 	TopicMediaAsset     TopicName = "media.asset.events"
 	TopicAlbumStats     TopicName = "media.album_stats.events"
-	TopicViewCountStory TopicName = "media.view_count_story.events"
-	TopicReactStory     TopicName = "media.react_story.events"
+	TopicStoryStats     TopicName = "media.story_stats.events"
+
 	TopicReplyStory     TopicName = "media.rely_story.events"
 	TopicReactReel      TopicName = "media.react_reel.events"
 	TopicCounterReel    TopicName = "media.counter_reel.events"

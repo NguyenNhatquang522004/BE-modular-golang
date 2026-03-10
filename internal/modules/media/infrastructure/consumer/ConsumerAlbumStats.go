@@ -123,6 +123,7 @@ func (c *ConsumerAlbumStats) handleCreatedAlbumStats(ctx context.Context, event 
 	datablum.Reactions.Like = data.Like + datablum.Reactions.Like
 	datablum.Reactions.Sad = data.Sad + datablum.Reactions.Sad
 	datablum.Reactions.Wow = data.Wow + datablum.Reactions.Wow
+	datablum.Reactions.Total = datablum.Reactions.Total + data.Like + data.Love + data.Haha + data.Wow + data.Sad + data.Angry
 	err = c.albumRepo.UpdateAlbum(ctx, datablum)
 	if err != nil {
 		return fmt.Errorf("failed to update album with ID %s: %w", data.AlbumID, err)
@@ -157,6 +158,7 @@ func (c *ConsumerAlbumStats) handleUpdatedAlbumStats(ctx context.Context, event 
 	datablum.Reactions.Like = data.Like + datablum.Reactions.Like
 	datablum.Reactions.Sad = data.Sad + datablum.Reactions.Sad
 	datablum.Reactions.Wow = data.Wow + datablum.Reactions.Wow
+	datablum.Reactions.Total = datablum.Reactions.Total + data.Like + data.Love + data.Haha + data.Wow + data.Sad + data.Angry
 	err = c.albumRepo.UpdateAlbum(ctx, datablum)
 	if err != nil {
 		return fmt.Errorf("failed to update album with ID %s: %w", data.AlbumID, err)
@@ -191,6 +193,7 @@ func (c *ConsumerAlbumStats) handleDeletedAlbumStats(ctx context.Context, event 
 	datablum.Reactions.Like = datablum.Reactions.Like - data.Like
 	datablum.Reactions.Sad = datablum.Reactions.Sad - data.Sad
 	datablum.Reactions.Wow = datablum.Reactions.Wow - data.Wow
+	datablum.Reactions.Total = datablum.Reactions.Total - (data.Like + data.Love + data.Haha + data.Wow + data.Sad + data.Angry)
 	err = c.albumRepo.UpdateAlbum(ctx, datablum)
 	if err != nil {
 		return fmt.Errorf("failed to update album with ID %s: %w", data.AlbumID, err)
@@ -208,7 +211,7 @@ func (c *ConsumerAlbumStats) handlemappingReactionCode(ctx context.Context, data
 		field := typ.Field(i)
 		fieldName := field.Name
 		fieldValue := value.Field(i).Interface()
-		if fieldName == "asset_count" {
+		if fieldName == "asset_count" || fieldName == "user_id" || fieldName == "album_id" || fieldName == "event_type" {
 			continue
 		}
 		convertcql, err := gocql.ParseUUID(data.UserID)
@@ -216,7 +219,7 @@ func (c *ConsumerAlbumStats) handlemappingReactionCode(ctx context.Context, data
 			return fmt.Errorf("failed to convert user ID %s to CQL UUID: %w", data.UserID, err)
 		}
 		if fieldValue.(int) != 0 && fieldValue.(int) > 0 {
-			code := mappingreactioncode(fieldName)
+			code := c.mappingreactioncode(fieldName)
 			if code == sharedEnums.ReactionUnknown {
 				continue
 			}
@@ -236,7 +239,7 @@ func (c *ConsumerAlbumStats) handlemappingReactionCode(ctx context.Context, data
 	}
 	return nil
 }
-func mappingreactioncode(data string) sharedEnums.ReactionCode {
+func (c *ConsumerAlbumStats) mappingreactioncode(data string) sharedEnums.ReactionCode {
 	switch data {
 	case "like":
 		return sharedEnums.ReactionLike

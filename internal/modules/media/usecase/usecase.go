@@ -28,11 +28,8 @@ type IUpdateStoryUseCase interface {
 type IDeleteStoryUseCase interface {
 	Execute(ctx context.Context, req *req.DeleteStoryRequest) (*res.FailedStoryResponse, error)
 }
-type IViewCountStoryUseCase interface {
-	Execute(ctx context.Context, req *req.ViewCountStoryRequest) (*res.FailedStoryResponse, error)
-}
-type IReactStoryUseCase interface {
-	Execute(ctx context.Context, req *req.ReactStoryRequest) (*res.FailedStoryResponse, error)
+type IStoryStatsUseCase interface {
+	Execute(ctx context.Context, req *req.StoryStatsRequest) (*res.FailedStoryResponse, error)
 }
 type IRelyStoryUseCase interface {
 	Execute(ctx context.Context, req *req.RelyStoryRequest) (*[]res.FailedStoryResponse, error)
