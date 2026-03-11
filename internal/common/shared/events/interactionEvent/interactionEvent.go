@@ -77,12 +77,15 @@ type MediaSnapshotPayload struct {
 type DeleteInteractionRelationTargetPayload struct {
 	TargetID string `json:"target_id"`
 }
+type DeleteCommentPayload struct {
+	CommentID string `json:"comment_id"`
+}
 type UpdatedCommentPayload struct {
 	CommentID       string                  `json:"comment_id"`
 	UserID          string                  `json:"user_id"`
 	Content         string                  `json:"content"`
 	Media           *CommentMediaPayload    `json:"media,omitempty"`
-	Mentions        *[]string                `json:"mentions,omitempty"`
+	Mentions        *[]string               `json:"mentions,omitempty"`
 	EditedAt        time.Time               `json:"edited_at"`
 	HiddenMetadata  *HiddenMetadataPayload  `json:"hidden_metadata,omitempty"`
 	DeletedMetadata *DeletedMetadataPayload `json:"deleted_metadata,omitempty"`
@@ -103,13 +106,14 @@ type DeletedMetadataPayload struct {
 	DeletedByUserID string `bson:"deleted_by_user_id" json:"deleted_by_user_id"`
 }
 type CreatedCommentPayload struct {
+	ID              string               `json:"id,omitempty"` // Có thể có hoặc không, tùy vào việc client có truyền lên hay không
 	UserID          string               `json:"user_id"`
 	TargetID        string               `json:"target_id"`
 	Content         string               `json:"content"`
 	CreatedAt       time.Time            `json:"created_at"`
 	AssetID         *string              `json:"asset_id,omitempty"`
 	Media           *CommentMediaPayload `json:"media,omitempty"`
-	Mentions        *[]string             `json:"mentions,omitempty"`
+	Mentions        *[]string            `json:"mentions,omitempty"`
 	ParentCommentID *string              `json:"parent_comment_id,omitempty"`
 	RootCommentID   *string              `json:"root_comment_id,omitempty"`
 	Type            constants.EventType  `json:"type" validate:"required"` // CREATED, DELETED

@@ -5,7 +5,6 @@ import (
 
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/constants"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/sharedEnums"
-	"github.com/gocql/gocql"
 )
 
 type ReplyStoryPayload struct {
@@ -19,18 +18,8 @@ type CoutnerLiveStreamPayload struct {
 	Views         int                 `json:"views"`
 	EventType     constants.EventType `json:"event_type"` // "increment" hoặc "decrement"
 }
-type CommentLiveStreamPayload struct {
-	StreamID      gocql.UUID               `json:"stream_id" validate:"required"`
-	CreatedAt     time.Time                `json:"created_at"`
-	CommentID     gocql.UUID               `json:"comment_id"`
-	UserID        gocql.UUID               `json:"user_id" validate:"required"`
-	UserNickname  string                   `json:"user_nickname" validate:"required"`
-	UserAvatarURL string                   `json:"user_avatar_url"`
-	UserBadges    []*sharedEnums.UserBadge `json:"user_badges"` // Sử dụng enum ở DTO
-	Content       string                   `json:"content" validate:"required"`
-	IsPinned      bool                     `json:"is_pinned"`
-	EventType     constants.EventType      `json:"event_type"`
-}
+
+
 type StartStopVideoLiveStreamPayload struct {
 	LiveSessionID string              `json:"live_session_id"`
 	SegmentLen    int                 `json:"segment_len"`
@@ -211,5 +200,7 @@ type LiveCommentPayload struct {
 	UserBadges []*sharedEnums.UserBadge `json:"user_badges"`
 	Content    string                   `json:"content"`
 	IsPinned   bool                     `json:"is_pinned"`
+	UserNickname string                   `json:"user_nickname"`
+	UserAvatarURL string                   `json:"user_avatar_url"`
 	EventType  constants.EventType      `json:"event_type"`
 }

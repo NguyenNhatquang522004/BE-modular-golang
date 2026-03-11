@@ -164,12 +164,93 @@ func (c *ConsumerComment) handleCreatedComment(ctx context.Context, event events
 
 func (c *ConsumerComment) handleUpdatedComment(ctx context.Context, event events.IntegrationEvent) error {
 	// Implement the logic for handling updated comments here
-	
+	data, err := utils.ParsePayload[interactionEvent.UpdatedCommentPayload](event.Payload)
+	if err != nil {
+		return kafka.NewNonRetryableError(fmt.Errorf("failed to parse payload for event %s: %w", event.ID, err))
+	}
+	if data == nil {
+		return kafka.NewNonRetryableError(fmt.Errorf("payload is nil for event %s", event.ID))
+	}
+	dataComment, err := c.commentRepo.GetCommentByID(ctx, data.CommentID)
+	if err != nil {
+		return fmt.Errorf("failed to get comment by ID %s for event %s: %w", data.CommentID, event.ID, err)
+	}
+	if dataComment == nil {
+		return kafka.NewNonRetryableError(fmt.Errorf("comment with ID %s not found for event %s", data.CommentID, event.ID))
+	}
+	entitycomment, err := mapper.MapUpdatedCommentPayloadToEntity(data, dataComment)
+	if err != nil {
+		return kafka.NewNonRetryableError(fmt.Errorf("failed to map payload to entity for event %s: %w", event.ID, err))
+	}
+	err = c.commentRepo.UpdateComment(ctx, entitycomment)
+	if err != nil {
+		return fmt.Errorf("failed to update comment in repository for event %s: %w", event.ID, err)
+	}
+	if data.Media != nil {
+		itemupdate := &mediaEvent.UpdateMediaAssetsPayload{}
+		itemupdate.MediaID = entitycomment.AssetID.Hex()
+		itemupdate.URL = &data.Media.URL
+		itemupdate.ThumbnailURL = nil
+		itemupdate.Order = nil
+		itemupdate.Hashtags = nil
+		itemupdate.TaggedUsers = func() *[]mediaEvent.TaggedUserPayload {
+			if data.Mentions != nil {
+				var taggedUsers []mediaEvent.TaggedUserPayload
+				for _, mention := range *data.Mentions {
+					taggedUsers = append(taggedUsers, mediaEvent.TaggedUserPayload{
+						UserID: mention,
+						Name:   "", // Nếu có tên người dùng, bạn có thể thêm vào đây
+						X:      0,  // Vị trí X nếu có
+						Y:      0,  // Vị trí Y nếu có
+					})
+				}
+				return &taggedUsers
+			}
+			return nil
+		}()
+		itemupdate.Metadata = &mediaEvent.MetadataPayload{
+			Width:     data.Media.DisplayMeta.Width,
+			Height:    data.Media.DisplayMeta.Height,
+			Duration:  data.Media.DisplayMeta.Duration,
+			SizeBytes: data.Media.DisplayMeta.SizeBytes,
+			MimeType:  data.Media.DisplayMeta.MimeType,
+		}
+		err = c.events.Publish(ctx, constants.TopicMediaAsset.String(), entitycomment.ID.Hex(), constants.Updated.String(), itemupdate)
+		if err != nil {
+			return fmt.Errorf("failed to publish media asset update event for comment %s: %w", entitycomment.ID.Hex(), err)
+		}
+	}
 	return nil
 }
 
 func (c *ConsumerComment) handleDeletedComment(ctx context.Context, event events.IntegrationEvent) error {
 	// Implement the logic for handling deleted comments here
+	data, err := utils.ParsePayload[interactionEvent.UpdatedCommentPayload](event.Payload)
+	if err != nil {
+		return kafka.NewNonRetryableError(fmt.Errorf("failed to parse payload for event %s: %w", event.ID, err))
+	}
+	if data == nil {
+		return kafka.NewNonRetryableError(fmt.Errorf("payload is nil for event %s", event.ID))
+	}
+	dataComment, err := c.commentRepo.GetCommentByID(ctx, data.CommentID)
+	if err != nil {
+		return fmt.Errorf("failed to get comment by ID %s for event %s: %w", data.CommentID, event.ID, err)
+	}
+	if dataComment == nil {
+		return kafka.NewNonRetryableError(fmt.Errorf("comment with ID %s not found for event %s", data.CommentID, event.ID))
+	}
+	err = c.commentRepo.DeleteComment(ctx, data.CommentID)
+	if err != nil {
+		return fmt.Errorf("failed to delete comment in repository for event %s: %w", event.ID, err)
+	}
+	if data.Media != nil && dataComment.AssetID != nil {
+		err = c.events.Publish(ctx, constants.TopicMediaAsset.String(), data.CommentID, constants.Deleted.String(), mediaEvent.DeleteMediaRelationTargetPayload{
+			TargetID: data.CommentID,
+		})
+		if err != nil {
+			return fmt.Errorf("failed to publish media asset delete event for comment %s: %w", data.CommentID, err)
+		}
+	}
 	return nil
 }
 func (c *ConsumerComment) ConsumerFailedComment(ctx context.Context) error {

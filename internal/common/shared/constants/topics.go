@@ -61,7 +61,6 @@ const (
 	TopicLiveSessionStats TopicName = "media.live_session.events"
 	TopicStartStopLive    TopicName = "media.start_stop_live.events" //refactor sau
 	TopicCommentLive      TopicName = "media.comment_live.events"
-	TopicDelete
 	TopicDeleteMediaRelationTarget TopicName = "media.delete_relation_target.events" // chưa làm gì cả
 	// communication
 	TopicMessage              TopicName = "communication.message.events"

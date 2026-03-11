@@ -1003,3 +1003,35 @@ func (r *LiveCommentsRepository) GetLiveCommentByUserID(ctx context.Context, str
 	// Trả về comment đã tìm thấy
 	return &c, nil
 }
+
+func (r *LiveCommentsRepository) GetLiveCommentByCommentID(ctx context.Context, streamID string, commentID string) (*entity.LiveComment, error) {
+	// Implement the method to fetch a live comment by comment ID
+	tableName := entity.LiveComment{}.TableName()
+	query := fmt.Sprintf(`
+		SELECT stream_id, created_at, comment_id, user_id, user_nickname, 
+		       user_avatar_url, user_badges, content, is_pinned 
+		FROM %s WHERE stream_id = ? AND comment_id = ? ALLOW FILTERING
+	`, tableName)
+
+	var c entity.LiveComment
+	err := r.session.Query(query, streamID, commentID).WithContext(ctx).Scan(
+		&c.StreamID,
+		&c.CreatedAt,
+		&c.CommentID,
+		&c.UserID,
+		&c.UserNickname,
+		&c.UserAvatarURL,
+		&c.UserBadges,
+		&c.Content,
+		&c.IsPinned,
+	)
+
+	if err != nil {
+		if errors.Is(err, gocql.ErrNotFound) {
+			return nil, nil // Không tìm thấy comment nào với commentID này trong stream
+		}
+		return nil, fmt.Errorf("failed to get live comment with ID %s in stream %s: %w", commentID, streamID, err)
+	}
+
+	return &c, nil
+}

@@ -10,15 +10,20 @@ import (
 
 func MapCreatedCommentPayloadToEntity(data *interactionEvent.CreatedCommentPayload) (*entity.Comment, error) {
 	var entitya = &entity.Comment{}
-	ID := primitive.NewObjectID()       // Tạo ID mới cho comment
-	asssetid := primitive.NewObjectID() // Tạo ID mới cho asset
+	ID := primitive.NewObjectID() // Tạo ID mới cho comment
 	if data.TargetID != "" {
 		return nil, errors.New("TargetID is required and must be a valid ObjectID string")
 	}
 	if data.UserID == "" {
 		return nil, errors.New("UserID is required")
 	}
-
+	if data.ID != "" {
+		convertID, err := primitive.ObjectIDFromHex(data.ID)
+		if err != nil {
+			return nil, errors.New("Invalid ID format, must be a valid ObjectID string")
+		}
+		ID = convertID
+	}
 	entitya.ID = ID
 	targetObjectID, err := primitive.ObjectIDFromHex(data.TargetID)
 	if err != nil {
@@ -52,7 +57,14 @@ func MapCreatedCommentPayloadToEntity(data *interactionEvent.CreatedCommentPaylo
 		entitya.Mentions = *data.Mentions
 	}
 	if data.Media != nil {
-		entitya.AssetID = &asssetid
+		if data.AssetID == nil {
+			return nil, errors.New("AssetID is required when Media is provided")
+		}
+		assetid, err := primitive.ObjectIDFromHex(*data.AssetID)
+		if err != nil {
+			return nil, errors.New("Invalid AssetID format, must be a valid ObjectID string")
+		}
+		entitya.AssetID = &assetid
 		entitya.Media = &entity.CommentMedia{
 			Type: data.Media.Type,
 			URL:  data.Media.URL,

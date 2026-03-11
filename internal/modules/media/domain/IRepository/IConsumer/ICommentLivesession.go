@@ -2,6 +2,7 @@ package IConsumer
 
 import "context"
 
-type ICommentLiveStreamUseCase interface {
-	ConsumerLiveComment(ctx context.Context)
+type ICommentLiveStream interface {
+	ConsumerLiveComment(ctx context.Context) error
+	ConsumerFailedLiveComment(ctx context.Context) error
 }
