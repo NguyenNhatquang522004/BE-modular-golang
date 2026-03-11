@@ -32,6 +32,8 @@ type MediaAsset struct {
 
 	PageID primitive.ObjectID `bson:"page_id,omitempty" json:"page_id,omitempty"`
 
+	CommentID primitive.ObjectID `bson:"comment_id,omitempty" json:"comment_id,omitempty"`
+
 	// 2. STORAGE LINKS
 	// ID file trong hệ thống lưu trữ (GridFS / SeaweedFS / S3)
 	StorageFileID string `bson:"url" json:"url"` // Mapping với trường "url" trong JSON đề bài

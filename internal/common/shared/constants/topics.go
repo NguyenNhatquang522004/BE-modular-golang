@@ -49,19 +49,18 @@ const (
 	TopicEdit                            TopicName = "interaction.edit_comment.events"
 	TopicUserBookmark                    TopicName = "interaction.user_bookmark.events"
 	TopicCommentStats                    TopicName = "interaction.comment_stats.events"
+	TopicComment                         TopicName = "interaction.comment_reaction.events"
 	TopicEntityReaction                  TopicName = "interaction.entity_reaction.events"
 	TopicDeleteInteractionRelationTarget TopicName = "interaction.delete_relation_target.events" // chưa làm gì cả
 
 	// media
-	TopicMediaAsset    TopicName = "media.asset.events"
-	TopicAlbumStats    TopicName = "media.album_stats.events"
-	TopicStoryStats    TopicName = "media.story_stats.events"
-	TopicReelStats     TopicName = "media.reel_stats.events"
-	
-	TopicReactLive     TopicName = "media.react_live.events"
-	TopicStartStopLive TopicName = "media.start_stop_live.events"
-	TopicCommentLive   TopicName = "media.comment_live.events"
-	TopicCounterLive   TopicName = "media.counter_live.events"
+	TopicMediaAsset       TopicName = "media.asset.events"
+	TopicAlbumStats       TopicName = "media.album_stats.events"
+	TopicStoryStats       TopicName = "media.story_stats.events"
+	TopicReelStats        TopicName = "media.reel_stats.events"
+	TopicLiveSessionStats TopicName = "media.live_session.events"
+	TopicStartStopLive    TopicName = "media.start_stop_live.events" //refactor sau
+	TopicCommentLive      TopicName = "media.comment_live.events"
 	TopicDelete
 	TopicDeleteMediaRelationTarget TopicName = "media.delete_relation_target.events" // chưa làm gì cả
 	// communication

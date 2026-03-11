@@ -61,9 +61,6 @@ type IDeleteLiveStreamUseCase interface {
 type IReactLiveStreamUseCase interface {
 	Execute(ctx context.Context, req *req.ReactLiveStreamRequest) (*res.FailedLiveStreamResponse, error)
 }
-type ICounterLiveStreamUseCase interface {
-	Execute(ctx context.Context, req *req.CounterLiveStreamRequest) (*res.FailedLiveStreamResponse, error)
-}
 type IStartStopVideoLiveStreamUseCase interface {
 	Execute(ctx context.Context, req *req.StartStopVideoLiveStreamRequest) (*res.FailedLiveStreamResponse, error)
 }

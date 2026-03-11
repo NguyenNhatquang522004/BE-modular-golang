@@ -39,6 +39,13 @@ func ToEntityCreateMediaAssetsPayload(data *mediaEvent.CreateMediaAssetsPayload)
 			}
 			mediaAssetItem.AlbumID = albumID
 		}
+		if item.CommentID != "" {
+			commentID, err := primitive.ObjectIDFromHex(item.CommentID)
+			if err != nil {
+				return nil, errors.New("invalid commentID: " + err.Error())
+			}
+			mediaAssetItem.CommentID = commentID
+		}
 		if item.GroupID != "" {
 			groupID, err := primitive.ObjectIDFromHex(item.GroupID)
 			if err != nil {

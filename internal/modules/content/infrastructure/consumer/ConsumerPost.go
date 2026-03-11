@@ -177,13 +177,12 @@ func (c *ConsumerPost) handleCreatedPost(ctx context.Context, event events.Integ
 					return
 				}
 				var payloads []mediaEvent.CreateMediaAssetsPayload
-				for _, item := range entitymedia.Items {
-					mediaid := primitive.NewObjectID()
+				for index, item := range entitymedia.Items {
 					itemmediaitempayload := mediaEvent.MediaItemPayload{
 						PostID:       postid.Hex(),
 						AlbumID:      "",          // Chưa có album trong yêu cầu tạo post, để trống hoặc gán sau nếu có
 						GroupID:      *data.Group, // Chưa có group trong yêu cầu tạo post, để trống hoặc gán sau nếu có
-						MediaID:      mediaid.Hex(),
+						MediaID:      entitymedia.Items[index].ID.Hex(),
 						MediaType:    item.MediaType,
 						URL:          item.URL,
 						ThumbnailURL: item.ThumbnailURL,

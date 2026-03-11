@@ -112,7 +112,7 @@ func ToResEditLogsPayload(ent *entity.EntityEditLog) *res.CommentEditLogRes {
 		Version:          ent.Version,
 		EditedAt:         ent.EditedAt,
 		EditorID:         ent.EditorID,
-		Diff:             mapDiffEntityToRes(ent.Diff),
+		Diff:             mapDiffEntityToResPayload(ent.Diff),
 		IPAddress:        ent.IPAddress,
 		UserAgent:        ent.UserAgent,
 	}

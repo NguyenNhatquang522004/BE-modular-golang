@@ -74,18 +74,21 @@ type DeleteMediaRelationTargetPayload struct {
 // /
 type CreateMediaAssetsPayload struct {
 	// Chuyển toàn bộ primitive.ObjectID của MongoDB thành string
-	UserID string             `json:"user_id"` // ID người upload (UUID từ Postgres)
-	Items  []MediaItemPayload `json:"items"`
+	// // Nếu client gửi lên có nghĩa là update, nếu không có nghĩa là create mới
+	AssetsID string             `json:"assets_id,omitempty"`
+	UserID   string             `json:"user_id"` // ID người upload (UUID từ Postgres)
+	Items    []MediaItemPayload `json:"items"`
 }
 
 // --- 3. SUB-STRUCT: MEDIA ITEM ---
 type MediaItemPayload struct {
+	MediaID      string                `json:"media_id,omitempty"` // Nếu client gửi lên có nghĩa là update, nếu không có nghĩa là create mới
 	PostID       string                `json:"post_id"`
 	AlbumID      string                `json:"album_id,omitempty"`
 	GroupID      string                `json:"group_id,omitempty"`
+	CommentID    string                `json:"comment_id,omitempty"`
 	PageID       string                `json:"page_id,omitempty"`
-	MediaID      string                `json:"media_id,omitempty"` // Nếu client gửi lên có nghĩa là update, nếu không có nghĩa là create mới
-	MediaType    sharedEnums.MediaType `json:"media_type"`         // Sử dụng Enum đã định nghĩa
+	MediaType    sharedEnums.MediaType `json:"media_type"` // Sử dụng Enum đã định nghĩa
 	URL          string                `json:"url"`
 	ThumbnailURL string                `json:"thumbnail_url"`
 	Metadata     MetadataPayload       `json:"metadata"`
@@ -183,4 +186,30 @@ type ReelStatsPayload struct {
 	Saves     int                 `json:"saves"`
 	Comments  int                 `json:"comments"`
 	EventType constants.EventType `json:"event_type"` // "increment" hoặc "decrement"
+}
+
+type LiveSessionStatsPayload struct {
+	LiveSessionID string              `json:"live_session_id"`
+	UserID        string              `json:"user_id"`
+	PeakViewers   int                 `json:"peak_viewers"`
+	TotalViews    int                 `json:"total_views"`
+	TotalComments int                 `json:"total_comments"`
+	Like          int                 `json:"like"`
+	Love          int                 `json:"love"`
+	Haha          int                 `json:"haha"`
+	Wow           int                 `json:"wow"`
+	Sad           int                 `json:"sad"`
+	Angry         int                 `json:"angry"`
+	EventType     constants.EventType `json:"event_type"` // "view" hoặc "unview"
+}
+
+type LiveCommentPayload struct {
+	UserID     string                   `json:"user_id"`
+	StreamID   string                   `json:"stream_id"`
+	CreatedAt  time.Time                `json:"created_at"`
+	CommentID  string                   `json:"comment_id"`
+	UserBadges []*sharedEnums.UserBadge `json:"user_badges"`
+	Content    string                   `json:"content"`
+	IsPinned   bool                     `json:"is_pinned"`
+	EventType  constants.EventType      `json:"event_type"`
 }

@@ -21,16 +21,21 @@ func NewReactLiveStreamUseCase(eventsbus events.EventBus) *ReactLiveStreamUseCas
 }
 
 func (u *ReactLiveStreamUseCase) Execute(ctx context.Context, req *req.ReactLiveStreamRequest) (*res.FailedLiveStreamResponse, error) {
-	payload := &mediaEvent.ReactLiveStreamPayload{
+	payload := &mediaEvent.LiveSessionStatsPayload{
 		LiveSessionID: req.LiveSessionID,
 		UserID:        req.UserID,
-		Total:         req.Total,
-		TargetType:    req.TargetType,
-		ReactionCode:  req.ReactionCode,
-		CreatedAt:     req.CreatedAt,
+		TotalComments: req.TotalComments,
+		TotalViews:    req.TotalViews,
+		PeakViewers:   req.PeakViewers,
+		Like:          req.Like,
+		Love:          req.Love,
+		Haha:          req.Haha,
+		Wow:           req.Wow,
+		Sad:           req.Sad,
+		Angry:         req.Angry,
 		EventType:     req.EventType,
 	}
-	err := u.eventsbus.Publish(ctx, constants.TopicReactLive.String(), req.LiveSessionID, string(req.EventType), payload)
+	err := u.eventsbus.Publish(ctx, constants.TopicLiveSessionStats.String(), req.LiveSessionID, string(req.EventType), payload)
 	if err != nil {
 		return &res.FailedLiveStreamResponse{
 			LiveSessionID: req.LiveSessionID,

@@ -77,3 +77,54 @@ type MediaSnapshotPayload struct {
 type DeleteInteractionRelationTargetPayload struct {
 	TargetID string `json:"target_id"`
 }
+type UpdatedCommentPayload struct {
+	CommentID       string                  `json:"comment_id"`
+	UserID          string                  `json:"user_id"`
+	Content         string                  `json:"content"`
+	Media           *CommentMediaPayload    `json:"media,omitempty"`
+	Mentions        *[]string                `json:"mentions,omitempty"`
+	EditedAt        time.Time               `json:"edited_at"`
+	HiddenMetadata  *HiddenMetadataPayload  `json:"hidden_metadata,omitempty"`
+	DeletedMetadata *DeletedMetadataPayload `json:"deleted_metadata,omitempty"`
+	Type            constants.EventType     `json:"type" validate:"required"` // UPDATED, DELETED
+}
+type HiddenMetadataPayload struct {
+	IsHidden bool      `bson:"is_hidden" json:"is_hidden"`
+	HiddenAt time.Time `bson:"hidden_at" json:"hidden_at"`
+	// UserID (UUID Postgres) thực hiện ẩn -> String
+	HiddenByUserID string `bson:"hidden_by_user_id" json:"hidden_by_user_id"`
+	Reason         string `bson:"reason" json:"reason"`
+	IsGhostBanned  bool   `bson:"is_ghost_banned" json:"is_ghost_banned"`
+}
+type DeletedMetadataPayload struct {
+	DeletedAt time.Time `bson:"deleted_at" json:"deleted_at"`
+
+	// UserID (UUID Postgres) thực hiện xóa -> String
+	DeletedByUserID string `bson:"deleted_by_user_id" json:"deleted_by_user_id"`
+}
+type CreatedCommentPayload struct {
+	UserID          string               `json:"user_id"`
+	TargetID        string               `json:"target_id"`
+	Content         string               `json:"content"`
+	CreatedAt       time.Time            `json:"created_at"`
+	AssetID         *string              `json:"asset_id,omitempty"`
+	Media           *CommentMediaPayload `json:"media,omitempty"`
+	Mentions        *[]string             `json:"mentions,omitempty"`
+	ParentCommentID *string              `json:"parent_comment_id,omitempty"`
+	RootCommentID   *string              `json:"root_comment_id,omitempty"`
+	Type            constants.EventType  `json:"type" validate:"required"` // CREATED, DELETED
+}
+
+type CommentMediaPayload struct {
+	Type        sharedEnums.MediaType `bson:"type" json:"type"`
+	URL         string                `bson:"url" json:"url"`
+	DisplayMeta DisplayMetaPayload    `bson:"display_meta" json:"display_meta"`
+}
+
+type DisplayMetaPayload struct {
+	Width     int     `bson:"width" json:"width"`
+	Height    int     `bson:"height" json:"height"`
+	Duration  float64 `bson:"duration,omitempty" json:"duration,omitempty"`     // Dành cho video/audio
+	SizeBytes int64   `bson:"size_bytes,omitempty" json:"size_bytes,omitempty"` // Dành cho tất cả loại media
+	MimeType  string  `bson:"mime_type,omitempty" json:"mime_type,omitempty"`   // Dành cho tất cả loại media
+}

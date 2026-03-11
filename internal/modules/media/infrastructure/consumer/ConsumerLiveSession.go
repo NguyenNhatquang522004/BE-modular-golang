@@ -14,7 +14,6 @@ import (
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/events/mediaEvent"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/media/domain/IRepository/IRepositoryCassandra"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/media/domain/IRepository/IRepositoryMongodb"
-	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/media/domain/entity"
 	"github.com/fsnotify/fsnotify"
 )
 
@@ -171,60 +170,5 @@ func (s *ConsumerLiveSession) watchAndUploadSegments(ctx context.Context, sessio
 			}
 			log.Printf("[Worker] Watcher error for %s: %v", sessionID, err)
 		}
-	}
-}
-
-func (c *ConsumerLiveSession) ConsumeCommentLiveStream(ctx context.Context) {
-	err := c.events.Subscribe(ctx, constants.TopicCommentLive.String(), func(ctx context.Context, event events.IntegrationEvent) error {
-		data, ok := event.Payload.(*mediaEvent.CommentLiveStreamPayload)
-		if !ok {
-			return fmt.Errorf("invalid event payload")
-		}
-		switch event.Type {
-		case string(constants.Created):
-			entityComment := &entity.LiveComment{
-				CommentID:     data.CommentID,
-				StreamID:      data.StreamID,
-				UserID:        data.UserID,
-				UserNickname:  data.UserNickname,
-				UserAvatarURL: data.UserAvatarURL,
-				UserBadges:    data.UserBadges,
-				Content:       data.Content,
-				IsPinned:      data.IsPinned,
-				CreatedAt:     data.CreatedAt,
-			}
-			err := c.liveComment.CreateLiveComment(ctx, entityComment)
-			if err != nil {
-				return fmt.Errorf("failed to create live comment: %w", err)
-			}
-		case string(constants.Updated):
-			datalivecomment, err := c.liveComment.GetLiveCommentByUserID(ctx, data.StreamID.String(), data.UserID.String())
-			if err != nil {
-				return fmt.Errorf("failed to get live comment: %w", err)
-			}
-			if datalivecomment == nil {
-				return fmt.Errorf("live comment not found")
-			}
-
-			entityComment := &entity.LiveComment{
-				CommentID:     data.CommentID,
-				StreamID:      data.StreamID,
-				UserID:        data.UserID,
-				UserNickname:  data.UserNickname,
-				UserAvatarURL: data.UserAvatarURL,
-				UserBadges:    data.UserBadges,
-				Content:       data.Content,
-				IsPinned:      data.IsPinned,
-				CreatedAt:     data.CreatedAt,
-			}
-			err = c.liveComment.UpdateLiveComment(ctx, entityComment)
-			if err != nil {
-				return fmt.Errorf("failed to update live comment: %w", err)
-			}
-		}
-		return nil
-	})
-	if err != nil {
-		log.Printf("Error subscribing to comment events: %v", err)
 	}
 }

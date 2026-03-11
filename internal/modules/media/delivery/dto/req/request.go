@@ -137,13 +137,18 @@ type DeleteLiveStreamRequest struct {
 	UserID        string `json:"user_id"`
 }
 type ReactLiveStreamRequest struct {
-	LiveSessionID string                     `json:"live_session_id"`
-	UserID        string                     `json:"user_id"`
-	Total         int                        `json:"total"`
-	TargetType    sharedEnums.ReactionTarget `json:"target_type" validate:"required"`
-	ReactionCode  sharedEnums.ReactionCode   `json:"reaction_code"` // "❤️", "😂" hoặc ID sticker
-	CreatedAt     time.Time                  `json:"created_at"`
-	EventType     constants.EventType        `json:"event_type"` // "view" hoặc "unview"
+	LiveSessionID string              `json:"live_session_id"`
+	UserID        string              `json:"user_id"`
+	PeakViewers   int                 `json:"peak_viewers"`
+	TotalViews    int                 `json:"total_views"`
+	TotalComments int                 `json:"total_comments"`
+	Like          int                 `json:"like"`
+	Love          int                 `json:"love"`
+	Haha          int                 `json:"haha"`
+	Wow           int                 `json:"wow"`
+	Sad           int                 `json:"sad"`
+	Angry         int                 `json:"angry"`
+	EventType     constants.EventType `json:"event_type"` // "view" hoặc "unview"
 }
 
 type StartStopVideoLiveStreamRequest struct {
@@ -154,12 +159,12 @@ type StartStopVideoLiveStreamRequest struct {
 	EventType     constants.EventType `json:"event_type"`
 }
 type CommentLiveStreamRequest struct {
-	*LiveCommentReq
-	EventType constants.EventType `json:"event_type"`
-}
-type CounterLiveStreamRequest struct {
-	LiveSessionID string              `json:"live_session_id"`
-	Comments      int                 `json:"comments"`
-	Views         int                 `json:"views"`
-	EventType     constants.EventType `json:"event_type"` // "increment" hoặc "decrement"
+	UserID     string                   `json:"user_id"`
+	StreamID   string                   `json:"stream_id"`
+	CreatedAt  time.Time                `json:"created_at"`
+	CommentID  string                   `json:"comment_id"`
+	UserBadges []*sharedEnums.UserBadge `json:"user_badges"`
+	Content    string                   `json:"content"`
+	IsPinned   bool                     `json:"is_pinned"`
+	EventType  constants.EventType
 }
