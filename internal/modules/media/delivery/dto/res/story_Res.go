@@ -4,7 +4,6 @@ import (
 	"time"
 
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/sharedEnums"
-	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/media/enum"
 )
 
 // --- SUB-STRUCTS ---
@@ -42,9 +41,9 @@ type OverlayPositionRes struct {
 }
 
 type StoryOverlayRes struct {
-	Type     enum.OverlayType       `json:"type"`
-	Position OverlayPositionRes     `json:"position"`
-	Data     map[string]interface{} `json:"data"`
+	Type     sharedEnums.OverlayType `json:"type"`
+	Position OverlayPositionRes      `json:"position"`
+	Data     map[string]interface{}  `json:"data"`
 }
 
 type StoryStatsRes struct {

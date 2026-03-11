@@ -19,7 +19,6 @@ type CoutnerLiveStreamPayload struct {
 	EventType     constants.EventType `json:"event_type"` // "increment" hoặc "decrement"
 }
 
-
 type StartStopVideoLiveStreamPayload struct {
 	LiveSessionID string              `json:"live_session_id"`
 	SegmentLen    int                 `json:"segment_len"`
@@ -193,14 +192,74 @@ type LiveSessionStatsPayload struct {
 }
 
 type LiveCommentPayload struct {
-	UserID     string                   `json:"user_id"`
-	StreamID   string                   `json:"stream_id"`
-	CreatedAt  time.Time                `json:"created_at"`
-	CommentID  string                   `json:"comment_id"`
-	UserBadges []*sharedEnums.UserBadge `json:"user_badges"`
-	Content    string                   `json:"content"`
-	IsPinned   bool                     `json:"is_pinned"`
-	UserNickname string                   `json:"user_nickname"`
+	UserID        string                   `json:"user_id"`
+	StreamID      string                   `json:"stream_id"`
+	CreatedAt     time.Time                `json:"created_at"`
+	CommentID     string                   `json:"comment_id"`
+	UserBadges    []*sharedEnums.UserBadge `json:"user_badges"`
+	Content       string                   `json:"content"`
+	IsPinned      bool                     `json:"is_pinned"`
+	UserNickname  string                   `json:"user_nickname"`
 	UserAvatarURL string                   `json:"user_avatar_url"`
-	EventType  constants.EventType      `json:"event_type"`
+	EventType     constants.EventType      `json:"event_type"`
+}
+
+// CreateStoryPayload đại diện cho payload Client gửi lên khi tạo Story mới
+type CreateStoryPayload struct {
+	Media    StoryMediaPayload     `json:"media" binding:"required"`
+	Overlays []StoryOverlayPayload `json:"overlays,omitempty" binding:"dive"` // dive: validate từng phần tử trong mảng
+	Privacy  StoryPrivacyPayload   `json:"privacy" binding:"required"`
+	Settings StorySettingsPayload  `json:"settings" binding:"required"`
+}
+
+type StoryMediaPayload struct {
+	URL          string                `json:"url" binding:"required,url"` // Bắt buộc phải là định dạng URL
+	Type         sharedEnums.MediaType `json:"type" binding:"required"`
+	Duration     float64               `json:"duration" binding:"gte=0"` // Lớn hơn hoặc bằng 0
+	ThumbnailURL string                `json:"thumbnail_url" binding:"omitempty,url"`
+	SizeBytes    int64                 `json:"size_bytes" binding:"gte=0"`
+}
+
+type StoryPrivacyPayload struct {
+	Type sharedEnums.PrivacyScope `json:"type" binding:"required"`
+	// Nếu dùng UUID cho Postgres, validate uuid ở đây
+	AllowList []string `json:"allow_list,omitempty" binding:"omitempty,dive,uuid"`
+	BlockList []string `json:"block_list,omitempty" binding:"omitempty,dive,uuid"`
+}
+
+type StorySettingsPayload struct {
+	// Không dùng pointer ở Create vì ta cần force client gửi các config này
+	AllowReply bool `json:"allow_reply"`
+	AllowShare bool `json:"allow_share"`
+}
+
+type StoryOverlayPayload struct {
+	Type     sharedEnums.OverlayType       `json:"type" binding:"required"`
+	Position OverlayPositionPayload `json:"position" binding:"required"`
+	Data     map[string]interface{} `json:"data" binding:"required"`
+}
+
+type OverlayPositionPayload struct {
+	X        float64 `json:"x"`
+	Y        float64 `json:"y"`
+	Rotation float64 `json:"rotation"`
+	Scale    float64 `json:"scale" binding:"gt=0"` // Scale phải lớn hơn 0
+}
+type UpdateStoryPayload struct {
+	Privacy  *UpdateStoryPrivacyPayload  `json:"privacy,omitempty"`
+	Settings *UpdateStorySettingsPayload `json:"settings,omitempty"`
+}
+
+type UpdateStoryPrivacyPayload struct {
+	Type      *sharedEnums.PrivacyScope `json:"type,omitempty"`
+	AllowList []string                  `json:"allow_list,omitempty" binding:"omitempty,dive,uuid"`
+	BlockList []string                  `json:"block_list,omitempty" binding:"omitempty,dive,uuid"`
+}
+
+type UpdateStorySettingsPayload struct {
+	// Bắt buộc phải dùng con trỏ (pointer) cho boolean trong Update DTO.
+	// Nếu dùng bool thường, khi client không truyền `allow_reply`, Go sẽ tự hiểu là `false`.
+	// Dùng `*bool` giúp ta check: nếu nó là nil -> client không muốn update trường này.
+	AllowReply *bool `json:"allow_reply,omitempty"`
+	AllowShare *bool `json:"allow_share,omitempty"`
 }

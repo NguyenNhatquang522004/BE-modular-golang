@@ -4,7 +4,6 @@ import (
 	"time"
 
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/sharedEnums"
-	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/media/enum"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -80,8 +79,8 @@ type ViewerPreview struct {
 
 // --- OVERLAYS (Sticker/Poll/Music) ---
 type StoryOverlay struct {
-	Type     enum.OverlayType `bson:"type" json:"type"`
-	Position OverlayPosition  `bson:"position" json:"position"`
+	Type     sharedEnums.OverlayType `bson:"type" json:"type"`
+	Position OverlayPosition         `bson:"position" json:"position"`
 
 	// Dữ liệu động tùy theo Type
 	// VD: Poll -> { question: "...", options: [] }

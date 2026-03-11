@@ -4,7 +4,6 @@ import (
 	"time"
 
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/sharedEnums"
-	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/media/enum"
 )
 
 // --- SUB-STRUCTS ---
@@ -42,9 +41,9 @@ type OverlayPositionReq struct {
 }
 
 type StoryOverlayReq struct {
-	Type     enum.OverlayType       `json:"type"`
-	Position OverlayPositionReq     `json:"position"`
-	Data     map[string]interface{} `json:"data"`
+	Type     sharedEnums.OverlayType `json:"type"`
+	Position OverlayPositionReq      `json:"position"`
+	Data     map[string]interface{}  `json:"data"`
 }
 
 type StoryStatsReq struct {
@@ -72,7 +71,7 @@ type StoryReq struct {
 	Stats          StoryStatsReq      `json:"stats"`
 	CreatedAt      *time.Time         `json:"created_at,omitempty"`
 	ExpiresAt      *time.Time         `json:"expires_at,omitempty"`
-	IsArchived     bool               `json:"is_archived"` 
+	IsArchived     bool               `json:"is_archived"`
 }
 
 // UpdateStoryReq: Áp dụng 100% pointer để hỗ trợ Partial Update
