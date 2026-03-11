@@ -11,14 +11,6 @@ type ReplyStoryPayload struct {
 	StoryID string `json:"story_id"`
 	ReplyID int    `json:"reply_id"`
 }
-
-type CoutnerLiveStreamPayload struct {
-	LiveSessionID string              `json:"live_session_id"`
-	Comments      int                 `json:"comments"`
-	Views         int                 `json:"views"`
-	EventType     constants.EventType `json:"event_type"` // "increment" hoặc "decrement"
-}
-
 type StartStopVideoLiveStreamPayload struct {
 	LiveSessionID string              `json:"live_session_id"`
 	SegmentLen    int                 `json:"segment_len"`
@@ -63,9 +55,8 @@ type DeleteMediaRelationTargetPayload struct {
 type CreateMediaAssetsPayload struct {
 	// Chuyển toàn bộ primitive.ObjectID của MongoDB thành string
 	// // Nếu client gửi lên có nghĩa là update, nếu không có nghĩa là create mới
-	AssetsID string             `json:"assets_id,omitempty"`
-	UserID   string             `json:"user_id"` // ID người upload (UUID từ Postgres)
-	Items    []MediaItemPayload `json:"items"`
+	UserID string             `json:"user_id"` // ID người upload (UUID từ Postgres)
+	Items  []MediaItemPayload `json:"items"`
 }
 
 // --- 3. SUB-STRUCT: MEDIA ITEM ---
@@ -76,6 +67,8 @@ type MediaItemPayload struct {
 	GroupID      string                `json:"group_id,omitempty"`
 	CommentID    string                `json:"comment_id,omitempty"`
 	PageID       string                `json:"page_id,omitempty"`
+	StoryID      string                `json:"story_id,omitempty"`
+	ReelID       string                `json:"reel_id,omitempty"`
 	MediaType    sharedEnums.MediaType `json:"media_type"` // Sử dụng Enum đã định nghĩa
 	URL          string                `json:"url"`
 	ThumbnailURL string                `json:"thumbnail_url"`
@@ -206,6 +199,7 @@ type LiveCommentPayload struct {
 
 // CreateStoryPayload đại diện cho payload Client gửi lên khi tạo Story mới
 type CreateStoryPayload struct {
+	UserID   string                `json:"user_id" binding:"required"` // ID người tạo Story (UUID từ Postgres)
 	Media    StoryMediaPayload     `json:"media" binding:"required"`
 	Overlays []StoryOverlayPayload `json:"overlays,omitempty" binding:"dive"` // dive: validate từng phần tử trong mảng
 	Privacy  StoryPrivacyPayload   `json:"privacy" binding:"required"`
@@ -218,6 +212,9 @@ type StoryMediaPayload struct {
 	Duration     float64               `json:"duration" binding:"gte=0"` // Lớn hơn hoặc bằng 0
 	ThumbnailURL string                `json:"thumbnail_url" binding:"omitempty,url"`
 	SizeBytes    int64                 `json:"size_bytes" binding:"gte=0"`
+	Width        int                   `json:"width,omitempty" binding:"gte=0"`
+	Height       int                   `json:"height,omitempty" binding:"gte=0"`
+	MimeType     string                `json:"mime_type,omitempty"`
 }
 
 type StoryPrivacyPayload struct {
@@ -234,9 +231,9 @@ type StorySettingsPayload struct {
 }
 
 type StoryOverlayPayload struct {
-	Type     sharedEnums.OverlayType       `json:"type" binding:"required"`
-	Position OverlayPositionPayload `json:"position" binding:"required"`
-	Data     map[string]interface{} `json:"data" binding:"required"`
+	Type     sharedEnums.OverlayType `json:"type" binding:"required"`
+	Position OverlayPositionPayload  `json:"position" binding:"required"`
+	Data     map[string]interface{}  `json:"data" binding:"required"`
 }
 
 type OverlayPositionPayload struct {
@@ -245,7 +242,11 @@ type OverlayPositionPayload struct {
 	Rotation float64 `json:"rotation"`
 	Scale    float64 `json:"scale" binding:"gt=0"` // Scale phải lớn hơn 0
 }
+type DeleteStoryPayload struct {
+	StoryID string `json:"story_id" binding:"required"`
+}
 type UpdateStoryPayload struct {
+	StoryID  string                      `json:"story_id" binding:"required"`
 	Privacy  *UpdateStoryPrivacyPayload  `json:"privacy,omitempty"`
 	Settings *UpdateStorySettingsPayload `json:"settings,omitempty"`
 }

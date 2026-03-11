@@ -53,6 +53,7 @@ type MediaAssetReq struct {
 	PostID         string                `json:"post_id,omitempty"`
 	GroupID        string                `json:"group_id,omitempty"`
 	PageID         string                `json:"page_id,omitempty"`
+	StoryID        string                `json:"story_id,omitempty"`
 	StorageFileID  string                `json:"url" validate:"required"` // Map chuẩn JSON "url"
 	OriginalURL    string                `json:"original_url"`
 	ThumbnailURL   string                `json:"thumbnail_url"`
@@ -72,11 +73,13 @@ type MediaAssetReq struct {
 
 // UpdateMediaAssetReq: Dùng pointer 100% cho Partial Update
 type UpdateMediaAssetReq struct {
-	AlbumID        *string                `json:"album_id,omitempty"`
-	PostID         *string                `json:"post_id,omitempty"`
-	GroupID        *string                `json:"group_id,omitempty"`
-	PageID         *string                `json:"page_id,omitempty"`
-	StorageFileID  *string                `json:"url,omitempty"`
+	AlbumID *string `json:"album_id,omitempty"`
+	PostID  *string `json:"post_id,omitempty"`
+	GroupID *string `json:"group_id,omitempty"`
+	PageID  *string `json:"page_id,omitempty"`
+	StoryID        *string                `json:"story_id,omitempty"`
+	StorageFileID *string `json:"url,omitempty"`
+
 	OriginalURL    *string                `json:"original_url,omitempty"`
 	ThumbnailURL   *string                `json:"thumbnail_url,omitempty"`
 	AssetType      *sharedEnums.MediaType `json:"asset_type,omitempty"`

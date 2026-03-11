@@ -53,6 +53,9 @@ type StoryMedia struct {
 	Duration     float64               `bson:"duration" json:"duration"` // Seconds
 	ThumbnailURL string                `bson:"thumbnail_url" json:"thumbnail_url"`
 	SizeBytes    int64                 `bson:"size_bytes" json:"size_bytes"`
+	Width        int                   `bson:"width" json:"width"`
+	Height       int                   `bson:"height" json:"height"`
+	MimeType     string                `bson:"mime_type" json:"mime_type"`
 }
 
 // --- PRIVACY ---

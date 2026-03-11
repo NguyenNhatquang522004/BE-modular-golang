@@ -56,6 +56,11 @@ func ToEntityMediaAsset(r *req.MediaAssetReq) (*entity.MediaAsset, error) {
 			e.AlbumID = id
 		}
 	}
+	if r.StoryID != "" {
+		if id, err := primitive.ObjectIDFromHex(r.StoryID); err == nil {
+			e.StoryID = id
+		}
+	}
 	if r.PostID != "" {
 		if id, err := primitive.ObjectIDFromHex(r.PostID); err == nil {
 			e.PostID = id

@@ -58,3 +58,22 @@ func (h *HandlerSocialGRPC) GetInfoUserByID(ctx context.Context, req *pb.UserSoc
 		AuthorAvatar: userInfo.Avatar.URL,
 	}, nil
 }
+
+func (h *HandlerSocialGRPC) GetListBlockByUserIDV2(ctx context.Context, req *pb.UserblockIDRequestv2) (*pb.ListBlockByUserIDResponse, error) {
+	data, err := h.blockRepo.GetListBlockByUserID(ctx, req.UserId)
+	if err != nil {
+		return nil, err
+	}
+	var ids []string
+	for _, block := range data {
+		if block.Blocker_UserID.String() == req.UserId {
+			ids = append(ids, block.Blocked_UserID.String())
+		} else if block.Blocked_UserID.String() == req.UserId {
+			ids = append(ids, block.Blocker_UserID.String())
+		}
+	}
+
+	return &pb.ListBlockByUserIDResponse{
+		Typeblock: ids,
+	}, nil
+}

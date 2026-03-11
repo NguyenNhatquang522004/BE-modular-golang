@@ -75,6 +75,50 @@ func (x *UserblockIDRequest) GetUserId2() string {
 	return ""
 }
 
+type UserblockIDRequestv2 struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	UserId        string                 `protobuf:"bytes,1,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *UserblockIDRequestv2) Reset() {
+	*x = UserblockIDRequestv2{}
+	mi := &file_v1_social_proto_msgTypes[1]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *UserblockIDRequestv2) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*UserblockIDRequestv2) ProtoMessage() {}
+
+func (x *UserblockIDRequestv2) ProtoReflect() protoreflect.Message {
+	mi := &file_v1_social_proto_msgTypes[1]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use UserblockIDRequestv2.ProtoReflect.Descriptor instead.
+func (*UserblockIDRequestv2) Descriptor() ([]byte, []int) {
+	return file_v1_social_proto_rawDescGZIP(), []int{1}
+}
+
+func (x *UserblockIDRequestv2) GetUserId() string {
+	if x != nil {
+		return x.UserId
+	}
+	return ""
+}
+
 type ListBlockByUserIDResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Typeblock     []string               `protobuf:"bytes,1,rep,name=typeblock,proto3" json:"typeblock,omitempty"`
@@ -84,7 +128,7 @@ type ListBlockByUserIDResponse struct {
 
 func (x *ListBlockByUserIDResponse) Reset() {
 	*x = ListBlockByUserIDResponse{}
-	mi := &file_v1_social_proto_msgTypes[1]
+	mi := &file_v1_social_proto_msgTypes[2]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -96,7 +140,7 @@ func (x *ListBlockByUserIDResponse) String() string {
 func (*ListBlockByUserIDResponse) ProtoMessage() {}
 
 func (x *ListBlockByUserIDResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_social_proto_msgTypes[1]
+	mi := &file_v1_social_proto_msgTypes[2]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -109,7 +153,7 @@ func (x *ListBlockByUserIDResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListBlockByUserIDResponse.ProtoReflect.Descriptor instead.
 func (*ListBlockByUserIDResponse) Descriptor() ([]byte, []int) {
-	return file_v1_social_proto_rawDescGZIP(), []int{1}
+	return file_v1_social_proto_rawDescGZIP(), []int{2}
 }
 
 func (x *ListBlockByUserIDResponse) GetTypeblock() []string {
@@ -128,7 +172,7 @@ type UserSocialIDRequest struct {
 
 func (x *UserSocialIDRequest) Reset() {
 	*x = UserSocialIDRequest{}
-	mi := &file_v1_social_proto_msgTypes[2]
+	mi := &file_v1_social_proto_msgTypes[3]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -140,7 +184,7 @@ func (x *UserSocialIDRequest) String() string {
 func (*UserSocialIDRequest) ProtoMessage() {}
 
 func (x *UserSocialIDRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_social_proto_msgTypes[2]
+	mi := &file_v1_social_proto_msgTypes[3]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -153,7 +197,7 @@ func (x *UserSocialIDRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UserSocialIDRequest.ProtoReflect.Descriptor instead.
 func (*UserSocialIDRequest) Descriptor() ([]byte, []int) {
-	return file_v1_social_proto_rawDescGZIP(), []int{2}
+	return file_v1_social_proto_rawDescGZIP(), []int{3}
 }
 
 func (x *UserSocialIDRequest) GetUserId() string {
@@ -174,7 +218,7 @@ type InfoUserByIDResponse struct {
 
 func (x *InfoUserByIDResponse) Reset() {
 	*x = InfoUserByIDResponse{}
-	mi := &file_v1_social_proto_msgTypes[3]
+	mi := &file_v1_social_proto_msgTypes[4]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -186,7 +230,7 @@ func (x *InfoUserByIDResponse) String() string {
 func (*InfoUserByIDResponse) ProtoMessage() {}
 
 func (x *InfoUserByIDResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_social_proto_msgTypes[3]
+	mi := &file_v1_social_proto_msgTypes[4]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -199,7 +243,7 @@ func (x *InfoUserByIDResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use InfoUserByIDResponse.ProtoReflect.Descriptor instead.
 func (*InfoUserByIDResponse) Descriptor() ([]byte, []int) {
-	return file_v1_social_proto_rawDescGZIP(), []int{3}
+	return file_v1_social_proto_rawDescGZIP(), []int{4}
 }
 
 func (x *InfoUserByIDResponse) GetUserId() string {
@@ -230,7 +274,9 @@ const file_v1_social_proto_rawDesc = "" +
 	"\x0fv1/social.proto\x12\fapi.proto.v1\x1a\x1bgoogle/protobuf/empty.proto\x1a\x1fgoogle/protobuf/timestamp.proto\"H\n" +
 	"\x12UserblockIDRequest\x12\x17\n" +
 	"\auser_id\x18\x01 \x01(\tR\x06userId\x12\x19\n" +
-	"\buser_id2\x18\x02 \x01(\tR\auserId2\"9\n" +
+	"\buser_id2\x18\x02 \x01(\tR\auserId2\"/\n" +
+	"\x14UserblockIDRequestv2\x12\x17\n" +
+	"\auser_id\x18\x01 \x01(\tR\x06userId\"9\n" +
 	"\x19ListBlockByUserIDResponse\x12\x1c\n" +
 	"\ttypeblock\x18\x01 \x03(\tR\ttypeblock\".\n" +
 	"\x13UserSocialIDRequest\x12\x17\n" +
@@ -240,9 +286,10 @@ const file_v1_social_proto_rawDesc = "" +
 	"\n" +
 	"AuthorName\x18\x02 \x01(\tR\n" +
 	"AuthorName\x12\"\n" +
-	"\fAuthorAvatar\x18\x03 \x01(\tR\fAuthorAvatar2\xcc\x01\n" +
+	"\fAuthorAvatar\x18\x03 \x01(\tR\fAuthorAvatar2\xb3\x02\n" +
 	"\rSocialService\x12a\n" +
-	"\x14GetListBlockByUserID\x12 .api.proto.v1.UserblockIDRequest\x1a'.api.proto.v1.ListBlockByUserIDResponse\x12X\n" +
+	"\x14GetListBlockByUserID\x12 .api.proto.v1.UserblockIDRequest\x1a'.api.proto.v1.ListBlockByUserIDResponse\x12e\n" +
+	"\x16GetListBlockByUserIDV2\x12\".api.proto.v1.UserblockIDRequestv2\x1a'.api.proto.v1.ListBlockByUserIDResponse\x12X\n" +
 	"\x0fGetInfoUserByID\x12!.api.proto.v1.UserSocialIDRequest\x1a\".api.proto.v1.InfoUserByIDResponseB.Z,github.com/quang/social-network/pkg/pb/v1;pbb\x06proto3"
 
 var (
@@ -257,20 +304,23 @@ func file_v1_social_proto_rawDescGZIP() []byte {
 	return file_v1_social_proto_rawDescData
 }
 
-var file_v1_social_proto_msgTypes = make([]protoimpl.MessageInfo, 4)
+var file_v1_social_proto_msgTypes = make([]protoimpl.MessageInfo, 5)
 var file_v1_social_proto_goTypes = []any{
 	(*UserblockIDRequest)(nil),        // 0: api.proto.v1.UserblockIDRequest
-	(*ListBlockByUserIDResponse)(nil), // 1: api.proto.v1.ListBlockByUserIDResponse
-	(*UserSocialIDRequest)(nil),       // 2: api.proto.v1.UserSocialIDRequest
-	(*InfoUserByIDResponse)(nil),      // 3: api.proto.v1.InfoUserByIDResponse
+	(*UserblockIDRequestv2)(nil),      // 1: api.proto.v1.UserblockIDRequestv2
+	(*ListBlockByUserIDResponse)(nil), // 2: api.proto.v1.ListBlockByUserIDResponse
+	(*UserSocialIDRequest)(nil),       // 3: api.proto.v1.UserSocialIDRequest
+	(*InfoUserByIDResponse)(nil),      // 4: api.proto.v1.InfoUserByIDResponse
 }
 var file_v1_social_proto_depIdxs = []int32{
 	0, // 0: api.proto.v1.SocialService.GetListBlockByUserID:input_type -> api.proto.v1.UserblockIDRequest
-	2, // 1: api.proto.v1.SocialService.GetInfoUserByID:input_type -> api.proto.v1.UserSocialIDRequest
-	1, // 2: api.proto.v1.SocialService.GetListBlockByUserID:output_type -> api.proto.v1.ListBlockByUserIDResponse
-	3, // 3: api.proto.v1.SocialService.GetInfoUserByID:output_type -> api.proto.v1.InfoUserByIDResponse
-	2, // [2:4] is the sub-list for method output_type
-	0, // [0:2] is the sub-list for method input_type
+	1, // 1: api.proto.v1.SocialService.GetListBlockByUserIDV2:input_type -> api.proto.v1.UserblockIDRequestv2
+	3, // 2: api.proto.v1.SocialService.GetInfoUserByID:input_type -> api.proto.v1.UserSocialIDRequest
+	2, // 3: api.proto.v1.SocialService.GetListBlockByUserID:output_type -> api.proto.v1.ListBlockByUserIDResponse
+	2, // 4: api.proto.v1.SocialService.GetListBlockByUserIDV2:output_type -> api.proto.v1.ListBlockByUserIDResponse
+	4, // 5: api.proto.v1.SocialService.GetInfoUserByID:output_type -> api.proto.v1.InfoUserByIDResponse
+	3, // [3:6] is the sub-list for method output_type
+	0, // [0:3] is the sub-list for method input_type
 	0, // [0:0] is the sub-list for extension type_name
 	0, // [0:0] is the sub-list for extension extendee
 	0, // [0:0] is the sub-list for field type_name
@@ -287,7 +337,7 @@ func file_v1_social_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_v1_social_proto_rawDesc), len(file_v1_social_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   4,
+			NumMessages:   5,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

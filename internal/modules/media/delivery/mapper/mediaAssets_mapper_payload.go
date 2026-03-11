@@ -19,11 +19,15 @@ func ToEntityCreateMediaAssetsPayload(data *mediaEvent.CreateMediaAssetsPayload)
 	}
 	for _, item := range data.Items {
 		mediaAssetItem := &entity.MediaAsset{}
-		converid, err := primitive.ObjectIDFromHex(item.MediaID)
-		if err != nil {
-			return nil, errors.New("invalid mediaID: " + err.Error())
+		ID := primitive.NewObjectID()
+		if item.MediaID != "" {
+			converid, err := primitive.ObjectIDFromHex(item.MediaID)
+			if err != nil {
+				return nil, errors.New("invalid mediaID: " + err.Error())
+			}
+			ID = converid
 		}
-		mediaAssetItem.ID = converid
+		mediaAssetItem.ID = ID
 		mediaAssetItem.UserID = data.UserID
 		if item.PostID != "" {
 			postID, err := primitive.ObjectIDFromHex(item.PostID)
@@ -31,6 +35,13 @@ func ToEntityCreateMediaAssetsPayload(data *mediaEvent.CreateMediaAssetsPayload)
 				return nil, errors.New("invalid postID: " + err.Error())
 			}
 			mediaAssetItem.PostID = postID
+		}
+		if item.StoryID != "" {
+			storyID, err := primitive.ObjectIDFromHex(item.StoryID)
+			if err != nil {
+				return nil, errors.New("invalid storyID: " + err.Error())
+			}
+			mediaAssetItem.StoryID = storyID
 		}
 		if item.AlbumID != "" {
 			albumID, err := primitive.ObjectIDFromHex(item.AlbumID)
@@ -45,6 +56,13 @@ func ToEntityCreateMediaAssetsPayload(data *mediaEvent.CreateMediaAssetsPayload)
 				return nil, errors.New("invalid commentID: " + err.Error())
 			}
 			mediaAssetItem.CommentID = commentID
+		}
+		if item.ReelID != "" {
+			reelID, err := primitive.ObjectIDFromHex(item.ReelID)
+			if err != nil {
+				return nil, errors.New("invalid reelID: " + err.Error())
+			}
+			mediaAssetItem.ReelID = reelID
 		}
 		if item.GroupID != "" {
 			groupID, err := primitive.ObjectIDFromHex(item.GroupID)
