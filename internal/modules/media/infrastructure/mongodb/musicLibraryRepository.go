@@ -357,3 +357,13 @@ func (r *MusicLibraryRepository) DeleteBulkMusicLibraries(ctx context.Context, i
 	}
 	return result.DeletedCount, nil, nil
 }
+
+func (r *MusicLibraryRepository) DeleteMusicLibraryByArtist(ctx context.Context, artistID string) error {
+	collection := r.client.Collection(entity.MusicLibrary{}.CollectionName())
+	filter := bson.M{"artist_id": artistID}
+	_, err := collection.DeleteMany(ctx, filter)
+	if err != nil {
+		return err
+	}
+	return nil
+}

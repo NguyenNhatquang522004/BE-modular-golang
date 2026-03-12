@@ -371,3 +371,92 @@ type UpdateAlbumPayload struct {
 	// Pointer tới struct để biết client có muốn update privacy hay không
 	Privacy *AlbumPrivacyPayload `json:"privacy" binding:"omitempty"`
 }
+type CreateMusicLibraryPayload struct {
+	// Dùng string cho ArtistID ở DTO để dễ validate, sau đó convert sang ObjectID ở Service
+	ArtistID string `json:"artist_id" binding:"required,mongodb"`
+	Title    string `json:"title" binding:"required,max=255"`
+	Album    string `json:"album,omitempty" binding:"omitempty,max=255"`
+
+	CoverURL  string `json:"cover_url" binding:"required,url"`
+	StreamURL string `json:"stream_url" binding:"required,url"`
+	Duration  int    `json:"duration" binding:"required,gt=0"` // Phải lớn hơn 0
+
+	LyricsSnippet string                   `json:"lyrics_snippet,omitempty"`
+	Genres        []sharedEnums.MusicGenre `json:"genre" binding:"required,min=1"` // Ít nhất 1 thể loại
+
+	CopyrightInfo CreateCopyrightInfoPayload `json:"copyright_info" binding:"required"`
+}
+
+type CreateCopyrightInfoPayload struct {
+	Provider       string   `json:"provider" binding:"required"`
+	AllowedRegions []string `json:"allowed_regions,omitempty" binding:"omitempty,dive,iso3166_1_alpha2"` // Validate chuẩn mã quốc gia 2 ký tự (VD: VN, US)
+}
+type DeleteMusicLibraryPayload struct {
+	MusicID string `json:"music_id" binding:"required"`
+	ArtisID string `json:"artist_id" binding:"required,mongodb"`
+}
+type UpdateMusicLibraryPayload struct {
+	// Dùng con trỏ (*) cho TẤT CẢ các trường để phân biệt nil (không gửi) và zero-value (0, "", false)
+	// ArtistID thường là immutable (không cho phép đổi sau khi tạo), nếu hệ thống cho phép đổi thì bạn mới thêm vào đây.
+	UserID  string  `json:"user_id" binding:"required"`  // ID người tạo (UUID từ Postgres)
+	MusicID string  `json:"music_id" binding:"required"` // ID của bản nhạc cần update, bắt buộc phải có để xác định target
+	Title   *string `json:"title,omitempty" binding:"omitempty,max=255"`
+	Album   *string `json:"album,omitempty" binding:"omitempty,max=255"`
+
+	CoverURL  *string `json:"cover_url,omitempty" binding:"omitempty,url"`
+	StreamURL *string `json:"stream_url,omitempty" binding:"omitempty,url"`
+	Duration  *int    `json:"duration,omitempty" binding:"omitempty,gt=0"`
+
+	LyricsSnippet *string                   `json:"lyrics_snippet,omitempty"`
+	Genres        *[]sharedEnums.MusicGenre `json:"genre,omitempty" binding:"omitempty,min=1"`
+
+	CopyrightInfo *UpdateCopyrightInfoPayload `json:"copyright_info,omitempty"`
+}
+
+type UpdateCopyrightInfoPayload struct {
+	Provider       *string   `json:"provider,omitempty"`
+	AllowedRegions *[]string `json:"allowed_regions,omitempty" binding:"omitempty,dive,iso3166_1_alpha2"`
+}
+type SocialLinksPayload struct {
+	Spotify   string `json:"spotify,omitempty" validate:"omitempty,url"`
+	Youtube   string `json:"youtube,omitempty" validate:"omitempty,url"`
+	Instagram string `json:"instagram,omitempty" validate:"omitempty,url"`
+	Facebook  string `json:"facebook,omitempty" validate:"omitempty,url"`
+	Website   string `json:"website,omitempty" validate:"omitempty,url"`
+}
+type CreateArtistPayload struct {
+	// Name là bắt buộc khi tạo mới
+	Name string `json:"name" validate:"required,min=2,max=100"`
+
+	// Slug thường được hệ thống tự động sinh ra từ Name (vd: son-tung-m-tp)
+	// Nhưng nếu bạn cho phép user tự custom slug thì mở field này.
+	Slug string `json:"slug,omitempty" validate:"omitempty,min=2,max=100"`
+
+	Bio       string `json:"bio,omitempty" validate:"omitempty,max=1000"`
+	AvatarURL string `json:"avatar_url,omitempty" validate:"omitempty,url"`
+	CoverURL  string `json:"cover_url,omitempty" validate:"omitempty,url"`
+
+	// UserID thường được trích xuất từ Token JWT (middleware) gán vào context.
+	// Chỉ đưa vào payload nếu đây là API dành cho Admin tạo hộ Artist.
+	UserID string `json:"user_id,omitempty" validate:"omitempty,mongodb"`
+
+	SocialLinks *SocialLinksPayload `json:"social_links,omitempty"`
+}
+type DeleteArtistPayload struct {
+	ArtisID string `json:"artist_id" binding:"required"` // ID của artist cần xóa, bắt buộc phải có để xác định target
+}
+type UpdateArtistPayload struct {
+	// Con trỏ *string giúp phân biệt:
+	// - Client không gửi field "name" lên API -> Name = nil -> Không cập nhật
+	// - Client gửi "name": "" -> Name != nil -> Báo lỗi validation do min=2
+	ArtisID string  `json:"artist_id" binding:"required"` // ID của artist cần update, bắt buộc phải có để xác định target
+	Name    *string `json:"name,omitempty" validate:"omitempty,min=2,max=100"`
+
+	Slug      *string `json:"slug,omitempty" validate:"omitempty,min=2,max=100"`
+	Bio       *string `json:"bio,omitempty" validate:"omitempty,max=1000"`
+	AvatarURL *string `json:"avatar_url,omitempty" validate:"omitempty,url"`
+	CoverURL  *string `json:"cover_url,omitempty" validate:"omitempty,url"`
+
+	// Update cả object SocialLinks hoặc không update.
+	SocialLinks *SocialLinksPayload `json:"social_links,omitempty"`
+}

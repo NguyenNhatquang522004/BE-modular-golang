@@ -19,4 +19,5 @@ type IMusicLibraryRepository interface {
 	UpdateBulkMusicLibraries(ctx context.Context, musicLibraries []*entity.MusicLibrary) (int64, []*mongodbErrors.BulkError, error)
 	DeleteMusicLibrary(ctx context.Context, id string) error
 	DeleteBulkMusicLibraries(ctx context.Context, ids []string) (int64, []*mongodbErrors.BulkError, error)
+	DeleteMusicLibraryByArtist(ctx context.Context, artistID string)  error
 }
