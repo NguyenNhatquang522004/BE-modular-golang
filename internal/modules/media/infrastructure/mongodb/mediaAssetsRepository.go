@@ -545,3 +545,17 @@ func (r *MediaAssetsRepository) GetListMediaAssetsByAlbumID(ctx context.Context,
 	}
 	return mediaAssets, nil
 }
+
+func (r *MediaAssetsRepository) DeleteMediaAssetsByMessageID(ctx context.Context, messageID string) error {
+	collection := r.client.Collection(entity.MediaAsset{}.CollectionName())
+	convertmessageID, err := primitive.ObjectIDFromHex(messageID)
+	if err != nil {
+		return fmt.Errorf("invalid message ID format: %w", err)
+	}
+	filter := bson.M{"message_id": convertmessageID}
+	_, err = collection.DeleteMany(ctx, filter)
+	if err != nil {
+		return err
+	}
+	return nil
+}

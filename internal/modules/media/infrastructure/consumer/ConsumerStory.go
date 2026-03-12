@@ -192,7 +192,8 @@ func (c *ConsumerStory) handleDeletedEvent(ctx context.Context, event events.Int
 	}
 	//gọi mediaasset
 	payloadMediaAsset := &mediaEvent.DeleteMediaAssetsPayload{
-		MediaID: data.StoryID,
+		MediaID:   data.StoryID,
+		MessageID: "",
 	}
 	err = c.events.Publish(ctx, constants.TopicMediaAsset.String(), "", constants.Deleted.String(), payloadMediaAsset)
 	return nil

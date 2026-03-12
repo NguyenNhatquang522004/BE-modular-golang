@@ -21,6 +21,7 @@ type IMediaAssetsRepository interface {
 	UpdateMediaAsset(ctx context.Context, asset *entity.MediaAsset) error
 	UpdateBulkMediaAssets(ctx context.Context, assets []*entity.MediaAsset) (int64, []*mongodbErrors.BulkError, error)
 	DeleteMediaAsset(ctx context.Context, id string) error
+	DeleteMediaAssetsByMessageID(ctx context.Context, messageID string)  error
 	DeleteBulkMediaAssets(ctx context.Context, ids []string) (int64, []*mongodbErrors.BulkError, error)
 	DeleteMediaAssetsByPostIDAndUserID(ctx context.Context, postID string, userID string) error
 }

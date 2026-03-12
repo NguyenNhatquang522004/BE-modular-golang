@@ -149,17 +149,26 @@ func (c *ConsumerMediaAssets) handlerUpdatedMediaAsset(ctx context.Context, even
 
 func (c *ConsumerMediaAssets) handlerDeletedMediaAsset(ctx context.Context, event events.IntegrationEvent) error {
 	// Implement the logic for handling a deleted media asset
-	data, err := utils.ParsePayload[mediaEvent.DeleteMediaRelationTargetPayload](event.Payload)
+	data, err := utils.ParsePayload[mediaEvent.DeleteMediaAssetsPayload](event.Payload)
 	if err != nil {
 		return kafka.NewNonRetryableError(errors.New("failed to parse event payload: " + err.Error()))
 	}
 	if data == nil {
 		return kafka.NewNonRetryableError(errors.New("event payload is nil"))
 	}
-	err = c.mediaRepo.DeleteMediaAsset(ctx, data.TargetID)
-	if err != nil {
-		return errors.New("failed to delete media asset from repository: " + err.Error())
+	if data.MediaID != "" {
+		err = c.mediaRepo.DeleteMediaAsset(ctx, data.MediaID)
+		if err != nil {
+			return errors.New("failed to delete media asset from repository: " + err.Error())
+		}
 	}
+	if data.MessageID != "" {
+		err = c.mediaRepo.DeleteMediaAssetsByMessageID(ctx, data.MessageID)
+		if err != nil {
+			return errors.New("failed to delete media assets by message ID from repository: " + err.Error())
+		}
+	}
+
 	return nil
 }
 func (c *ConsumerMediaAssets) ConsumerFailedMediaAsset(ctx context.Context) error {

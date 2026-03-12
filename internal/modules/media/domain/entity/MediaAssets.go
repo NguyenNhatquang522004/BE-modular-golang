@@ -38,6 +38,8 @@ type MediaAsset struct {
 
 	ReelID primitive.ObjectID `bson:"reel_id,omitempty" json:"reel_id,omitempty"`
 
+	MessageID primitive.ObjectID `bson:"message_id,omitempty" json:"message_id,omitempty"`
+
 	// 2. STORAGE LINKS
 	// ID file trong hệ thống lưu trữ (GridFS / SeaweedFS / S3)
 	StorageFileID string `bson:"url" json:"url"` // Mapping với trường "url" trong JSON đề bài
@@ -77,6 +79,7 @@ type MediaAssetsContext struct {
 	// Lưu String là an toàn nhất để chứa cả 2 loại.
 	TargetID string `bson:"target_id,omitempty" json:"target_id,omitempty"`
 }
+
 // --- METADATA ---
 type MediaMetadata struct {
 	Width     int     `bson:"width" json:"width"`

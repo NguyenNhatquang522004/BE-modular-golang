@@ -1,8 +1,6 @@
 package req
 
 import (
-	"time"
-
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/constants"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/sharedEnums"
 )
@@ -70,11 +68,7 @@ type UpdateGroupParticipantRequest struct {
 	UserID  string `json:"user_id"`
 	*ConversationParticipantReq
 }
-type MessageRequest struct {
-	ConversationID string `json:"conversation_id"`
-	*MessageReq
-	EventType constants.EventType `json:"event_type"`
-}
+
 type MessageStateRequest struct {
 	ConversationID string                   `json:"conversation_id"`
 	UserID         string                   `json:"user_id"`
@@ -84,11 +78,5 @@ type MessageStateRequest struct {
 	EventType      constants.EventType      `json:"event_type"`
 }
 
-type MessageRelyStoryRequest struct {
-	StoryID string    `json:"story_id"`
-	UserID  string    `json:"user_id"`
-	Bucket  time.Time `json:"bucket"`
-	Content string    `json:"content,omitempty"`
-}
 type GetCoversationListRequest struct {
 }

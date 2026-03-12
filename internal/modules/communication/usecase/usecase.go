@@ -55,16 +55,11 @@ type IRemoveGroupParticipantUsecase interface {
 type IUpdateGroupParticipantUsecase interface {
 	Execute(ctx context.Context, req *req.UpdateGroupParticipantRequest) (*res.FailedParticipantResponse, error)
 }
-type IMessageUsecase interface {
-	Execute(ctx context.Context, req *req.MessageRequest) (*res.FailedMessageResponse, error)
-}
+
 type IMessageStatedUsecase interface {
 	Execute(ctx context.Context, req *req.MessageStateRequest) (*res.FailedMessageResponse, error)
 }
 
-type IMessageRelyStoryUsecase interface {
-	Execute(ctx context.Context, req *req.MessageRelyStoryRequest) (*res.FailedMessageResponse, error)
-}
 type IGetCoversationListUsecase interface {
 	Execute(ctx context.Context) error
 }

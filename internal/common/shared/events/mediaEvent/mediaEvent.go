@@ -70,6 +70,7 @@ type MediaItemPayload struct {
 	PageID       string                `json:"page_id,omitempty"`
 	StoryID      string                `json:"story_id,omitempty"`
 	ReelID       string                `json:"reel_id,omitempty"`
+	MessageID    string                `json:"message_id,omitempty"`
 	MediaType    sharedEnums.MediaType `json:"media_type"` // Sử dụng Enum đã định nghĩa
 	URL          string                `json:"url"`
 	ThumbnailURL string                `json:"thumbnail_url"`
@@ -113,17 +114,14 @@ type UpdateMediaAssetsPayload struct {
 }
 
 type DeleteMediaAssetsPayload struct {
-	MediaID string `json:"media_id"`
+	MediaID   string `json:"media_id"`
+	MessageID string `json:"message_id"`
 }
 type MediaPrivacyPayload struct {
 	// Level string hoặc dùng Enum PrivacyScope tái sử dụng
 	Level            sharedEnums.PrivacyScope `bson:"level" json:"level"`
 	InheritFromAlbum bool                     `bson:"inherit_from_album" json:"inherit_from_album"`
 }
-type DeleteMediaByTargetPayload struct {
-	TargetID string `json:"target_id"`
-}
-
 type AlbumStatsPayload struct {
 	UserID     string              `json:"user_id"`
 	AlbumID    string              `json:"album_id"`

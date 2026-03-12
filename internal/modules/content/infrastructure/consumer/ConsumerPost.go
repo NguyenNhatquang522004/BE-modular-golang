@@ -437,7 +437,8 @@ func (c *ConsumerPost) handleUpdatedPost(ctx context.Context, event events.Integ
 						}
 						for _, mediaID := range *data.Deletemedia {
 							payload := mediaEvent.DeleteMediaAssetsPayload{
-								MediaID: mediaID,
+								MediaID:   mediaID,
+								MessageID: "",
 							}
 							err := c.events.Publish(ctx, constants.TopicMediaAsset.String(), data.PostID, constants.Deleted.String(), payload)
 							if err != nil {
@@ -551,7 +552,8 @@ func (c *ConsumerPost) handleDeletedPost(ctx context.Context, event events.Integ
 			case 5:
 				for _, media := range datamedia.Items {
 					payload := mediaEvent.DeleteMediaAssetsPayload{
-						MediaID: media.ID.Hex(),
+						MediaID:   media.ID.Hex(),
+						MessageID: "",
 					}
 					err := c.events.Publish(ctx, constants.TopicMediaAsset.String(), data.PostID, constants.Deleted.String(), payload)
 					if err != nil {
