@@ -425,6 +425,7 @@ type SocialLinksPayload struct {
 	Website   string `json:"website,omitempty" validate:"omitempty,url"`
 }
 type CreateArtistPayload struct {
+	ArtistID string `json:"artist_id,omitempty"` // Nếu client gửi lên có nghĩa là update, nếu không có nghĩa là create mới
 	// Name là bắt buộc khi tạo mới
 	Name string `json:"name" validate:"required,min=2,max=100"`
 
@@ -459,4 +460,14 @@ type UpdateArtistPayload struct {
 
 	// Update cả object SocialLinks hoặc không update.
 	SocialLinks *SocialLinksPayload `json:"social_links,omitempty"`
+}
+type MusicStatsPayload struct {
+	ID         string `json:"id"` // Có thể là MusicID hoặc ArtistID tùy context
+	ArtistID   string `json:"artist_id"`
+	UsageCount int    `json:"usage_count"`
+}
+type ArtistStatsPayload struct {
+	ArtistID      string `json:"artist_id"`
+	FollowerCount int    `json:"follower_count"`
+	TotalStreams  int    `json:"total_streams"`
 }

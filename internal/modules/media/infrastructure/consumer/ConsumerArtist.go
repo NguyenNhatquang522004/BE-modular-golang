@@ -15,6 +15,7 @@ import (
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/utils"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/media/delivery/mapper"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/media/domain/IRepository/IRepositoryMongodb"
+	"github.com/NguyenNhatquang522004/BE-modular-golang/pkg/pb/v1"
 )
 
 type ConsumerArtist struct {
@@ -22,10 +23,21 @@ type ConsumerArtist struct {
 	pool      IRepositoryShare.IWorkerPool
 	redisRepo IRepositoryShare.IRedis
 	artisRepo IRepositoryMongodb.IArtistRepository
+	socicalpb pb.SocialServiceClient
 }
 
-func NewConsumerArtist() *ConsumerArtist {
-	return &ConsumerArtist{}
+func NewConsumerArtist(events events.EventBus,
+	pool IRepositoryShare.IWorkerPool,
+	redisRepo IRepositoryShare.IRedis,
+	artisRepo IRepositoryMongodb.IArtistRepository,
+	socicalpb pb.SocialServiceClient) *ConsumerArtist {
+	return &ConsumerArtist{
+		events:    events,
+		pool:      pool,
+		redisRepo: redisRepo,
+		artisRepo: artisRepo,
+		socicalpb: socicalpb,
+	}
 }
 func (c *ConsumerArtist) ConsumerArtist(ctx context.Context) error {
 	err := c.events.SubscribeBatch(ctx, constants.TopicArtist.String(), 100, time.Duration(5)*time.Minute, func(ctx context.Context, events []events.IntegrationEvent) error {
@@ -97,6 +109,15 @@ func (c *ConsumerArtist) handleCreatedEvent(ctx context.Context, event events.In
 	if data == nil {
 		return kafka.NewNonRetryableError(fmt.Errorf("received nil CreateArtistPayload for event %s", event.ID))
 	}
+	datainfo, err := c.socicalpb.GetInfoUserByID(ctx, &pb.UserSocialIDRequest{UserId: data.ArtistID})
+	if err != nil {
+		return fmt.Errorf("failed to get user info for ArtistID %s for event %s: %w", data.ArtistID, event.ID, err)
+	}
+	if datainfo == nil {
+		return kafka.NewNonRetryableError(fmt.Errorf("failed to get user info for ArtistID %s for event %s", data.ArtistID, event.ID))
+	}
+	data.Name = datainfo.AuthorName
+	data.AvatarURL = datainfo.AuthorAvatar
 	artistEntity := mapper.ToArtistEntity(data)
 	err = c.artisRepo.CreatedArtist(ctx, artistEntity)
 	if err != nil {

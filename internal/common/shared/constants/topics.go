@@ -66,9 +66,12 @@ const (
 	TopicReel                      TopicName = "media.reel.events"
 	TopicAlbum                     TopicName = "media.album.events"
 	TopicMusic                     TopicName = "media.music.events"
+	TopicMusicStats                TopicName = "media.music_stats.events"
 	TopicArtist                    TopicName = "media.artist.events"
+	TopicArtistStats               TopicName = "media.artist_stats.events"
 	TopicLiveSession               TopicName = "media.live_session.events"
 	// communication
+
 	TopicMessage              TopicName = "communication.message.events"
 	TopicStateMessage         TopicName = "communication.state_message.events"
 	TopicReactMessage         TopicName = "communication.react_message.events"

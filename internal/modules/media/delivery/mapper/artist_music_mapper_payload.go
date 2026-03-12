@@ -10,9 +10,15 @@ import (
 
 func ToArtistEntity(req *mediaEvent.CreateArtistPayload) *entity.Artist {
 	now := time.Now().UTC() // Luôn dùng UTC để lưu trữ vào Database
-
+	if req.ArtistID == "" {
+		return nil // Trường ArtistID là bắt buộc, nếu thiếu thì trả về nil để đánh dấu lỗi
+	}
+	convertedArtistID, err := primitive.ObjectIDFromHex(req.ArtistID)
+	if err != nil {
+		return nil // Nếu ArtistID không phải là ObjectID hợp lệ, trả về nil để đánh dấu lỗi
+	}
 	artist := &entity.Artist{
-		ID:            primitive.NewObjectID(), // Auto-generate MongoDB ID
+		ID:            convertedArtistID, // Auto-generate MongoDB ID
 		Name:          req.Name,
 		Slug:          req.Slug,
 		Bio:           req.Bio,
