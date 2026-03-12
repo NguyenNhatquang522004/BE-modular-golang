@@ -38,7 +38,6 @@ type Message struct {
 
 	// Enum Type: text, image, video...
 	Type sharedEnums.MediaType `cql:"type" json:"type"`
-
 	Content     string   `cql:"content" json:"content"`
 	Attachments []string `cql:"attachments" json:"attachments"` // LIST<TEXT>
 

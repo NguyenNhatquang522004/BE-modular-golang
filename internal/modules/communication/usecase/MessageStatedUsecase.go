@@ -20,14 +20,15 @@ func NewMessageStatedUsecase(events events.EventBus) *MessageStatedUsecase {
 	}
 }
 func (u *MessageStatedUsecase) Execute(ctx context.Context, req *req.MessageStateRequest) (*res.FailedMessageResponse, error) {
-	payload := &communicationEvent.MessageStatePayload{
+	payload := &communicationEvent.MessageStatsPayload{
 		ConversationID: req.ConversationID,
+		Bucket:         req.Bucket,
 		UserID:         req.UserID,
 		MessageID:      req.MessageID,
-		LastReadAt:     req.LastReadAt,
+		ReactionCode:   req.ReactionCode,
 		EventType:      req.EventType,
 	}
-	err := u.events.Publish(ctx, string(constants.TopicStateMessage), req.ConversationID, req.EventType.String(), payload)
+	err := u.events.Publish(ctx, string(constants.TopicStatsMessage), req.ConversationID, req.EventType.String(), payload)
 	if err != nil {
 		return &res.FailedMessageResponse{
 			ConversationID: req.ConversationID,

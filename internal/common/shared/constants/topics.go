@@ -73,8 +73,7 @@ const (
 	// communication
 
 	TopicMessage              TopicName = "communication.message.events"
-	TopicStateMessage         TopicName = "communication.state_message.events"
-	TopicReactMessage         TopicName = "communication.react_message.events"
+	TopicStatsMessage         TopicName = "communication.stats_message.events"
 	TopicDeleteRelationTarget TopicName = "business.delete_relation_target.events"
 	//community
 	TopicGroupStats                    TopicName = "community.group_stats.events"

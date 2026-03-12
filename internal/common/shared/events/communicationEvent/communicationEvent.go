@@ -24,19 +24,12 @@ type MessagePayload struct {
 	EventType        constants.EventType   `json:"event_type"`
 }
 
-type MessageStatePayload struct {
-	ConversationID string              `json:"conversation_id"`
-	UserID         string              `json:"user_id"`
-	MessageID      string              `json:"message_id"`
-	LastReadAt     time.Time           `json:"last_read_at"`
-	EventType      constants.EventType `json:"event_type"`
-}
-type MessageReactionPayload struct {
-	ConversationID string                   `json:"conversation_id" validate:"required"`
-	MessageID      gocql.UUID               `json:"message_id" validate:"required"`
-	UserID         gocql.UUID               `json:"user_id" validate:"required"`
-	ReactionCode   sharedEnums.ReactionCode `json:"reaction_code" validate:"required"`
-	CreatedAt      time.Time                `json:"created_at"`
+type MessageStatsPayload struct {
+	ConversationID string                   `json:"conversation_id"`
+	Bucket         int                      `json:"bucket"`
+	UserID         string                   `json:"user_id"`
+	MessageID      string                   `json:"message_id"`
+	ReactionCode   sharedEnums.ReactionCode `json:"reaction_code"`
 	EventType      constants.EventType      `json:"event_type"`
 }
 

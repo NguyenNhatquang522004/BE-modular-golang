@@ -701,3 +701,52 @@ func (r *MessageRepository) DeleteBulkMessagesByConversationID(ctx context.Conte
 
 	return nil
 }
+func (r *MessageRepository) GetMessagesByMessageID(ctx context.Context, conversationID string, bucket int, messageID string) (*entity.Message, error) {
+	// 1. Fail-fast validation
+	if conversationID == "" || messageID == "" {
+		return nil, fmt.Errorf("conversationID and messageID cannot be empty")
+	}
+
+	// 2. Parse messageID sang UUID để đảm bảo định dạng hợp lệ trước khi gọi DB
+	msgUUID, err := gocql.ParseUUID(messageID)
+	if err != nil {
+		return nil, fmt.Errorf("invalid messageID format: %w", err)
+	}
+
+	// 3. Chuẩn bị Query cho Cassandra
+	tableName := entity.Message{}.TableName()
+
+	query := fmt.Sprintf(`
+		SELECT conversation_id, bucket, message_id,
+		       sender_id, type, content, attachments,
+		       is_edited, reply_to_message_id, story_ref_id,
+		       is_revoked, created_at
+		FROM %s WHERE conversation_id = ? AND bucket = ? AND message_id = ?
+	`, tableName)
+
+	var message entity.Message
+
+	err = r.session.Query(query, conversationID, bucket, msgUUID).WithContext(ctx).Scan(
+		&message.ConversationID,
+		&message.Bucket,
+		&message.MessageID,
+		&message.SenderID,
+		&message.Type,
+		&message.Content,
+		&message.Attachments,
+		&message.IsEdited,
+		&message.ReplyToMessageID,
+		&message.StoryRefID,
+		&message.IsRevoked,
+		&message.CreatedAt,
+	)
+
+	if err != nil {
+		if err == gocql.ErrNotFound {
+			return nil, nil // Không tìm thấy message nào
+		}
+		return nil, fmt.Errorf("failed to get message %s for conversation %s bucket %d: %w", messageID, conversationID, bucket, err)
+	}
+
+	return &message, nil
+}

@@ -61,9 +61,7 @@ type IMessageUsecase interface {
 type IMessageStatedUsecase interface {
 	Execute(ctx context.Context, req *req.MessageStateRequest) (*res.FailedMessageResponse, error)
 }
-type IReactMessageUsecase interface {
-	Execute(ctx context.Context, req *req.ReactMessageRequest) (*res.FailedReactMessageResponse, error)
-}
+
 type IMessageRelyStoryUsecase interface {
 	Execute(ctx context.Context, req *req.MessageRelyStoryRequest) (*res.FailedMessageResponse, error)
 }
