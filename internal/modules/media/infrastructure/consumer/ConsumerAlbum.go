@@ -3,12 +3,17 @@ package consumer
 import (
 	"context"
 	"errors"
+	"fmt"
 	"sync"
 	"time"
 
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/IRepositoryShare"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/constants"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/events"
+	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/events/mediaEvent"
+	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/infrastructure/kafka"
+	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/utils"
+	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/media/delivery/mapper"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/media/domain/IRepository/IRepositoryMongodb"
 )
 
@@ -92,15 +97,96 @@ func (c *ConsumerAlbum) ConsumerAlbum(ctx context.Context) error {
 	return nil
 }
 func (c *ConsumerAlbum) handleCreatedAlbum(ctx context.Context, event events.IntegrationEvent) error {
-
+	data, err := utils.ParsePayload[mediaEvent.CreateAlbumPayload](event.Payload)
+	if err != nil {
+		return kafka.NewNonRetryableError(fmt.Errorf(" failed to parse event payload for event %s: %w", event.ID, err))
+	}
+	if data == nil {
+		return kafka.NewNonRetryableError(fmt.Errorf(" event payload is nil for event %s", event.ID))
+	}
+	entity, err := mapper.ToAlbumEntity(data)
+	if err != nil {
+		return kafka.NewNonRetryableError(fmt.Errorf(" failed to map event payload to album entity for event %s: %w", event.ID, err))
+	}
+	err = c.albumRepo.CreateAlbum(ctx, entity)
+	if err != nil {
+		return fmt.Errorf(" failed to create album in repository for event %s: %w", event.ID, err)
+	}
+	if len(data.ItemMediaIDs) > 0 {
+		for _, mediaID := range data.ItemMediaIDs {
+			payload := mediaEvent.UpdateMediaAssetsPayload{
+				MediaID: mediaID,
+				AlbumID: entity.ID.Hex(),
+			}
+			err = c.events.Publish(ctx, constants.TopicMediaAsset.String(), mediaID, constants.Updated.String(), payload)
+		}
+	}
 	return nil
 }
 func (c *ConsumerAlbum) handleUpdatedAlbum(ctx context.Context, event events.IntegrationEvent) error {
-
+	data, err := utils.ParsePayload[mediaEvent.UpdateAlbumPayload](event.Payload)
+	if err != nil {
+		return kafka.NewNonRetryableError(fmt.Errorf(" failed to parse event payload for event %s: %w", event.ID, err))
+	}
+	if data == nil {
+		return kafka.NewNonRetryableError(fmt.Errorf(" event payload is nil for event %s", event.ID))
+	}
+	existing, err := c.albumRepo.GetAlbumByID(ctx, data.ID)
+	if err != nil {
+		return fmt.Errorf(" failed to retrieve existing album from repository for event %s: %w", event.ID, err)
+	}
+	if existing == nil {
+		return kafka.NewNonRetryableError(fmt.Errorf(" album with ID %s not found for event %s", data.ID, event.ID))
+	}
+	updatedEntity, err := mapper.ApplyAlbumUpdate(*existing, data)
+	if err != nil {
+		return kafka.NewNonRetryableError(fmt.Errorf(" failed to apply updates to album entity for event %s: %w", event.ID, err))
+	}
+	err = c.albumRepo.UpdateAlbum(ctx, updatedEntity)
+	if err != nil {
+		return fmt.Errorf(" failed to update album in repository for event %s: %w", event.ID, err)
+	}
+	if len(data.ItemMediaDeleteIDs) > 0 {
+		for _, mediaID := range data.ItemMediaDeleteIDs {
+			payload := mediaEvent.UpdateMediaAssetsPayload{
+				MediaID: mediaID,
+				AlbumID: "",
+			}
+			err = c.events.Publish(ctx, constants.TopicMediaAsset.String(), mediaID, constants.Updated.String(), payload)
+		}
+	}
+	if len(data.ItemMediaAddIDs) > 0 {
+		for _, mediaID := range data.ItemMediaAddIDs {
+			payload := mediaEvent.UpdateMediaAssetsPayload{
+				MediaID: mediaID,
+				AlbumID: existing.ID.Hex(),
+			}
+			err = c.events.Publish(ctx, constants.TopicMediaAsset.String(), mediaID, constants.Updated.String(), payload)
+		}
+	}
 	return nil
 }
 func (c *ConsumerAlbum) handleDeletedAlbum(ctx context.Context, event events.IntegrationEvent) error {
-
+	data, err := utils.ParsePayload[mediaEvent.DeleteAlbumPayload](event.Payload)
+	if err != nil {
+		return kafka.NewNonRetryableError(fmt.Errorf(" failed to parse event payload for event %s: %w", event.ID, err))
+	}
+	if data == nil {
+		return kafka.NewNonRetryableError(fmt.Errorf(" event payload is nil for event %s", event.ID))
+	}
+	err = c.albumRepo.DeleteAlbum(ctx, data.AlbumID)
+	if err != nil {
+		return fmt.Errorf(" failed to delete album in repository for event %s: %w", event.ID, err)
+	}
+	if len(data.ItemMediaIDs) > 0 {
+		for _, mediaID := range data.ItemMediaIDs {
+			payload := mediaEvent.UpdateMediaAssetsPayload{
+				MediaID: mediaID,
+				AlbumID: "",
+			}
+			err = c.events.Publish(ctx, constants.TopicMediaAsset.String(), mediaID, constants.Updated.String(), payload)
+		}
+	}
 	return nil
 }
 func (c *ConsumerAlbum) ConsumerFailedAlbum(ctx context.Context) error {

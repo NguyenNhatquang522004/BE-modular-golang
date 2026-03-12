@@ -3,7 +3,7 @@ package entity
 import (
 	"time"
 
-	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/media/enum"
+	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/sharedEnums"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -34,7 +34,7 @@ type MusicLibrary struct {
 	LyricsSnippet string `bson:"lyrics_snippet,omitempty" json:"lyrics_snippet,omitempty"`
 
 	// Index: Multikey { genres: 1 } -> Lọc nhạc theo thể loại
-	Genres []enum.MusicGenre `bson:"genre" json:"genre"`
+	Genres []sharedEnums.MusicGenre `bson:"genre" json:"genre"`
 
 	// 4. LEGAL & COPYRIGHT
 	// Hệ thống cần check field này trước khi cho user dùng nhạc

@@ -70,7 +70,13 @@ type MediaAsset struct {
 	UpdatedAt time.Time  `bson:"updated_at" json:"updated_at"`
 	DeletedAt *time.Time `bson:"deleted_at,omitempty" json:"deleted_at,omitempty"`
 }
+type MediaAssetsContext struct {
+	Type sharedEnums.ContextType `bson:"type" json:"type"`
 
+	// TargetID có thể là GroupID (ObjectId) hoặc UserID (UUID) tùy context.
+	// Lưu String là an toàn nhất để chứa cả 2 loại.
+	TargetID string `bson:"target_id,omitempty" json:"target_id,omitempty"`
+}
 // --- METADATA ---
 type MediaMetadata struct {
 	Width     int     `bson:"width" json:"width"`

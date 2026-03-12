@@ -512,8 +512,12 @@ func (c *ConsumerPost) handleDeletedPost(ctx context.Context, event events.Integ
 	if data == nil {
 		return kafka.NewNonRetryableError(fmt.Errorf("payload is nil"))
 	}
+	datamedia, err := c.mediaRepo.GetByPostID(ctx, data.PostID)
+	if err != nil {
+		return fmt.Errorf("failed to get post media by post ID: %w", err)
+	}
 	var wg sync.WaitGroup
-	workercout := 4
+	workercout := 5
 	errchan := make(chan error, workercout)
 	for i := 0; i < workercout; i++ {
 		wg.Add(1)
@@ -543,6 +547,17 @@ func (c *ConsumerPost) handleDeletedPost(ctx context.Context, event events.Integ
 				if err != nil {
 					errchan <- fmt.Errorf("failed to delete post setting by post ID in repository: %w", err)
 					return
+				}
+			case 5:
+				for _, media := range datamedia.Items {
+					payload := mediaEvent.DeleteMediaAssetsPayload{
+						MediaID: media.ID.Hex(),
+					}
+					err := c.events.Publish(ctx, constants.TopicMediaAsset.String(), data.PostID, constants.Deleted.String(), payload)
+					if err != nil {
+						errchan <- fmt.Errorf("failed to publish media asset deletion event: %w", err)
+						return
+					}
 				}
 			default:
 				errchan <- nil // Các worker còn lại không làm gì

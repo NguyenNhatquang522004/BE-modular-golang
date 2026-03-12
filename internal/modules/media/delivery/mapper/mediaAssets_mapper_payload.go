@@ -2,6 +2,7 @@ package mapper
 
 import (
 	"errors"
+	"fmt"
 
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/events/mediaEvent"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/sharedEnums"
@@ -110,6 +111,13 @@ func ToEntityCreateMediaAssetsPayload(data *mediaEvent.CreateMediaAssetsPayload)
 }
 
 func UpdateEntityMediaAssetsFromPayload(mediaAsset *entity.MediaAsset, data *mediaEvent.UpdateMediaAssetsPayload) error {
+	if data.AlbumID != "" {
+		albumID, err := primitive.ObjectIDFromHex(data.AlbumID)
+		if err != nil {
+			return fmt.Errorf("invalid albumID: %w", err)
+		}
+		mediaAsset.AlbumID = albumID
+	}
 	if data.URL != nil {
 		mediaAsset.StorageFileID = *data.URL
 	}

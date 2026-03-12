@@ -102,6 +102,7 @@ type TaggedUserPayload struct {
 type UpdateMediaAssetsPayload struct {
 	MediaID string `json:"media_id"`
 	// Các trường có thể cập nhật
+	AlbumID      string               `json:"album_id,omitempty"`
 	URL          *string              `json:"url,omitempty"`
 	ThumbnailURL *string              `json:"thumbnail_url,omitempty"`
 	Order        *int                 `json:"order,omitempty"`
@@ -330,4 +331,43 @@ type RemixInfoPayload struct {
 	ParentReelID string         `json:"parent_reel_id" binding:"required,mongodb"`
 	Type         enum.RemixType `json:"type" binding:"required"`
 	IsRemixable  bool           `json:"is_remixable"`
+}
+
+type AlbumPrivacyPayload struct {
+	// Yêu cầu phải có, có thể thêm tag 'oneof' nếu enum là string (ví dụ: oneof=public friends only_me custom)
+	Level sharedEnums.PrivacyScope `json:"level" binding:"required"`
+
+	// dive,uuid: Đảm bảo từng phần tử trong mảng phải là UUID hợp lệ
+	AllowList []string `json:"allow_list" binding:"omitempty,dive,uuid"`
+	BlockList []string `json:"block_list" binding:"omitempty,dive,uuid"`
+}
+type CreateAlbumPayload struct {
+	UserID string
+	// GroupID nhận vào dạng string để validate trước khi parse sang ObjectID ở Controller/Service.
+	// Tránh lỗi panic của Unmarshal nếu client gửi sai format ObjectID.
+	GroupID *string `json:"group_id" binding:"omitempty,mongodb"`
+
+	Title       string         `json:"title" binding:"required,min=1,max=255"`
+	Description string         `json:"description" binding:"omitempty,max=2000"`
+	Type        enum.AlbumType `json:"type" binding:"required"`
+
+	Privacy      AlbumPrivacyPayload `json:"privacy" binding:"required"`
+	ItemMediaIDs []string            `json:"item_media_ids,omitempty" binding:"omitempty,dive,mongodb"` // Danh sách media_id (string) để thêm vào album khi tạo
+}
+type DeleteAlbumPayload struct {
+	AlbumID      string   `json:"album_id" binding:"required"`
+	ItemMediaIDs []string `json:"item_media_ids,omitempty" binding:"omitempty,dive,mongodb"` // Danh sách media_id (string) để xóa khỏi album khi xóa album
+}
+type UpdateAlbumPayload struct {
+	ID                 string          `json:"id" binding:"required"` // ID của album cần update, bắt buộc phải có để xác định target
+	Title              *string         `json:"title" binding:"omitempty,min=1,max=255"`
+	Description        *string         `json:"description" binding:"omitempty,max=2000"`
+	Type               *enum.AlbumType `json:"type" binding:"omitempty"`
+	ItemMediaDeleteIDs []string        `json:"item_media_delete_ids,omitempty" binding:"omitempty,dive,mongodb"` // Danh sách media_id (string) để xóa khỏi album khi cập nhật
+	ItemMediaAddIDs    []string        `json:"item_media_add_ids,omitempty" binding:"omitempty,dive,mongodb"`    // Danh sách media_id (string) để thêm vào album khi cập nhật
+	// CoverAssetID có thể được update sau khi người dùng upload ảnh mới
+	CoverAssetID *string `json:"cover_asset_id" binding:"omitempty,mongodb"`
+
+	// Pointer tới struct để biết client có muốn update privacy hay không
+	Privacy *AlbumPrivacyPayload `json:"privacy" binding:"omitempty"`
 }
