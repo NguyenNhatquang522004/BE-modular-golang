@@ -9,13 +9,22 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-func ToCreateEntityPostPayload(id primitive.ObjectID, r *contentEvent.CreatePostPayload) *entity.Post {
+func ToCreateEntityPostPayload(r *contentEvent.CreatePostPayload) *entity.Post {
 	if r == nil {
 		return nil
 	}
-
+	var ID primitive.ObjectID
+	if r.ID != "" {
+		convertedID, err := primitive.ObjectIDFromHex(r.ID)
+		if err != nil {
+			return nil
+		}
+		ID = convertedID
+	} else {
+		ID = primitive.NewObjectID()
+	}
 	post := &entity.Post{
-		ID:      id,
+		ID:      ID,
 		UserID:  r.UserID, // UserID sẽ được gán sau khi giải mã token, không lấy từ payload
 		Type:    r.Type,
 		Content: r.Content,

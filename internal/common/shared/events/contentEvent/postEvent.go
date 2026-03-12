@@ -33,8 +33,9 @@ type UpdatePrivacyPayload struct {
 
 // CreatePostPayload là payload duy nhất Client cần gửi lên
 type CreatePostPayload struct {
+	ID      string               `json:"id"` // ID do backend tạo ra, client không gửi lên
 	UserID  string               // Trường này không lấy từ payload, sẽ được gán sau khi giải mã token
-	Group   *string               `json:"group_id,omitempty"`       // Nếu có group_id thì sẽ là post nhóm, không có thì sẽ là post cá nhân
+	Group   *string              `json:"group_id,omitempty"`       // Nếu có group_id thì sẽ là post nhóm, không có thì sẽ là post cá nhân
 	Type    sharedEnums.PostType `json:"type" validate:"required"` // Bắt buộc
 	Content string               `json:"content"`                  // Có thể rỗng nếu chỉ đăng ảnh
 	Privacy PostPrivacyPayload   `json:"privacy" validate:"required"`

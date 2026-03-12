@@ -20,7 +20,6 @@ import (
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/content/domain/IRepository/IRepositoryMongodb"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/content/domain/entity"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/pkg/pb/v1"
-	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 type ConsumerPost struct {
@@ -145,7 +144,7 @@ func (c *ConsumerPost) handleCreatedPost(ctx context.Context, event events.Integ
 		datasetting   *entity.PostSetting
 		err           error
 	}
-	postid := primitive.NewObjectID()
+
 	taskResultchan := make(chan taskResult, workercount)
 	for i := 0; i < workercount; i++ {
 		wg.Add(1)
@@ -153,7 +152,7 @@ func (c *ConsumerPost) handleCreatedPost(ctx context.Context, event events.Integ
 			defer wg.Done()
 			switch i {
 			case 0:
-				entitypost := mapper.ToCreateEntityPostPayload(postid, data)
+				entitypost := mapper.ToCreateEntityPostPayload(data)
 				if entitypost == nil {
 					taskResultchan <- taskResult{err: fmt.Errorf("failed to map payload to entity")}
 					return
@@ -166,7 +165,7 @@ func (c *ConsumerPost) handleCreatedPost(ctx context.Context, event events.Integ
 
 				taskResultchan <- taskResult{datapost: entitypost, err: nil}
 			case 1:
-				entitymedia := mapper.ToCreateEntityPostMediaPayload(postid.Hex(), data.Media) // PostID sẽ được gán sau khi tạo post
+				entitymedia := mapper.ToCreateEntityPostMediaPayload(data.ID, data.Media) // PostID sẽ được gán sau khi tạo post
 				if entitymedia == nil {
 					taskResultchan <- taskResult{err: fmt.Errorf("failed to map media payload to entity")}
 					return
@@ -179,7 +178,7 @@ func (c *ConsumerPost) handleCreatedPost(ctx context.Context, event events.Integ
 				var payloads []mediaEvent.CreateMediaAssetsPayload
 				for index, item := range entitymedia.Items {
 					itemmediaitempayload := mediaEvent.MediaItemPayload{
-						PostID:       postid.Hex(),
+						PostID:       data.ID,     // PostID sẽ được gán sau khi tạo post
 						AlbumID:      "",          // Chưa có album trong yêu cầu tạo post, để trống hoặc gán sau nếu có
 						GroupID:      *data.Group, // Chưa có group trong yêu cầu tạo post, để trống hoặc gán sau nếu có
 						MediaID:      entitymedia.Items[index].ID.Hex(),
@@ -213,7 +212,7 @@ func (c *ConsumerPost) handleCreatedPost(ctx context.Context, event events.Integ
 						Items:  []mediaEvent.MediaItemPayload{itemmediaitempayload},
 					}
 					payloads = append(payloads, itempayload)
-					err := c.events.Publish(ctx, constants.TopicMediaAsset.String(), postid.Hex(), constants.Created.String(), itempayload)
+					err := c.events.Publish(ctx, constants.TopicMediaAsset.String(), data.ID, constants.Created.String(), itempayload)
 					if err != nil {
 						taskResultchan <- taskResult{err: fmt.Errorf("failed to publish media asset event: %w", err)}
 						return
@@ -230,7 +229,7 @@ func (c *ConsumerPost) handleCreatedPost(ctx context.Context, event events.Integ
 					taskResultchan <- taskResult{err: fmt.Errorf("%s", "failed to get user info by ID: "+err.Error())}
 					return
 				}
-				entityextension := mapper.ToCreateEntityPostExtensionPayload(postid.Hex(), data.Extension, dataprofile.UserId, dataprofile.AuthorName, dataprofile.AuthorAvatar, data.Content, "") // PostID sẽ được gán sau khi tạo post
+				entityextension := mapper.ToCreateEntityPostExtensionPayload(data.ID, data.Extension, dataprofile.UserId, dataprofile.AuthorName, dataprofile.AuthorAvatar, data.Content, "") // PostID sẽ được gán sau khi tạo post
 				if data.Extension != nil && entityextension == nil {
 					taskResultchan <- taskResult{err: fmt.Errorf("failed to map extension payload to entity")}
 					return
@@ -264,9 +263,9 @@ func (c *ConsumerPost) handleCreatedPost(ctx context.Context, event events.Integ
 						return
 					}
 
-					entitysetting = mapper.ToCreateEntityPostSettingPayload(postid.Hex(), data.UserID, convertrole, data.Setting)
+					entitysetting = mapper.ToCreateEntityPostSettingPayload(data.ID, data.UserID, convertrole, data.Setting)
 				case sharedEnums.ContextTypeUserWall:
-					entitysetting = mapper.ToCreateEntityPostSettingPayload(postid.Hex(), data.UserID, sharedEnums.RoleTypeUser, data.Setting)
+					entitysetting = mapper.ToCreateEntityPostSettingPayload(data.ID, data.UserID, sharedEnums.RoleTypeUser, data.Setting)
 					if data.Setting != nil && entitysetting == nil {
 						taskResultchan <- taskResult{err: fmt.Errorf("failed to map setting payload to entity")}
 						return
@@ -289,7 +288,7 @@ func (c *ConsumerPost) handleCreatedPost(ctx context.Context, event events.Integ
 						taskResultchan <- taskResult{err: fmt.Errorf("%s", "failed to convert role string to enum: "+err.Error())}
 						return
 					}
-					entitysetting = mapper.ToCreateEntityPostSettingPayload(postid.Hex(), data.UserID, convertrole, data.Setting)
+					entitysetting = mapper.ToCreateEntityPostSettingPayload(data.ID, data.UserID, convertrole, data.Setting)
 				default:
 					taskResultchan <- taskResult{err: fmt.Errorf("unknown context type: %s", data.Context.Type.String())}
 					return

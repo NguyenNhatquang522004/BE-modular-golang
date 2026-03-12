@@ -5,6 +5,7 @@ import (
 
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/constants"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/sharedEnums"
+	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/media/enum"
 )
 
 type ReplyStoryPayload struct {
@@ -263,4 +264,70 @@ type UpdateStorySettingsPayload struct {
 	// Dùng `*bool` giúp ta check: nếu nó là nil -> client không muốn update trường này.
 	AllowReply *bool `json:"allow_reply,omitempty"`
 	AllowShare *bool `json:"allow_share,omitempty"`
+}
+type DeleteReelPayload struct {
+	UserID string `json:"user_id" binding:"required"` // ID người tạo Reel (UUID từ Postgres)
+	PostID string `json:"post_id" binding:"required"`
+	ReelID string `json:"reel_id" binding:"required"`
+}
+type UpdateReelPayload struct {
+	UserID       string  `json:"user_id" binding:"required"` // ID người tạo Reel (UUID từ Postgres)
+	ReelID       string  `json:"reel_id" binding:"required"`
+	Caption      *string `json:"caption,omitempty" binding:"omitempty,max=2200"`
+	AllowComment *bool   `json:"allow_comment,omitempty"`
+	AllowShare   *bool   `json:"allow_share,omitempty"`
+
+	// Slice bản chất đã có thể check nil, nhưng để phân biệt "xóa hết hashtag" (gửi mảng rỗng [])
+	// và "không update hashtag" (không gửi field), ta có thể cân nhắc dùng Pointer cho mảng hoặc tự xử lý logic ở Service.
+	Hashtags []string `json:"hashtags,omitempty" binding:"omitempty,dive,alphanum"`
+	Mentions []string `json:"mentions,omitempty" binding:"omitempty,dive,uuid"`
+
+	Privacy *sharedEnums.PrivacyScope `json:"privacy,omitempty" binding:"omitempty"`
+
+	// LƯU Ý: Thông thường các nền tảng (như TikTok/IG) KHÔNG cho phép update Video file,
+	// Audio file hay Remix Info sau khi đã publish. Nếu hệ thống của bạn cho phép,
+	// bạn có thể thêm các trường UpdateVideoDTO, UpdateAudioMetaDTO tương tự vào đây bằng Pointer.
+}
+type CreateReelPayload struct {
+	UserID string `json:"user_id" binding:"required"` // ID người tạo Reel (UUID từ Postgres)
+	// Video bắt buộc phải có khi tạo Reel
+	Video ReelVideoPayload `json:"video" binding:"required"`
+
+	Caption      string                   `json:"caption" binding:"max=2200"`                 // Giới hạn độ dài giống Instagram
+	Hashtags     []string                 `json:"hashtags,omitempty" binding:"dive,alphanum"` // dive: validate từng phần tử trong slice
+	Mentions     []string                 `json:"mentions,omitempty" binding:"dive,uuid"`     // Theo entity, UserID là UUID (Postgres)
+	AllowComment *bool                    `json:"allow_comment,omitempty"`
+	AllowShare   *bool                    `json:"allow_share,omitempty"`
+	Privacy      sharedEnums.PrivacyScope `json:"privacy" binding:"required"`
+
+	AudioMeta AudioMetaPayload `json:"audio_meta" binding:"required"`
+
+	// Con trỏ vì không phải Reel nào cũng là Remix
+	RemixInfo *RemixInfoPayload `json:"remix_info,omitempty"`
+}
+
+type ReelVideoPayload struct {
+	URL           string  `json:"url" binding:"required,url"`
+	ThumbnailURL  string  `json:"thumbnail_url" binding:"required,url"`
+	PreviewGifURL string  `json:"preview_gif_url,omitempty" binding:"omitempty,url"`
+	Width         int     `json:"width" binding:"required,min=1"`
+	Height        int     `json:"height" binding:"required,min=1"`
+	Duration      float64 `json:"duration" binding:"required,min=0.1"` // Tính bằng giây
+	SizeBytes     int64   `json:"size_bytes" binding:"required,min=1"`
+	MimeType      string  `json:"mime_type,omitempty"`
+}
+
+type AudioMetaPayload struct {
+	// Nhận string từ client, Service layer sẽ convert sang primitive.ObjectID
+	TrackID         *string `json:"track_id,omitempty" binding:"omitempty,mongodb"`
+	IsOriginalAudio bool    `json:"is_original_audio"`
+	VolumeAdjust    float64 `json:"volumn_adjust" binding:"min=0,max=1"` // 0.0 -> 1.0 (Giữ nguyên tên field volumn)
+	AudioStartTime  float64 `json:"audio_start_time" binding:"min=0"`
+}
+
+type RemixInfoPayload struct {
+	// Nhận string từ client, Service layer sẽ convert sang primitive.ObjectID
+	ParentReelID string         `json:"parent_reel_id" binding:"required,mongodb"`
+	Type         enum.RemixType `json:"type" binding:"required"`
+	IsRemixable  bool           `json:"is_remixable"`
 }

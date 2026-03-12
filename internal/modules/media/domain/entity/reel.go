@@ -14,12 +14,11 @@ const (
 
 type Reel struct {
 	ID primitive.ObjectID `bson:"_id,omitempty" json:"id"`
-
 	// 1. OWNERSHIP
 	// UserID từ Postgres (UUID) -> Lưu String
 	// Index: { user_id: 1, created_at: -1 } -> Trang cá nhân
 	UserID string `bson:"user_id" json:"user_id"`
-
+	
 	// 2. PROCESSING FLOW
 	// Worker sẽ update field này. Client chỉ load các reel có status = 'active'
 	ProcessingStatus sharedEnums.ProcessingStatus `bson:"processing_status" json:"processing_status"`
@@ -59,6 +58,8 @@ type ReelVideo struct {
 	Width         int     `bson:"width" json:"width"`
 	Height        int     `bson:"height" json:"height"`
 	Duration      float64 `bson:"duration" json:"duration"` // Seconds
+	SizeBytes     int64   `bson:"size_bytes" json:"size_bytes"`
+	MimeType      string  `bson:"mime_type" json:"mime_type"`
 }
 
 // --- AUDIO INFO ---
@@ -90,7 +91,7 @@ type ReelStats struct {
 	Haha     int `bson:"haha" json:"haha"`
 	Wow      int `bson:"wow" json:"wow"`
 	Sad      int `bson:"sad" json:"sad"`
-	Angry    int `bson:"angry" json:"angry"` 
+	Angry    int `bson:"angry" json:"angry"`
 	Shares   int `bson:"shares" json:"shares"`     //chưa làm
 	Saves    int `bson:"saves" json:"saves"`       //chưa làm
 	Comments int `bson:"comments" json:"comments"` //chưa làm
