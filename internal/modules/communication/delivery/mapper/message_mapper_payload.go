@@ -7,6 +7,7 @@ import (
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/events/communicationEvent"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/communication/domain/entity"
 	"github.com/gocql/gocql"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 func generateBucket(t time.Time) int {
@@ -26,9 +27,8 @@ func ToMessageEntity(req *communicationEvent.CreateMessagePayload) (*entity.Mess
 	// Chúng ta lưu ID để giữ bảng Message nhẹ nhàng
 	assetIDs := make([]string, 0, len(req.Attachments))
 	for _, att := range req.Attachments {
-		if att.AssetID != "" {
-			assetIDs = append(assetIDs, att.AssetID)
-		}
+		att.AssetID = primitive.NewObjectID().Hex() // Đảm bảo mỗi Attachment có một ID duy nhất
+		assetIDs = append(assetIDs, att.AssetID)
 	}
 
 	return &entity.Message{
@@ -68,12 +68,22 @@ func UpdateMessageMapper(existing *entity.Message, req *communicationEvent.Updat
 			oldAssetsMap[id] = true
 		}
 
-		for _, att := range *req.Attachments {
+		// DUYỆT BẰNG INDEX (i) thay vì copy value (att) để có thể thay đổi giá trị gốc
+		for i := range *req.Attachments {
+			// Lấy con trỏ của phần tử hiện tại
+			att := &(*req.Attachments)[i]
+
+			// TÍNH NĂNG MỚI: NẾU CHƯA CÓ ID -> TỰ ĐỘNG TẠO ID MỚI
+			if att.AssetID == "" {
+				att.AssetID = primitive.NewObjectID().Hex() // Tạo ID chuẩn MongoDB
+			}
+
 			newAssetIDs = append(newAssetIDs, att.AssetID)
 
 			// Nếu AssetID này không có trong Entity cũ -> Đây là hàng mới thêm
 			if !oldAssetsMap[att.AssetID] {
-				addedAssets = append(addedAssets, att)
+				// Vì att là con trỏ, ta lấy giá trị thực tế của nó để đưa vào mảng addedAssets
+				addedAssets = append(addedAssets, *att)
 			}
 		}
 

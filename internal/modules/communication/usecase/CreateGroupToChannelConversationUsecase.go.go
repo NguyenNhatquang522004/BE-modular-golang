@@ -4,11 +4,11 @@ import (
 	"context"
 	"errors"
 
+	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/sharedEnums"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/communication/delivery/dto/req"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/communication/delivery/dto/res"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/communication/delivery/mapper"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/communication/domain/IRepository/IRepositoryMongodb"
-	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/communication/enum"
 )
 
 type CreateGroupToChannelConversationUsecase struct {
@@ -44,7 +44,7 @@ func (u *CreateGroupToChannelConversationUsecase) Execute(ctx context.Context, r
 		}, nil
 	}
 	entityConversation := mapper.ToEntityConversation(req.ConversationReq)
-	entityConversation.Type = enum.TypeGroup
+	entityConversation.Type = sharedEnums.TypeGroup
 	entityConversation.RelatedChannelID = &dataGetChannel.ID
 	entityConversation.ParticipantCount = len(req.User)
 	err = u.conversationRepo.CreateConversation(ctx, entityConversation)

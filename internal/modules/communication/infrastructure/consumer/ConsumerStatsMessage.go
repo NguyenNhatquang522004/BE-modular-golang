@@ -110,7 +110,7 @@ func (c *ConsumerStatsMessage) handleCreatedStatsMessage(ctx context.Context, ev
 		return fmt.Errorf("message reaction not found for user %s on message %s in conversation %s", data.UserID, data.MessageID, data.ConversationID)
 	}
 	dataMessageReaction.ReactionCode = data.ReactionCode
-	err = c.messageReactionRepo.UpdateReaction(ctx, dataMessageReaction)
+	err = c.messageReactionRepo.UpdateOrInsertReaction(ctx, dataMessageReaction)
 	if err != nil {
 		return fmt.Errorf("failed to update message reaction: %w", err)
 	}
@@ -132,7 +132,7 @@ func (c *ConsumerStatsMessage) handleUpdatedStatsMessage(ctx context.Context, ev
 		return fmt.Errorf("message reaction not found for user %s on message %s in conversation %s", data.UserID, data.MessageID, data.ConversationID)
 	}
 	dataMessageReaction.ReactionCode = data.ReactionCode
-	err = c.messageReactionRepo.UpdateReaction(ctx, dataMessageReaction)
+	err = c.messageReactionRepo.UpdateOrInsertReaction(ctx, dataMessageReaction)
 	if err != nil {
 		return fmt.Errorf("failed to update message reaction: %w", err)
 	}
@@ -153,10 +153,9 @@ func (c *ConsumerStatsMessage) handleDeletedStatsMessage(ctx context.Context, ev
 	if dataMessageReaction == nil {
 		return fmt.Errorf("message reaction not found for user %s on message %s in conversation %s", data.UserID, data.MessageID, data.ConversationID)
 	}
-	dataMessageReaction.ReactionCode = data.ReactionCode
-	err = c.messageReactionRepo.UpdateReaction(ctx, dataMessageReaction)
+	err = c.messageReactionRepo.DeleteReaction(ctx, data.ConversationID, data.MessageID, data.UserID)
 	if err != nil {
-		return fmt.Errorf("failed to update message reaction: %w", err)
+		return fmt.Errorf("failed to delete message reaction: %w", err)
 	}
 	return nil
 }

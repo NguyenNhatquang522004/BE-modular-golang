@@ -6,12 +6,12 @@ import (
 	"log"
 
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/IRepositoryShare"
+	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/sharedEnums"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/communication/delivery/dto/req"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/communication/delivery/dto/res"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/communication/delivery/mapper"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/communication/domain/IRepository/IRepositoryMongodb"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/communication/domain/entity"
-	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/communication/enum"
 )
 
 type CreatePrivateConversationUsecase struct {
@@ -30,9 +30,9 @@ func NewCreatePrivateConversationUsecase(conversationRepo IRepositoryMongodb.ICo
 func (u *CreatePrivateConversationUsecase) Execute(ctx context.Context, req *req.CreatePrivateConversationRequest) (*res.FailedPrivateConversationResponse, error) {
 	// Implement the logic to create a private conversation here
 	// This may involve validating the request, checking if the users exist, creating a conversation record in the database, etc.
-	
+
 	entityConversation := mapper.ToEntityConversation(req.ConversationReq)
-	entityConversation.Type = enum.TypePrivate
+	entityConversation.Type = sharedEnums.TypePrivate
 	entityConversation.ParticipantCount = 2
 	err := u.conversationRepo.CreateConversation(ctx, entityConversation)
 	if err != nil {

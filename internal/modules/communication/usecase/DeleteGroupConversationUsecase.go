@@ -5,11 +5,11 @@ import (
 	"errors"
 
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/IRepositoryShare"
+	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/sharedEnums"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/communication/delivery/dto/req"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/communication/delivery/dto/res"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/communication/domain/IRepository/IRepositoryCassandra"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/communication/domain/IRepository/IRepositoryMongodb"
-	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/communication/enum"
 )
 
 type DeleteGroupConversationUsecase struct {
@@ -52,7 +52,7 @@ func (u *DeleteGroupConversationUsecase) Execute(ctx context.Context, req *req.D
 			ErrorMessage:   errors.New("Conversation not found"),
 		}, nil
 	}
-	if dataConversation.Type != enum.TypeGroup {
+	if dataConversation.Type != sharedEnums.TypeGroup {
 		return &res.FailedChannelGroupConversationResponse{
 			ChannelID:      "unknown",
 			ConversationID: req.ConversationID,

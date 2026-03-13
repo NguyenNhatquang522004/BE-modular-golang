@@ -3,11 +3,11 @@ package usecase
 import (
 	"context"
 
+	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/sharedEnums"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/communication/delivery/dto/req"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/communication/delivery/dto/res"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/communication/delivery/mapper"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/communication/domain/IRepository/IRepositoryMongodb"
-	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/communication/enum"
 )
 
 type UpdateChannelGroupConversationUsecase struct {
@@ -37,7 +37,7 @@ func (u *UpdateChannelGroupConversationUsecase) Execute(ctx context.Context, req
 			ErrorMessage:   err,
 		}, err
 	}
-	if data.Type != enum.TypeChannel {
+	if data.Type != sharedEnums.TypeChannel {
 		return &res.FailedChannelGroupConversationResponse{
 			ChannelID:      req.ChannelID,
 			ConversationID: req.ID,

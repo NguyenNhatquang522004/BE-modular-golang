@@ -807,3 +807,43 @@ func (r *MessageReactionsRepository) DeleteBulkReactionByConversationID(ctx cont
 
 	return nil
 }
+
+func (r *MessageReactionsRepository) UpdateOrInsertReaction(ctx context.Context, reaction *entity.MessageReaction) error {
+	tableName := entity.MessageReaction{}.TableName()
+
+	// 1. Fail-fast validation
+	if reaction == nil {
+		return fmt.Errorf("reaction payload is nil")
+	}
+
+	var emptyUUID gocql.UUID
+	if reaction.ConversationID == "" || reaction.MessageID == emptyUUID || reaction.UserID == emptyUUID {
+		return fmt.Errorf("missing primary key components: conversation_id, message_id, and user_id are required")
+	}
+
+	// 2. Bảo vệ Context: Thao tác Ghi không được ngắt giữa chừng dù HTTP Request bị hủy
+	safeCtx := context.WithoutCancel(ctx)
+
+	// 3. Query với khai báo rõ từng cột (Explicit columns - best practice)
+	// Cassandra INSERT là Upsert: nếu row đã tồn tại, reaction_code sẽ bị ghi đè (last-write-wins)
+	query := fmt.Sprintf(`
+		INSERT INTO %s (conversation_id, message_id, user_id, reaction_code, created_at)
+		VALUES (?, ?, ?, ?, ?)
+	`, tableName)
+
+	// 4. Thực thi query
+	err := r.session.Query(query,
+		reaction.ConversationID,
+		reaction.MessageID,
+		reaction.UserID,
+		reaction.ReactionCode,
+		reaction.CreatedAt,
+	).WithContext(safeCtx).Exec()
+
+	if err != nil {
+		return fmt.Errorf("failed to upsert reaction for user %s on message %s: %w",
+			reaction.UserID.String(), reaction.MessageID.String(), err)
+	}
+
+	return nil
+}

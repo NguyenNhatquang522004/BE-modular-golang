@@ -4,11 +4,11 @@ import (
 	"context"
 	"errors"
 
+	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/sharedEnums"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/communication/delivery/dto/req"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/communication/delivery/dto/res"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/communication/delivery/mapper"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/communication/domain/IRepository/IRepositoryMongodb"
-	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/communication/enum"
 )
 
 type AddGroupToChannelParticipantUsecase struct {
@@ -38,7 +38,7 @@ func (u *AddGroupToChannelParticipantUsecase) Execute(ctx context.Context, req *
 			ErrorMessage:   errors.New("Channel conversation not found"),
 		}, nil
 	}
-	if dataChannelConversation.Type != enum.TypeChannel {
+	if dataChannelConversation.Type != sharedEnums.TypeChannel {
 		return &res.FailedParticipantResponse{
 			ConversationID: req.ChannelID,
 			UserID:         req.UserID,
@@ -60,7 +60,7 @@ func (u *AddGroupToChannelParticipantUsecase) Execute(ctx context.Context, req *
 			ErrorMessage:   errors.New("Group conversation not found"),
 		}, nil
 	}
-	if dataGroupConversation.Type != enum.TypeGroup {
+	if dataGroupConversation.Type != sharedEnums.TypeGroup {
 		return &res.FailedParticipantResponse{
 			ConversationID: req.GroupID,
 			UserID:         req.UserID,

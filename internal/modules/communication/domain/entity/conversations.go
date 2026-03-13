@@ -4,7 +4,6 @@ import (
 	"time"
 
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/sharedEnums"
-	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/communication/enum"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -16,10 +15,13 @@ type Conversation struct {
 	ID primitive.ObjectID `bson:"_id,omitempty" json:"id"`
 
 	// 1. CLASSIFICATION
-	Type   enum.ConversationType        `bson:"type" json:"type"`     // 'private', 'group'
-	Scope  enum.ConversationScope       `bson:"scope" json:"scope"`   // 'messenger', 'community_channel'
-	Status sharedEnums.ProcessingStatus `bson:"status" json:"status"` // 'active', 'pending'
-
+	Type   sharedEnums.ConversationType  `bson:"type" json:"type"`     // 'private', 'group'
+	Scope  sharedEnums.ConversationScope `bson:"scope" json:"scope"`   // 'messenger', 'community_channel'
+	Status sharedEnums.ProcessingStatus  `bson:"status" json:"status"` // 'active', 'pending'
+	
+	// Khóa định danh cho chat 1-1. Sẽ null nếu là chat nhóm.
+	// Format: "private_UserID1_UserID2" (đã sort ID theo ABC)
+	PrivateChatKey *string `bson:"private_chat_key,omitempty" json:"private_chat_key,omitempty"`
 	// 2. GROUP INFO
 	// Tên nhóm (Null nếu là Private chat 1-1)
 	Name   string              `bson:"name,omitempty" json:"name,omitempty"`

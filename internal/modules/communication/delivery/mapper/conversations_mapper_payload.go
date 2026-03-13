@@ -1,0 +1,204 @@
+package mapper
+
+import (
+	"fmt"
+	"sort"
+	"time"
+
+	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/events/communicationEvent"
+	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/sharedEnums"
+	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/communication/domain/entity"
+	"go.mongodb.org/mongo-driver/bson/primitive"
+)
+
+func ToConversationEntity(payload *communicationEvent.CreateConversationPayload) (*entity.Conversation, error) {
+	now := time.Now()
+
+	conv := &entity.Conversation{
+		Type:             payload.Type,
+		Scope:            payload.Scope,
+		Name:             payload.Name,
+		Status:           sharedEnums.ProcessingActive, // Trạng thái mặc định khi mới tạo
+		CreatorID:        payload.UserCreatorAndOwnerID,
+		OwnerID:          payload.UserCreatorAndOwnerID,
+		ParticipantCount: len(payload.ParticipantIDs),
+		CreatedAt:        now,
+		UpdatedAt:        now,
+	}
+
+	// ==========================================
+	// 1. XỬ LÝ LOGIC PRIVATE CHAT KEY (NEW)
+	// ==========================================
+	// Giả sử enum của bạn là sharedEnums.ConversationTypePrivate, hãy thay đổi cho đúng tên enum thực tế
+	if payload.Type == sharedEnums.TypePrivate {
+		// Dùng map để lọc các UserID trùng lặp (đề phòng client gửi lên cả ID của chính họ trong mảng ParticipantIDs)
+		uniqueUsers := map[string]struct{}{
+			payload.UserCreatorAndOwnerID: {},
+		}
+		for _, id := range payload.ParticipantIDs {
+			uniqueUsers[id] = struct{}{}
+		}
+
+		// Chat 1-1 bắt buộc phải có chính xác 2 người
+		if len(uniqueUsers) != 2 {
+			return nil, fmt.Errorf("private conversation must have exactly 2 unique members")
+		}
+
+		// Trích xuất ra slice để sort
+		var users []string
+		for id := range uniqueUsers {
+			users = append(users, id)
+		}
+
+		// Sort A-Z và tạo Unique Key
+		sort.Strings(users)
+		privateKey := fmt.Sprintf("private_%s_%s", users[0], users[1])
+		conv.PrivateChatKey = &privateKey
+
+		// Đảm bảo ParticipantCount là 2 cho chat 1-1
+		conv.ParticipantCount = 2
+	}
+
+	// ==========================================
+	// 2. XỬ LÝ AVATAR, LINKING GROUP & CHANNEL
+	// ==========================================
+	if payload.Avatar != "" {
+		conv.Avatar = &entity.ConversationAvatar{URL: payload.Avatar}
+	}
+
+	if payload.RelatedGroupID != "" {
+		objID, err := primitive.ObjectIDFromHex(payload.RelatedGroupID)
+		if err != nil {
+			return nil, fmt.Errorf("invalid related_group_id format: %w", err)
+		}
+		conv.RelatedGroupID = &objID
+	}
+
+	if payload.RelatedChannelID != "" {
+		objID, err := primitive.ObjectIDFromHex(payload.RelatedChannelID)
+		if err != nil {
+			return nil, fmt.Errorf("invalid related_channel_id format: %w", err)
+		}
+		conv.RelatedChannelID = &objID
+	}
+
+	// ==========================================
+	// 3. XỬ LÝ PERMISSIONS & THEME
+	// ==========================================
+	if payload.Permissions != nil {
+		conv.Permissions = entity.ConversationPermissions{
+			SendMessage: payload.Permissions.SendMessage,
+			AddMember:   payload.Permissions.AddMember,
+		}
+	} else {
+		// Gán quyền mặc định nếu client không truyền
+		conv.Permissions = entity.ConversationPermissions{
+			SendMessage: sharedEnums.ScopePublic,
+			AddMember:   sharedEnums.ScopePublic,
+		}
+	}
+
+	if payload.Theme != nil {
+		conv.Theme = &entity.ConversationTheme{
+			Color:         payload.Theme.Color,
+			Emoji:         payload.Theme.Emoji,
+			BackgroundURL: payload.Theme.BackgroundURL,
+		}
+	}
+
+	return conv, nil
+}
+func ApplyConversationUpdate(existingConv *entity.Conversation, payload *communicationEvent.UpdateConversationReq) (bool, error) {
+	hasChanges := false
+
+	// Kiểm tra xem đây là chat 1-1 hay chat nhóm
+	isPrivate := existingConv.Type == sharedEnums.TypePrivate // Thay bằng enum thực tế của bạn
+
+	// 1. CẬP NHẬT NAME
+	if payload.Name != nil {
+		if isPrivate {
+			return false, fmt.Errorf("cannot update name for a private conversation")
+		}
+		// Chỉ update nếu thực sự khác giá trị cũ
+		if existingConv.Name != *payload.Name {
+			existingConv.Name = *payload.Name
+			hasChanges = true
+		}
+	}
+
+	// 2. CẬP NHẬT AVATAR
+	if payload.Avatar != nil {
+		if isPrivate {
+			return false, fmt.Errorf("cannot update avatar for a private conversation")
+		}
+		if *payload.Avatar == "" {
+			if existingConv.Avatar != nil { // Chỉ đánh dấu change nếu trước đó nó có avatar
+				existingConv.Avatar = nil
+				hasChanges = true
+			}
+		} else {
+			// Nếu url mới khác url cũ
+			if existingConv.Avatar == nil || existingConv.Avatar.URL != *payload.Avatar {
+				existingConv.Avatar = &entity.ConversationAvatar{URL: *payload.Avatar}
+				hasChanges = true
+			}
+		}
+	}
+
+	// 3. CẬP NHẬT OWNER_ID
+	if payload.OwnerID != nil {
+		if isPrivate {
+			return false, fmt.Errorf("cannot transfer ownership in a private conversation")
+		}
+		if existingConv.OwnerID != *payload.OwnerID {
+			existingConv.OwnerID = *payload.OwnerID
+			hasChanges = true
+		}
+	}
+
+	// 4. CẬP NHẬT STATUS (Áp dụng được cho cả Private và Group - VD: Archive)
+	if payload.Status != nil {
+		if existingConv.Status != *payload.Status {
+			existingConv.Status = *payload.Status
+			hasChanges = true
+		}
+	}
+
+	// 5. CẬP NHẬT PERMISSIONS (Thường chỉ Group mới quan tâm, nhưng private set mặc định cũng không sao)
+	if payload.Permissions != nil {
+		if existingConv.Permissions.SendMessage != payload.Permissions.SendMessage {
+			existingConv.Permissions.SendMessage = payload.Permissions.SendMessage
+			hasChanges = true
+		}
+		if existingConv.Permissions.AddMember != payload.Permissions.AddMember {
+			existingConv.Permissions.AddMember = payload.Permissions.AddMember
+			hasChanges = true
+		}
+	}
+
+	// 6. CẬP NHẬT THEME (Messenger cho phép đổi theme/màu sắc cho cả chat 1-1 và group)
+	if payload.Theme != nil {
+		if existingConv.Theme == nil {
+			existingConv.Theme = &entity.ConversationTheme{}
+		}
+		if payload.Theme.Color != "" && existingConv.Theme.Color != payload.Theme.Color {
+			existingConv.Theme.Color = payload.Theme.Color
+			hasChanges = true
+		}
+		if payload.Theme.Emoji != "" && existingConv.Theme.Emoji != payload.Theme.Emoji {
+			existingConv.Theme.Emoji = payload.Theme.Emoji
+			hasChanges = true
+		}
+		if payload.Theme.BackgroundURL != "" && existingConv.Theme.BackgroundURL != payload.Theme.BackgroundURL {
+			existingConv.Theme.BackgroundURL = payload.Theme.BackgroundURL
+			hasChanges = true
+		}
+	}
+
+	// 7. CẬP NHẬT THỜI GIAN
+	if hasChanges {
+		existingConv.UpdatedAt = time.Now()
+	}
+
+	return hasChanges, nil
+}

@@ -133,7 +133,7 @@ func (c *ConsumerMessage) handleCreatedMessage(ctx context.Context, event events
 					SizeBytes: data.Attachments[index].SizeBytes,
 					MimeType:  data.Attachments[index].MimeType,
 				},
-				Order:       index,
+				Order:       0,
 				Hashtags:    nil,
 				TaggedUsers: nil,
 			})
@@ -161,13 +161,63 @@ func (c *ConsumerMessage) handleUpdatedMessage(ctx context.Context, event events
 	}
 	if existingMessage == nil {
 		return kafka.NewNonRetryableError(fmt.Errorf("message not found for update"))
-	} 
+	}
+	entity, addedAssets, removedIDs := mapper.UpdateMessageMapper(existingMessage, data)
+	err = c.messageRepo.UpdateMessage(ctx, entity)
+	if err != nil {
+		return fmt.Errorf("failed to update message in repository: %w", err)
+	}
+	// Xử lý media assets đã thêm
+	for _, asset := range addedAssets {
+		payload := &mediaEvent.UpdateMediaAssetsPayload{
+			MediaID:      asset.AssetID,
+			AlbumID:      "",
+			URL:          &asset.URL,
+			ThumbnailURL: &asset.ThumbnailURL,
+			Metadata: &mediaEvent.MetadataPayload{
+				Width:     asset.Width,
+				Height:    asset.Height,
+				SizeBytes: asset.SizeBytes,
+				MimeType:  asset.MimeType,
+			},
+			Order:       nil,
+			Hashtags:    nil,
+			TaggedUsers: nil,
+		}
 
+		err = c.events.Publish(ctx, constants.TopicMediaAsset.String(), data.MessageID, constants.Updated.String(), payload)
+		if err != nil {
+			return fmt.Errorf("failed to publish media asset event for added asset in message %s: %w", data.MessageID, err)
+		}
+	}
+	// Xử lý media assets đã xóa
+	for _, removedID := range removedIDs {
+		payload := &mediaEvent.DeleteMediaAssetsPayload{
+			MediaID:   removedID,
+			MessageID: data.MessageID,
+		}
+		err = c.events.Publish(ctx, constants.TopicMediaAsset.String(), data.MessageID, constants.Deleted.String(), payload)
+		if err != nil {
+			return fmt.Errorf("failed to publish media asset event for removed asset in message %s: %w", data.MessageID, err)
+		}
+	}
 
 	return nil
 }
 func (c *ConsumerMessage) handleDeletedMessage(ctx context.Context, event events.IntegrationEvent) error {
 	// Xử lý logic khi nhận được sự kiện Deleted
+	data, err := utils.ParsePayload[communicationEvent.DeleteMessagePayload](event.Payload)
+	if err != nil {
+		return kafka.NewNonRetryableError(fmt.Errorf("failed to parse payload: %w", err))
+	}
+	if data == nil {
+		return kafka.NewNonRetryableError(fmt.Errorf("payload is nil"))
+	}
+	// Xử lý xóa message trong repository
+	err = c.messageRepo.DeleteMessage(ctx, data.ConversationID, data.Bucket, data.MessageID)
+	if err != nil {
+		return fmt.Errorf("failed to delete message in repository: %w", err)
+	}
 	return nil
 }
 func (c *ConsumerMessage) ConsumerFailedMessage(ctx context.Context) error {

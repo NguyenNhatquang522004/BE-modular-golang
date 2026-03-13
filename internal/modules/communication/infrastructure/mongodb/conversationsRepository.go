@@ -423,3 +423,19 @@ func (r *ConversationsRepository) GetConversationByGroupID(ctx context.Context, 
 		Limit:      limit,
 	}, nil
 }
+func (r *ConversationsRepository) CheckConversationExistsByPrivateChatKey(ctx context.Context, privateChatKey string) (*entity.Conversation, error) {
+	collection := r.client.Collection(entity.Conversation{}.CollectionName())
+	query := bson.M{
+		"type":             "private",
+		"private_chat_key": privateChatKey,
+	}
+	var conversation *entity.Conversation
+	err := collection.FindOne(ctx, query).Decode(&conversation)
+	if err != nil {
+		if errors.Is(err, mongo.ErrNoDocuments) {
+			return nil, nil // Không tìm thấy cuộc trò chuyện nào với privateChatKey này
+		}
+		return nil, err // Lỗi khác xảy ra
+	}
+	return conversation, nil // Trả về cuộc trò chuyện tìm thấy
+}

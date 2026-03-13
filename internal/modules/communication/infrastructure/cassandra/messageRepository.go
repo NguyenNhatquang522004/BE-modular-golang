@@ -750,3 +750,14 @@ func (r *MessageRepository) GetMessagesByMessageID(ctx context.Context, conversa
 
 	return &message, nil
 }
+func (r *MessageRepository) DeleteAllMessagesByMessageConversationID(ctx context.Context, conversationID string) error {
+	tableName := entity.Message{}.TableName()
+	query := fmt.Sprintf(`DELETE FROM %s WHERE conversation_id = ?`, tableName)
+
+	safeCtx := context.WithoutCancel(ctx)
+	if err := r.session.Query(query, conversationID).WithContext(safeCtx).Exec(); err != nil {
+		return fmt.Errorf("failed to delete all messages of conversation %s: %w", conversationID, err)
+	}
+
+	return nil
+}

@@ -75,6 +75,13 @@ func (m *ModuleCommunication) initConversationIndexes(ctx context.Context, db *m
 		{
 			Keys: bson.D{{Key: "creator_id", Value: 1}},
 		},
+		// C. PRIVATE CHAT 1-1: Đảm bảo không trùng lặp cuộc hội thoại giữa 2 người (Idempotency)
+		{
+			Keys: bson.D{{Key: "private_chat_key", Value: 1}},
+			Options: options.Index().
+				SetUnique(true). // Bắt buộc Unique để chống Race Condition khi tạo chat 1-1
+				SetSparse(true), // Rất quan trọng: Bỏ qua các Group Chat (vì Group chat không có field private_chat_key)
+		},
 	}
 
 	_, err := coll.Indexes().CreateMany(ctx, models)

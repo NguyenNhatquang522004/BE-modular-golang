@@ -37,7 +37,7 @@ type IMessageReactionsRepository interface {
 	// =========================================================================
 	// UPDATE
 	// =========================================================================
-
+	UpdateOrInsertReaction(ctx context.Context, reaction *entity.MessageReaction) error
 	// UpdateReaction cập nhật reaction_code của 1 reaction đã tồn tại.
 	// Yêu cầu đủ Primary Key: (conversation_id, message_id, user_id).
 	UpdateReaction(ctx context.Context, reaction *entity.MessageReaction) error

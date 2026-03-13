@@ -4,11 +4,11 @@ import (
 	"context"
 	"errors"
 
+	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/sharedEnums"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/communication/delivery/dto/req"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/communication/delivery/dto/res"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/communication/delivery/mapper"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/communication/domain/IRepository/IRepositoryMongodb"
-	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/communication/enum"
 )
 
 type UpdateGroupConversationUsecase struct {
@@ -39,7 +39,7 @@ func (u *UpdateGroupConversationUsecase) Execute(ctx context.Context, req *req.U
 			ErrorMessage:   errors.New("Conversation not found for update"),
 		}, nil
 	}
-	if data.Type != enum.TypeGroup {
+	if data.Type != sharedEnums.TypeGroup {
 		return &res.FailedChannelGroupConversationResponse{
 			ChannelID:      req.ID,
 			ConversationID: req.ID,

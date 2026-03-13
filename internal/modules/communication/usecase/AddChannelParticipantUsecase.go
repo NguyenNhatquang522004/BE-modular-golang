@@ -4,11 +4,11 @@ import (
 	"context"
 	"errors"
 
+	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/sharedEnums"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/communication/delivery/dto/req"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/communication/delivery/dto/res"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/communication/delivery/mapper"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/communication/domain/IRepository/IRepositoryMongodb"
-	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/communication/enum"
 )
 
 type AddChannelParticipantUsecase struct {
@@ -38,7 +38,7 @@ func (u *AddChannelParticipantUsecase) Execute(ctx context.Context, req *req.Add
 			ErrorMessage:   errors.New("Conversation not found"),
 		}, nil
 	}
-	if dataConversation.Type != enum.TypeChannel {
+	if dataConversation.Type != sharedEnums.TypeChannel {
 		return &res.FailedParticipantResponse{
 			ConversationID: req.ConversationID,
 			UserID:         req.UserID,

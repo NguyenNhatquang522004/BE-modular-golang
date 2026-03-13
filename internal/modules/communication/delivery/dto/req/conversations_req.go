@@ -4,7 +4,6 @@ import (
 	"time"
 
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/sharedEnums"
-	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/communication/enum"
 )
 
 type ConversationAvatarReq struct {
@@ -31,20 +30,20 @@ type LastMessageCacheReq struct {
 }
 
 type ConversationReq struct {
-	ID               string                        `json:"id"`
-	Type             *enum.ConversationType        `json:"type" binding:"required"`
-	Scope            *enum.ConversationScope       `json:"scope" binding:"required"`
-	Status           *sharedEnums.ProcessingStatus `json:"status" binding:"required"`
-	Name             string                        `json:"name,omitempty"`
-	Avatar           *ConversationAvatarReq        `json:"avatar,omitempty"`
-	CreatorID        string                        `json:"creator_id" binding:"required"`
-	OwnerID          string                        `json:"owner_id" binding:"required"`
-	RelatedGroupID   *string                       `json:"related_group_id,omitempty"` // Pointer string
-	RelatedChannelID *string                       `json:"related_channel_id,omitempty"`
-	Permissions      ConversationPermissionsReq    `json:"permissions"`
-	Theme            *ConversationThemeReq         `json:"theme,omitempty"`
-	LastMessage      *LastMessageCacheReq          `json:"last_message,omitempty"`
-	ParticipantCount int                           `json:"participant_count"`
-	CreatedAt        time.Time                     `json:"created_at"`
-	UpdatedAt        time.Time                     `json:"updated_at"`
+	ID               string                         `json:"id"`
+	Type             *sharedEnums.ConversationType  `json:"type" binding:"required"`
+	Scope            *sharedEnums.ConversationScope `json:"scope" binding:"required"`
+	Status           *sharedEnums.ProcessingStatus  `json:"status" binding:"required"`
+	Name             string                         `json:"name,omitempty"`
+	Avatar           *ConversationAvatarReq         `json:"avatar,omitempty"`
+	CreatorID        string                         `json:"creator_id" binding:"required"`
+	OwnerID          string                         `json:"owner_id" binding:"required"`
+	RelatedGroupID   *string                        `json:"related_group_id,omitempty"` // Pointer string
+	RelatedChannelID *string                        `json:"related_channel_id,omitempty"`
+	Permissions      ConversationPermissionsReq     `json:"permissions"`
+	Theme            *ConversationThemeReq          `json:"theme,omitempty"`
+	LastMessage      *LastMessageCacheReq           `json:"last_message,omitempty"`
+	ParticipantCount int                            `json:"participant_count"`
+	CreatedAt        time.Time                      `json:"created_at"`
+	UpdatedAt        time.Time                      `json:"updated_at"`
 }
