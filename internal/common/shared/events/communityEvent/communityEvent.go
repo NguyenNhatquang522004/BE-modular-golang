@@ -1,6 +1,8 @@
 package communityEvent
 
 import (
+	"time"
+
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/constants"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/sharedEnums"
 )
@@ -27,7 +29,8 @@ type DeleteCommunityRelationTargetPayload struct {
 }
 
 type CreateGroupPayload struct {
-	GroupID string `json:"group_id"` // Dùng để update hoặc tracking, có thể là UUID hoặc ObjectID dưới dạng string
+	GroupID   string `json:"group_id"`   // Dùng để update hoặc tracking, có thể là UUID hoặc ObjectID dưới dạng
+	CreatorID string `json:"creator_id"` // Thêm trường creatorID để biết ai là người tạo nhóm
 	// BẮT BUỘC
 	Name       string                   `json:"name" validate:"required,min=3,max=100"`
 	Privacy    sharedEnums.PrivacyScope `json:"privacy" validate:"required"`
@@ -76,6 +79,10 @@ type CreateGroupSettingsPayload struct {
 type CreateFeatureFlagPayload struct {
 	IsEnabled bool `json:"is_enabled"`
 }
+type DeleteGroupPayload struct {
+	UserAction string `json:"user_action"` // Enum: "delete" hoặc "leave"
+	GroupID    string `json:"group_id"`
+}
 type UpdateGroupPayload struct {
 	GroupID     string                    `json:"group_id"` // Dùng để update hoặc tracking, có thể là UUID hoặc ObjectID dưới dạng string
 	Name        *string                   `json:"name,omitempty" validate:"omitempty,min=3,max=100"`
@@ -119,4 +126,67 @@ type UpdateGroupSettingsPayload struct {
 
 type UpdateFeatureFlagPayload struct {
 	IsEnabled *bool `json:"is_enabled,omitempty"`
+}
+
+// =====================================================================
+// 1. SUB-PAYLOADS (Dùng chung cho Create/Update nếu cần)
+// =====================================================================
+
+type JoinAnswerPayload struct {
+	// Dùng string thay vì primitive.ObjectID để tách biệt tầng HTTP và DB
+	QuestionID string `json:"question_id" binding:"required,mongodb"`
+	Answer     string `json:"answer" binding:"required,max=1000"`
+}
+
+type DisciplineInfoPayload struct {
+	Reason    string     `json:"reason" binding:"required,max=500"`
+	BannedBy  string     `json:"banned_by" binding:"required,uuid"`               // Assuming Postgres UUID format
+	UntilDate *time.Time `json:"until_date,omitempty" binding:"omitempty,gt=now"` // Bắt buộc phải là ngày trong tương lai
+}
+
+// =====================================================================
+// 2. CREATE PAYLOAD (POST /api/v1/groups/{group_id}/members)
+// =====================================================================
+
+type CreateGroupMemberPayload struct {
+	// Dùng binding:"required" để đảm bảo client bắt buộc phải gửi.
+	// Nếu group_id được lấy từ URL params (Path) thì không cần thiết để trong body.
+	// Tôi vẫn để ở đây để đảm bảo tính đầy đủ.
+	GroupID string                       `json:"group_id" binding:"required,mongodb"`
+	UserID  string                       `json:"user_id" binding:"required,uuid"` // Assuming Postgres UUID
+	Role    sharedEnums.RoleType         `json:"role" binding:"required"`         // Nên validate custom hoặc oneof='admin' 'member'
+	Status  sharedEnums.ProcessingStatus `json:"status" binding:"required"`       // Nên validate custom hoặc oneof='active' 'pending' 'invited'
+
+	// Optional fields (Có thể rỗng)
+	InviterID   string              `json:"inviter_id,omitempty" binding:"omitempty,uuid"`
+	JoinAnswers []JoinAnswerPayload `json:"join_answers,omitempty" binding:"dive"` // "dive" giúp validate vào sâu từng phần tử trong mảng
+}
+
+// =====================================================================
+// 3. UPDATE PAYLOAD (PATCH /api/v1/groups/{group_id}/members/{user_id})
+// =====================================================================
+
+type UpdateGroupMemberPayload struct {
+	GroupID string `json:"group_id" binding:"required,mongodb"` // Dùng để update hoặc tracking, có thể là UUID hoặc ObjectID dưới dạng string
+	UserID  string `json:"user_id" binding:"required,uuid"`     // Assuming Postgres UUID
+	// BEST PRACTICE: Dùng Pointer (*) cho update payload.
+	// Nếu client không gửi trường này (nil), ta bỏ qua.
+	// Nếu client gửi, ta lấy giá trị thực để update.
+	Role   *sharedEnums.RoleType         `json:"role,omitempty" binding:"omitempty"`
+	Status *sharedEnums.ProcessingStatus `json:"status,omitempty" binding:"omitempty"`
+
+	// Kỷ luật: Nếu client muốn ban/mute
+	DisciplineInfo *DisciplineInfoPayload `json:"discipline_info,omitempty" binding:"omitempty"`
+
+	// Cập nhật huy hiệu gamification
+	Badges []sharedEnums.UserBadge `json:"badges,omitempty" binding:"omitempty"`
+
+	// Chú ý: KHÔNG cho phép update GroupID, UserID vì đây là danh tính core của record.
+	// KHÔNG cho update JoinedAt, CreatedAt, UpdatedAt (Hệ thống tự lo).
+	// KHÔNG cho update LastActiveAt ở API này (Nên update thông qua middleware hoặc sự kiện hoạt động).
+}
+type DeleteGroupMemberPayload struct {
+	GroupID   string `json:"group_id" binding:"required,mongodb"`
+	UserID    string `json:"user_id" binding:"required,uuid"`
+	DeleteALL bool   `json:"delete_all"` // Nếu true, xóa tất cả bài viết và tương tác của user trong nhóm, không chỉ xóa member record
 }

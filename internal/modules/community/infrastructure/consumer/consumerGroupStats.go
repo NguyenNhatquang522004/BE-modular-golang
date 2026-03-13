@@ -109,8 +109,14 @@ func (c *ConsumerGroupStats) handleCreatedEvent(ctx context.Context, event event
 		return fmt.Errorf("group not found with ID %s for event %s", data.GroupID, event.ID)
 	}
 	// Cập nhật lại số liệu thống kê của nhóm dựa trên dữ liệu mới
-	datagroup.Stats.MemberCount = data.MemberCount + datagroup.Stats.MemberCount
-	datagroup.Stats.PostCount = data.PostCount + datagroup.Stats.PostCount
+	if data.MemberCount != 0 {
+		datagroup.Stats.MemberCount = data.MemberCount + datagroup.Stats.MemberCount
+		datagroup.Stats.PendingMemberCount = data.PendingMemberCount - 1
+	}
+	if data.PostCount != 0 {
+		datagroup.Stats.PostCount = data.PostCount + datagroup.Stats.PostCount
+		datagroup.Stats.PendingPostCount = data.PendingPostCount - 1
+	}
 	datagroup.Stats.PendingMemberCount = data.PendingMemberCount + datagroup.Stats.PendingMemberCount
 	datagroup.Stats.PendingPostCount = data.PendingPostCount + datagroup.Stats.PendingPostCount
 	datagroup.Stats.ReportedPostCount = data.ReportedPostCount + datagroup.Stats.ReportedPostCount
@@ -135,9 +141,16 @@ func (c *ConsumerGroupStats) handleUpdatedEvent(ctx context.Context, event event
 	if datagroup == nil {
 		return fmt.Errorf("group not found with ID %s for event %s", data.GroupID, event.ID)
 	}
+
 	// Cập nhật lại số liệu thống kê của nhóm dựa trên dữ liệu mới
-	datagroup.Stats.MemberCount = data.MemberCount + datagroup.Stats.MemberCount
-	datagroup.Stats.PostCount = data.PostCount + datagroup.Stats.PostCount
+	if data.MemberCount != 0 {
+		datagroup.Stats.MemberCount = data.MemberCount + datagroup.Stats.MemberCount
+		datagroup.Stats.PendingMemberCount = data.PendingMemberCount - 1
+	}
+	if data.PostCount != 0 {
+		datagroup.Stats.PostCount = data.PostCount + datagroup.Stats.PostCount
+		datagroup.Stats.PendingPostCount = data.PendingPostCount - 1
+	}
 	datagroup.Stats.PendingMemberCount = data.PendingMemberCount + datagroup.Stats.PendingMemberCount
 	datagroup.Stats.PendingPostCount = data.PendingPostCount + datagroup.Stats.PendingPostCount
 	datagroup.Stats.ReportedPostCount = data.ReportedPostCount + datagroup.Stats.ReportedPostCount

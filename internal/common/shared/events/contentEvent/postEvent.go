@@ -19,10 +19,10 @@ type UpdatePostPayload struct {
 	Deletemedia *[]string             `json:"delete_media,omitempty"` // Danh sách media_id cần xoá khỏi post, nếu client muốn xoá media nào đó thì gửi lên ID của nó, backend sẽ xoá khỏi post. Nếu client muốn xoá tất cả media thì gửi lên tất cả media_id hiện có của post.
 	// Media thay vì update lẻ tẻ, thường Best Practice là client sẽ gửi lại MẢNG MỚI HOÀN TOÀN
 	// Backend sẽ xoá media cũ và insert media mới để tránh rác logic
-	Media *[]MediaItemPayload `json:"media,omitempty" validate:"omitempty,max=10"`
-
-	Extension *ExtensionPayload `json:"extension,omitempty"`
-	Setting   *SettingPayload   `json:"setting,omitempty"`
+	Media     *[]MediaItemPayload           `json:"media,omitempty" validate:"omitempty,max=10"`
+	Status    *sharedEnums.ProcessingStatus `json:"status,omitempty"`
+	Extension *ExtensionPayload             `json:"extension,omitempty"`
+	Setting   *SettingPayload               `json:"setting,omitempty"`
 }
 
 type UpdatePrivacyPayload struct {

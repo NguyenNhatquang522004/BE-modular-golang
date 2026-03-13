@@ -43,7 +43,9 @@ func ToCreateEntityPostPayload(r *contentEvent.CreatePostPayload) *entity.Post {
 		CreatedAt: time.Now(),
 		UpdatedAt: time.Now(),
 	}
-
+	if r.Context.Type == sharedEnums.ContextTypeGroup {
+		post.Status = sharedEnums.ProcessingPending
+	}
 	return post
 }
 func ToCreateEntityPostMediaPayload(postID string, mediaItems []contentEvent.MediaItemPayload) *entity.PostMedia {
@@ -192,6 +194,9 @@ func UpdateEntityPostFromPayload(post *entity.Post, r *contentEvent.UpdatePostPa
 	}
 	if r.Mentions != nil {
 		post.Mentions = *r.Mentions
+	}
+	if r.Status != nil {
+		post.Status = *r.Status
 	}
 	post.IsEdited = true
 	post.UpdatedAt = time.Now()

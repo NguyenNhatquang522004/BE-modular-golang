@@ -10,6 +10,7 @@ import (
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/IRepositoryShare"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/constants"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/events"
+	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/events/communityEvent"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/events/contentEvent"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/events/mediaEvent"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/infrastructure/kafka"
@@ -162,7 +163,22 @@ func (c *ConsumerPost) handleCreatedPost(ctx context.Context, event events.Integ
 					taskResultchan <- taskResult{err: fmt.Errorf("failed to create post in repository: %w", err)}
 					return
 				}
-
+				if entitypost.Context.Type == sharedEnums.ContextTypeGroup {
+					payload := &communityEvent.GroupStatsPayload{
+						GroupID:            entitypost.Context.TargetID,
+						MemberCount:        0,
+						PostCount:          0,
+						PendingMemberCount: 0,
+						PendingPostCount:   1, // Tăng số lượng bài viết đang chờ duyệt lên 1
+						ReportedPostCount:  0,
+						EventType:          constants.Created,
+					}
+					err = c.events.Publish(ctx, constants.TopicGroupStats.String(), entitypost.Context.TargetID, constants.Created.String(), payload)
+					if err != nil {
+						taskResultchan <- taskResult{err: fmt.Errorf("failed to publish group stats event: %w", err)}
+						return
+					}
+				}
 				taskResultchan <- taskResult{datapost: entitypost, err: nil}
 			case 1:
 				entitymedia := mapper.ToCreateEntityPostMediaPayload(data.ID, data.Media) // PostID sẽ được gán sau khi tạo post
@@ -416,6 +432,8 @@ func (c *ConsumerPost) handleUpdatedPost(ctx context.Context, event events.Integ
 					errchan <- fmt.Errorf("failed to update post in repository: %w", err)
 					return
 				}
+
+				errchan <- nil
 			case 1:
 				if data.Media != nil {
 					if datamedia == nil {
@@ -495,6 +513,44 @@ func (c *ConsumerPost) handleUpdatedPost(ctx context.Context, event events.Integ
 		return fmt.Errorf("failed to run worker: %w", err)
 	}
 	wg.Wait()
+	if datapost.Context.Type == sharedEnums.ContextTypeGroup && datapost.Status == sharedEnums.ProcessingActive {
+		payload := &communityEvent.GroupStatsPayload{
+			GroupID:            datapost.Context.TargetID,
+			MemberCount:        0,
+			PostCount:          1,
+			PendingMemberCount: 0,
+			PendingPostCount:   0, // Cập nhật lại số lượng bài viết đang chờ duyệt nếu có thay đổi về status
+			ReportedPostCount:  0,
+			EventType:          constants.Updated,
+		}
+		err = c.events.Publish(ctx, constants.TopicGroupStats.String(), datapost.Context.TargetID, constants.Updated.String(), payload)
+		if err != nil {
+			errchan <- fmt.Errorf("failed to publish group stats event: %w", err)
+		}
+	}
+	if datapost.Context.Type == sharedEnums.ContextTypeGroup && datapost.Status == sharedEnums.ProcessingFailed {
+		payload := &communityEvent.GroupStatsPayload{
+			GroupID:            datapost.Context.TargetID,
+			MemberCount:        0,
+			PostCount:          0,
+			PendingMemberCount: 0,
+			PendingPostCount:   1, // Cập nhật lại số lượng bài viết đang chờ duyệt nếu có thay đổi về status
+			ReportedPostCount:  0,
+			EventType:          constants.Deleted,
+		}
+		err = c.events.Publish(ctx, constants.TopicGroupStats.String(), datapost.Context.TargetID, constants.Deleted.String(), payload)
+		if err != nil {
+			errchan <- fmt.Errorf("failed to publish group stats event: %w", err)
+		}
+		payloadDelete := &contentEvent.DeletePostPayload{
+			PostID: data.PostID,
+			Reason: "Post status changed to failed, treated as deleted in group stats",
+		}
+		err = c.events.Publish(ctx, constants.TopicPost.String(), data.PostID, constants.Deleted.String(), payloadDelete)
+		if err != nil {
+			errchan <- fmt.Errorf("failed to publish post deletion event for group stats update: %w", err)
+		}
+	}
 	close(errchan)
 	var finalErr error
 	for err := range errchan {

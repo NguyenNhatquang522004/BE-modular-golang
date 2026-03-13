@@ -11,7 +11,7 @@ import (
 
 // ToCreateGroupEntity chuyển đổi CreateGroupPayload thành entity.Group
 // Truyền thêm creatorID lấy từ Token/Context để đảm bảo bảo mật.
-func ToCreateGroupEntity(req *communityEvent.CreateGroupPayload, creatorID string) *entity.Group {
+func ToCreateGroupEntity(req *communityEvent.CreateGroupPayload) *entity.Group {
 	now := time.Now()
 	if req.GroupID == "" {
 		return nil // Hoặc trả về lỗi nếu GroupID là bắt buộc
@@ -22,7 +22,7 @@ func ToCreateGroupEntity(req *communityEvent.CreateGroupPayload, creatorID strin
 	}
 	group := &entity.Group{
 		ID:         convertGroupID,
-		CreatorID:  creatorID,
+		CreatorID:  req.CreatorID, // Lấy từ payload, nhưng nên xác thực trong service layer
 		Name:       req.Name,
 		Slug:       generateSlug(req.Name), // Helper func để tạo URL friendly
 		Privacy:    req.Privacy,
