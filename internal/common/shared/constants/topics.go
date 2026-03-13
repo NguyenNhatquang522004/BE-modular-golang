@@ -77,7 +77,7 @@ const (
 	TopicDeleteRelationTarget TopicName = "business.delete_relation_target.events"
 	TopicConversation         TopicName = "communication.conversation.events"
 	TopicStatsConversation    TopicName = "communication.stats_conversation.events"
-	TopicParticipant          TopicName = "communication.participant.events"
+	TopicConversationParticipant          TopicName = "communication.participant.events"
 	TopicRelpyStory           TopicName = "communication.reply_story.events"
 	//community
 	TopicGroupStats                    TopicName = "community.group_stats.events"

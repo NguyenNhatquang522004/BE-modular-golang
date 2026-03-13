@@ -213,6 +213,13 @@ func (c *ConsumerMessage) handleDeletedMessage(ctx context.Context, event events
 	if data == nil {
 		return kafka.NewNonRetryableError(fmt.Errorf("payload is nil"))
 	}
+	if data.DeleteAlll {
+		err = c.messageRepo.DeleteAllMessagesByMessageConversationID(ctx, data.ConversationID)
+		if err != nil {
+			return fmt.Errorf("failed to delete all messages in conversation %s: %w", data.ConversationID, err)
+		}
+		return nil
+	}
 	// Xử lý xóa message trong repository
 	err = c.messageRepo.DeleteMessage(ctx, data.ConversationID, data.Bucket, data.MessageID)
 	if err != nil {

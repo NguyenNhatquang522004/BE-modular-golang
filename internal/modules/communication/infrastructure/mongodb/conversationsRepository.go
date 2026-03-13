@@ -8,6 +8,7 @@ import (
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/errors/mongodbErrors"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/IRepositoryShare"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/dto"
+	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/sharedEnums"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/utils"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/communication/domain/entity"
 	"go.mongodb.org/mongo-driver/bson"
@@ -426,7 +427,7 @@ func (r *ConversationsRepository) GetConversationByGroupID(ctx context.Context, 
 func (r *ConversationsRepository) CheckConversationExistsByPrivateChatKey(ctx context.Context, privateChatKey string) (*entity.Conversation, error) {
 	collection := r.client.Collection(entity.Conversation{}.CollectionName())
 	query := bson.M{
-		"type":             "private",
+		"type":             sharedEnums.TypePrivate, // Thay bằng enum thực tế của bạn
 		"private_chat_key": privateChatKey,
 	}
 	var conversation *entity.Conversation

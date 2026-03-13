@@ -146,12 +146,12 @@ func (c *ConsumerStatsMessage) handleDeletedStatsMessage(ctx context.Context, ev
 	if data == nil {
 		return kafka.NewNonRetryableError(fmt.Errorf("payload is nil"))
 	}
-	dataMessageReaction, err := c.messageReactionRepo.GetReactionByUser(ctx, data.ConversationID, data.MessageID, data.UserID)
-	if err != nil {
-		return fmt.Errorf("failed to get message reaction: %w", err)
-	}
-	if dataMessageReaction == nil {
-		return fmt.Errorf("message reaction not found for user %s on message %s in conversation %s", data.UserID, data.MessageID, data.ConversationID)
+	if data.DeleteAll == true {
+		err := c.messageReactionRepo.DeleteReactionByConversationID(ctx, data.ConversationID)
+		if err != nil {
+			return fmt.Errorf("failed to delete all message reactions in conversation %s: %w", data.ConversationID, err)
+		}
+		return nil
 	}
 	err = c.messageReactionRepo.DeleteReaction(ctx, data.ConversationID, data.MessageID, data.UserID)
 	if err != nil {

@@ -3,7 +3,7 @@ package entity
 import (
 	"time"
 
-	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/communication/enum"
+	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/sharedEnums"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -29,8 +29,8 @@ type CallLog struct {
 	Participants []string `bson:"participants" json:"participants"`
 
 	// 3. META INFO
-	Type   enum.CallType   `bson:"type" json:"type"`     // 'voice', 'video'
-	Status enum.CallStatus `bson:"status" json:"status"` // 'missed', 'ended'...
+	Type   sharedEnums.CallType   `bson:"type" json:"type"`     // 'voice', 'video'
+	Status sharedEnums.CallStatus `bson:"status" json:"status"` // 'missed', 'ended'...
 
 	// 4. TIMING
 	StartedAt time.Time `bson:"started_at" json:"started_at"`

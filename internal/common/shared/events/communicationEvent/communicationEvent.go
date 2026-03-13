@@ -1,8 +1,11 @@
 package communicationEvent
 
 import (
+	"time"
+
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/constants"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/sharedEnums"
+	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/communication/enum"
 	"github.com/gocql/gocql"
 )
 
@@ -60,6 +63,7 @@ type MessageStatsPayload struct {
 	MessageID      string                   `json:"message_id"`
 	ReactionCode   sharedEnums.ReactionCode `json:"reaction_code"`
 	EventType      constants.EventType      `json:"event_type"`
+	DeleteAll      bool                     `json:"delete_all,omitempty"` // Cờ để xóa tất cả các reaction của user này trên message này (nếu có)
 }
 
 type DeletePrivateConversationGroupPayload struct {
@@ -69,6 +73,7 @@ type DeletePrivateConversationGroupPayload struct {
 type CreateConversationPayload struct {
 	ConversationID        string `json:"conversation_id" validate:"required"` // Client-side generated UUID
 	UserCreatorAndOwnerID string `json:"user_id" validate:"required"`         // ID của người tạo cuộc hội thoại, dùng để add vào participant_ids bắt buộc
+	UserCreatorName       string `json:"user_name" validate:"required"`       // Tên của người tạo cuộc hội thoại, dùng để làm nickname khi tạo participant record
 	// --- 1. CLASSIFICATION ---
 	Type  sharedEnums.ConversationType  `json:"type" binding:"required"`  // Bắt buộc: 'private' hoặc 'group'
 	Scope sharedEnums.ConversationScope `json:"scope" binding:"required"` // Bắt buộc: 'messenger' hoặc 'community_channel'
@@ -94,7 +99,11 @@ type CreateConversationPayload struct {
 	// --- LƯU Ý QUAN TRỌNG (BEST PRACTICE) ---
 	// Dù Entity Conversation không trực tiếp lưu mảng UserID (do bạn dùng Collection/Table Members riêng),
 	// nhưng khi TẠO cuộc hội thoại, client phải gửi lên danh sách những người được thêm vào.
-	ParticipantIDs []string `json:"participant_ids" binding:"required,min=1"`
+	ParticipantIDs []participantInfo `json:"participant_ids" binding:"required,min=1"`
+}
+type participantInfo struct {
+	UserID   string `json:"user_id"`
+	Nickname string `json:"nickname,omitempty"`
 }
 
 // ConversationPermissionsPayload payload cho permissions
@@ -110,6 +119,7 @@ type ConversationThemePayload struct {
 	BackgroundURL string `json:"background_url,omitempty"` // URL ảnh nền
 }
 type UpdateConversationReq struct {
+	ConversationID string `json:"conversation_id" validate:"required"` // Client-side generated UUID
 	// --- 1. GROUP INFO ---
 	Name   *string `json:"name,omitempty"`
 	Avatar *string `json:"avatar_url,omitempty"` // Tương tự, dùng string pointer chứa URL
@@ -125,4 +135,59 @@ type UpdateConversationReq struct {
 
 	// Bổ sung tính năng chuyển nhượng quyền Owner (chỉ Owner hiện tại mới có quyền gọi payload có field này)
 	OwnerID *string `json:"owner_id,omitempty"`
+}
+
+type CreateParticipantPayload struct {
+	// ID cuộc hội thoại là bắt buộc
+	ConversationID string `json:"conversation_id" validate:"required,mongodb"`
+
+	// ID người dùng được thêm (Postgres UUID string)
+	UserID string `json:"user_id" validate:"required,uuid4"`
+
+	// Người thực hiện hành động thêm (Lấy từ Token/Context)
+	AddedByUserID string `json:"added_by_user_id" validate:"required,uuid4"`
+
+	// Vai trò mặc định thường là 'member', nhưng cho phép chỉ định nếu là Admin tạo nhóm
+	Role sharedEnums.RoleType `json:"role" validate:"required,oneof=admin member"`
+
+	// Biệt danh có thể có hoặc không
+	Nickname string `json:"nickname" validate:"omitempty,max=50"`
+}
+type DeleteParticipantPayload struct {
+	ConversationID string `json:"conversation_id" validate:"required,mongodb"`
+	UserID         string `json:"user_id" validate:"required,uuid4"`
+	DeleteAll      bool   `json:"delete_all,omitempty"` // Cờ để xóa tất cả các bản ghi liên quan đến user này trong conversation (nếu có)
+}
+type UpdateParticipantPayload struct {
+	ConversationID string `json:"conversation_id" validate:"required,mongodb"`
+	UserID         string `json:"user_id" validate:"required,uuid4"`
+	// Nickname mới (để trống nếu muốn xóa biệt danh)
+	Nickname *string `json:"nickname" validate:"omitempty,max=50"`
+
+	// Cập nhật vai trò (thường do Admin thực hiện)
+	Role *sharedEnums.RoleType `json:"role" validate:"omitempty,oneof=admin member"`
+
+	// Trạng thái lưu trữ cuộc hội thoại
+	IsArchived *bool `json:"is_archived" validate:"omitempty"`
+
+	// Tắt thông báo:
+	// - Gửi thời gian cụ thể trong tương lai để mute.
+	// - Gửi null (nil) để bật lại thông báo.
+	MuteUntil *time.Time `json:"mute_until" validate:"omitempty"`
+}
+type CreateCallLogPayload struct {
+	// Để string thay vì primitive.ObjectID trong Payload để parse JSON an toàn, sau đó map sang ObjectID ở Service
+	ConversationID string `json:"conversation_id" validate:"required,mongodb"`
+
+	// UUID của người gọi, có thể lấy từ JWT Token ở Controller, nhưng nếu bắt client gửi thì validate UUID
+	CallerID string `json:"caller_id" validate:"required,uuid"`
+
+	// Bắt buộc phải có ít nhất 2 người trong cuộc gọi, kiểm tra từng phần tử phải là chuẩn UUID
+	Participants []string `json:"participants" validate:"required,min=2,dive,uuid"`
+
+	// Type của cuộc gọi, cần validate đúng các giá trị enum cho phép
+	Type sharedEnums.CallType `json:"type" validate:"required,oneof=voice video"`
+
+	// Phân biệt call nhóm hay cá nhân
+	IsGroupCall bool `json:"is_group_call"`
 }

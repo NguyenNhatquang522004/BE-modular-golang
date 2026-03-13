@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"sort"
 	"sync"
 	"time"
 
@@ -12,7 +13,9 @@ import (
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/events"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/events/communicationEvent"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/infrastructure/kafka"
+	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/sharedEnums"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/utils"
+	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/communication/delivery/mapper"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/communication/domain/IRepository/IRepositoryMongodb"
 )
 
@@ -104,16 +107,98 @@ func (c *ConsumerConversation) handleCreatedConversation(ctx context.Context, ev
 	if data == nil {
 		return kafka.NewNonRetryableError(fmt.Errorf("payload is nil"))
 	}
+	if data.Type == sharedEnums.TypePrivate {
+		var users []string
+		users = append(users, data.UserCreatorAndOwnerID)
+		users = append(users, data.ParticipantIDs[0].UserID)
+		sort.Strings(users)
+		privateKey := fmt.Sprintf("private_%s_%s", users[0], users[1])
+		existingConv, err := c.conversationRepo.CheckConversationExistsByPrivateChatKey(ctx, privateKey)
+		if err != nil {
+			return fmt.Errorf("failed to check existing conversation by private chat key: %w", err)
+		}
+		if existingConv != nil {
+			return fmt.Errorf("conversation with private chat key %s already exists", privateKey)
+		}
+	}
+	conversationEntity, err := mapper.ToConversationEntity(data)
+	if err != nil {
+		return kafka.NewNonRetryableError(fmt.Errorf("failed to map payload to conversation entity for event %s: %w", event.ID, err))
+	}
+	if conversationEntity == nil {
+		return kafka.NewNonRetryableError(fmt.Errorf("mapped conversation entity is nil for event %s", event.ID))
+	}
+	err = c.conversationRepo.CreateConversation(ctx, conversationEntity)
+	if err != nil {
+		return fmt.Errorf("failed to create conversation in repository for event %s: %w", event.ID, err)
+	}
+	payloadCreated := &communicationEvent.CreateParticipantPayload{
+		ConversationID: conversationEntity.ID.Hex(),
+		UserID:         data.UserCreatorAndOwnerID,
+		AddedByUserID:  data.UserCreatorAndOwnerID,
+		Nickname:       data.UserCreatorName,
+		Role:           sharedEnums.RoleTypeAdmin,
+	}
+	err = c.events.Publish(ctx, constants.TopicConversationParticipant.String(), conversationEntity.ID.Hex(), constants.Created.String(), payloadCreated)
+	for _, participant := range data.ParticipantIDs {
+		payload := &communicationEvent.CreateParticipantPayload{
+			ConversationID: conversationEntity.ID.Hex(),
+			UserID:         participant.UserID,
+			AddedByUserID:  data.UserCreatorAndOwnerID,
+			Nickname:       participant.Nickname,
+			Role:           sharedEnums.RoleTypeMember,
+		}
+		err = c.events.Publish(ctx, constants.TopicConversationParticipant.String(), conversationEntity.ID.Hex(), constants.Created.String(), payload)
+		if err != nil {
+			return fmt.Errorf("failed to publish create participant event for user %s in conversation %s: %w", participant.UserID, conversationEntity.ID.Hex(), err)
+		}
+	}
 	return nil
 }
 
 func (c *ConsumerConversation) handleUpdatedConversation(ctx context.Context, event events.IntegrationEvent) error {
 	// Implement the logic for handling updated conversation messages
+	data, err := utils.ParsePayload[communicationEvent.UpdateConversationReq](event.Payload)
+	if err != nil {
+		return kafka.NewNonRetryableError(fmt.Errorf("failed to parse event payload for event %s: %w", event.ID, err))
+	}
+	if data == nil {
+		return kafka.NewNonRetryableError(fmt.Errorf("payload is nil"))
+	}
+	existingConv, err := c.conversationRepo.GetConversationByID(ctx, data.ConversationID)
+	if err != nil {
+		return fmt.Errorf("failed to get existing conversation by ID for event %s: %w", event.ID, err)
+	}
+	if existingConv == nil {
+		return fmt.Errorf("conversation with ID %s not found for event %s", data.ConversationID, event.ID)
+	}
+	hasChanges, err := mapper.ApplyConversationUpdate(existingConv, data)
+	if err != nil {
+		return fmt.Errorf("failed to apply conversation update for event %s: %w", event.ID, err)
+	}
+	if !hasChanges {
+		return nil
+	}
+	err = c.conversationRepo.UpdateConversation(ctx, existingConv)
+	if err != nil {
+		return fmt.Errorf("failed to update conversation in repository for event %s: %w", event.ID, err)
+	}
 	return nil
 }
 
 func (c *ConsumerConversation) handleDeletedConversation(ctx context.Context, event events.IntegrationEvent) error {
 	// Implement the logic for handling deleted conversation messages
+	data, err := utils.ParsePayload[communicationEvent.DeletePrivateConversationGroupPayload](event.Payload)
+	if err != nil {
+		return kafka.NewNonRetryableError(fmt.Errorf("failed to parse event payload for event %s: %w", event.ID, err))
+	}
+	if data == nil {
+		return kafka.NewNonRetryableError(fmt.Errorf("payload is nil"))
+	}
+	err = c.conversationRepo.DeleteConversation(ctx, data.TargetID)
+	if err != nil {
+		return fmt.Errorf("failed to delete conversation in repository for event %s: %w", event.ID, err)
+	}
 	return nil
 }
 func (c *ConsumerConversation) ConsumerFailedConversation(ctx context.Context) error {

@@ -21,4 +21,5 @@ type IMessageRepository interface {
 	GetMessagesByConversationIDs(ctx context.Context, conversationID string, bucket int, cursor string, limit int) (*dto.PaginationRes, error)
 	GetMessagesByConversationID(ctx context.Context, conversationID string, bucket int) (*entity.Message, error)
 	GetMessagesByMessageID(ctx context.Context, conversationID string, bucket int, messageID string) (*entity.Message, error)
+	DeleteAllByConversationID(ctx context.Context, conversationID string) error
 }
