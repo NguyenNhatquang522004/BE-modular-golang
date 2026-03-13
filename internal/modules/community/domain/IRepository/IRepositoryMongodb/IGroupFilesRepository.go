@@ -15,6 +15,7 @@ type IGroupFilesRepository interface {
 	GetGroupFilesByGroupID(ctx context.Context, groupID string, cursor string, limit int) (*dto.PaginationRes, error)
 	GetGroupFilesByGroupIDAndUploaderID(ctx context.Context, groupID string, UploaderID string, cursor string, limit int) (*dto.PaginationRes, error)
 	UpdateGroupFileDownloadCount(ctx context.Context, id string, newCount int) error
+	UpdateGroupFile(ctx context.Context, file *entity.GroupFile) error
 	DeleteGroupFile(ctx context.Context, id string) error
 	deleteBulkGroupFiles(ctx context.Context, ids []string) (int64, []*mongodbErrors.BulkError, error)
 	DeleteGroupFilesByGroupID(ctx context.Context, groupID string) error

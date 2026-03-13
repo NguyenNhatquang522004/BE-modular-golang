@@ -431,3 +431,16 @@ func (r *GroupFilesRepository) DeleteBulkGroupFilesByGroupIDAndUploaderID(ctx co
 	}
 	return result.DeletedCount, faildocs, nil
 }
+func (r *GroupFilesRepository) UpdateGroupFile(ctx context.Context, file *entity.GroupFile) error {
+	collection := r.client.Collection(entity.GroupFile{}.CollectionName())
+	idObj, err := primitive.ObjectIDFromHex(file.ID.Hex())
+	if err != nil {
+		return err
+	}
+	update := bson.M{"$set": file}
+	_, err = collection.UpdateOne(ctx, bson.M{"_id": idObj}, update)
+	if err != nil {
+		return err
+	}
+	return nil
+}

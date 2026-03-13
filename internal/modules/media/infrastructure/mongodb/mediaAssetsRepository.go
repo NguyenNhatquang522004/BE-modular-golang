@@ -559,3 +559,14 @@ func (r *MediaAssetsRepository) DeleteMediaAssetsByMessageID(ctx context.Context
 	}
 	return nil
 }
+
+func (r *MediaAssetsRepository) InsertOrUpdateMediaAsset(ctx context.Context, asset *entity.MediaAsset) error {
+	collection := r.client.Collection(entity.MediaAsset{}.CollectionName())
+	filter := bson.M{"_id": asset.ID}
+	update := bson.M{"$set": asset}
+	_, err := collection.UpdateOne(ctx, filter, update, options.Update().SetUpsert(true))
+	if err != nil {
+		return fmt.Errorf("failed to insert or update media asset: %w", err)
+	}
+	return nil
+}

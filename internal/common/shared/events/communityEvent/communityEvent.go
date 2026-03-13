@@ -312,3 +312,61 @@ type DeleteGroupJoinQuestionPayload struct {
 	GroupID   string `json:"group_id" validate:"required,mongodb"`
 	DeleteAll bool   `json:"delete_all"` // Nếu true, xóa tất cả bài viết và tương tác của user trong nhóm, không chỉ xóa member record
 }
+
+// CreateGroupFilePayload là payload nhận từ client khi tạo mới file metadata
+type CreateGroupFilePayload struct {
+	ID string `json:"id"` // Dùng để update hoặc tracking, có thể là UUID hoặc ObjectID dưới dạng string. Tuy nhiên, thường sẽ để DB tự sinh ID nên có thể bỏ qua trường này ở Create.
+	// 1. LINKING (Dùng string để dễ map từ JSON, validate chuẩn ObjectID của Mongo)
+	GroupID    string  `json:"group_id" binding:"required,mongodb"`
+	PostID     *string `json:"post_id,omitempty" binding:"omitempty,mongodb"`
+	CommentID  *string `json:"comment_id,omitempty" binding:"omitempty,mongodb"`
+	MessageID  *string `json:"message_id,omitempty" binding:"omitempty,mongodb"`
+	UploaderID string  // Trường này sẽ được lấy từ JWT Token ở tầng Middleware, không cần client gửi lên
+
+	// Lưu ý: UploaderID KHÔNG có ở đây. Nó phải được trích xuất từ JWT Token ở HTTP Middleware!
+
+	// 2. FILE INFO
+	FileName string                `json:"file_name" binding:"required,max=255"`
+	FileType sharedEnums.MediaType `json:"file_type" binding:"required"`
+	FileSize int64                 `json:"file_size" binding:"required,gt=0"` // Phải lớn hơn 0 byte
+
+	// 3. STORAGE
+	StorageFileID string `json:"seaweedfs_file_id" binding:"required"`
+	OriginalURL   string `json:"original_url" binding:"required,url"`
+	ThumbnailURL  string `json:"thumbnail_url,omitempty" binding:"omitempty,url"`
+
+	// 4. STATS & METADATA
+	Caption  string              `json:"caption,omitempty" binding:"omitempty,max=1000"`
+	Metadata FileMetadataPayload `json:"metadata" binding:"required"`
+}
+
+// FileMetadataPayload là payload con cho Metadata
+type FileMetadataPayload struct {
+	Extension string `json:"extension" binding:"required"`       // VD: ".xlsx"
+	MimeType  string `json:"mime_type" binding:"required"`       // VD: "application/vnd.ms-excel"
+	SizeBytes int64  `json:"size_bytes" binding:"required,gt=0"` // Thường sẽ giống FileSize ở ngoài, nhưng vẫn cần validate
+
+	// Các trường này chỉ dành cho Image/Video
+	Width    *int     `json:"width,omitempty" binding:"omitempty,gt=0"`
+	Height   *int     `json:"height,omitempty" binding:"omitempty,gt=0"`
+	Duration *float64 `json:"duration,omitempty" binding:"omitempty,gt=0"`
+}
+type UpdateGroupFilePayload struct {
+	ID      string `json:"id" binding:"required,mongodb"`       // Dùng để update hoặc tracking, có thể là UUID hoặc ObjectID dưới dạng string. Bắt buộc phải có để biết update record nào.
+	GroupID string `json:"group_id" binding:"required,mongodb"` // Dùng để update hoặc tracking, có thể là UUID hoặc ObjectID dưới dạng string. Bắt buộc phải có để biết update record nào.
+	// Dùng con trỏ *string để phân biệt giữa việc Client không truyền lên (nil)
+	// và việc Client truyền lên một chuỗi rỗng ("") hoặc muốn cập nhật.
+
+	FileName *string `json:"file_name,omitempty" binding:"omitempty,min=1,max=255"`
+	Caption  *string `json:"caption,omitempty" binding:"omitempty,max=1000"`
+
+	// Trong một số trường hợp, video upload lên cần thời gian xử lý thumbnail.
+	// Sau khi xử lý xong (worker), có thể update lại ThumbnailURL.
+	ThumbnailURL *string `json:"thumbnail_url,omitempty" binding:"omitempty,url"`
+}
+
+type DeleteGroupFilePayload struct {
+	ID        string `json:"id" binding:"required,mongodb"`       // Dùng để update hoặc tracking, có thể là UUID hoặc ObjectID dưới dạng string. Bắt buộc phải có để biết update record nào.
+	GroupID   string `json:"group_id" binding:"required,mongodb"` // Dùng để update hoặc tracking, có thể là UUID hoặc ObjectID dưới dạng string. Bắt buộc phải có để biết update record nào.
+	DeleteAll bool   `json:"delete_all"`                          // Nếu true, xóa tất cả bài viết và tương tác của user trong nhóm, không chỉ xóa member record
+}
