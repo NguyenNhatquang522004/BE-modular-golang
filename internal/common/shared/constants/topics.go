@@ -81,7 +81,11 @@ const (
 	TopicRelpyStory              TopicName = "communication.reply_story.events"
 	//community
 	TopicGroupStats                    TopicName = "community.group_stats.events"
-	TopicEventStats                    TopicName = "community.event_stats.events"
+	TopicGroup                         TopicName = "community.group.events"
+	TopicGroupMember                   TopicName = "community.group_member.events"
+	TopicGroupEvent                    TopicName = "community.group_event.events"
+	TopicGroupQA                       TopicName = "community.group_qa.events"
+	TopicGroupFile                     TopicName = "community.group_file.events"
 	TopicDownloadGroupFile             TopicName = "community.download_group_file.events"
 	TopicDeleteCommunityRelationTarget TopicName = "business.delete_relation_target.events" // chưa làm gì cả, dùng chung với communication
 

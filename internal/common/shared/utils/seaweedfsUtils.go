@@ -130,3 +130,4 @@ func IsImage(contentType string) bool {
 func IsVideo(contentType string) bool {
 	return strings.HasPrefix(contentType, "video/")
 }
+
