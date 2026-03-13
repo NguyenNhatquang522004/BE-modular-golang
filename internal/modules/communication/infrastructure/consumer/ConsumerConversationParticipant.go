@@ -149,8 +149,8 @@ func (c *ConsumerConversationParticipant) handleDeletedEvent(ctx context.Context
 	if data == nil {
 		return kafka.NewNonRetryableError(fmt.Errorf("payload is nil for event %s", event.ID))
 	}
-	if data.DeleteAll == true {
-		err = c.participantRepo.DeleteConversationParticipant(ctx, data.ConversationID, data.UserID)
+	if data.DeleteAll == true && data.UserID == "" {
+		err = c.participantRepo.DeleteConversationParticipantByConversationID(ctx, data.ConversationID)
 		if err != nil {
 			return fmt.Errorf("failed to delete conversation participant for event %s: %w", event.ID, err)
 		}

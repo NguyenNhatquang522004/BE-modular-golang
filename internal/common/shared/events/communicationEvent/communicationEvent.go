@@ -5,7 +5,6 @@ import (
 
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/constants"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/sharedEnums"
-	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/communication/enum"
 	"github.com/gocql/gocql"
 )
 
@@ -190,4 +189,44 @@ type CreateCallLogPayload struct {
 
 	// Phân biệt call nhóm hay cá nhân
 	IsGroupCall bool `json:"is_group_call"`
+}
+type UpdateCallLogPayload struct {
+	ID string `json:"id" validate:"required,mongodb"` // ID của CallLog cần cập nhật, dùng để tìm bản ghi trong DB
+	// Cập nhật trạng thái cuối cùng của cuộc gọi
+	Status sharedEnums.CallStatus `json:"status" validate:"required,oneof=missed ended rejected"`
+
+	// Thời điểm kết thúc do client báo lên (hoặc Server tự tính bằng time.Now())
+	EndedAt time.Time `json:"ended_at" validate:"required"`
+
+	// Thời lượng cuộc gọi tính bằng giây. Không thể là số âm.
+	DurationSeconds int `json:"duration_seconds" validate:"gte=0"`
+}
+
+type DeleteCallLogPayload struct {
+	ID             string `json:"id" validate:"required,mongodb"` // ID của CallLog cần xóa, dùng để tìm bản ghi trong DB
+	ConversationID string `json:"conversation_id" validate:"required,mongodb"`
+	DeleteAll      bool   `json:"delete_all,omitempty"` // Cờ để xóa tất cả các bản ghi liên quan đến conversation này (nếu có)
+}
+
+type ConversationStatsPayload struct {
+	UserID            *string                   `json:"user_id"`
+	ConversationID    string                   `json:"conversation_id"`
+	ParticipantCount  *int                     `json:"participant_count"`
+	LastMessage       *LastMessageCachePayload `json:"last_message"`
+	LastSeenAt        *time.Time               `json:"last_seen_at"`
+	LastSeenMessageID *string                  `json:"last_seen_message_id"`
+	EventType         constants.EventType      `json:"event_type"`
+}
+type LastMessageCachePayload struct {
+	// MessageID từ Cassandra (TimeUUID) -> Lưu String
+	MessageID string `bson:"message_id" json:"message_id"`
+
+	Content string `bson:"content" json:"content"`
+
+	// SenderID từ Postgres (UUID) -> Lưu String
+	SenderID string `bson:"sender_id" json:"sender_id"`
+
+	Type sharedEnums.MediaType `bson:"type" json:"type"`
+
+	CreatedAt time.Time `bson:"created_at" json:"created_at"`
 }

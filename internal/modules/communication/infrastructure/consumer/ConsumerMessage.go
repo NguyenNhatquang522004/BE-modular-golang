@@ -142,8 +142,27 @@ func (c *ConsumerMessage) handleCreatedMessage(ctx context.Context, event events
 				return fmt.Errorf("failed to publish media asset event for message %s: %w", data.MessageID, err)
 			}
 		}
-	}
 
+	}
+	payload := &communicationEvent.ConversationStatsPayload{
+		UserID:           nil,
+		ConversationID:   data.ConversationID,
+		ParticipantCount: nil,
+		LastMessage: &communicationEvent.LastMessageCachePayload{
+			MessageID: data.MessageID,
+			Content:   data.Content,
+			SenderID:  data.SenderID.String(),
+			Type:      data.Attachments[0].Type,
+			CreatedAt: time.Now(),
+		},
+		LastSeenAt:        nil,
+		LastSeenMessageID: nil,
+		EventType:         constants.Created,
+	}
+	err = c.events.Publish(ctx, constants.TopicStatsConversation.String(), data.ConversationID, constants.Created.String(), payload)
+	if err != nil {
+		return fmt.Errorf("failed to publish conversation stats event for message %s: %w", data.MessageID, err)
+	}
 	return nil
 }
 func (c *ConsumerMessage) handleUpdatedMessage(ctx context.Context, event events.IntegrationEvent) error {

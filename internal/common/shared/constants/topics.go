@@ -71,14 +71,14 @@ const (
 	TopicArtistStats               TopicName = "media.artist_stats.events"
 	TopicLiveSession               TopicName = "media.live_session.events"
 	// communication
-
-	TopicMessage              TopicName = "communication.message.events"
-	TopicStatsMessage         TopicName = "communication.stats_message.events"
-	TopicDeleteRelationTarget TopicName = "business.delete_relation_target.events"
-	TopicConversation         TopicName = "communication.conversation.events"
-	TopicStatsConversation    TopicName = "communication.stats_conversation.events"
-	TopicConversationParticipant          TopicName = "communication.participant.events"
-	TopicRelpyStory           TopicName = "communication.reply_story.events"
+	TopicMessage                 TopicName = "communication.message.events"
+	TopicStatsMessage            TopicName = "communication.stats_message.events"
+	TopicDeleteRelationTarget    TopicName = "business.delete_relation_target.events"
+	TopicConversation            TopicName = "communication.conversation.events"
+	TopicStatsConversation       TopicName = "communication.stats_conversation.events"
+	TopicConversationParticipant TopicName = "communication.participant.events"
+	TopicCallLog                 TopicName = "communication.call_log.events"
+	TopicRelpyStory              TopicName = "communication.reply_story.events"
 	//community
 	TopicGroupStats                    TopicName = "community.group_stats.events"
 	TopicEventStats                    TopicName = "community.event_stats.events"

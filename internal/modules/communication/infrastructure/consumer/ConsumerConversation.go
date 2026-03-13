@@ -199,6 +199,41 @@ func (c *ConsumerConversation) handleDeletedConversation(ctx context.Context, ev
 	if err != nil {
 		return fmt.Errorf("failed to delete conversation in repository for event %s: %w", event.ID, err)
 	}
+	payloadparticipant := &communicationEvent.DeleteParticipantPayload{
+		ConversationID: data.TargetID,
+		UserID:         "",
+		DeleteAll:      true,
+	}
+	err = c.events.Publish(ctx, constants.TopicConversationParticipant.String(), data.TargetID, constants.Deleted.String(), payloadparticipant)
+	if err != nil {
+		return fmt.Errorf("failed to publish delete participant event for conversation %s: %w", data.TargetID, err)
+	}
+	payloadMessage := &communicationEvent.DeleteMessagePayload{
+		ConversationID: data.TargetID,
+		DeleteAlll:     true,
+	}
+
+	err = c.events.Publish(ctx, constants.TopicMessage.String(), data.TargetID, constants.Deleted.String(), payloadMessage)
+	if err != nil {
+		return fmt.Errorf("failed to publish delete message event for conversation %s: %w", data.TargetID, err)
+	}
+	payloadcalllog := &communicationEvent.DeleteCallLogPayload{
+		ConversationID: data.TargetID,
+		DeleteAll:      true,
+	}
+	err = c.events.Publish(ctx, constants.TopicCallLog.String(), data.TargetID, constants.Deleted.String(), payloadcalllog)
+	if err != nil {
+		return fmt.Errorf("failed to publish delete call log event for conversation %s: %w", data.TargetID, err)
+	}
+	payloadStats := &communicationEvent.MessageStatsPayload{
+		ConversationID: data.TargetID,
+		DeleteAll:      true,
+		EventType:      constants.Deleted,
+	}
+	err = c.events.Publish(ctx, constants.TopicStatsMessage.String(), data.TargetID, constants.Deleted.String(), payloadStats)
+	if err != nil {
+		return fmt.Errorf("failed to publish delete conversation stats event for conversation %s: %w", data.TargetID, err)
+	}
 	return nil
 }
 func (c *ConsumerConversation) ConsumerFailedConversation(ctx context.Context) error {
