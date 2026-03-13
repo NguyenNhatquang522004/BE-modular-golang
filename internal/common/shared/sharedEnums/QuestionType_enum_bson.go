@@ -1,4 +1,4 @@
-package enum
+package sharedEnums
 
 import (
 	"fmt"
@@ -6,9 +6,6 @@ import (
 	"go.mongodb.org/mongo-driver/bson/bsontype"
 )
 
-// -----------------------------------------------------------------------------
-// QuestionType
-// -----------------------------------------------------------------------------
 func (e QuestionType) MarshalBSONValue() (bsontype.Type, []byte, error) {
 	return bsontype.String, []byte(e.String()), nil
 }

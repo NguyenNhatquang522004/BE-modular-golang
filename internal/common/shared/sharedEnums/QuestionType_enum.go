@@ -1,8 +1,4 @@
-package enum
-
-// =============================================================================
-// QUESTION TYPE
-// =============================================================================
+package sharedEnums
 
 //go:generate enumer -type=QuestionType -json -transform=snake -trimprefix=QuestionType
 type QuestionType int

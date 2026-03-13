@@ -3,7 +3,7 @@ package req
 import (
 	"time"
 
-	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/community/enum"
+	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/sharedEnums"
 )
 
 // CreateGroupEventReq - Ánh xạ 100% các trường đầu vào cần thiết để tạo sự kiện
@@ -35,9 +35,9 @@ type UpdateGroupEventReq struct {
 // --- Nested Structs ---
 
 type ReqEventLocation struct {
-	Type        enum.EventLocationType `json:"type" binding:"required"`
-	Address     string                 `json:"address"`
-	Coordinates []float64              `json:"coordinates,omitempty"` // [Kinh độ, Vĩ độ]
+	Type        sharedEnums.EventLocationType `json:"type" binding:"required"`
+	Address     string                        `json:"address"`
+	Coordinates []float64                     `json:"coordinates,omitempty"` // [Kinh độ, Vĩ độ]
 }
 
 type ReqEventAttendeeStats struct {

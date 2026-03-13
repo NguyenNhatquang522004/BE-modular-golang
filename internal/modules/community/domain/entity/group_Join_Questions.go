@@ -3,7 +3,7 @@ package entity
 import (
 	"time"
 
-	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/community/enum"
+	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/sharedEnums"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -13,6 +13,7 @@ import (
 const (
 	CollectionGroupJoinQuestions = "GroupJoinQuestions"
 )
+
 type QuestionOption struct {
 	Text  string `bson:"text" json:"text"`   // VD: "Dưới 18 tuổi"
 	Value string `bson:"value" json:"value"` // VD: "under_18"
@@ -30,8 +31,8 @@ type GroupJoinQuestion struct {
 	GroupID primitive.ObjectID `bson:"group_id" json:"group_id"`
 
 	// 2. CONTENT
-	Content string            `bson:"content" json:"content"` // "Bạn bao nhiêu tuổi?"
-	Type    enum.QuestionType `bson:"type" json:"type"`       // 'text', 'checkbox'...
+	Content string                   `bson:"content" json:"content"` // "Bạn bao nhiêu tuổi?"
+	Type    sharedEnums.QuestionType `bson:"type" json:"type"`       // 'text', 'checkbox'...
 
 	// Danh sách lựa chọn (Chỉ dùng cho MultipleChoice/Checkbox)
 	// Dùng omitempty để tiết kiệm nếu là câu hỏi Text
@@ -45,6 +46,7 @@ type GroupJoinQuestion struct {
 	CreatedAt time.Time `bson:"created_at" json:"created_at"`
 	UpdatedAt time.Time `bson:"updated_at" json:"updated_at"`
 }
+
 func (GroupJoinQuestion) CollectionName() string {
 	return CollectionGroupJoinQuestions
 }

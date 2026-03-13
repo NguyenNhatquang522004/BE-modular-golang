@@ -1,4 +1,4 @@
-package enum
+package sharedEnums
 
 import (
 	"fmt"
@@ -6,14 +6,12 @@ import (
 	"go.mongodb.org/mongo-driver/bson/bsontype"
 )
 
-// -----------------------------------------------------------------------------
-// EventLocationType
-// -----------------------------------------------------------------------------
+// MarshalBSONValue: Int -> String
 func (e EventLocationType) MarshalBSONValue() (bsontype.Type, []byte, error) {
-	// Gọi hàm helper marshalEnum từ file common_bson.go (nếu đã tạo)
 	return bsontype.String, []byte(e.String()), nil
 }
 
+// UnmarshalBSONValue: String -> Int
 func (e *EventLocationType) UnmarshalBSONValue(t bsontype.Type, data []byte) error {
 	if t != bsontype.String {
 		return fmt.Errorf("expected string for EventLocationType, got %v", t)

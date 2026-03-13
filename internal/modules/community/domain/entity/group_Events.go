@@ -3,12 +3,14 @@ package entity
 import (
 	"time"
 
-	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/community/enum"
+	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/sharedEnums"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
+
 const (
 	CollectionGroupEvents = "GroupEvents"
 )
+
 type GroupEvent struct {
 	ID primitive.ObjectID `bson:"_id,omitempty" json:"id"`
 
@@ -21,7 +23,7 @@ type GroupEvent struct {
 	CreatorID string `bson:"creator_id" json:"creator_id"`
 
 	// 2. CONTENT
-	Title       string `bson:"title" json:"title"`
+	Title       string `bson:"title" json:"title"`	
 	Description string `bson:"description" json:"description"`
 	CoverURL    string `bson:"cover_url" json:"cover_url"`
 
@@ -43,7 +45,7 @@ type GroupEvent struct {
 
 // --- LOCATION ---
 type EventLocation struct {
-	Type enum.EventLocationType `bson:"type" json:"type"` // 'online', 'offline'
+	Type sharedEnums.EventLocationType `bson:"type" json:"type"` // 'online', 'offline'
 
 	// Địa chỉ text hoặc Link Online (Zoom/Google Meet)
 	Address string `bson:"address" json:"address"`
@@ -61,6 +63,7 @@ type EventAttendeeStats struct {
 	Going      int `bson:"going" json:"going"`           // Số người xác nhận đi
 	Interested int `bson:"interested" json:"interested"` // Số người quan tâm
 }
+
 func (GroupEvent) CollectionName() string {
 	return CollectionGroupEvents
 }

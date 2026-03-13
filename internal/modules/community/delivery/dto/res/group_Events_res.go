@@ -3,7 +3,7 @@ package res
 import (
 	"time"
 
-	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/community/enum"
+	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/sharedEnums"
 )
 
 // GroupEventRes - Phản hồi 100% dữ liệu từ Entity (ObjectID chuyển sang String)
@@ -24,9 +24,9 @@ type GroupEventRes struct {
 // --- Nested Structs ---
 
 type ResEventLocation struct {
-	Type        enum.EventLocationType `json:"type"`
-	Address     string                 `json:"address"`
-	Coordinates []float64              `json:"coordinates,omitempty"`
+	Type        sharedEnums.EventLocationType `json:"type"`
+	Address     string                        `json:"address"`
+	Coordinates []float64                     `json:"coordinates,omitempty"`
 }
 
 type ResEventAttendeeStats struct {
