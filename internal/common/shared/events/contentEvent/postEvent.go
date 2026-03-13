@@ -7,8 +7,11 @@ import (
 )
 
 type DeletePostPayload struct {
-	PostID string `json:"post_id"`
-	Reason string `json:"reason,omitempty"`
+	PostID  string `json:"post_id"`
+	Reason  string `json:"reason,omitempty"`
+	GroupID string `json:"group_id,omitempty"`
+	PageID  string `json:"page_id,omitempty"`
+	UserID  string `json:"user_id,omitempty"` // Ai là người xóa bài viết này, có thể là tác giả hoặc admin/mod của group/page
 }
 type UpdatePostPayload struct {
 	PostID      string                `json:"post_id"`

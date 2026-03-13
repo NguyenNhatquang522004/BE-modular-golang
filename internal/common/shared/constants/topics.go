@@ -55,6 +55,7 @@ const (
 
 	// media
 	TopicMediaAsset                TopicName = "media.asset.events"
+	TopicMeiaAssetHandleMetadata   TopicName = "media.asset_handle_metadata.events"
 	TopicAlbumStats                TopicName = "media.album_stats.events"
 	TopicStoryStats                TopicName = "media.story_stats.events"
 	TopicReelStats                 TopicName = "media.reel_stats.events"

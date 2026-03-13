@@ -86,8 +86,4 @@ type DeleteGroupFileRequest struct {
 	FileID       string `json:"file_id" binding:"required"`
 	UserActionID string `json:"user_action_id" binding:"required"` // ID của người thực hiện hành động (có thể là admin hoặc chính user đó)
 }
-type DownloadGroupFileRequest struct {
-	GroupID      string `json:"group_id" binding:"required"`
-	FileID       string `json:"file_id" binding:"required"`
-	UserActionID string `json:"user_action_id" binding:"required"` // ID của người thực hiện hành động (có thể là admin hoặc chính user đó)
-}
+

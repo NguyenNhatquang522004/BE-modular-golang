@@ -55,9 +55,6 @@ type ICreateGroupFileUsecase interface {
 type IDeleteGroupFileUsecase interface {
 	Execute(ctx context.Context, req *req.DeleteGroupFileRequest) (*res.FailGroupFile, error)
 }
-type IDownloadGroupFileUsecase interface {
-	Execute(ctx context.Context, req *req.DownloadGroupFileRequest) (*res.FailGroupFile, error)
-}
 
 type Usecase struct{}
 

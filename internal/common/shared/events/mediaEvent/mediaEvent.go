@@ -116,6 +116,8 @@ type UpdateMediaAssetsPayload struct {
 type DeleteMediaAssetsPayload struct {
 	MediaID   string `json:"media_id"`
 	MessageID string `json:"message_id"`
+	GroupID   string `json:"group_id"`
+	PageID    string `json:"page_id"`
 }
 type MediaPrivacyPayload struct {
 	// Level string hoặc dùng Enum PrivacyScope tái sử dụng
@@ -468,4 +470,12 @@ type ArtistStatsPayload struct {
 	ArtistID      string `json:"artist_id"`
 	FollowerCount int    `json:"follower_count"`
 	TotalStreams  int    `json:"total_streams"`
+}
+
+type ProcessMediaPayload struct {
+	// Bắt buộc: ID của MediaAsset trong MongoDB (dạng Hex String)
+	MediaID string `json:"media_id"`
+
+	// Tùy chọn: Gắn thêm UserID để dễ dàng trace log trên Kibana/Grafana mà không cần query DB
+	UserID string `json:"user_id,omitempty"`
 }

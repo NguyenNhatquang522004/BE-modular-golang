@@ -338,68 +338,115 @@ func (r *SeaweedfsAdapter) GetStreamURL(sessionID string) string {
 }
 
 func (r *SeaweedfsAdapter) GetUploadPresignedUrl(ctx context.Context, input *dto.FileUploadInput) (*dto.PresignedURLResponse, error) {
-	// 1. VALIDATION INPUT
+	// 1. VALIDATION CƠ BẢN
 	if input.FileName == "" {
 		return nil, fmt.Errorf("filename is required")
 	}
+	if input.OwnerID == "" {
+		return nil, fmt.Errorf("owner_id is required")
+	}
 
-	// 2. TẠO TÊN FILE DUY NHẤT (UUID)
-	// Format: uuid_timestamp.ext (Giúp sort theo thời gian và unique tuyệt đối)
+	// 2. CHUẨN HÓA ĐUÔI FILE & SINH TÊN DUY NHẤT
+	// Áp dụng thêm Timestamp (Unix) để đảm bảo không bao giờ trùng lặp ngay cả khi tạo cùng 1 mili-giây
 	ext := filepath.Ext(input.FileName)
 	if ext == "" {
 		ext = ".bin"
 	}
-	// Dùng UnixNano để đảm bảo tính duy nhất cao nhất kết hợp UUID
 	uniqueFileName := fmt.Sprintf("%s_%d%s", uuid.New().String(), time.Now().Unix(), ext)
 
-	// 3. XÁC ĐỊNH FOLDER (Logic giống hàm Upload thường)
+	// 3. XÁC ĐỊNH ĐƯỜNG DẪN THƯ MỤC (FOLDER PARTITIONING)
+	// Sử dụng hàm utils.GenerateStoragePath để tự động chia thư mục theo thời gian cho các StorageType nặng
 	folderPath := input.Folder
 	if folderPath == "" {
 		folderPath = utils.GenerateStoragePath(input.OwnerID, input.Storage)
 	}
 
-	// Chuẩn hóa path: S3 key không nên bắt đầu bằng dấu "/" (relative to bucket)
-	// VD: avatars/user_123/abc.jpg (ĐÚNG) - /avatars/user_123/abc.jpg (SAI với một số S3 client)
+	// 4. TẠO S3 OBJECT KEY CHUẨN MỰC
+	// S3 Object Key tuyệt đối KHÔNG ĐƯỢC bắt đầu bằng dấu "/", phải là dạng: "users/123/posts/2026/03/abc.jpg"
 	cleanFolder := strings.Trim(folderPath, "/")
 	objectName := fmt.Sprintf("%s/%s", cleanFolder, uniqueFileName)
 
-	// 4. CẤU HÌNH PRESIGNED URL
-	// Thời gian hết hạn: 15 phút (Đủ để user upload file lớn, nhưng không quá lâu để rò rỉ)
-	expiry := 15 * time.Minute
+	// 5. CẤU HÌNH THỜI GIAN SỐNG & PRESIGNED URL
+	expiry := 15 * time.Minute // 15 phút là con số lý tưởng để chống rò rỉ link
 
-	// Best Practice Security: Ép buộc Content-Type
-	// Nếu Frontend upload file khác loại (vd đổi đuôi .exe thành .jpg), S3 sẽ từ chối.
-	reqParams := make(url.Values)
-	if input.ContentType != "" {
-		reqParams.Set("response-content-type", input.ContentType)
-		reqParams.Set("Content-Type", input.ContentType)
-	}
-
-	// 5. GỌI MINIO SDK TẠO URL
+	// Gọi SDK của MinIO để cấp link
 	presignedURL, err := r.s3Client.PresignedPutObject(ctx, r.cfg.SEAWEEDFS.S3_BUCKET_NAME, objectName, expiry)
 	if err != nil {
-		return nil, fmt.Errorf("failed to generate presigned url: %w", err)
+		return nil, fmt.Errorf("seaweedfs_adapter: failed to generate upload presigned url: %w", err)
 	}
 
-	// 6. TẠO PUBLIC URL
-	// Public URL để lưu DB cần mapping từ Bucket S3 sang Filer Path hoặc CDN
-	// Trong SeaweedFS: Bucket "default", Object "avatars/img.jpg" -> Filer Path "/buckets/default/avatars/img.jpg"
-	// Hoặc nếu dùng S3 Gateway trực tiếp làm CDN thì là: http://s3-host/bucket/key
+	// 6. REWRITE HOST (Xử lý cho môi trường Docker/Microservices)
+	// Biến đổi http://seaweedfs-s3:8333 thành https://cdn.mysocial.com
+	if parsedPublic, err := url.Parse(r.publicHost); err == nil && parsedPublic.Host != "" {
+		presignedURL.Scheme = parsedPublic.Scheme
+		presignedURL.Host = parsedPublic.Host
+	}
 
-	// Ở đây ta dùng Filer Path để đồng bộ với logic cũ
+	// 7. MAP TỪ S3 KEY SANG FILER PATH
+	// Khi upload qua Gateway S3 của SeaweedFS, file vật lý sẽ nằm ở: /buckets/{bucket_name}/{object_key}
 	internalFilePath := fmt.Sprintf("/buckets/%s/%s", r.cfg.SEAWEEDFS.S3_BUCKET_NAME, objectName)
+	finalPublicURL := r.GetPublicURL(internalFilePath)
 
-	// Nếu r.publicHost trỏ vào Filer (port 8888)
-	finalPublicURL := fmt.Sprintf("%s%s", strings.TrimRight(r.publicHost, "/"), internalFilePath)
-
-	// 7. TRẢ VỀ RESPONSE
+	// 8. TRẢ VỀ PAYLOAD CHO FRONTEND
 	return &dto.PresignedURLResponse{
 		URL:       presignedURL.String(),
-		FilePath:  internalFilePath, // Lưu cái này vào DB
-		PublicURL: finalPublicURL,   // Dùng để hiển thị
-		Method:    "PUT",            // Frontend bắt buộc dùng PUT
+		FilePath:  internalFilePath, // Lưu giá trị này vào CSDL (Postgres/MongoDB)
+		PublicURL: finalPublicURL,   // Dùng để Frontend biết sau khi up xong thì truy cập link nào
+		Method:    "PUT",            // Báo Frontend phải dùng HTTP PUT
 		Headers: map[string]string{
-			"Content-Type": input.ContentType, // Frontend bắt buộc set header này khớp
+			"Content-Type": input.ContentType, // Ép Frontend phải gắn đúng Content-Type khi PUT lên S3
 		},
 	}, nil
+}
+
+// GetDownloadPresignedUrl: Sinh link tải file trực tiếp với tốc độ cực cao, bypass Backend
+func (r *SeaweedfsAdapter) GetDownloadPresignedUrl(ctx context.Context, filePath string, forceDownload bool) (string, error) {
+	// 1. KIỂM TRA ĐẦU VÀO
+	cleanPath := strings.TrimSpace(filePath)
+	if cleanPath == "" {
+		return "", fmt.Errorf("invalid empty file path")
+	}
+
+	// 2. TRÍCH XUẤT S3 OBJECT KEY TỪ FILER PATH
+	// FilePath đang lưu trong DB là dạng: /buckets/{bucket_name}/users/123/posts/2026/03/abc.jpg
+	// Ta cần bóc phần "/buckets/{bucket_name}/" đi để trả lại ObjectKey nguyên thủy
+	bucketPrefix := fmt.Sprintf("/buckets/%s/", r.cfg.SEAWEEDFS.S3_BUCKET_NAME)
+	objectName := strings.TrimPrefix(cleanPath, bucketPrefix)
+	objectName = strings.TrimPrefix(objectName, "/")
+
+	if objectName == "" || objectName == cleanPath {
+		// Log cảnh báo nếu đường dẫn trong DB không khớp chuẩn S3 Bucket
+		log.Printf("[Warning] FilePath không có bucket prefix chuẩn: %s", cleanPath)
+		// Fallback: Lấy toàn bộ filepath làm objectKey (cắt "/" ở đầu)
+		objectName = strings.TrimPrefix(cleanPath, "/")
+	}
+
+	// 3. CẤU HÌNH THỜI GIAN SỐNG
+	expiry := 1 * time.Hour // Thời gian cho phép tải (1 tiếng)
+
+	// 4. XỬ LÝ CONTENT-DISPOSITION (ÉP TẢI XUỐNG HAY XEM TRỰC TIẾP)
+	reqParams := make(url.Values)
+	if forceDownload {
+		// Dùng filepath.Base để trích xuất tên file thật (VD: lấy "abc.jpg" từ "users/123/posts/abc.jpg")
+		fileName := filepath.Base(objectName)
+
+		// Set header ép trình duyệt mở hộp thoại tải file (Save As...) thay vì mở tab xem ảnh
+		disposition := fmt.Sprintf("attachment; filename=\"%s\"", fileName)
+		reqParams.Set("response-content-disposition", disposition)
+	}
+
+	// 5. GỌI SDK TẠO LINK KÝ MÃ HÓA
+	presignedURL, err := r.s3Client.PresignedGetObject(ctx, r.cfg.SEAWEEDFS.S3_BUCKET_NAME, objectName, expiry, reqParams)
+	if err != nil {
+		return "", fmt.Errorf("seaweedfs_adapter: failed to generate download presigned url: %w", err)
+	}
+
+	// 6. REWRITE HOST CHO PUBLIC NETWORK
+	// Biến URL nội bộ thành Public URL để Client tải được
+	if parsedPublic, err := url.Parse(r.publicHost); err == nil && parsedPublic.Host != "" {
+		presignedURL.Scheme = parsedPublic.Scheme
+		presignedURL.Host = parsedPublic.Host
+	}
+
+	return presignedURL.String(), nil
 }
