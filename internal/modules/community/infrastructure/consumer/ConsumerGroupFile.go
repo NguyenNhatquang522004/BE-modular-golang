@@ -13,24 +13,27 @@ import (
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/events/communityEvent"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/events/mediaEvent"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/infrastructure/kafka"
+	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/sharedEnums"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/utils"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/community/delivery/mapper"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/community/domain/IRepository/IRepositoryMongodb"
 )
 
 type ConsumerGroupFile struct {
-	events    events.EventBus
-	pool      IRepositoryShare.IWorkerPool
-	redisRepo IRepositoryShare.IRedis
-	groupFile IRepositoryMongodb.IGroupFilesRepository
+	events          events.EventBus
+	pool            IRepositoryShare.IWorkerPool
+	redisRepo       IRepositoryShare.IRedis
+	groupFile       IRepositoryMongodb.IGroupFilesRepository
+	groupMemberRepo IRepositoryMongodb.IGroupMembersRepository
 }
 
-func NewConsumerGroupFile(events events.EventBus, pool IRepositoryShare.IWorkerPool, redisRepo IRepositoryShare.IRedis, groupFile IRepositoryMongodb.IGroupFilesRepository) *ConsumerGroupFile {
+func NewConsumerGroupFile(events events.EventBus, pool IRepositoryShare.IWorkerPool, redisRepo IRepositoryShare.IRedis, groupFile IRepositoryMongodb.IGroupFilesRepository, groupMemberRepo IRepositoryMongodb.IGroupMembersRepository) *ConsumerGroupFile {
 	return &ConsumerGroupFile{
-		events:    events,
-		pool:      pool,
-		redisRepo: redisRepo,
-		groupFile: groupFile,
+		events:          events,
+		pool:            pool,
+		redisRepo:       redisRepo,
+		groupFile:       groupFile,
+		groupMemberRepo: groupMemberRepo,
 	}
 }
 func (c *ConsumerGroupFile) ConsumerGroupFile(ctx context.Context) error {
@@ -181,6 +184,16 @@ func (c *ConsumerGroupFile) handleDeletedGroupFile(ctx context.Context, event ev
 		return kafka.NewNonRetryableError(fmt.Errorf("payload is nil"))
 	}
 	if data.DeleteAll == true {
+		dataaction, err := c.groupMemberRepo.GetGroupMemberByUserIDAndGroupID(ctx, data.UserActionID, data.GroupID)
+		if err != nil {
+			return fmt.Errorf("failed to fetch action user group member from repository for event %s: %w", event.ID, err)
+		}
+		if dataaction == nil {
+			return kafka.NewNonRetryableError(fmt.Errorf("action user group member with user_id %s and group_id %s not found for event %s", data.UserActionID, data.GroupID, event.ID))
+		}
+		if dataaction.Role != sharedEnums.RoleTypeAdmin {
+			return kafka.NewNonRetryableError(fmt.Errorf("user with ID %s does not have permission to update group member in group %s for event %s", data.UserActionID, data.GroupID, event.ID))
+		}
 		err = c.groupFile.DeleteGroupFilesByGroupID(ctx, data.GroupID)
 		if err != nil {
 			return fmt.Errorf("failed to delete group files by group ID in database for event %s: %w", event.ID, err)

@@ -169,22 +169,23 @@ func (c *ConsumerGroupQA) handleDeletedEvent(ctx context.Context, event events.I
 	if data == nil {
 		return kafka.NewNonRetryableError(fmt.Errorf("payload is nil for event %s", event.ID))
 	}
-	dataaction, err := c.groupMemberRepo.GetGroupMemberByUserIDAndGroupID(ctx, data.UserActionID, data.GroupID)
-	if err != nil {
-		return fmt.Errorf("failed to fetch action user group member from repository for event %s: %w", event.ID, err)
-	}
-	if dataaction == nil {
-		return kafka.NewNonRetryableError(fmt.Errorf("action user group member with user_id %s and group_id %s not found for event %s", data.UserActionID, data.GroupID, event.ID))
-	}
-	if dataaction.Role != sharedEnums.RoleTypeAdmin {
-		return kafka.NewNonRetryableError(fmt.Errorf("user with ID %s does not have permission to update group member in group %s for event %s", data.UserActionID, data.GroupID, event.ID))
-	}
+
 	if data.DeleteAll == true {
 		_, err := c.groupQARepo.DeleteGroupJoinQuestionsByGroupID(ctx, data.GroupID)
 		if err != nil {
 			return fmt.Errorf("failed to delete GroupJoinQuestions by group ID %s for event %s: %w", data.GroupID, event.ID, err)
 		}
 	} else {
+		dataaction, err := c.groupMemberRepo.GetGroupMemberByUserIDAndGroupID(ctx, data.UserActionID, data.GroupID)
+		if err != nil {
+			return fmt.Errorf("failed to fetch action user group member from repository for event %s: %w", event.ID, err)
+		}
+		if dataaction == nil {
+			return kafka.NewNonRetryableError(fmt.Errorf("action user group member with user_id %s and group_id %s not found for event %s", data.UserActionID, data.GroupID, event.ID))
+		}
+		if dataaction.Role != sharedEnums.RoleTypeAdmin {
+			return kafka.NewNonRetryableError(fmt.Errorf("user with ID %s does not have permission to update group member in group %s for event %s", data.UserActionID, data.GroupID, event.ID))
+		}
 		err = c.groupQARepo.DeleteGroupJoinQuestionByIDAndGroupID(ctx, data.ID, data.GroupID)
 		if err != nil {
 			return fmt.Errorf("failed to delete GroupJoinQuestion with ID %s and group ID %s for event %s: %w", data.ID, data.GroupID, event.ID, err)

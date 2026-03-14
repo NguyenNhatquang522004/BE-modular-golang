@@ -570,3 +570,81 @@ func (r *MediaAssetsRepository) InsertOrUpdateMediaAsset(ctx context.Context, as
 	}
 	return nil
 }
+func (r *MediaAssetsRepository) DeleteMediaAssetsByAnyID(ctx context.Context, anyID string) error {
+	collection := r.client.Collection(entity.MediaAsset{}.CollectionName())
+	finalID, err := primitive.ObjectIDFromHex(anyID)
+	if err != nil {
+		return fmt.Errorf("invalid ID format: %w", err)
+	}
+	filter := bson.M{"any_id": finalID}
+	_, err = collection.DeleteMany(ctx, filter)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+func (r *MediaAssetsRepository) DeleteMediaAssetsByGroupID(ctx context.Context, groupID string) error {
+	collection := r.client.Collection(entity.MediaAsset{}.CollectionName())
+	finalGroupID, err := primitive.ObjectIDFromHex(groupID)
+	if err != nil {
+		return fmt.Errorf("invalid group ID format: %w", err)
+	}
+	filter := bson.M{"group_id": finalGroupID}
+	_, err = collection.DeleteMany(ctx, filter)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+func (r *MediaAssetsRepository) DeleteMediaAssetsByPageID(ctx context.Context, pageID string) error {
+	collection := r.client.Collection(entity.MediaAsset{}.CollectionName())
+	finalPageID, err := primitive.ObjectIDFromHex(pageID)
+	if err != nil {
+		return fmt.Errorf("invalid page ID format: %w", err)
+	}
+	filter := bson.M{"page_id": finalPageID}
+	_, err = collection.DeleteMany(ctx, filter)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+func (r *MediaAssetsRepository) DeleteMediaAssetsByCommentID(ctx context.Context, commentID string) error {
+	collection := r.client.Collection(entity.MediaAsset{}.CollectionName())
+	finalCommentID, err := primitive.ObjectIDFromHex(commentID)
+	if err != nil {
+		return fmt.Errorf("invalid comment ID format: %w", err)
+	}
+	filter := bson.M{"comment_id": finalCommentID}
+	_, err = collection.DeleteMany(ctx, filter)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+func (r *MediaAssetsRepository) DeleteMediaAssetsByStoryID(ctx context.Context, storyID string) error {
+	collection := r.client.Collection(entity.MediaAsset{}.CollectionName())
+	finalStoryID, err := primitive.ObjectIDFromHex(storyID)
+	if err != nil {
+		return fmt.Errorf("invalid story ID format: %w", err)
+	}
+	filter := bson.M{"story_id": finalStoryID}
+	_, err = collection.DeleteMany(ctx, filter)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+func (r *MediaAssetsRepository) DeleteMediaAssetsByReelID(ctx context.Context, reelID string) error {
+	collection := r.client.Collection(entity.MediaAsset{}.CollectionName())
+	finalReelID, err := primitive.ObjectIDFromHex(reelID)
+	if err != nil {
+		return fmt.Errorf("invalid reel ID format: %w", err)
+	}
+	filter := bson.M{"reel_id": finalReelID}
+	_, err = collection.DeleteMany(ctx, filter)
+	if err != nil {
+		return err
+	}
+	return nil
+}

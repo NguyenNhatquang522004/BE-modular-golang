@@ -186,7 +186,36 @@ func (c *ConsumerMediaAssets) handlerDeletedMediaAsset(ctx context.Context, even
 			return errors.New("failed to delete media assets by message ID from repository: " + err.Error())
 		}
 	}
-
+	if data.GroupID != "" {
+		err = c.mediaRepo.DeleteMediaAssetsByGroupID(ctx, data.GroupID)
+		if err != nil {
+			return errors.New("failed to delete media assets by group ID from repository: " + err.Error())
+		}
+	}
+	if data.PageID != "" {
+		err = c.mediaRepo.DeleteMediaAssetsByPageID(ctx, data.PageID)
+		if err != nil {
+			return errors.New("failed to delete media assets by page ID from repository: " + err.Error())
+		}
+	}
+	if data.ReelID != "" {
+		err = c.mediaRepo.DeleteMediaAssetsByReelID(ctx, data.ReelID)
+		if err != nil {
+			return errors.New("failed to delete media assets by reel ID from repository: " + err.Error())
+		}
+	}
+	if data.StoryID != "" {
+		err = c.mediaRepo.DeleteMediaAssetsByStoryID(ctx, data.StoryID)
+		if err != nil {
+			return errors.New("failed to delete media assets by story ID from repository: " + err.Error())
+		}
+	}
+	if data.CommentID != "" {
+		err = c.mediaRepo.DeleteMediaAssetsByCommentID(ctx, data.CommentID)
+		if err != nil {
+			return errors.New("failed to delete media assets by comment ID from repository: " + err.Error())
+		}
+	}
 	return nil
 }
 func (c *ConsumerMediaAssets) ConsumerFailedMediaAsset(ctx context.Context) error {

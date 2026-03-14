@@ -208,9 +208,10 @@ type CreateGroupEventPayload struct {
 	Location EventLocationPayload `json:"location" validate:"required"`
 }
 type DeleteGroupEventPayload struct {
-	EventID   string `json:"event_id" validate:"required,mongodb"`
-	GroupID   string `json:"group_id" validate:"required,mongodb"`
-	DeleteAll bool   `json:"delete_all"` // Nếu true, xóa tất cả bài viết và tương tác của user trong sự kiện, không chỉ xóa event record
+	UserActionID string `json:"user_action_id" binding:"required,uuid"` // ID của người thực hiện hành động (có thể là admin hoặc chính user đó)
+	EventID      string `json:"event_id" validate:"required,mongodb"`
+	GroupID      string `json:"group_id" validate:"required,mongodb"`
+	DeleteAll    bool   `json:"delete_all"` // Nếu true, xóa tất cả bài viết và tương tác của user trong sự kiện, không chỉ xóa event record
 }
 
 // ==============================================================================
@@ -371,9 +372,10 @@ type UpdateGroupFilePayload struct {
 }
 
 type DeleteGroupFilePayload struct {
-	ID        string `json:"id" binding:"required,mongodb"`       // Dùng để update hoặc tracking, có thể là UUID hoặc ObjectID dưới dạng string. Bắt buộc phải có để biết update record nào.
-	GroupID   string `json:"group_id" binding:"required,mongodb"` // Dùng để update hoặc tracking, có thể là UUID hoặc ObjectID dưới dạng string. Bắt buộc phải có để biết update record nào.
-	DeleteAll bool   `json:"delete_all"`                          // Nếu true, xóa tất cả bài viết và tương tác của user trong nhóm, không chỉ xóa member record
+	UserActionID string `json:"user_action_id" binding:"required,uuid"` // ID của người thực hiện hành động (có thể là admin hoặc chính user đó)
+	ID           string `json:"id" binding:"required,mongodb"`          // Dùng để update hoặc tracking, có thể là UUID hoặc ObjectID dưới dạng string. Bắt buộc phải có để biết update record nào.
+	GroupID      string `json:"group_id" binding:"required,mongodb"`    // Dùng để update hoặc tracking, có thể là UUID hoặc ObjectID dưới dạng string. Bắt buộc phải có để biết update record nào.
+	DeleteAll    bool   `json:"delete_all"`                             // Nếu true, xóa tất cả bài viết và tương tác của user trong nhóm, không chỉ xóa member record
 }
 
 type CommunityStatsPayload struct {
