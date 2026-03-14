@@ -167,8 +167,9 @@ type CreateGroupMemberPayload struct {
 // =====================================================================
 
 type UpdateGroupMemberPayload struct {
-	GroupID string `json:"group_id" binding:"required,mongodb"` // Dùng để update hoặc tracking, có thể là UUID hoặc ObjectID dưới dạng string
-	UserID  string `json:"user_id" binding:"required,uuid"`     // Assuming Postgres UUID
+	UserActionID string `json:"user_action_id" binding:"required,uuid"` // ID của người thực hiện hành động (có thể là admin hoặc chính user đó)
+	GroupID      string `json:"group_id" binding:"required,mongodb"`    // Dùng để update hoặc tracking, có thể là UUID hoặc ObjectID dưới dạng string
+	UserID       string `json:"user_id" binding:"required,uuid"`        // Assuming Postgres UUID
 	// BEST PRACTICE: Dùng Pointer (*) cho update payload.
 	// Nếu client không gửi trường này (nil), ta bỏ qua.
 	// Nếu client gửi, ta lấy giá trị thực để update.
@@ -185,9 +186,10 @@ type UpdateGroupMemberPayload struct {
 	// KHÔNG cho update LastActiveAt ở API này (Nên update thông qua middleware hoặc sự kiện hoạt động).
 }
 type DeleteGroupMemberPayload struct {
-	GroupID   string `json:"group_id" binding:"required,mongodb"`
-	UserID    string `json:"user_id" binding:"required,uuid"`
-	DeleteALL bool   `json:"delete_all"` // Nếu true, xóa tất cả bài viết và tương tác của user trong nhóm, không chỉ xóa member record
+	UserActionID string `json:"user_action_id" binding:"required,uuid"` // ID của người thực hiện hành động (có thể là admin hoặc chính user đó)
+	GroupID      string `json:"group_id" binding:"required,mongodb"`
+	UserID       string `json:"user_id" binding:"required,uuid"`
+	DeleteALL    bool   `json:"delete_all"` // Nếu true, xóa tất cả bài viết và tương tác của user trong nhóm, không chỉ xóa member record
 }
 
 type CreateGroupEventPayload struct {
@@ -259,6 +261,7 @@ type QuestionOptionPayload struct {
 // =============================================================================
 
 type CreateGroupJoinQuestionPayload struct {
+	UserActionID string `json:"user_action_id" binding:"required,uuid"` // ID của người thực hiện hành động (có thể là admin hoặc chính user đó)
 	// GroupID: Best practice là truyền qua URL Params (VD: POST /groups/:group_id/questions)
 	// Nhưng nếu cấu trúc API của bạn yêu cầu nhận từ Body, ta để kiểu string để validate
 	// mã Hex của ObjectID hợp lệ trước khi parse thành primitive.ObjectID ở tầng Service.
@@ -284,7 +287,9 @@ type CreateGroupJoinQuestionPayload struct {
 // =============================================================================
 
 type UpdateGroupJoinQuestionPayload struct {
-	ID string `json:"id" validate:"required,mongodb"` // Dùng để update hoặc tracking, có thể là UUID hoặc ObjectID dưới dạng string
+	UserActionID string `json:"user_action_id" binding:"required,uuid"` // ID của người thực hiện hành động (có thể là admin hoặc chính user đó)
+	GroupID      string `json:"group_id" binding:"required,mongodb"`    // Dùng để update hoặc tracking, có thể là UUID hoặc ObjectID dưới dạng string
+	ID           string `json:"id" validate:"required,mongodb"`         // Dùng để update hoặc tracking, có thể là UUID hoặc ObjectID dưới dạng string
 	// LƯU Ý: ID của câu hỏi và GroupID KHÔNG NẰM Ở ĐÂY.
 	// Best practice: Lấy từ URL Path (VD: PATCH /groups/:group_id/questions/:question_id)
 
@@ -307,9 +312,10 @@ type UpdateGroupJoinQuestionPayload struct {
 }
 
 type DeleteGroupJoinQuestionPayload struct {
-	ID        string `json:"id" validate:"required,mongodb"` // Dùng để update hoặc tracking, có thể là UUID hoặc ObjectID dưới dạng string
-	GroupID   string `json:"group_id" validate:"required,mongodb"`
-	DeleteAll bool   `json:"delete_all"` // Nếu true, xóa tất cả bài viết và tương tác của user trong nhóm, không chỉ xóa member record
+	ID           string `json:"id" validate:"required,mongodb"` // Dùng để update hoặc tracking, có thể là UUID hoặc ObjectID dưới dạng string
+	GroupID      string `json:"group_id" validate:"required,mongodb"`
+	DeleteAll    bool   `json:"delete_all"`                             // Nếu true, xóa tất cả bài viết và tương tác của user trong nhóm, không chỉ xóa member record
+	UserActionID string `json:"user_action_id" binding:"required,uuid"` // ID của người thực hiện hành động (có thể là admin hoặc chính user đó)
 }
 
 // CreateGroupFilePayload là payload nhận từ client khi tạo mới file metadata

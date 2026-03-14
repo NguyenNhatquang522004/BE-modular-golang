@@ -107,6 +107,7 @@ type CreatePagePayload struct {
 	Settings      *SettingsPayload      `json:"settings,omitempty" validate:"omitempty"`
 }
 type UpdatePagePayload struct {
+	UserActionID string `json:"user_action" validate:"required"` // "update_by_user" hoặc "auto_update"
 	// TẤT CẢ CÁC TRƯỜNG LÀ CON TRỎ (Pointer)
 	// Lý do: Để biết chính xác Client muốn update trường nào.
 	// Nếu Client không gửi Name, Name sẽ là nil -> Không update.
@@ -130,8 +131,9 @@ type UpdatePagePayload struct {
 }
 
 type DeletedPagePayload struct {
-	PageID string `json:"page_id" validate:"required,uuid"`
-	UserID string `json:"user_id" validate:"required,uuid"`
+	UserActionID string `json:"user_action" validate:"required"` // "delete_by_user" hoặc "auto_remove"
+	PageID       string `json:"page_id" validate:"required,uuid"`
+	UserID       string `json:"user_id" validate:"required,uuid"`
 }
 
 type CreatePageRolePayload struct {
@@ -150,7 +152,8 @@ type CreatePageRolePayload struct {
 }
 
 type UpdatePageRolePayload struct {
-	PageRoleID string `json:"page_role_id" binding:"required,uuid"`
+	UserActionID string `json:"user_action" binding:"required"` // "update_by_user" hoặc "auto_update"
+	PageRoleID   string `json:"page_role_id" binding:"required,uuid"`
 	// Dùng pointer (*sharedEnums.RoleType) để hỗ trợ partial update (PATCH).
 	// Nếu dùng value thường, ta sẽ không biết là client gửi zero-value hay không gửi.
 	Role *sharedEnums.RoleType `json:"role,omitempty" binding:"omitempty"`
@@ -235,10 +238,5 @@ type PageDailyMetricPayload struct {
 	ProfileViews  *int `json:"profile_views,omitempty" validate:"omitempty,gte=0"`
 	WebsiteClicks *int `json:"website_clicks,omitempty" validate:"omitempty,gte=0"`
 	CTAClicks     *int `json:"cta_clicks,omitempty" validate:"omitempty,gte=0"`
-}
-
-type DeletePageDailyMetricPayload struct {
-	PageID     string    `json:"page_id" validate:"required,uuid"`
-	MetricDate time.Time `json:"metric_date" validate:"required"`
-	DeleteALL  bool      `json:"delete_all"` // Nếu true, sẽ xóa tất cả metric của page này (dùng khi xóa page)
+	DeleteALL     bool `json:"delete_all"` // Nếu true, sẽ xóa tất cả metric của page này (dùng khi xóa page)
 }

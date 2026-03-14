@@ -215,7 +215,7 @@ func (c *ConsumerPageDailyMetrics) handleUpdatedEvent(ctx context.Context, event
 
 func (c *ConsumerPageDailyMetrics) handleDeletedEvent(ctx context.Context, event events.IntegrationEvent) error {
 	// Implement the logic for handling deleted events here
-	data, err := utils.ParsePayload[businessEvent.DeletePageDailyMetricPayload](event.Payload)
+	data, err := utils.ParsePayload[businessEvent.PageDailyMetricPayload](event.Payload)
 	if err != nil {
 		return kafka.NewNonRetryableError(fmt.Errorf(" failed to parse event payload: %w", err))
 	}
@@ -228,15 +228,50 @@ func (c *ConsumerPageDailyMetrics) handleDeletedEvent(ctx context.Context, event
 			return errors.New("failed to delete all page daily metrics for page: " + err.Error())
 		}
 	} else {
-		normalizedDate := time.Date(
-			data.MetricDate.Year(),
-			data.MetricDate.Month(),
-			data.MetricDate.Day(),
-			0, 0, 0, 0, time.UTC,
-		)
-		err = c.pageMetricRepo.DeletePageDailyMetric(ctx, data.PageID, normalizedDate)
+		datametric, err := c.pageMetricRepo.GetPageDailyMetricLatest(ctx, data.PageID)
 		if err != nil {
-			return errors.New("failed to delete page daily metric: " + err.Error())
+			return kafka.NewNonRetryableError(fmt.Errorf("failed to get latest page daily metric: %w", err))
+		}
+		if datametric == nil {
+			convertPageID, err := gocql.ParseUUID(data.PageID)
+			normalizedDate := time.Date(
+				data.MetricDate.Year(),
+				data.MetricDate.Month(),
+				data.MetricDate.Day(),
+				0, 0, 0, 0, time.UTC,
+			)
+			if err != nil {
+				return kafka.NewNonRetryableError(fmt.Errorf("invalid page_id format: %w", err))
+			}
+			entity := &entity.PageDailyMetric{
+				ID:               convertPageID,
+				MetricDate:       normalizedDate,
+				ReachTotal:       0,
+				ReachPaid:        0,
+				ReachOrganic:     0,
+				ImpressionsTotal: 0,
+				NewFollowers:     0,
+				Unfollows:        0,
+				ProfileViews:     0,
+				WebsiteClicks:    0,
+			}
+			err = c.pageMetricRepo.InsertOrUpdatePageDailyMetric(ctx, entity)
+			if err != nil {
+				return errors.New("failed to insert new page daily metric: " + err.Error())
+			}
+		} else {
+			datametric.ReachTotal = *data.ReachTotal - datametric.ReachTotal
+			datametric.ReachPaid = *data.ReachPaid - datametric.ReachPaid
+			datametric.ReachOrganic = *data.ReachOrganic - datametric.ReachOrganic
+			datametric.ImpressionsTotal = *data.ImpressionsTotal - datametric.ImpressionsTotal
+			datametric.NewFollowers = *data.NewFollowers - datametric.NewFollowers
+			datametric.Unfollows = *data.Unfollows - datametric.Unfollows
+			datametric.ProfileViews = *data.ProfileViews - datametric.ProfileViews
+			datametric.WebsiteClicks = *data.WebsiteClicks - datametric.WebsiteClicks
+			err = c.pageMetricRepo.InsertOrUpdatePageDailyMetric(ctx, datametric)
+			if err != nil {
+				return errors.New("failed to update existing page daily metric: " + err.Error())
+			}
 		}
 	}
 	return nil

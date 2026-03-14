@@ -31,7 +31,7 @@ func ToGroupMemberEntity(p *communityEvent.CreateGroupMemberPayload) (*entity.Gr
 		ID:           primitive.NewObjectID(), // Tự động sinh ID mới cho record
 		GroupID:      groupID,
 		UserID:       p.UserID,
-		Role:         p.Role,
+		Role:         sharedEnums.RoleTypeMember,
 		Status:       sharedEnums.ProcessingPending,
 		InviterID:    p.InviterID,
 		JoinedAt:     now,

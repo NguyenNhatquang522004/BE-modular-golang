@@ -12,16 +12,18 @@ import (
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/events"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/events/communityEvent"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/infrastructure/kafka"
+	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/sharedEnums"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/utils"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/community/delivery/mapper"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/community/domain/IRepository/IRepositoryMongodb"
 )
 
 type ConsumerGroupQA struct {
-	events      events.EventBus
-	pool        IRepositoryShare.IWorkerPool
-	redisRepo   IRepositoryShare.IRedis
-	groupQARepo IRepositoryMongodb.IGroupjoinQuestionsRepository
+	events          events.EventBus
+	pool            IRepositoryShare.IWorkerPool
+	redisRepo       IRepositoryShare.IRedis
+	groupMemberRepo IRepositoryMongodb.IGroupMembersRepository
+	groupQARepo     IRepositoryMongodb.IGroupjoinQuestionsRepository
 }
 
 func NewConsumerGroupQA(events events.EventBus, pool IRepositoryShare.IWorkerPool, redisRepo IRepositoryShare.IRedis, groupQARepo IRepositoryMongodb.IGroupjoinQuestionsRepository) *ConsumerGroupQA {
@@ -103,6 +105,16 @@ func (c *ConsumerGroupQA) handleCreatedEvent(ctx context.Context, event events.I
 	if data == nil {
 		return kafka.NewNonRetryableError(fmt.Errorf("payload is nil for event %s", event.ID))
 	}
+	dataaction, err := c.groupMemberRepo.GetGroupMemberByUserIDAndGroupID(ctx, data.UserActionID, data.GroupID)
+	if err != nil {
+		return fmt.Errorf("failed to fetch action user group member from repository for event %s: %w", event.ID, err)
+	}
+	if dataaction == nil {
+		return kafka.NewNonRetryableError(fmt.Errorf("action user group member with user_id %s and group_id %s not found for event %s", data.UserActionID, data.GroupID, event.ID))
+	}
+	if dataaction.Role != sharedEnums.RoleTypeAdmin {
+		return kafka.NewNonRetryableError(fmt.Errorf("user with ID %s does not have permission to update group member in group %s for event %s", data.UserActionID, data.GroupID, event.ID))
+	}
 	entity, err := mapper.ToGroupJoinQuestionEntity(data)
 	if err != nil {
 		return kafka.NewNonRetryableError(fmt.Errorf("failed to map payload to entity for event %s: %w", event.ID, err))
@@ -123,6 +135,16 @@ func (c *ConsumerGroupQA) handleUpdatedEvent(ctx context.Context, event events.I
 	}
 	if data == nil {
 		return kafka.NewNonRetryableError(fmt.Errorf("payload is nil for event %s", event.ID))
+	}
+	dataaction, err := c.groupMemberRepo.GetGroupMemberByUserIDAndGroupID(ctx, data.UserActionID, data.GroupID)
+	if err != nil {
+		return fmt.Errorf("failed to fetch action user group member from repository for event %s: %w", event.ID, err)
+	}
+	if dataaction == nil {
+		return kafka.NewNonRetryableError(fmt.Errorf("action user group member with user_id %s and group_id %s not found for event %s", data.UserActionID, data.GroupID, event.ID))
+	}
+	if dataaction.Role != sharedEnums.RoleTypeAdmin {
+		return kafka.NewNonRetryableError(fmt.Errorf("user with ID %s does not have permission to update group member in group %s for event %s", data.UserActionID, data.GroupID, event.ID))
 	}
 	// Lấy entity hiện tại từ DB để áp dụng update
 	existingEntity, err := c.groupQARepo.GetGroupJoinQuestionByID(ctx, data.ID)
@@ -146,6 +168,16 @@ func (c *ConsumerGroupQA) handleDeletedEvent(ctx context.Context, event events.I
 	}
 	if data == nil {
 		return kafka.NewNonRetryableError(fmt.Errorf("payload is nil for event %s", event.ID))
+	}
+	dataaction, err := c.groupMemberRepo.GetGroupMemberByUserIDAndGroupID(ctx, data.UserActionID, data.GroupID)
+	if err != nil {
+		return fmt.Errorf("failed to fetch action user group member from repository for event %s: %w", event.ID, err)
+	}
+	if dataaction == nil {
+		return kafka.NewNonRetryableError(fmt.Errorf("action user group member with user_id %s and group_id %s not found for event %s", data.UserActionID, data.GroupID, event.ID))
+	}
+	if dataaction.Role != sharedEnums.RoleTypeAdmin {
+		return kafka.NewNonRetryableError(fmt.Errorf("user with ID %s does not have permission to update group member in group %s for event %s", data.UserActionID, data.GroupID, event.ID))
 	}
 	if data.DeleteAll == true {
 		_, err := c.groupQARepo.DeleteGroupJoinQuestionsByGroupID(ctx, data.GroupID)

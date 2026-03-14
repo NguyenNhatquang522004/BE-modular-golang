@@ -111,6 +111,37 @@ func (c *ConsumerFollowerPage) handleCreatedEvent(ctx context.Context, event eve
 	if err != nil {
 		return fmt.Errorf("failed to create page follower for event %s: %w", event.ID, err)
 	}
+	one := 1
+	payloadMetric := &businessEvent.PageDailyMetricPayload{
+		PageID:           data.PageID,
+		MetricDate:       time.Now().UTC(),
+		ReachTotal:       nil,
+		ReachPaid:        nil,
+		ReachOrganic:     nil,
+		ImpressionsTotal: nil,
+		NewFollowers:     &one,
+		Unfollows:        nil,
+		ProfileViews:     nil,
+		WebsiteClicks:    nil,
+		DeleteALL:        false,
+	}
+	err = c.events.Publish(ctx, constants.TopicDailyMetricsPage.String(), data.PageID, constants.Created.String(), payloadMetric)
+	if err != nil {
+		return fmt.Errorf("failed to publish page daily metric event for created follower in event %s: %w", event.ID, err)
+	}
+	payloadPage := businessEvent.StatsPagePayload{
+		PageID:         data.PageID,
+		UserID:         data.UserID,
+		FollowersCount: 1,
+		LikesCount:     1,
+		RatingScore:    0,
+		ReviewCount:    0,
+		CreatedAt:      time.Now().UTC(),
+	}
+	err = c.events.Publish(ctx, constants.TopicStatsPage.String(), data.PageID, constants.Created.String(), payloadPage)
+	if err != nil {
+		return fmt.Errorf("failed to publish stats page event for created follower in event %s: %w", event.ID, err)
+	}
 	return nil
 }
 func (c *ConsumerFollowerPage) handleUpdatedEvent(ctx context.Context, event events.IntegrationEvent) error {
@@ -153,6 +184,24 @@ func (c *ConsumerFollowerPage) handleDeletedEvent(ctx context.Context, event eve
 		err := c.pageFollowerRepo.DeleteFollower(ctx, data.PageID, data.UserID)
 		if err != nil {
 			return fmt.Errorf("failed to delete follower for page %s and user %s in event %s: %w", data.PageID, data.UserID, event.ID, err)
+		}
+		one := 1
+		payloadMetric := &businessEvent.PageDailyMetricPayload{
+			PageID:           data.PageID,
+			MetricDate:       time.Now().UTC(),
+			ReachTotal:       nil,
+			ReachPaid:        nil,
+			ReachOrganic:     nil,
+			ImpressionsTotal: nil,
+			NewFollowers:     nil,
+			Unfollows:        &one,
+			ProfileViews:     nil,
+			WebsiteClicks:    nil,
+			DeleteALL:        false,
+		}
+		err = c.events.Publish(ctx, constants.TopicDailyMetricsPage.String(), data.PageID, constants.Deleted.String(), payloadMetric)
+		if err != nil {
+			return fmt.Errorf("failed to publish page daily metric event for deleted follower in event %s: %w", event.ID, err)
 		}
 	}
 	return nil

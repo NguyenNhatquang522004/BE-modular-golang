@@ -138,7 +138,10 @@ func (c *ConsumerSharePost) handleCreateSharePost(ctx context.Context, event eve
 			return fmt.Errorf("post with ID %s is in a private group and cannot be shared", data.PostID)
 		}
 	}
-	postnewid := primitive.NewObjectID()
+	convertID, err := primitive.ObjectIDFromHex(data.PostID)
+	if err != nil {
+		return fmt.Errorf("invalid post ID %s: %w", data.PostID, err)
+	}
 	timestamp := time.Now()
 	workercount := 4 // Giới hạn số lượng worker đồng thời để tránh quá tải hệ thống
 	var wg sync.WaitGroup
@@ -150,7 +153,7 @@ func (c *ConsumerSharePost) handleCreateSharePost(ctx context.Context, event eve
 			switch i {
 			case 0:
 				sharepost := datapost
-				sharepost.ID = postnewid
+				sharepost.ID = convertID
 				if data.GroupID != nil {
 					sharepost.Context = &entity.PostContext{
 						Type:     sharedEnums.ContextTypeGroup,
@@ -208,10 +211,10 @@ func (c *ConsumerSharePost) handleCreateSharePost(ctx context.Context, event eve
 				errchan <- nil
 				datamedianew := datamedia
 				datamedianew.ID = primitive.NewObjectID()
-				datamedianew.PostID = postnewid
+				datamedianew.PostID = convertID
 				err = c.mediaRepo.CreatePostMedia(ctx, datamedianew)
 				if err != nil {
-					errchan <- fmt.Errorf("failed to create media for share post with ID %s: %w", postnewid, err)
+					errchan <- fmt.Errorf("failed to create media for share post with ID %s: %w", convertID.Hex(), err)
 					return
 				}
 				errchan <- nil
@@ -224,12 +227,12 @@ func (c *ConsumerSharePost) handleCreateSharePost(ctx context.Context, event eve
 				errchan <- nil
 				dataextensionnew := dataextension
 				dataextensionnew.ID = primitive.NewObjectID()
-				dataextensionnew.PostID = postnewid
+				dataextensionnew.PostID = convertID
 				dataextensionnew.ShareData.ParentPostID = dataextension.PostID
 				dataextensionnew.ShareData.OriginalPostID = dataextension.ShareData.OriginalPostID
 				err = c.extensionRepo.CreatePostExtension(ctx, dataextensionnew)
 				if err != nil {
-					errchan <- fmt.Errorf("failed to create post extension for share post with ID %s: %w", postnewid, err)
+					errchan <- fmt.Errorf("failed to create post extension for share post with ID %s: %w", convertID.Hex(), err)
 					return
 				}
 				errchan <- nil
@@ -242,10 +245,10 @@ func (c *ConsumerSharePost) handleCreateSharePost(ctx context.Context, event eve
 				errchan <- nil
 				datasettingnew := datasetting
 				datasettingnew.ID = primitive.NewObjectID()
-				datasettingnew.PostID = postnewid
+				datasettingnew.PostID = convertID
 				_, err = c.settingRepo.CreatePostSetting(ctx, datasettingnew)
 				if err != nil {
-					errchan <- fmt.Errorf("failed to create post setting for share post with ID %s: %w", postnewid, err)
+					errchan <- fmt.Errorf("failed to create post setting for share post with ID %s: %w", convertID.Hex(), err)
 					return
 				}
 				errchan <- nil

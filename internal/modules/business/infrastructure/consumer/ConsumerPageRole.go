@@ -12,6 +12,7 @@ import (
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/events"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/events/businessEvent"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/infrastructure/kafka"
+	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/sharedEnums"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/utils"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/business/delivery/mapper"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/business/domain/IRepository/IRepositoryMongodb"
@@ -103,6 +104,16 @@ func (c *ConsumerPageRole) handleCreatedEvent(ctx context.Context, event events.
 	if data == nil {
 		return kafka.NewNonRetryableError(fmt.Errorf("payload is nil"))
 	}
+	dataassingn, err := c.pageRoleRepo.GetPageRoleByID(ctx, data.AssignedBy)
+	if err != nil {
+		return fmt.Errorf("failed to fetch assigner page role: %w", err)
+	}
+	if dataassingn == nil {
+		return kafka.NewNonRetryableError(fmt.Errorf("assigner page role with ID %s not found", data.AssignedBy))
+	}
+	if dataassingn.Role != sharedEnums.RoleTypeAdmin {
+		return kafka.NewNonRetryableError(fmt.Errorf("assigner page role with ID %s does not have admin privileges", data.AssignedBy))
+	}
 	pageRoleEntity, err := mapper.ToPageRoleEntity(data)
 	if err != nil {
 		return fmt.Errorf("failed to convert payload to entity: %w", err)
@@ -121,12 +132,25 @@ func (c *ConsumerPageRole) handleUpdatedEvent(ctx context.Context, event events.
 	if data == nil {
 		return kafka.NewNonRetryableError(fmt.Errorf("payload is nil"))
 	}
+	dataaction, err := c.pageRoleRepo.GetPageRoleByID(ctx, data.UserActionID)
+	if err != nil {
+		return fmt.Errorf("failed to fetch action user page role: %w", err)
+	}
+	if dataaction == nil {
+		return kafka.NewNonRetryableError(fmt.Errorf("action user page role with ID %s not found", data.UserActionID))
+	}
+	if dataaction.Role != sharedEnums.RoleTypeAdmin {
+		return kafka.NewNonRetryableError(fmt.Errorf("action user page role with ID %s does not have admin privileges", data.UserActionID))
+	}
 	existingEntity, err := c.pageRoleRepo.GetPageRoleByID(ctx, data.PageRoleID)
 	if err != nil {
 		return fmt.Errorf("failed to fetch existing page role: %w", err)
 	}
 	if existingEntity == nil {
 		return kafka.NewNonRetryableError(fmt.Errorf("page role with ID %s not found", data.PageRoleID))
+	}
+	if existingEntity.Role == dataaction.Role {
+		return kafka.NewNonRetryableError(fmt.Errorf("no changes detected for page role with ID %s", data.PageRoleID))
 	}
 	mapper.MapUpdateToPageRoleEntity(existingEntity, data)
 	err = c.pageRoleRepo.UpdatePageRole(ctx, existingEntity)
@@ -143,12 +167,36 @@ func (c *ConsumerPageRole) handleDeletedEvent(ctx context.Context, event events.
 	if data == nil {
 		return kafka.NewNonRetryableError(fmt.Errorf("payload is nil"))
 	}
+	dataaction, err := c.pageRoleRepo.GetPageRoleByID(ctx, data.UserAction)
+	if err != nil {
+		return fmt.Errorf("failed to fetch action user page role: %w", err)
+	}
+	if dataaction == nil {
+		return kafka.NewNonRetryableError(fmt.Errorf("action user page role with ID %s not found", data.UserAction))
+	}
 	if data.DeLeteAll == true {
-		err := c.pageRoleRepo.DeletePageRoleByPageID(ctx, data.PageRoleID)
+
+		if dataaction.Role != sharedEnums.RoleTypeAdmin {
+			return kafka.NewNonRetryableError(fmt.Errorf("action user page role with ID %s does not have admin privileges", data.UserAction))
+		}
+		err = c.pageRoleRepo.DeletePageRoleByPageID(ctx, data.PageRoleID)
 		if err != nil {
 			return fmt.Errorf("failed to delete all page roles by page ID in repository: %w", err)
 		}
 	} else {
+		datauser, err := c.pageRoleRepo.GetPageRoleByPageIDAndUserID(ctx, data.PageRoleID, data.UserID)
+		if err != nil {
+			return fmt.Errorf("failed to fetch user page role: %w", err)
+		}
+		if datauser == nil {
+			return kafka.NewNonRetryableError(fmt.Errorf("user page role with ID %s not found", data.UserID))
+		}
+		if dataaction.Role != sharedEnums.RoleTypeAdmin {
+			return kafka.NewNonRetryableError(fmt.Errorf("action user page role with ID %s does not have admin privileges", data.UserAction))
+		}
+		if datauser.Role == dataaction.Role {
+			return kafka.NewNonRetryableError(fmt.Errorf("no changes detected for page role with ID %s", data.PageRoleID))
+		}
 		err = c.pageRoleRepo.DeletePageRoleByUserIDandPageID(ctx, data.UserID, data.PageRoleID)
 		if err != nil {
 			return fmt.Errorf("failed to delete page role in repository: %w", err)

@@ -3,6 +3,7 @@ package contentEvent
 import "github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/constants"
 
 type SharePostPayload struct {
+	ID      string  `json:"id"` // ID do backend tạo ra, client không gửi lên
 	UserID  string  `json:"user_id"`
 	PostID  string  `json:"post_id"`
 	GroupID *string `json:"group_id,omitempty"` // Nếu share vào group, có thể có group_id

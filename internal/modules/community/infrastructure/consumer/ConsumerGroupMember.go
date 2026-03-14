@@ -136,12 +136,25 @@ func (c *ConsumerGroupMember) handleUpdatedGroupMember(ctx context.Context, even
 	if data == nil {
 		return kafka.NewNonRetryableError(fmt.Errorf("payload is nil for event %s", event.ID))
 	}
+	dataaction, err := c.groupMemberRepo.GetGroupMemberByUserIDAndGroupID(ctx, data.UserActionID, data.GroupID)
+	if err != nil {
+		return fmt.Errorf("failed to fetch action user group member from repository for event %s: %w", event.ID, err)
+	}
+	if dataaction == nil {
+		return kafka.NewNonRetryableError(fmt.Errorf("action user group member with user_id %s and group_id %s not found for event %s", data.UserActionID, data.GroupID, event.ID))
+	}
+	if dataaction.Role != sharedEnums.RoleTypeAdmin {
+		return kafka.NewNonRetryableError(fmt.Errorf("user with ID %s does not have permission to update group member in group %s for event %s", data.UserActionID, data.GroupID, event.ID))
+	}
 	datamember, err := c.groupMemberRepo.GetGroupMemberByUserIDAndGroupID(ctx, data.UserID, data.GroupID)
 	if err != nil {
 		return fmt.Errorf("failed to get existing group member from repository for event %s: %w", event.ID, err)
 	}
 	if datamember == nil {
 		return kafka.NewNonRetryableError(fmt.Errorf("group member not found for user_id %s and group_id %s for event %s", data.UserID, data.GroupID, event.ID))
+	}
+	if datamember.Role == dataaction.Role {
+		return kafka.NewNonRetryableError(fmt.Errorf("no role change for group member with user_id %s in group %s for event %s", data.UserID, data.GroupID, event.ID))
 	}
 	memberEntity := mapper.ApplyUpdateToGroupMember(datamember, data)
 	if memberEntity.Status == sharedEnums.ProcessingFailed {
@@ -197,7 +210,18 @@ func (c *ConsumerGroupMember) handleDeletedGroupMember(ctx context.Context, even
 	if data == nil {
 		return kafka.NewNonRetryableError(fmt.Errorf("payload is nil for event %s", event.ID))
 	}
+	dataaction, err := c.groupMemberRepo.GetGroupMemberByUserIDAndGroupID(ctx, data.UserActionID, data.GroupID)
+	if err != nil {
+		return fmt.Errorf("failed to fetch action user group member from repository for event %s: %w", event.ID, err)
+	}
+	if dataaction == nil {
+		return kafka.NewNonRetryableError(fmt.Errorf("action user group member with user_id %s and group_id %s not found for event %s", data.UserActionID, data.GroupID, event.ID))
+	}
+	if dataaction.Role != sharedEnums.RoleTypeAdmin {
+		return kafka.NewNonRetryableError(fmt.Errorf("user with ID %s does not have permission to update group member in group %s for event %s", data.UserActionID, data.GroupID, event.ID))
+	}
 	if data.DeleteALL == true {
+
 		err = c.groupMemberRepo.DeleteGroupMember(ctx, data.GroupID)
 		if err != nil {
 			return fmt.Errorf("failed to delete all group members by group_id in repository for event %s: %w", event.ID, err)
