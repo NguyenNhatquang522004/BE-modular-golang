@@ -424,3 +424,63 @@ func (r *PageDailyMetricsRepository) DeletePageDailyMetricsByPageID(ctx context.
 	}
 	return nil
 }
+
+func (r *PageDailyMetricsRepository) InsertOrUpdatePageDailyMetric(ctx context.Context, metric *entity.PageDailyMetric) error {
+	tableName := entity.PageDailyMetric{}.TableName()
+	query := fmt.Sprintf(`
+		INSERT INTO %s (page_id, metric_date, Reach_Total, Reach_Paid, Reach_Organic,  ImpressionsTotal , new_followers, unfollows, profile_views, website_clicks, cta_clicks)
+		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+	`, tableName)
+	err := r.session.Query(query,
+		metric.ID,
+		metric.MetricDate,
+		metric.ReachTotal,
+		metric.ReachPaid,
+		metric.ReachOrganic,
+		metric.ImpressionsTotal,
+		metric.NewFollowers,
+		metric.Unfollows,
+		metric.ProfileViews,
+		metric.WebsiteClicks,
+		metric.CTAClicks,
+	).WithContext(ctx).Exec()
+
+	if err != nil {
+		return fmt.Errorf("failed to insert or update page daily metric for page %s on date %s: %w", metric.ID.String(), metric.MetricDate.Format("2006-01-02"), err)
+	}
+	return nil
+}
+func (r *PageDailyMetricsRepository) GetPageDailyMetricLatest(ctx context.Context, pageID string) (*entity.PageDailyMetric, error) {
+	var metric *entity.PageDailyMetric
+	tableName := entity.PageDailyMetric{}.TableName()
+	query := fmt.Sprintf(`
+		SELECT page_id, metric_date, reach_total, reach_paid, reach_organic,
+		       impressions_total, new_followers, unfollows, profile_views,
+		       website_clicks, cta_clicks
+		FROM %s WHERE page_id = ? ORDER BY metric_date DESC LIMIT 1
+	`, tableName)
+	finalid, err := gocql.ParseUUID(pageID)
+	if err != nil {
+		return nil, fmt.Errorf("invalid pageID: %w", err)
+	}
+	err = r.session.Query(query, finalid).WithContext(ctx).Scan(
+		&metric.ID,
+		&metric.MetricDate,
+		&metric.ReachTotal,
+		&metric.ReachPaid,
+		&metric.ReachOrganic,
+		&metric.ImpressionsTotal,
+		&metric.NewFollowers,
+		&metric.Unfollows,
+		&metric.ProfileViews,
+		&metric.WebsiteClicks,
+		&metric.CTAClicks,
+	)
+	if err != nil {
+		if err == gocql.ErrNotFound {
+			return nil, nil // Không tìm thấy metric nào cho page này
+		}
+		return nil, fmt.Errorf("failed to get latest page daily metric for page %s: %w", pageID, err)
+	}
+	return metric, nil
+}

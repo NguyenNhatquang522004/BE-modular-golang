@@ -88,11 +88,14 @@ const (
 	TopicGroupQA                       TopicName = "community.group_qa.events"
 	TopicGroupFile                     TopicName = "community.group_file.events"
 	TopicDownloadGroupFile             TopicName = "community.download_group_file.events"
+	TopicCommunityStats                TopicName = "community.community_stats.events"
 	TopicDeleteCommunityRelationTarget TopicName = "business.delete_relation_target.events" // chưa làm gì cả, dùng chung với communication
 
 	// business
-	TopicStatsPage        TopicName = "business.stats_page.events"
+	TopicPage             TopicName = "business.page.events"
+	TopicPageRole         TopicName = "business.page_role.events"
 	TopicFollowerPage     TopicName = "business.follower_page.events"
+	TopicStatsPage        TopicName = "business.stats_page.events"
 	TopicDailyMetricsPage TopicName = "business.daily_metrics_page.events"
 )
 

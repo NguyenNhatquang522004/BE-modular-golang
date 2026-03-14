@@ -116,6 +116,16 @@ func (c *ConsumerMediaAssets) handlerCreatedMediaAsset(ctx context.Context, even
 	if err != nil {
 		return errors.New("failed to create media assets in repository: " + err.Error())
 	}
+	for _, item := range entity {
+		payload := mediaEvent.ProcessMediaPayload{
+			MediaID: item.ID.Hex(),
+			UserID:  item.UserID,
+		}
+		err = c.events.Publish(ctx, constants.TopicMeiaAssetHandleMetadata.String(), payload.MediaID, constants.Created.String(), payload)
+		if err != nil {
+			return errors.New("failed to publish media processing event for media asset ID " + item.ID.Hex() + ": " + err.Error())
+		}
+	}
 	return nil
 }
 
@@ -142,6 +152,14 @@ func (c *ConsumerMediaAssets) handlerUpdatedMediaAsset(ctx context.Context, even
 	err = c.mediaRepo.UpdateMediaAsset(ctx, datamediasset)
 	if err != nil {
 		return errors.New("failed to update media asset in repository: " + err.Error())
+	}
+	payload := mediaEvent.ProcessMediaPayload{
+		MediaID: datamediasset.ID.Hex(),
+		UserID:  datamediasset.UserID,
+	}
+	err = c.events.Publish(ctx, constants.TopicMeiaAssetHandleMetadata.String(), payload.MediaID, constants.Updated.String(), payload)
+	if err != nil {
+		return errors.New("failed to publish media processing event for media asset ID " + datamediasset.ID.Hex() + ": " + err.Error())
 	}
 	// Nếu có logic liên quan đến việc cập nhật album hoặc group khi media asset thay đổi, bạn có thể thêm vào đây.
 	return nil

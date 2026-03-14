@@ -177,7 +177,6 @@ type UpdateGroupMemberPayload struct {
 
 	// Kỷ luật: Nếu client muốn ban/mute
 	DisciplineInfo *DisciplineInfoPayload `json:"discipline_info,omitempty" binding:"omitempty"`
-
 	// Cập nhật huy hiệu gamification
 	Badges []sharedEnums.UserBadge `json:"badges,omitempty" binding:"omitempty"`
 
@@ -369,4 +368,17 @@ type DeleteGroupFilePayload struct {
 	ID        string `json:"id" binding:"required,mongodb"`       // Dùng để update hoặc tracking, có thể là UUID hoặc ObjectID dưới dạng string. Bắt buộc phải có để biết update record nào.
 	GroupID   string `json:"group_id" binding:"required,mongodb"` // Dùng để update hoặc tracking, có thể là UUID hoặc ObjectID dưới dạng string. Bắt buộc phải có để biết update record nào.
 	DeleteAll bool   `json:"delete_all"`                          // Nếu true, xóa tất cả bài viết và tương tác của user trong nhóm, không chỉ xóa member record
+}
+
+type CommunityStatsPayload struct {
+	GroupID string `json:"group_id"`
+	UserID  string `json:"user_id"`
+	//GROUP MEMBER
+	LastActiveAt *time.Time `json:"last_active_at"`
+	// group Event
+	Going      *int `bson:"going" json:"going"`           // Số người xác nhận đi
+	Interested *int `bson:"interested" json:"interested"` // Số người quan tâm
+
+	// group file
+	DownloadCount *int `bson:"download_count" json:"download_count"` // Số lượt tải files
 }
