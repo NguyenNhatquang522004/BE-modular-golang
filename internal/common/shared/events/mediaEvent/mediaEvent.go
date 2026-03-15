@@ -16,6 +16,8 @@ type StartStopVideoLiveStreamPayload struct {
 	LiveSessionID string              `json:"live_session_id"`
 	SegmentLen    int                 `json:"segment_len"`
 	OwnerID       string              `json:"owner_id"`
+	GroupID       string              `json:"group_id,omitempty"`
+	PageID        string              `json:"page_id,omitempty"`
 	Name          string              `json:"name"`
 	EventType     constants.EventType `json:"event_type"`
 }
@@ -481,4 +483,41 @@ type ProcessMediaPayload struct {
 
 	// Tùy chọn: Gắn thêm UserID để dễ dàng trace log trên Kibana/Grafana mà không cần query DB
 	UserID string `json:"user_id,omitempty"`
+}
+
+type CreateLiveSessionPayload struct {
+	SessionID string  `json:"session_id,omitempty"`       // Nếu client gửi lên có nghĩa là update, nếu không có nghĩa là create mới
+	UserID    string  `json:"user_id" binding:"required"` // ID người tạo (UUID từ Postgres)
+	GroupID   *string `json:"group_id,omitempty"`         // Nếu stream liên kết với Group nào đó, không bắt buộc phải có
+	PageID    *string `json:"page_id,omitempty"`          // Nếu stream liên kết với Page nào đó, không bắt buộc phải có
+	// Dùng binding:"required" để bắt buộc user phải truyền lên, chống spam chuỗi rỗng
+	Title string `json:"title" binding:"required,min=3,max=255"`
+
+	Description string `json:"description" binding:"omitempty,max=2000"`
+
+	// CategoryID bắt buộc phải có để phân loại phòng stream
+	CategoryID string `json:"category_id" binding:"required"`
+
+	// IsRecorded: Dùng con trỏ (*bool) thay vì bool thường.
+	// Lý do: Để phân biệt được việc người dùng CỐ TÌNH gửi false hay là KHÔNG GỬI GÌ (giá trị zero-value).
+	IsRecorded *bool `json:"is_recorded" binding:"required"`
+}
+type UpdateLiveSessionPayload struct {
+	SessionID   string  `json:"session_id,omitempty"` // Nếu client gửi lên có nghĩa là update, nếu không có nghĩa là create mới
+	Title       *string `json:"title,omitempty" binding:"omitempty,min=3,max=255"`
+	Description *string `json:"description,omitempty" binding:"omitempty,max=2000"`
+	CategoryID  *string `json:"category_id,omitempty" binding:"omitempty"`
+	IsRecorded  *bool   `json:"is_recorded,omitempty" binding:"omitempty"`
+
+	// Lưu ý: Status, PinnedCommentID hoặc BannedUsers thường KHÔNG nằm chung
+	// trong hàm Update chung này mà nên tách thành các API riêng biệt để an toàn và rành mạch.
+	// VD: PUT /live/{id}/status, POST /live/{id}/ban-user
+}
+
+type DeleteLiveSessionPayload struct {
+	SessionID string  `json:"session_id,omitempty"` // Nếu client gửi lên có nghĩa là update, nếu không có nghĩa là create mới
+	PageID    *string `json:"page_id,omitempty"`    // Nếu stream liên kết với Page nào đó, không bắt buộc phải có
+	GroupID   *string `json:"group_id,omitempty"`   // Nếu stream liên kết với Group nào đó, không bắt buộc phải có
+	UserID    *string `json:"user_id,omitempty"`    // ID người tạo (UUID từ Postgres)
+	DeleteAll bool    `json:"delete_all"`           // Cờ để xác định có xóa tất cả các phiên bản live session liên quan đến Page/Group hay không
 }

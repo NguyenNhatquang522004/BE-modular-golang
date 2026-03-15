@@ -12,6 +12,7 @@ import (
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/constants"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/events"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/events/mediaEvent"
+	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/utils"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/media/domain/IRepository/IRepositoryCassandra"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/media/domain/IRepository/IRepositoryMongodb"
 	"github.com/fsnotify/fsnotify"
@@ -44,13 +45,23 @@ func (c *ConsumerLiveSession) ConsumeStartLiveStream(ctx context.Context) {
 		}
 		switch event.Type {
 		case string(constants.Created):
-			outputdir := c.seaweedfs.GetStreamURLDIR(data.LiveSessionID)
+			var outputdir string
+			if data.PageID != "" {
+				outputdir = c.seaweedfs.GetStreamURLDIR(data.OwnerID, data.LiveSessionID, utils.BucketPageLiveStream)
+			}
+			if data.GroupID != "" {
+				outputdir = c.seaweedfs.GetStreamURLDIR(data.OwnerID, data.LiveSessionID, utils.BucketGroupStream)
+			}
+			if data.PageID == "" && data.GroupID == "" {
+				outputdir = c.seaweedfs.GetStreamURLDIR(data.OwnerID, data.LiveSessionID, utils.BucketLive)
+			}
 			log.Printf("Stream URL DIR: %s", outputdir)
-			go c.watchAndUploadSegments(ctx, data.LiveSessionID, outputdir)
+			go c.watchAndUploadSegments(ctx, data.OwnerID, data.LiveSessionID, outputdir)
 			transcodeConfig := &IRepositoryShare.TranscodeConfig{
 				SessionID:  data.LiveSessionID,
 				OutputDir:  outputdir,
 				SegmentLen: 5, // Ví dụ: 5 giây mỗi segment
+				InputURL:   "",
 			}
 
 			err := c.ffampeg.StartTranscoding(ctx, *transcodeConfig)
@@ -90,7 +101,7 @@ func (c *ConsumerLiveSession) ConsumeStartLiveStream(ctx context.Context) {
 		log.Printf("Error subscribing to events: %v", err)
 	}
 }
-func (s *ConsumerLiveSession) watchAndUploadSegments(ctx context.Context, sessionID, outputDir string) {
+func (s *ConsumerLiveSession) watchAndUploadSegments(ctx context.Context, OwnerID, sessionID, outputDir string) {
 	watcher, err := fsnotify.NewWatcher()
 	if err != nil {
 		log.Printf("[Worker] Error creating watcher for %s: %v", sessionID, err)
@@ -129,7 +140,7 @@ func (s *ConsumerLiveSession) watchAndUploadSegments(ctx context.Context, sessio
 
 						// Đẩy tác vụ Upload sang WorkerPool
 						err := s.pool.Run(ctx, func() {
-							_ = s.seaweedfs.UpdateStreamManifest(ctx, sessionID, content)
+							_ = s.seaweedfs.UpdateStreamManifest(ctx, OwnerID, sessionID, content)
 						})
 						if err != nil {
 							log.Printf("[WorkerPool] Failed to assign m3u8 upload task: %v", err)
@@ -154,7 +165,7 @@ func (s *ConsumerLiveSession) watchAndUploadSegments(ctx context.Context, sessio
 								// BẮT BUỘC: Đóng file ngay trong Worker này khi xong tác vụ
 								defer file.Close()
 
-								_ = s.seaweedfs.UploadStreamSegment(ctx, sessionID, fName, file)
+								_ = s.seaweedfs.UploadStreamSegment(ctx, OwnerID, sessionID, fName, file)
 							}
 						}
 					})

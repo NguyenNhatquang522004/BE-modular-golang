@@ -27,7 +27,12 @@ const (
 	BucketGroupAvatar StorageType = "groups/avatar"
 	BucketGroupCover  StorageType = "groups/cover"
 	BucketGroupFile   StorageType = "groups/files"
+	BucketGroupStream StorageType = "groups/streams" // Dành cho file video livestream của nhóm, nếu có tính năng này trong tương lai
 
+	//page assets
+	BucketPageAvatar     StorageType = "pages/avatar"
+	BucketPageCover      StorageType = "pages/cover"
+	BucketPageLiveStream StorageType = "pages/streams" // Dành cho file video livestream của page, nếu có tính năng này trong tương lai
 	// System
 	BucketSystem StorageType = "system"
 )
@@ -61,7 +66,7 @@ func GenerateStoragePath(ownerID string, bucketType StorageType) string {
 	basePath := fmt.Sprintf("users/%s/%s", ownerID, bucketType.String())
 
 	// Nhóm Group thì path khác một chút
-	if bucketType == BucketGroupAvatar || bucketType == BucketGroupCover || bucketType == BucketGroupFile {
+	if bucketType == BucketGroupAvatar || bucketType == BucketGroupCover || bucketType == BucketGroupFile || bucketType == BucketGroupStream {
 		basePath = fmt.Sprintf("%s/%s", bucketType.String(), ownerID) // groups/avatar/{group_id}
 	}
 
@@ -130,4 +135,3 @@ func IsImage(contentType string) bool {
 func IsVideo(contentType string) bool {
 	return strings.HasPrefix(contentType, "video/")
 }
-

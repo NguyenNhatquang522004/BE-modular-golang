@@ -331,6 +331,18 @@ services:
         condition: service_healthy # Chỉ chạy khi Keycloak đã Healthcheck OK
     networks:
       - be_modular_golang_network  
+  ovenmediaengine:
+    image: airensoft/ovenmediaengine:latest
+    ports:
+        - "1935:1935" # Cổng nhận RTMP từ OBS/App
+        - "3333:3333" # Cổng WebRTC cho khán giả xem (LLHLS/WebRTC)
+        - "8080:8080" # Cổng HLS truyền thống
+    volumes:
+        - ./ome_conf:/opt/ovenmediaengine/bin/origin_conf # Config
+        - /tmp/lives:/opt/ovenmediaengine/media # Thư mục dùng chung chứa file Record mp4
+    restart: always
+    networks:
+        - be_modular_golang_network
 networks:
   be_modular_golang_network:
     driver: bridge
@@ -348,4 +360,5 @@ volumes:
   seaweedfs-volume-data_BE-modular-golang:
   seaweedfs-filer-data_BE-modular-golang:
   cassandra-data_BE-modular-golang:
+  
   

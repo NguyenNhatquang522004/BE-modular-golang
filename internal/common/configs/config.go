@@ -7,6 +7,7 @@ import (
 )
 
 type Config struct {
+	LiveStream     liveStreamConfig
 	DLQ            DLQConfig
 	WorkerPool     WorkerPoolConfig
 	CircuitBreaker CircuitBreakerConfig
@@ -25,6 +26,9 @@ type Config struct {
 	PostgresDB     PostgresConfig
 	Server         ServerConfig
 	VNPay          VNPayConfig
+}
+type liveStreamConfig struct {
+	SECRET_KEY string
 }
 
 // DLQ (Dead Letter Queue) Configuration
@@ -152,6 +156,9 @@ func LoadConfig() (*Config, error) {
 	// Vì file .env của bạn đặt tên biến lộn xộn (Host, POSTGRES_USER...)
 	// nên ta phải lấy từng cái bỏ vào đúng chỗ trong Struct.
 	cfg := &Config{
+		LiveStream: liveStreamConfig{
+			SECRET_KEY: viper.GetString("LIVE_STREAM_SECRET_KEY"),
+		},
 		// --- DLQ Config ---
 		DLQ: DLQConfig{
 			TOPIC:            viper.GetString("KAFKA_TOPIC_DLQ"),

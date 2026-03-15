@@ -18,7 +18,8 @@ type LiveSession struct {
 	// UserID từ Postgres (UUID) -> Lưu String
 	// Index: { host_user_id: 1, status: 1 } -> Kiểm tra xem user này có đang live không
 	HostUserID string `bson:"host_user_id" json:"host_user_id"`
-
+	GroupID    string `bson:"group_id,omitempty" json:"group_id,omitempty"` // Nếu live liên kết với Group nào đó, không bắt buộc phải có
+	PageID     string `bson:"page_id,omitempty" json:"page_id,omitempty"`   // Nếu live liên kết với Page nào đó, không bắt buộc phải có
 	// 2. INFO
 	Title       string `bson:"title" json:"title"`
 	Description string `bson:"description" json:"description"`
@@ -68,12 +69,12 @@ type LiveStats struct {
 	PeakViewers   int `bson:"peak_viewers" json:"peak_viewers"` // Mắt xem đỉnh điểm
 	TotalViews    int `bson:"total_views" json:"total_views"`   // Tổng số lượt xem (có thể tính bằng Redis)
 	TotalComments int `bson:"total_comments" json:"total_comments"`
-	Like      int `bson:"likes_count" json:"likes_count"`
-	Love       int `bson:"love" json:"love"`
-	Haha       int `bson:"haha" json:"haha"`
-	Wow        int `bson:"wow" json:"wow"`
-	Sad        int `bson:"sad" json:"sad"`
-	Angry      int `bson:"angry" json:"angry"`
+	Like          int `bson:"likes_count" json:"likes_count"`
+	Love          int `bson:"love" json:"love"`
+	Haha          int `bson:"haha" json:"haha"`
+	Wow           int `bson:"wow" json:"wow"`
+	Sad           int `bson:"sad" json:"sad"`
+	Angry         int `bson:"angry" json:"angry"`
 }
 
 func (LiveSession) CollectionName() string {

@@ -21,4 +21,8 @@ type ILiveSessionRepository interface {
 	DeleteBulkLiveSessions(ctx context.Context, ids []string) (int64, []*mongodbErrors.BulkError, error)
 	CheckLiveSessionExists(ctx context.Context, id string) (bool, error)
 	CheckLiveSessionExistsByStreamKey(ctx context.Context, HostUserID string, streamKey string) (bool, error)
+	DeleteLiveSessionsByPageID(ctx context.Context, pageID string) error
+	DeleteLiveSessionsByGroupID(ctx context.Context, groupID string) error
+	DeleteLiveSessionsByHostUserID(ctx context.Context, hostUserID string) error
+	DeleteLiveSessionByID(ctx context.Context, id string) error
 }

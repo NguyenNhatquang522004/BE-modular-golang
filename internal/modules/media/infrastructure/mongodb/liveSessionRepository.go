@@ -380,3 +380,43 @@ func (r *LiveSessionRepository) CheckLiveSessionExistsByStreamKey(ctx context.Co
 	}
 	return count > 0, nil
 }
+func (r *LiveSessionRepository) DeleteLiveSessionsByPageID(ctx context.Context, pageID string) error {
+	collection := r.client.Collection(entity.LiveSession{}.CollectionName())
+	finalid, _ := primitive.ObjectIDFromHex(pageID)
+	filter := bson.M{"page_id": finalid}
+	_, err := collection.DeleteMany(ctx, filter)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+func (r *LiveSessionRepository) DeleteLiveSessionsByGroupID(ctx context.Context, groupID string) error {
+	collection := r.client.Collection(entity.LiveSession{}.CollectionName())
+	finalid, _ := primitive.ObjectIDFromHex(groupID)
+	filter := bson.M{"group_id": finalid}
+	_, err := collection.DeleteMany(ctx, filter)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+func (r *LiveSessionRepository) DeleteLiveSessionsByHostUserID(ctx context.Context, hostUserID string) error {
+	collection := r.client.Collection(entity.LiveSession{}.CollectionName())
+	finalid, _ := primitive.ObjectIDFromHex(hostUserID)
+	filter := bson.M{"host_user_id": finalid }
+	_, err := collection.DeleteMany(ctx, filter)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+func (r *LiveSessionRepository) DeleteLiveSessionByID(ctx context.Context, id string) error {
+	collection := r.client.Collection(entity.LiveSession{}.CollectionName())
+	finalid, _ := primitive.ObjectIDFromHex(id)
+	filter := bson.M{"_id": finalid}
+	_, err := collection.DeleteOne(ctx, filter)
+	if err != nil {
+		return err
+	}
+	return nil
+}

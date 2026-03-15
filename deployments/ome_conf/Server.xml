@@ -1,0 +1,49 @@
+<Application>
+    <Name>app</Name>
+    <Type>live</Type>
+
+    <OutputProfiles>
+        <HardwareAcceleration>false</HardwareAcceleration>
+        <OutputProfile>
+            <Name>bypass_stream</Name>
+            <OutputStreamName>${OriginStreamName}</OutputStreamName>
+            <Encodes>
+                <Video>
+                    <Codec>bypass</Codec>
+                </Video>
+                <Audio>
+                    <Codec>bypass</Codec>
+                </Audio>
+            </Encodes>
+        </OutputProfile>
+    </OutputProfiles>
+
+    <Providers>
+        <RTMP>
+            <Port>1935</Port>
+        </RTMP>
+    </Providers>
+
+    <Publishers>
+        <AppWorkerCount>1</AppWorkerCount>
+        <WebRTC>
+            <Port>3333</Port>
+        </WebRTC>
+        <HLS>
+            <Port>8080</Port>
+            <WorkerCount>1</WorkerCount>
+        </HLS>
+        <FILE>
+            <FilePath>/opt/ovenmediaengine/media/${OriginStreamName}.mp4</FilePath>
+            <InfoFile>${OriginStreamName}.xml</InfoFile>
+        </FILE>
+    </Publishers>
+
+    <Webhooks>
+        <Endpoint>http://host.docker.internal:8000/api/v1/media/webhooks/ome</Endpoint>
+        <Events>
+            <Event>stream.created</Event>
+            <Event>stream.destroyed</Event>
+        </Events>
+    </Webhooks>
+</Application>
