@@ -3,5 +3,6 @@ package IConsumer
 import "context"
 
 type IConsumerLiveSession interface {
-	ConsumeStartLiveStream(ctx context.Context)
+	ConsumerTopicLiveSession(ctx context.Context) error
+	ConsumerFailedTopicLiveSession(ctx context.Context) error
 }

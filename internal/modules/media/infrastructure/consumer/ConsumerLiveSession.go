@@ -2,184 +2,196 @@ package consumer
 
 import (
 	"context"
+	"errors"
 	"fmt"
-	"log"
-	"os"
-	"path/filepath"
-	"strings"
+	"sync"
+	"time"
 
+	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/configs"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/IRepositoryShare"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/constants"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/events"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/events/mediaEvent"
+	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/infrastructure/kafka"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/utils"
-	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/media/domain/IRepository/IRepositoryCassandra"
+	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/media/delivery/mapper"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/media/domain/IRepository/IRepositoryMongodb"
-	"github.com/fsnotify/fsnotify"
 )
 
-type ConsumerLiveSession struct {
-	liveComment IRepositoryCassandra.ILiveCommentsRepository
-	livesession IRepositoryMongodb.ILiveSessionRepository
-	events      events.EventBus
-	seaweedfs   IRepositoryShare.ISeaweedfs
-	ffampeg     IRepositoryShare.IMediaTranscoder
-	pool        IRepositoryShare.IWorkerPool
+type ConsumerTopicLiveSession struct {
+	events        events.EventBus
+	pool          IRepositoryShare.IWorkerPool
+	redisRepo     IRepositoryShare.IRedis
+	livesession   IRepositoryMongodb.ILiveSessionRepository
+	seaweedfsRepo IRepositoryShare.ISeaweedfs
+	cfg           *configs.Config
 }
 
-func NewConsumerLiveSession(liveComment IRepositoryCassandra.ILiveCommentsRepository, livesession IRepositoryMongodb.ILiveSessionRepository, events events.EventBus, seaweedfs IRepositoryShare.ISeaweedfs, ffampeg IRepositoryShare.IMediaTranscoder, pool IRepositoryShare.IWorkerPool) *ConsumerLiveSession {
-	return &ConsumerLiveSession{
-		liveComment: liveComment,
-		livesession: livesession,
-		events:      events,
-		seaweedfs:   seaweedfs,
-		ffampeg:     ffampeg,
-		pool:        pool,
+func NewConsumerTopicLiveSession(events events.EventBus, pool IRepositoryShare.IWorkerPool, redisRepo IRepositoryShare.IRedis, livesession IRepositoryMongodb.ILiveSessionRepository, seaweedfsRepo IRepositoryShare.ISeaweedfs, cfg *configs.Config) *ConsumerTopicLiveSession {
+	return &ConsumerTopicLiveSession{
+		events:        events,
+		pool:          pool,
+		redisRepo:     redisRepo,
+		livesession:   livesession,
+		seaweedfsRepo: seaweedfsRepo,
+		cfg:           cfg,
 	}
 }
-func (c *ConsumerLiveSession) ConsumeStartLiveStream(ctx context.Context) {
-	err := c.events.Subscribe(ctx, constants.TopicStartStopLive.String(), func(ctx context.Context, event events.IntegrationEvent) error {
-		data, ok := event.Payload.(*mediaEvent.StartStopVideoLiveStreamPayload)
-		if !ok {
-			return fmt.Errorf("invalid event payload")
+
+func (c *ConsumerTopicLiveSession) ConsumerTopicLiveSession(ctx context.Context) error {
+	// Implement the logic for consuming the live session topic
+	err := c.events.SubscribeBatch(ctx, constants.TopicLiveSession.String(), 100, time.Duration(5)*time.Minute, func(ctx context.Context, events []events.IntegrationEvent) error {
+		var wg sync.WaitGroup
+		errchan := make(chan error, len(events))
+		for _, event := range events {
+			status, can, err := c.redisRepo.Lock(ctx, event.ID)
+			if err != nil {
+				errchan <- errors.New("failed to acquire lock for event " + event.ID + ": " + err.Error())
+				continue
+			}
+			if !can {
+				if status == constants.StatusProcessing {
+					errchan <- errors.New("event " + event.ID + " is currently being processed by another worker. Skipping.")
+				} else {
+					errchan <- errors.New("event " + event.ID + " has already been processed with status " + status.String() + ". Skipping.")
+				}
+				continue
+			}
+			wg.Add(1)
+			var processErr error
+			err = c.pool.Run(ctx, func() {
+				switch event.Type {
+				case constants.Created.String():
+					processErr = c.handleCreatedEvent(ctx, event)
+				case constants.Updated.String():
+					processErr = c.handleUpdatedEvent(ctx, event)
+				case constants.Deleted.String():
+					processErr = c.handleDeletedEvent(ctx, event)
+				default:
+					processErr = errors.New("unknown event type: " + event.Type)
+				}
+			})
+			if err != nil {
+				errchan <- errors.New("failed to submit event " + event.ID + " to worker pool: " + err.Error())
+				c.redisRepo.Unlock(ctx, event.ID)
+				wg.Done()
+			}
+			if processErr != nil {
+				errchan <- errors.New("failed to process event " + event.ID + ": " + processErr.Error())
+				c.redisRepo.Unlock(ctx, event.ID)
+			} else {
+				errchan <- nil
+				c.redisRepo.MarkCompleted(ctx, event.ID)
+
+			}
 		}
-		switch event.Type {
-		case string(constants.Created):
-			var outputdir string
-			if data.PageID != "" {
-				outputdir = c.seaweedfs.GetStreamURLDIR(data.OwnerID, data.LiveSessionID, utils.BucketPageLiveStream)
-			}
-			if data.GroupID != "" {
-				outputdir = c.seaweedfs.GetStreamURLDIR(data.OwnerID, data.LiveSessionID, utils.BucketGroupStream)
-			}
-			if data.PageID == "" && data.GroupID == "" {
-				outputdir = c.seaweedfs.GetStreamURLDIR(data.OwnerID, data.LiveSessionID, utils.BucketLive)
-			}
-			log.Printf("Stream URL DIR: %s", outputdir)
-			go c.watchAndUploadSegments(ctx, data.OwnerID, data.LiveSessionID, outputdir)
-			transcodeConfig := &IRepositoryShare.TranscodeConfig{
-				SessionID:  data.LiveSessionID,
-				OutputDir:  outputdir,
-				SegmentLen: 5, // Ví dụ: 5 giây mỗi segment
-				InputURL:   "",
-			}
-
-			err := c.ffampeg.StartTranscoding(ctx, *transcodeConfig)
+		wg.Wait()
+		close(errchan)
+		var finalErr error
+		for err := range errchan {
 			if err != nil {
-				return fmt.Errorf("failed to start transcoding: %w", err)
+				finalErr = errors.Join(finalErr, err)
 			}
-			return nil
-		case string(constants.Deleted):
-			datalivesession, err := c.livesession.GetLiveSessionByID(ctx, data.LiveSessionID)
-			if err != nil {
-				return fmt.Errorf("failed to get live session: %w", err)
-			}
-			if datalivesession == nil {
-				return fmt.Errorf("live session not found")
-			}
-			if datalivesession.RecordingSetting.IsRecorded == false {
-				return nil
-			}
-			datafile, err := c.seaweedfs.GenerateVOD(ctx, data.LiveSessionID, data.OwnerID, data.Name)
-			if err != nil {
-				return fmt.Errorf("failed to generate VOD: %w", err)
-			}
-			log.Printf("Generated VOD file: %s", datafile.PublicURL)
-
-			datalivesession.PlaybackURL = datafile.PublicURL
-			datalivesession.RecordingSetting.ArchiveURL = datafile.PublicURL
-			err = c.livesession.UpdateLiveSession(ctx, datalivesession)
-			if err != nil {
-				return fmt.Errorf("failed to update live session with VOD URL: %w", err)
-			}
-
 		}
-		return nil
+		return finalErr
 	})
 	if err != nil {
-		// Log lỗi hoặc xử lý theo yêu cầu
-		log.Printf("Error subscribing to events: %v", err)
+		return err
 	}
+	return nil
 }
-func (s *ConsumerLiveSession) watchAndUploadSegments(ctx context.Context, OwnerID, sessionID, outputDir string) {
-	watcher, err := fsnotify.NewWatcher()
+func (c *ConsumerTopicLiveSession) handleCreatedEvent(ctx context.Context, event events.IntegrationEvent) error {
+	data, err := utils.ParsePayload[mediaEvent.CreateLiveSessionPayload](event.Payload)
 	if err != nil {
-		log.Printf("[Worker] Error creating watcher for %s: %v", sessionID, err)
-		return
+		return kafka.NewNonRetryableError(fmt.Errorf(" failed to parse event payload: %w", err))
 	}
-	defer watcher.Close()
-
-	if err := watcher.Add(outputDir); err != nil {
-		log.Printf("[Worker] Error watching directory %s: %v", outputDir, err)
-		return
+	if data == nil {
+		return kafka.NewNonRetryableError(fmt.Errorf("payload is nil"))
 	}
+	streamkey := utils.GenerateSecureStreamKey(data.UserID, data.SessionID, c.cfg.LiveStream.SECRET_KEY, time.Duration(24)*time.Hour)
+	var playbackURL string
+	if data.PageID != nil {
+		playbackURL = c.seaweedfsRepo.GetStreamURL(*data.PageID, data.SessionID, utils.BucketPageLiveStream)
+	}
+	if data.GroupID != nil {
+		playbackURL = c.seaweedfsRepo.GetStreamURL(*data.GroupID, data.SessionID, utils.BucketGroupStream)
+	}
+	if data.PageID == nil && data.GroupID == nil {
+		playbackURL = c.seaweedfsRepo.GetStreamURL(data.UserID, data.SessionID, utils.BucketLive)
+	}
+	entity := mapper.MapCreatePayloadToEntity(data, streamkey, playbackURL)
+	err = c.livesession.CreateLiveSession(ctx, entity)
+	if err != nil {
+		return fmt.Errorf("failed to create live session in database: %w", err)
+	}
+	// Implement the logic for handling the created event using the parsed data
+	return nil
+}
 
-	log.Printf("[Worker] Started watching: %s", outputDir)
-
-	for {
-		select {
-		case <-ctx.Done(): // FFmpeg dừng -> Hủy worker theo dõi
-			log.Printf("[Worker] Stopped watching for session: %s", sessionID)
-			return
-
-		case event, ok := <-watcher.Events:
-			if !ok {
-				return
+// Implement the logic for handling the created event using the parsed data
+func (c *ConsumerTopicLiveSession) handleUpdatedEvent(ctx context.Context, event events.IntegrationEvent) error {
+	data, err := utils.ParsePayload[mediaEvent.UpdateLiveSessionPayload](event.Payload)
+	if err != nil {
+		return kafka.NewNonRetryableError(fmt.Errorf(" failed to parse event payload: %w", err))
+	}
+	if data == nil {
+		return kafka.NewNonRetryableError(fmt.Errorf("payload is nil"))
+	}
+	existingLive, err := c.livesession.GetLiveSessionByID(ctx, data.SessionID)
+	if err != nil {
+		return fmt.Errorf("failed to retrieve existing live session from database: %w", err)
+	}
+	if existingLive == nil {
+		return kafka.NewNonRetryableError(fmt.Errorf("live session with ID %s not found", data.SessionID))
+	}
+	updatedLive := mapper.ApplyUpdatePayloadToEntity(existingLive, data)
+	if updatedLive == nil {
+		return kafka.NewNonRetryableError(fmt.Errorf("no valid fields to update for live session with ID %s", data.SessionID))
+	}
+	err = c.livesession.UpdateLiveSession(ctx, updatedLive)
+	if err != nil {
+		return fmt.Errorf("failed to update live session in database: %w", err)
+	}
+	return nil
+}
+func (c *ConsumerTopicLiveSession) handleDeletedEvent(ctx context.Context, event events.IntegrationEvent) error {
+	data, err := utils.ParsePayload[mediaEvent.DeleteLiveSessionPayload](event.Payload)
+	if err != nil {
+		return kafka.NewNonRetryableError(fmt.Errorf(" failed to parse event payload: %w", err))
+	}
+	if data == nil {
+		return kafka.NewNonRetryableError(fmt.Errorf("payload is nil"))
+	}
+	if data.DeleteAll {
+		if data.PageID != nil {
+			err = c.livesession.DeleteLiveSessionsByPageID(ctx, *data.PageID)
+			if err != nil {
+				return fmt.Errorf("failed to delete live sessions by PageID in database: %w", err)
 			}
 
-			// Lọc sự kiện Create hoặc Write
-			if event.Has(fsnotify.Create) || event.Has(fsnotify.Write) {
-				fileName := filepath.Base(event.Name)
-
-				// 1. XỬ LÝ FILE MANIFEST (.m3u8)
-				if strings.HasSuffix(fileName, ".m3u8") {
-					// Best Practice: Đọc file m3u8 ĐỒNG BỘ ngay lập tức trên luồng chính để lấy "snapshot" mới nhất,
-					// vì FFmpeg ghi đè file này rất nhanh. Nếu để Worker tự mở file sau, có thể bị lỗi Race Condition.
-					content, err := os.ReadFile(event.Name)
-					if err == nil && len(content) > 0 {
-
-						// Đẩy tác vụ Upload sang WorkerPool
-						err := s.pool.Run(ctx, func() {
-							_ = s.seaweedfs.UpdateStreamManifest(ctx, OwnerID, sessionID, content)
-						})
-						if err != nil {
-							log.Printf("[WorkerPool] Failed to assign m3u8 upload task: %v", err)
-						}
-					}
-				}
-
-				// 2. XỬ LÝ FILE SEGMENT (.ts)
-				if strings.HasSuffix(fileName, ".ts") {
-					// Best Practice: Copy biến ra scope cục bộ để tránh lỗi "Closure capture" trong Go
-					// (Đặc biệt quan trọng khi truyền vào func() của WorkerPool)
-					evtName := event.Name
-					fName := fileName
-
-					// Đẩy tác vụ mở file và upload sang WorkerPool để tránh block luồng theo dõi
-					err := s.pool.Run(ctx, func() {
-						fileInfo, err := os.Stat(evtName)
-						// Chỉ upload khi file đã có dung lượng (FFmpeg đã bắt đầu ghi)
-						if err == nil && fileInfo.Size() > 0 {
-							file, err := os.Open(evtName)
-							if err == nil {
-								// BẮT BUỘC: Đóng file ngay trong Worker này khi xong tác vụ
-								defer file.Close()
-
-								_ = s.seaweedfs.UploadStreamSegment(ctx, OwnerID, sessionID, fName, file)
-							}
-						}
-					})
-					if err != nil {
-						log.Printf("[WorkerPool] Failed to assign TS segment upload task: %v", err)
-					}
-				}
+		}
+		if data.GroupID != nil {
+			err = c.livesession.DeleteLiveSessionsByGroupID(ctx, *data.GroupID)
+			if err != nil {
+				return fmt.Errorf("failed to delete live sessions by GroupID in database: %w", err)
 			}
-
-		case err, ok := <-watcher.Errors:
-			if !ok {
-				return
+		}
+		if data.PageID == nil && data.GroupID == nil {
+			err = c.livesession.DeleteLiveSessionsByHostUserID(ctx, *data.UserID)
+			if err != nil {
+				return fmt.Errorf("failed to delete live sessions by HostUserID in database: %w", err)
 			}
-			log.Printf("[Worker] Watcher error for %s: %v", sessionID, err)
+		}
+	} else {
+		err = c.livesession.DeleteLiveSessionByID(ctx, data.SessionID)
+		if err != nil {
+			return fmt.Errorf("failed to delete live session by ID in database: %w", err)
 		}
 	}
+
+	return nil
+}
+func (c *ConsumerTopicLiveSession) ConsumerFailedTopicLiveSession(ctx context.Context) error {
+	// Implement the logic for consuming the failed live session topic
+	return nil
 }
