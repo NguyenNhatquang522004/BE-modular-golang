@@ -46,10 +46,12 @@ type TopicDailyMetricsPagePayload struct {
 }
 
 type AvatarPayload struct {
+	ID  string `json:"id,omitempty"` // ID của media đã tồn tại, nếu có
 	URL string `json:"url" validate:"required,url"`
 }
 
 type CoverPayload struct {
+	ID        string  `json:"id,omitempty"` // ID của media đã tồn tại, nếu có
 	URL       string  `json:"url" validate:"required,url"`
 	PositionY float64 `json:"position_y" validate:"min=0,max=100"`
 }

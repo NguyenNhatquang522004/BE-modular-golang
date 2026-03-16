@@ -522,3 +522,18 @@ type DeleteLiveSessionPayload struct {
 	UserID    *string `json:"user_id,omitempty"`    // ID người tạo (UUID từ Postgres)
 	DeleteAll bool    `json:"delete_all"`           // Cờ để xác định có xóa tất cả các phiên bản live session liên quan đến Page/Group hay không
 }
+
+type AIAnalysisMediaAssetPayload struct {
+	PostID  string   `json:"post_id,omitempty"`
+	MediaID []string `json:"media_id"`
+	Content string   `json:"content,omitempty"` // Kết quả phân tích AI, có thể là caption gợi ý, hashtag gợi ý, hoặc phân tích nội dung ảnh/video
+}
+type OllamaRequest struct {
+	Model  string   `json:"model"`
+	Prompt string   `json:"prompt"`
+	Images []string `json:"images"`
+	Stream bool     `json:"stream"`
+}
+type OllamaResponse struct {
+	Response string `json:"response"`
+}

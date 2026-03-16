@@ -7,25 +7,30 @@ import (
 )
 
 type Config struct {
-	LiveStream     liveStreamConfig
-	DLQ            DLQConfig
-	WorkerPool     WorkerPoolConfig
-	CircuitBreaker CircuitBreakerConfig
-	GRPCServer     GRPCServerConfig
-	Kafka          KafkaConfig
-	KeyCloak       KeyCloakConfig
-	EmailSMTP      EmailSMTPConfig
-	GoogleAuth     GoogleAuthConfig
-	JWT            JWTConfig
-	SEAWEEDFS      SEAWEEDFSConfig
-	Neo4jDB        Neo4jConfig
-	MongoDB        MongodbConfig
-	ElasticDB      ElasticsearchConfig
-	CassandraDB    CassandraConfig
-	RedisDB        RedisConfig
-	PostgresDB     PostgresConfig
-	Server         ServerConfig
-	VNPay          VNPayConfig
+	AIAnalysisMediaAsset AIAnalysisMediaAssetConfig
+	LiveStream           liveStreamConfig
+	DLQ                  DLQConfig
+	WorkerPool           WorkerPoolConfig
+	CircuitBreaker       CircuitBreakerConfig
+	GRPCServer           GRPCServerConfig
+	Kafka                KafkaConfig
+	KeyCloak             KeyCloakConfig
+	EmailSMTP            EmailSMTPConfig
+	GoogleAuth           GoogleAuthConfig
+	JWT                  JWTConfig
+	SEAWEEDFS            SEAWEEDFSConfig
+	Neo4jDB              Neo4jConfig
+	MongoDB              MongodbConfig
+	ElasticDB            ElasticsearchConfig
+	CassandraDB          CassandraConfig
+	RedisDB              RedisConfig
+	PostgresDB           PostgresConfig
+	Server               ServerConfig
+	VNPay                VNPayConfig
+}
+type AIAnalysisMediaAssetConfig struct {
+	OllamaURL string
+	ModelName string
 }
 type liveStreamConfig struct {
 	SECRET_KEY string
@@ -156,6 +161,12 @@ func LoadConfig() (*Config, error) {
 	// Vì file .env của bạn đặt tên biến lộn xộn (Host, POSTGRES_USER...)
 	// nên ta phải lấy từng cái bỏ vào đúng chỗ trong Struct.
 	cfg := &Config{
+		// --- AI Analysis Media Asset Config ---
+		AIAnalysisMediaAsset: AIAnalysisMediaAssetConfig{
+			OllamaURL: viper.GetString("OLLAMA_API_URL"),
+			ModelName: viper.GetString("OLLAMA_MODEL_NAME"),
+		},
+		// --- Live Stream Config ---
 		LiveStream: liveStreamConfig{
 			SECRET_KEY: viper.GetString("LIVE_STREAM_SECRET_KEY"),
 		},

@@ -3,6 +3,7 @@ package seaweedfs
 import (
 	"bytes"
 	"context"
+	"encoding/base64"
 	"fmt"
 	"io"
 	"log"
@@ -207,7 +208,7 @@ func (r *SeaweedfsAdapter) UploadStreamSegment(ctx context.Context, OwnerID stri
 	// Quy hoạch folder: /lives/{sessionID}/{segmentName}
 	// Lưu ý: Stream segment thường nhỏ nên ta dùng TTL ngắn (ví dụ: 10 phút) để tự dọn rác
 
-	fullPath := r.GetStreamSegmentURL(OwnerID, sessionID, segmentName , utils.BucketGroupStream)
+	fullPath := r.GetStreamSegmentURL(OwnerID, sessionID, segmentName, utils.BucketGroupStream)
 	// Vì đây là stream realtime, ta không cần lưu Metadata phức tạp vào DB chính
 	// Dùng TTL "10m" để SeaweedFS tự xóa các segment cũ
 	// Lưu ý: Cần biết Size của segment. Nếu không có, bạn phải buffer hoặc dùng chunked upload.
@@ -456,4 +457,41 @@ func (r *SeaweedfsAdapter) GetDownloadPresignedUrl(ctx context.Context, filePath
 	}
 
 	return presignedURL.String(), nil
+}
+
+func (r *SeaweedfsAdapter) DownloadMultipleImagesAsBase64(ctx context.Context, filePaths []string) ([]string, error) {
+	var base64Images []string
+
+	// Giới hạn số lượng ảnh tối đa để tránh quá tải RAM của Backend và VRAM của AI
+	limit := len(filePaths)
+	if limit > 5 {
+		limit = 5
+	}
+
+	for i := 0; i < limit; i++ {
+		filePath := strings.TrimSpace(filePaths[i])
+		if filePath == "" {
+			continue
+		}
+
+		// 1. Gọi hàm Download có sẵn trong Adapter để lấy Pipe Reader (stream)
+		reader, err := r.Download(ctx, filePath)
+		if err != nil {
+			return nil, fmt.Errorf("seaweedfs_adapter: failed to get download stream for [%s]: %w", filePath, err)
+		}
+
+		// 2. Đọc toàn bộ dữ liệu từ stream vào bộ nhớ
+		bytesData, err := io.ReadAll(reader)
+		reader.Close() // BẮT BUỘC ĐÓNG READER để giải phóng Pipe, tránh memory leak
+
+		if err != nil {
+			return nil, fmt.Errorf("seaweedfs_adapter: failed to read stream data for [%s]: %w", filePath, err)
+		}
+
+		// 3. Mã hóa sang Base64 và đưa vào mảng
+		encodedStr := base64.StdEncoding.EncodeToString(bytesData)
+		base64Images = append(base64Images, encodedStr)
+	}
+
+	return base64Images, nil
 }

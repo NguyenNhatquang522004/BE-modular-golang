@@ -64,12 +64,14 @@ type Page struct {
 
 // --- BRANDING ---
 type PageAvatar struct {
-	URL string `bson:"url" json:"url"`
+	ID  primitive.ObjectID `bson:"id" json:"id"` // ID của media asset (PostgreSQL UUID -> String)
+	URL string             `bson:"url" json:"url"`
 }
 
 type PageCover struct {
-	URL       string  `bson:"url" json:"url"`
-	PositionY float64 `bson:"position_y" json:"position_y"` // 0.0 - 100.0
+	ID        primitive.ObjectID `bson:"id" json:"id"` // ID của media asset (PostgreSQL UUID -> String)
+	URL       string             `bson:"url" json:"url"`
+	PositionY float64            `bson:"position_y" json:"position_y"` // 0.0 - 100.0
 }
 
 // --- ADDRESS (GeoJSON support) ---

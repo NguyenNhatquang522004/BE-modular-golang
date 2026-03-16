@@ -112,6 +112,7 @@ func mapAvatar(p *businessEvent.AvatarPayload) *entity.PageAvatar {
 		return nil
 	}
 	return &entity.PageAvatar{
+		ID:  primitive.NewObjectID(),
 		URL: p.URL,
 	}
 }
@@ -121,6 +122,7 @@ func mapCover(p *businessEvent.CoverPayload) *entity.PageCover {
 		return nil
 	}
 	return &entity.PageCover{
+		ID:        primitive.NewObjectID(),
 		URL:       p.URL,
 		PositionY: p.PositionY,
 	}

@@ -151,7 +151,7 @@ func (c *ConsumerGroup) handleCreatedEvent(ctx context.Context, event events.Int
 		item.Items = append(item.Items, mediaEvent.MediaItemPayload{
 			MediaID:      entity.Cover.ID.Hex(),
 			AlbumID:      "",
-			GroupID:      "",
+			GroupID:      data.GroupID,
 			PageID:       "",
 			PostID:       "",
 			CommentID:    "",
@@ -188,7 +188,7 @@ func (c *ConsumerGroup) handleCreatedEvent(ctx context.Context, event events.Int
 		item.Items = append(item.Items, mediaEvent.MediaItemPayload{
 			MediaID:      entity.Avatar.ID.Hex(),
 			AlbumID:      "",
-			GroupID:      "",
+			GroupID:      data.GroupID,
 			PageID:       "",
 			PostID:       "",
 			CommentID:    "",
@@ -273,7 +273,7 @@ func (c *ConsumerGroup) handleUpdatedEvent(ctx context.Context, event events.Int
 		item.Items = append(item.Items, mediaEvent.MediaItemPayload{
 			MediaID:      datagroup.Avatar.ID.Hex(),
 			AlbumID:      "",
-			GroupID:      "",
+			GroupID:      data.GroupID,
 			PageID:       "",
 			PostID:       "",
 			CommentID:    "",
@@ -306,7 +306,7 @@ func (c *ConsumerGroup) handleUpdatedEvent(ctx context.Context, event events.Int
 		item.Items = append(item.Items, mediaEvent.MediaItemPayload{
 			MediaID:      datagroup.Cover.ID.Hex(),
 			AlbumID:      "",
-			GroupID:      "",
+			GroupID:      data.GroupID,
 			PageID:       "",
 			PostID:       "",
 			CommentID:    "",
@@ -352,9 +352,45 @@ func (c *ConsumerGroup) handleDeletedEvent(ctx context.Context, event events.Int
 	if dataaction.Role != sharedEnums.RoleTypeAdmin {
 		return fmt.Errorf("user with ID: %s is not an admin of group with ID: %s", data.UserAction, data.GroupID)
 	}
+	datagroup, err := c.groupRepo.GetGroupByID(ctx, data.GroupID)
+	if err != nil {
+		return fmt.Errorf("failed to get group by ID: %w", err)
+	}
+	if datagroup == nil {
+		return fmt.Errorf("group not found with ID: %s", data.GroupID)
+	}
 	err = c.groupRepo.DeleteGroup(ctx, data.GroupID)
 	if err != nil {
 		return fmt.Errorf("failed to delete group: %w", err)
+	}
+	if datagroup.Avatar.ID != primitive.NilObjectID {
+		err := c.events.Publish(ctx, constants.TopicMediaAsset.String(), data.GroupID, constants.Deleted.String(), &mediaEvent.DeleteMediaAssetsPayload{
+			MediaID:   datagroup.Avatar.ID.Hex(),
+			MessageID: "",
+			GroupID:   "",
+			PageID:    "",
+			ReelID:    "",
+			StoryID:   "",
+			CommentID: "",
+		})
+		if err != nil {
+			return kafka.NewNonRetryableError(fmt.Errorf("failed to publish media asset deletion event for old avatar: %w", err))
+		}
+	}
+
+	if datagroup.Cover.ID != primitive.NilObjectID {
+		err := c.events.Publish(ctx, constants.TopicMediaAsset.String(), data.GroupID, constants.Deleted.String(), &mediaEvent.DeleteMediaAssetsPayload{
+			MediaID:   datagroup.Cover.ID.Hex(),
+			MessageID: "",
+			GroupID:   "",
+			PageID:    "",
+			ReelID:    "",
+			StoryID:   "",
+			CommentID: "",
+		})
+		if err != nil {
+			return kafka.NewNonRetryableError(fmt.Errorf("failed to publish media asset deletion event for old cover: %w", err))
+		}
 	}
 	return nil
 }

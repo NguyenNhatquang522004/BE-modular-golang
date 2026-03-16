@@ -3,6 +3,17 @@ package entity
 // ==========================================
 // 2. RELATIONSHIP ENTITIES (Thực thể Cạnh)
 // ==========================================
+type AuthoredRel struct {
+	PostID    string `json:"post_id"`
+	CreatedAt int64  `json:"created_at"`
+}
+type HasTopicRel struct {
+	TopicName string `json:"topic_name"`
+}
+type PostedInRel struct {
+	GroupID string `json:"group_id"`
+	Privacy string `json:"privacy"` // public, closed, secret
+}
 
 // --- NHÓM XÃ HỘI & TĂNG TRƯỞNG ---
 

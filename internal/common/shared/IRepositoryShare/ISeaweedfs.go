@@ -57,4 +57,5 @@ type ISeaweedfs interface {
 
 	// GetDownloadPresignedUrl: Sinh link tải file trực tiếp với tốc độ cực cao, bypass Backend
 	GetDownloadPresignedUrl(ctx context.Context, filePath string, forceDownload bool) (string, error)
+	DownloadMultipleImagesAsBase64(ctx context.Context, filePaths []string) ([]string, error)
 }
