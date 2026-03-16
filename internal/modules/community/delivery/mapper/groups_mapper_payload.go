@@ -44,12 +44,14 @@ func ToCreateGroupEntity(req *communityEvent.CreateGroupPayload) *entity.Group {
 	// 1. Map Media (Cover, Avatar)
 	if req.Cover != nil {
 		group.Cover = entity.GroupCover{
+			ID:        primitive.NewObjectID(), // Tạo ID mới cho media asset, hoặc lấy từ payload nếu đã có
 			URL:       req.Cover.URL,
 			PositionY: req.Cover.PositionY,
 		}
 	}
 	if req.Avatar != nil {
 		group.Avatar = entity.GroupAvatar{
+			ID:  primitive.NewObjectID(), // Tạo ID mới cho media asset, hoặc lấy từ payload nếu đã có
 			URL: req.Avatar.URL,
 		}
 	}

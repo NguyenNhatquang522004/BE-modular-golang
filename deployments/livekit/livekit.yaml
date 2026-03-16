@@ -1,0 +1,69 @@
+# ==========================================
+# 1. CẤU HÌNH SERVER PORT
+# Các port này khớp 100% với mapping trong file docker-compose của bạn
+# ==========================================
+port: 7880
+bind_addresses:
+  - "" # Lắng nghe mọi request từ mọi IP
+
+# ==========================================
+# 2. CẤU HÌNH GIAO THỨC TRUYỀN THÔNG (RTC)
+# ==========================================
+rtc:
+  tcp_port: 7881 # Khớp với port "- 7881:7881" trong compose
+  udp_port: 7882 # Khớp với port "- 7882:7882/udp" trong compose
+  use_external_ip: true # Tự động dò IP Public (rất quan trọng khi chạy Docker)
+
+# ==========================================
+# 3. KẾT NỐI DATABASE (REDIS) - CRITICAL POINT
+# ==========================================
+redis:
+  # Trỏ đúng tên container Redis trong file docker-compose của bạn
+  address: "redis_BE-modular-golang:6379"
+  username: ""
+  password: ""
+  db: 0
+
+# ==========================================
+# 4. CHỐNG RỚT MẠNG VÀ XUYÊN TƯỜNG LỬA (TURN SERVER)
+# ==========================================
+turn:
+  cert_file: ""
+  key_file: ""
+  tls_port: 5349
+  udp_port: 3478
+  external_tls: false
+
+# ==========================================
+# 5. CHÌA KHÓA BẢO MẬT (API KEYS)
+# Khớp với LIVEKIT_KEYS=your_api_key:your_super_secret_key trong compose
+# ==========================================
+keys:
+  your_api_key: "your_super_secret_key"
+
+# ==========================================
+# 6. GIAO TIẾP VỚI BACKEND GOLANG (WEBHOOK)
+# ==========================================
+webhook:
+  api_key: "your_api_key" # Dùng key này để Golang verify chữ ký
+  urls:
+    # HIỆN TẠI: Giả định Backend Golang của bạn chạy local ngoài Docker ở port 8080
+    - "http://host.docker.internal:8080/api/v1/calls/webhook"
+    
+    # SAU NÀY: Nếu bạn đưa cả Backend Golang vào file docker-compose, 
+    # hãy đổi thành tên service của Backend. Ví dụ:
+    # - "http://backend_BE-modular-golang:8080/api/v1/calls/webhook"
+
+# ==========================================
+# 7. TỐI ƯU TÀI NGUYÊN PHÒNG (ROOMS)
+# ==========================================
+room:
+  empty_timeout: 300 # Tự động giải tán phòng sau 5 phút nếu không có ai
+  max_participants: 50 # Giới hạn số người trong 1 phòng để bảo vệ tài nguyên Server
+
+# ==========================================
+# 8. CẤU HÌNH GHI LOG
+# ==========================================
+logging:
+  json: false
+  level: info # Để là 'info' khi chạy production, đổi thành 'debug' nếu đang test lỗi

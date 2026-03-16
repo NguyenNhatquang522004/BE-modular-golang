@@ -84,12 +84,13 @@ type DeleteGroupPayload struct {
 	GroupID    string `json:"group_id"`
 }
 type UpdateGroupPayload struct {
-	GroupID     string                    `json:"group_id"` // Dùng để update hoặc tracking, có thể là UUID hoặc ObjectID dưới dạng string
-	Name        *string                   `json:"name,omitempty" validate:"omitempty,min=3,max=100"`
-	Description *string                   `json:"description,omitempty" validate:"omitempty,max=1000"`
-	Tags        *[]string                 `json:"tags,omitempty" validate:"omitempty,dive,max=30"`
-	Privacy     *sharedEnums.PrivacyScope `json:"privacy,omitempty" validate:"omitempty"`
-	CategoryID  *string                   `json:"category_id,omitempty" validate:"omitempty,uuid4"`
+	UserActionID string                    `json:"user_action_id" binding:"required,uuid"` // ID của người thực hiện hành động (có thể là admin hoặc chính user đó)
+	GroupID      string                    `json:"group_id"`                               // Dùng để update hoặc tracking, có thể là UUID hoặc ObjectID dưới dạng string
+	Name         *string                   `json:"name,omitempty" validate:"omitempty,min=3,max=100"`
+	Description  *string                   `json:"description,omitempty" validate:"omitempty,max=1000"`
+	Tags         *[]string                 `json:"tags,omitempty" validate:"omitempty,dive,max=30"`
+	Privacy      *sharedEnums.PrivacyScope `json:"privacy,omitempty" validate:"omitempty"`
+	CategoryID   *string                   `json:"category_id,omitempty" validate:"omitempty,uuid4"`
 
 	Cover  *UpdateGroupCoverPayload  `json:"cover,omitempty" validate:"omitempty"`
 	Avatar *UpdateGroupAvatarPayload `json:"avatar,omitempty" validate:"omitempty"`
@@ -104,11 +105,13 @@ type UpdateGroupPayload struct {
 // --- Các struct phụ trợ cho Update (Dùng Pointer) ---
 
 type UpdateGroupCoverPayload struct {
+	ID        string   `json:"id" validate:"required,mongodb"` // Dùng để update hoặc tracking, có thể là UUID hoặc ObjectID dưới dạng string
 	URL       *string  `json:"url,omitempty" validate:"omitempty,url"`
 	PositionY *float64 `json:"position_y,omitempty" validate:"omitempty,min=0,max=100"`
 }
 
 type UpdateGroupAvatarPayload struct {
+	ID  string  `json:"id" validate:"required,mongodb"` // Dùng để update hoặc tracking, có thể là UUID hoặc ObjectID dưới dạng string
 	URL *string `json:"url,omitempty" validate:"omitempty,url"`
 }
 

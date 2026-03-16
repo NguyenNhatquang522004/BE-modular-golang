@@ -216,6 +216,12 @@ func (c *ConsumerMediaAssets) handlerDeletedMediaAsset(ctx context.Context, even
 			return errors.New("failed to delete media assets by comment ID from repository: " + err.Error())
 		}
 	}
+	if data.UserID != "" {
+		err = c.mediaRepo.DeleteMediaAssetsByUserID(ctx, data.UserID)
+		if err != nil {
+			return errors.New("failed to delete media assets by user ID from repository: " + err.Error())
+		}
+	}
 	return nil
 }
 func (c *ConsumerMediaAssets) ConsumerFailedMediaAsset(ctx context.Context) error {

@@ -24,10 +24,11 @@ func ToCreateEntityPostPayload(r *contentEvent.CreatePostPayload) *entity.Post {
 		ID = primitive.NewObjectID()
 	}
 	post := &entity.Post{
-		ID:      ID,
-		UserID:  r.UserID, // UserID sẽ được gán sau khi giải mã token, không lấy từ payload
-		Type:    r.Type,
-		Content: r.Content,
+		ID:       ID,
+		UserID:   r.UserID, // UserID sẽ được gán sau khi giải mã token, không lấy từ payload
+		Type:     r.Type,
+		Content:  r.Content,
+		IsShared: false,
 		// Map explicitly to avoid conversion errors
 		Privacy: entity.PostPrivacy{
 			Scope:        r.Privacy.Scope,

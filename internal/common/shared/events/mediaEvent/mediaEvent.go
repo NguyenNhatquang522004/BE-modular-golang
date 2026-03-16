@@ -123,6 +123,7 @@ type DeleteMediaAssetsPayload struct {
 	ReelID    string `json:"reel_id"`
 	StoryID   string `json:"story_id"`
 	CommentID string `json:"comment_id"`
+	UserID    string `json:"user_id"`
 }
 type MediaPrivacyPayload struct {
 	// Level string hoặc dùng Enum PrivacyScope tái sử dụng

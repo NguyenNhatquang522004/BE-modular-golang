@@ -569,73 +569,231 @@ func (c *ConsumerPost) handleDeletedPost(ctx context.Context, event events.Integ
 	if data == nil {
 		return kafka.NewNonRetryableError(fmt.Errorf("payload is nil"))
 	}
-	datamedia, err := c.mediaRepo.GetByPostID(ctx, data.PostID)
-	if err != nil {
-		return fmt.Errorf("failed to get post media by post ID: %w", err)
-	}
-	var wg sync.WaitGroup
-	workercout := 5
-	errchan := make(chan error, workercout)
-	for i := 0; i < workercout; i++ {
-		wg.Add(1)
-		err := c.pool.Run(ctx, func() {
-			defer wg.Done()
-			switch i {
-			case 0:
-				err = c.postRepo.DeletePost(ctx, data.PostID)
-				if err != nil {
-					errchan <- fmt.Errorf("failed to delete post in repository: %w", err)
-					return
-				}
-			case 1:
-				err = c.mediaRepo.DeleteByPostID(ctx, data.PostID)
-				if err != nil {
-					errchan <- fmt.Errorf("failed to delete post media by post ID in repository: %w", err)
-					return
-				}
-			case 2:
-				err = c.extensionRepo.DeleteByPostID(ctx, data.PostID)
-				if err != nil {
-					errchan <- fmt.Errorf("failed to delete post extension by post ID in repository: %w", err)
-					return
-				}
-			case 3:
-				err = c.settingRepo.DeletePostSetting(ctx, data.PostID)
-				if err != nil {
-					errchan <- fmt.Errorf("failed to delete post setting by post ID in repository: %w", err)
-					return
-				}
-			case 5:
-				for _, media := range datamedia.Items {
-					payload := mediaEvent.DeleteMediaAssetsPayload{
-						MediaID:   media.ID.Hex(),
-						MessageID: "",
+	if data.PostID != "" && data.GroupID == "" && data.PageID == "" && data.ReelID == "" && data.UserID == "" {
+		datapost, err := c.postRepo.GetPostByID(ctx, data.PostID)
+		if err != nil {
+			return fmt.Errorf("failed to get post by ID %s: %w", data.PostID, err)
+		}
+		if datapost == nil {
+			return fmt.Errorf("post with ID %s not found", data.PostID)
+		}
+		var datamedia *entity.PostMedia
+		if datapost.IsShared == true {
+			datamedia = nil
+		} else {
+			datamedia, err = c.mediaRepo.GetByPostID(ctx, data.PostID)
+			if err != nil {
+				return fmt.Errorf("failed to get post media by post ID %s: %w", data.PostID, err)
+			}
+		}
+		var wg sync.WaitGroup
+		workercout := 5
+		errchan := make(chan error, workercout)
+		for i := 0; i < workercout; i++ {
+			wg.Add(1)
+			err := c.pool.Run(ctx, func() {
+				defer wg.Done()
+				switch i {
+				case 0:
+					err = c.postRepo.DeletePost(ctx, data.PostID)
+					if err != nil {
+						errchan <- fmt.Errorf("failed to delete post in repository: %w", err)
+						return
 					}
-					err := c.events.Publish(ctx, constants.TopicMediaAsset.String(), data.PostID, constants.Deleted.String(), payload)
+				case 1:
+
+					err = c.mediaRepo.DeleteByPostID(ctx, data.PostID)
+					if err != nil {
+						errchan <- fmt.Errorf("failed to delete post media by post ID in repository: %w", err)
+						return
+					}
+				case 2:
+					err = c.extensionRepo.DeleteByPostID(ctx, data.PostID)
+					if err != nil {
+						errchan <- fmt.Errorf("failed to delete post extension by post ID in repository: %w", err)
+						return
+					}
+				case 3:
+					err = c.settingRepo.DeletePostSetting(ctx, data.PostID)
+					if err != nil {
+						errchan <- fmt.Errorf("failed to delete post setting by post ID in repository: %w", err)
+						return
+					}
+				case 5:
+					if datamedia != nil {
+						for _, media := range datamedia.Items {
+							payload := mediaEvent.DeleteMediaAssetsPayload{
+								MediaID:   media.ID.Hex(),
+								MessageID: "",
+							}
+							err := c.events.Publish(ctx, constants.TopicMediaAsset.String(), data.PostID, constants.Deleted.String(), payload)
+							if err != nil {
+								errchan <- fmt.Errorf("failed to publish media asset deletion event: %w", err)
+								return
+							}
+						}
+					}
+
+				default:
+					errchan <- nil // Các worker còn lại không làm gì
+				}
+			})
+			if err != nil {
+				wg.Done()
+				errchan <- fmt.Errorf("failed to run worker: %w", err)
+				return fmt.Errorf("failed to run worker: %w", err)
+			}
+		}
+		wg.Wait()
+		close(errchan)
+		var finalErr error
+		for err := range errchan {
+			if err != nil {
+				finalErr = errors.Join(finalErr, err)
+			}
+		}
+		return finalErr
+	} else {
+		var list []string
+		if data.GroupID != "" {
+			datagroup, err := c.postRepo.GetAllPostByGroupID(ctx, data.GroupID)
+			if err != nil {
+				return fmt.Errorf("failed to get posts by group ID %s: %w", data.GroupID, err)
+			}
+			for _, post := range datagroup {
+				list = append(list, post.ID.Hex())
+			}
+			err = c.events.Publish(ctx, constants.TopicMediaAsset.String(), data.PostID, constants.Deleted.String(), &mediaEvent.DeleteMediaAssetsPayload{
+				MediaID:   "", // Xoá tất cả media liên quan đến các bài viết trong group
+				MessageID: "",
+				GroupID:   data.GroupID,
+				PageID:    "",
+				ReelID:    "",
+				StoryID:   "",
+				CommentID: "",
+			})
+			if err != nil {
+				return fmt.Errorf("failed to publish media asset deletion event for group posts: %w", err)
+			}
+		}
+		if data.PageID != "" {
+			datapage, err := c.postRepo.GetAllPostByPageID(ctx, data.PageID)
+			if err != nil {
+				return fmt.Errorf("failed to get posts by page ID %s: %w", data.PageID, err)
+			}
+			for _, post := range datapage {
+				list = append(list, post.ID.Hex())
+			}
+			err = c.events.Publish(ctx, constants.TopicMediaAsset.String(), data.PostID, constants.Deleted.String(), &mediaEvent.DeleteMediaAssetsPayload{
+				MediaID:   "", // Xoá tất cả media liên quan đến các bài viết trong group
+				MessageID: "",
+				GroupID:   "",
+				PageID:    data.PageID,
+				ReelID:    "",
+				StoryID:   "",
+				CommentID: "",
+			})
+			if err != nil {
+				return fmt.Errorf("failed to publish media asset deletion event for group posts: %w", err)
+			}
+		}
+		if data.ReelID != "" {
+			datareel, err := c.postRepo.GetAllPostByReelID(ctx, data.ReelID)
+			if err != nil {
+				return fmt.Errorf("failed to get posts by reel ID %s: %w", data.ReelID, err)
+			}
+			for _, post := range datareel {
+				list = append(list, post.ID.Hex())
+			}
+			err = c.events.Publish(ctx, constants.TopicMediaAsset.String(), data.PostID, constants.Deleted.String(), &mediaEvent.DeleteMediaAssetsPayload{
+				MediaID:   "", // Xoá tất cả media liên quan đến các bài viết trong group
+				MessageID: "",
+				GroupID:   "",
+				PageID:    "",
+				ReelID:    data.ReelID,
+				StoryID:   "",
+				CommentID: "",
+			})
+			if err != nil {
+				return fmt.Errorf("failed to publish media asset deletion event for group posts: %w", err)
+			}
+		}
+		if data.UserID != "" {
+			datauser, err := c.postRepo.GetAllPostByUserID(ctx, data.UserID)
+			if err != nil {
+				return fmt.Errorf("failed to get posts by user ID %s: %w", data.UserID, err)
+			}
+			for _, post := range datauser {
+				list = append(list, post.ID.Hex())
+			}
+			err = c.events.Publish(ctx, constants.TopicMediaAsset.String(), data.PostID, constants.Deleted.String(), &mediaEvent.DeleteMediaAssetsPayload{
+				MediaID:   "", // Xoá tất cả media liên quan đến các bài viết trong group
+				MessageID: "",
+				GroupID:   "",
+				PageID:    "",
+				ReelID:    "",
+				StoryID:   "",
+				CommentID: "",
+				UserID:    data.UserID,
+			})
+			if err != nil {
+				return fmt.Errorf("failed to publish media asset deletion event for group posts: %w", err)
+			}
+		}
+
+		var wg sync.WaitGroup
+		workercout := 4
+		errchan := make(chan error, workercout)
+		for i := 0; i < workercout; i++ {
+			wg.Add(1)
+			err := c.pool.Run(ctx, func() {
+				defer wg.Done()
+				switch i {
+				case 0:
+					_, _, err = c.postRepo.DeleteBulkPosts(ctx, list)
+					if err != nil {
+						errchan <- fmt.Errorf("failed to delete post in repository: %w", err)
+						return
+					}
+					errchan <- nil
+				case 1:
+					_, _, err = c.mediaRepo.DeleteBulkByPostIDs(ctx, list)
 					if err != nil {
 						errchan <- fmt.Errorf("failed to publish media asset deletion event: %w", err)
 						return
 					}
+				case 2:
+					_, _, err = c.extensionRepo.DeleteBulkByPostIDs(ctx, list)
+					if err != nil {
+						errchan <- fmt.Errorf("failed to delete post extension by post ID in repository: %w", err)
+						return
+					}
+				case 3:
+					_, _, err = c.settingRepo.DeleteBulkPostSettings(ctx, list)
+					if err != nil {
+						errchan <- fmt.Errorf("failed to delete post setting by post ID in repository: %w", err)
+						return
+					}
+				default:
+					errchan <- nil // Các worker còn lại không làm gì
 				}
-			default:
-				errchan <- nil // Các worker còn lại không làm gì
+			})
+			if err != nil {
+				wg.Done()
+				errchan <- fmt.Errorf("failed to run worker: %w", err)
+				return fmt.Errorf("failed to run worker: %w", err)
 			}
-		})
-		if err != nil {
-			wg.Done()
-			errchan <- fmt.Errorf("failed to run worker: %w", err)
-			return fmt.Errorf("failed to run worker: %w", err)
 		}
-	}
-	wg.Wait()
-	close(errchan)
-	var finalErr error
-	for err := range errchan {
-		if err != nil {
-			finalErr = errors.Join(finalErr, err)
+		wg.Wait()
+		close(errchan)
+		var finalErr error
+		for err := range errchan {
+			if err != nil {
+				finalErr = errors.Join(finalErr, err)
+			}
 		}
+		return finalErr
 	}
-	return finalErr
 }
 func (c *ConsumerPost) ConsumerFailedPost(ctx context.Context) error {
 	// Xử lý logic khi tiêu thụ sự kiện thất bại, ví dụ: ghi log, retry, v.v.

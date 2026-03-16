@@ -33,10 +33,12 @@ type ProfilePayload struct {
 // --- SUB-DTOs ---
 
 type AvatarPayload struct {
+	ID  string `json:"id" binding:"required"` // Nhận string ID từ FE
 	URL string `json:"url" binding:"required"`
 }
 
 type CoverPhotoPayload struct {
+	ID        string  `json:"id" binding:"required"` // Nhận string ID từ FE
 	URL       string  `json:"url" binding:"required"`
 	PositionY float64 `json:"position_y"`
 }

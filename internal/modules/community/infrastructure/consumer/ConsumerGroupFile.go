@@ -184,6 +184,11 @@ func (c *ConsumerGroupFile) handleDeletedGroupFile(ctx context.Context, event ev
 		return kafka.NewNonRetryableError(fmt.Errorf("payload is nil"))
 	}
 	if data.DeleteAll == true {
+		err = c.groupFile.DeleteGroupFile(ctx, data.ID)
+		if err != nil {
+			return fmt.Errorf("failed to delete group file in database for event %s: %w", event.ID, err)
+		}
+	} else {
 		dataaction, err := c.groupMemberRepo.GetGroupMemberByUserIDAndGroupID(ctx, data.UserActionID, data.GroupID)
 		if err != nil {
 			return fmt.Errorf("failed to fetch action user group member from repository for event %s: %w", event.ID, err)
@@ -198,14 +203,9 @@ func (c *ConsumerGroupFile) handleDeletedGroupFile(ctx context.Context, event ev
 		if err != nil {
 			return fmt.Errorf("failed to delete group files by group ID in database for event %s: %w", event.ID, err)
 		}
-	} else {
-		err = c.groupFile.DeleteGroupFile(ctx, data.ID)
-		if err != nil {
-			return fmt.Errorf("failed to delete group file in database for event %s: %w", event.ID, err)
-		}
 	}
 	payload := &mediaEvent.DeleteMediaAssetsPayload{
-		MediaID:   data.ID,
+		GroupID:   data.GroupID,
 		MessageID: "",
 	}
 	err = c.events.Publish(ctx, constants.TopicMediaAsset.String(), data.GroupID, constants.Deleted.String(), payload)

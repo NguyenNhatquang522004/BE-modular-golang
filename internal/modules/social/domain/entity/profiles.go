@@ -57,13 +57,15 @@ type Profiles struct {
 	DeletedAt *time.Time `bson:"deleted_at,omitempty" json:"deleted_at,omitempty"` // Pointer để check null
 }
 type ProfileAvatar struct {
-	URL       string    `bson:"url" json:"url"`
-	UpdatedAt time.Time `bson:"updated_at" json:"updated_at"`
+	ID        primitive.ObjectID `bson:"id" json:"id"` // Link sang GridFS
+	URL       string             `bson:"url" json:"url"`
+	UpdatedAt time.Time          `bson:"updated_at" json:"updated_at"`
 }
 
 type ProfileCover struct {
-	URL       string  `bson:"url" json:"url"`
-	PositionY float64 `bson:"position_y" json:"position_y"` // 0.0 đến 100.0
+	ID        primitive.ObjectID `bson:"id" json:"id"` // Link sang GridFS
+	URL       string             `bson:"url" json:"url"`
+	PositionY float64            `bson:"position_y" json:"position_y"` // 0.0 đến 100.0
 }
 
 // --- LOCATION ---

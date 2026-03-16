@@ -646,5 +646,19 @@ func (r *MediaAssetsRepository) DeleteMediaAssetsByReelID(ctx context.Context, r
 	if err != nil {
 		return err
 	}
+
+	return nil
+}
+func (r *MediaAssetsRepository) DeleteMediaAssetsByUserID(ctx context.Context, userID string) error {
+	collection := r.client.Collection(entity.MediaAsset{}.CollectionName())
+	finalUserID, err := primitive.ObjectIDFromHex(userID)
+	if err != nil {
+		return fmt.Errorf("invalid user ID format: %w", err)
+	}
+	filter := bson.M{"user_id": finalUserID}
+	_, err = collection.DeleteMany(ctx, filter)
+	if err != nil {
+		return err
+	}
 	return nil
 }

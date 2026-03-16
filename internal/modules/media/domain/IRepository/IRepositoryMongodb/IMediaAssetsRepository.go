@@ -31,4 +31,5 @@ type IMediaAssetsRepository interface {
 	DeleteMediaAssetsByCommentID(ctx context.Context, commentID string) error
 	DeleteMediaAssetsByStoryID(ctx context.Context, storyID string) error
 	DeleteMediaAssetsByReelID(ctx context.Context, reelID string) error
+	DeleteMediaAssetsByUserID(ctx context.Context, userID string) error
 }

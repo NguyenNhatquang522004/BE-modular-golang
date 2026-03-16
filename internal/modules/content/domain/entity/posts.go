@@ -34,6 +34,7 @@ type Post struct {
 	Status   sharedEnums.ProcessingStatus `bson:"status" json:"status"`
 	IsPinned bool                         `bson:"is_pinned" json:"is_pinned"`
 	IsEdited bool                         `bson:"is_edited" json:"is_edited"`
+	IsShared bool                         `bson:"is_shared" json:"is_shared"` // Nếu là bài viết được share lại từ bài khác thì true
 
 	// 5. COUNTERS (Thường xuyên update -> Tách struct giúp code rõ ràng)
 	Stats PostStats `bson:"stats" json:"stats"`

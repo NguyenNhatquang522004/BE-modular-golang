@@ -61,12 +61,14 @@ type Group struct {
 
 // --- MEDIA ---
 type GroupCover struct {
-	URL       string  `bson:"url" json:"url"`
-	PositionY float64 `bson:"position_y" json:"position_y"` // Để căn chỉnh ảnh bìa (0.0 - 100.0)
+	ID        primitive.ObjectID `bson:"id" json:"id"` // ID của media asset (PostgreSQL UUID -> String)
+	URL       string             `bson:"url" json:"url"`
+	PositionY float64            `bson:"position_y" json:"position_y"` // Để căn chỉnh ảnh bìa (0.0 - 100.0)
 }
 
 type GroupAvatar struct {
-	URL string `bson:"url" json:"url"`
+	ID  primitive.ObjectID `bson:"id" json:"id"` // ID của media asset (PostgreSQL UUID -> String)
+	URL string             `bson:"url" json:"url"`
 }
 
 // --- RULES ---

@@ -152,8 +152,10 @@ func (c *ConsumerSharePost) handleCreateSharePost(ctx context.Context, event eve
 			defer wg.Done()
 			switch i {
 			case 0:
+
 				sharepost := datapost
 				sharepost.ID = convertID
+				sharepost.IsShared = true
 				if data.GroupID != nil {
 					sharepost.Context = &entity.PostContext{
 						Type:     sharedEnums.ContextTypeGroup,

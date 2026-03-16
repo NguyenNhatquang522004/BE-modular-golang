@@ -343,6 +343,22 @@ services:
     restart: always
     networks:
         - be_modular_golang_network
+  livekit:
+    image: livekit/livekit-server:latest
+    command: --config /etc/livekit.yaml
+    ports:
+      - "7880:7880"  # Cổng API HTTP & WebRTC qua TCP
+      - "7881:7881"  # Cổng Webhook (tùy chọn)
+      - "7882:7882/udp" # Cổng WebRTC UDP (Rất quan trọng cho Video)
+    environment:
+      - LIVEKIT_KEYS=your_api_key:your_super_secret_key # ĐÂY LÀ CHÌA KHÓA BẢO MẬT
+    volumes:
+      - ./livekit.yaml:/etc/livekit.yaml
+    depends_on:
+      - redis_BE-modular-golang
+    restart: always
+    networks:
+      - be_modular_golang_network
 networks:
   be_modular_golang_network:
     driver: bridge
@@ -360,5 +376,4 @@ volumes:
   seaweedfs-volume-data_BE-modular-golang:
   seaweedfs-filer-data_BE-modular-golang:
   cassandra-data_BE-modular-golang:
-  
-  
+

@@ -11,11 +11,13 @@ import (
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/constants"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/events"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/events/communityEvent"
+	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/events/mediaEvent"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/infrastructure/kafka"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/sharedEnums"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/utils"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/community/delivery/mapper"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/community/domain/IRepository/IRepositoryMongodb"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 type ConsumerGroup struct {
@@ -109,9 +111,108 @@ func (c *ConsumerGroup) handleCreatedEvent(ctx context.Context, event events.Int
 	if entity == nil {
 		return kafka.NewNonRetryableError(fmt.Errorf("failed to map payload to entity"))
 	}
+	if entity.Avatar.ID != primitive.NilObjectID {
+		item := &mediaEvent.CreateMediaAssetsPayload{
+			UserID: data.CreatorID,
+		}
+		item.Items = append(item.Items, mediaEvent.MediaItemPayload{
+			MediaID:      entity.Avatar.ID.Hex(),
+			AlbumID:      "",
+			GroupID:      "",
+			PageID:       "",
+			PostID:       "",
+			CommentID:    "",
+			StoryID:      "",
+			ReelID:       "",
+			MessageID:    "",
+			MediaType:    sharedEnums.MediaTypeImage,
+			URL:          entity.Avatar.URL,
+			ThumbnailURL: "",
+			Metadata: mediaEvent.MetadataPayload{
+				Width:     0, // Cần bổ sung nếu có thông tin
+				Height:    0, // Cần bổ sung nếu có thông tin
+				Duration:  0,
+				SizeBytes: 0,
+				MimeType:  "",
+			},
+			Order:       0,
+			Hashtags:    []string{},
+			TaggedUsers: []mediaEvent.TaggedUserPayload{},
+		})
+		err := c.events.Publish(ctx, constants.TopicMediaAsset.String(), data.CreatorID, constants.Created.String(), item)
+		if err != nil {
+			return kafka.NewNonRetryableError(fmt.Errorf("failed to publish media asset event: %w", err))
+		}
+	}
+	if entity.Cover.ID != primitive.NilObjectID {
+		item := &mediaEvent.CreateMediaAssetsPayload{
+			UserID: data.CreatorID,
+		}
+		item.Items = append(item.Items, mediaEvent.MediaItemPayload{
+			MediaID:      entity.Cover.ID.Hex(),
+			AlbumID:      "",
+			GroupID:      "",
+			PageID:       "",
+			PostID:       "",
+			CommentID:    "",
+			StoryID:      "",
+			ReelID:       "",
+			MessageID:    "",
+			MediaType:    sharedEnums.MediaTypeImage,
+			URL:          entity.Cover.URL,
+			ThumbnailURL: "",
+			Metadata: mediaEvent.MetadataPayload{
+				Width:     0, // Cần bổ sung nếu có thông tin
+				Height:    0, // Cần bổ sung nếu có thông tin
+				Duration:  0,
+				SizeBytes: 0,
+				MimeType:  "",
+			},
+			Order:       0,
+			Hashtags:    []string{},
+			TaggedUsers: []mediaEvent.TaggedUserPayload{},
+		})
+		err := c.events.Publish(ctx, constants.TopicMediaAsset.String(), data.CreatorID, constants.Created.String(), item)
+		if err != nil {
+			return kafka.NewNonRetryableError(fmt.Errorf("failed to publish media asset event: %w", err))
+		}
+	}
 	err = c.groupRepo.CreateGroup(ctx, entity)
 	if err != nil {
 		return fmt.Errorf("failed to create group: %w", err)
+	}
+	if entity.Avatar.ID != primitive.NilObjectID {
+		item := &mediaEvent.CreateMediaAssetsPayload{
+			UserID: data.CreatorID,
+		}
+		item.Items = append(item.Items, mediaEvent.MediaItemPayload{
+			MediaID:      entity.Avatar.ID.Hex(),
+			AlbumID:      "",
+			GroupID:      "",
+			PageID:       "",
+			PostID:       "",
+			CommentID:    "",
+			StoryID:      "",
+			ReelID:       "",
+			MessageID:    "",
+			MediaType:    sharedEnums.MediaTypeImage,
+			URL:          entity.Avatar.URL,
+			ThumbnailURL: "",
+			Metadata: mediaEvent.MetadataPayload{
+				Width:     0, // Cần bổ sung nếu có thông tin
+				Height:    0, // Cần bổ sung nếu có thông tin
+				Duration:  0,
+				SizeBytes: 0,
+				MimeType:  "",
+			},
+			Order:       0,
+			Hashtags:    []string{},
+			TaggedUsers: []mediaEvent.TaggedUserPayload{},
+		})
+		err := c.events.Publish(ctx, constants.TopicMediaAsset.String(), data.CreatorID, constants.Created.String(), item)
+		if err != nil {
+			return kafka.NewNonRetryableError(fmt.Errorf("failed to publish media asset event: %w", err))
+		}
 	}
 	return nil
 }
@@ -128,6 +229,35 @@ func (c *ConsumerGroup) handleUpdatedEvent(ctx context.Context, event events.Int
 	if err != nil {
 		return fmt.Errorf("failed to get group by ID: %w", err)
 	}
+	if data.Avatar != nil && data.Avatar.ID != datagroup.Avatar.ID.Hex() {
+		err := c.events.Publish(ctx, constants.TopicMediaAsset.String(), data.UserActionID, constants.Deleted.String(), &mediaEvent.DeleteMediaAssetsPayload{
+			MediaID:   datagroup.Avatar.ID.Hex(),
+			MessageID: "",
+			GroupID:   "",
+			PageID:    "",
+			ReelID:    "",
+			StoryID:   "",
+			CommentID: "",
+		})
+		if err != nil {
+			return kafka.NewNonRetryableError(fmt.Errorf("failed to publish media asset deletion event for old avatar: %w", err))
+		}
+	}
+
+	if data.Cover != nil && data.Cover.ID != datagroup.Cover.ID.Hex() {
+		err := c.events.Publish(ctx, constants.TopicMediaAsset.String(), data.UserActionID, constants.Deleted.String(), &mediaEvent.DeleteMediaAssetsPayload{
+			MediaID:   datagroup.Cover.ID.Hex(),
+			MessageID: "",
+			GroupID:   "",
+			PageID:    "",
+			ReelID:    "",
+			StoryID:   "",
+			CommentID: "",
+		})
+		if err != nil {
+			return kafka.NewNonRetryableError(fmt.Errorf("failed to publish media asset deletion event for old cover: %w", err))
+		}
+	}
 	if datagroup == nil {
 		return fmt.Errorf("group not found with ID: %s", data.GroupID)
 	}
@@ -135,6 +265,72 @@ func (c *ConsumerGroup) handleUpdatedEvent(ctx context.Context, event events.Int
 	err = c.groupRepo.UpdateGroup(ctx, datagroup)
 	if err != nil {
 		return fmt.Errorf("failed to update group: %w", err)
+	}
+	if datagroup.Avatar.ID != primitive.NilObjectID {
+		item := &mediaEvent.CreateMediaAssetsPayload{
+			UserID: data.UserActionID,
+		}
+		item.Items = append(item.Items, mediaEvent.MediaItemPayload{
+			MediaID:      datagroup.Avatar.ID.Hex(),
+			AlbumID:      "",
+			GroupID:      "",
+			PageID:       "",
+			PostID:       "",
+			CommentID:    "",
+			StoryID:      "",
+			ReelID:       "",
+			MessageID:    "",
+			MediaType:    sharedEnums.MediaTypeImage,
+			URL:          datagroup.Avatar.URL,
+			ThumbnailURL: "",
+			Metadata: mediaEvent.MetadataPayload{
+				Width:     0, // Cần bổ sung nếu có thông tin
+				Height:    0, // Cần bổ sung nếu có thông tin
+				Duration:  0,
+				SizeBytes: 0,
+				MimeType:  "",
+			},
+			Order:       0,
+			Hashtags:    []string{},
+			TaggedUsers: []mediaEvent.TaggedUserPayload{},
+		})
+		err := c.events.Publish(ctx, constants.TopicMediaAsset.String(), data.UserActionID, constants.Created.String(), item)
+		if err != nil {
+			return kafka.NewNonRetryableError(fmt.Errorf("failed to publish media asset event: %w", err))
+		}
+	}
+	if datagroup.Cover.ID != primitive.NilObjectID {
+		item := &mediaEvent.CreateMediaAssetsPayload{
+			UserID: data.UserActionID,
+		}
+		item.Items = append(item.Items, mediaEvent.MediaItemPayload{
+			MediaID:      datagroup.Cover.ID.Hex(),
+			AlbumID:      "",
+			GroupID:      "",
+			PageID:       "",
+			PostID:       "",
+			CommentID:    "",
+			StoryID:      "",
+			ReelID:       "",
+			MessageID:    "",
+			MediaType:    sharedEnums.MediaTypeImage,
+			URL:          datagroup.Cover.URL,
+			ThumbnailURL: "",
+			Metadata: mediaEvent.MetadataPayload{
+				Width:     0, // Cần bổ sung nếu có thông tin
+				Height:    0, // Cần bổ sung nếu có thông tin
+				Duration:  0,
+				SizeBytes: 0,
+				MimeType:  "",
+			},
+			Order:       0,
+			Hashtags:    []string{},
+			TaggedUsers: []mediaEvent.TaggedUserPayload{},
+		})
+		err := c.events.Publish(ctx, constants.TopicMediaAsset.String(), data.UserActionID, constants.Created.String(), item)
+		if err != nil {
+			return kafka.NewNonRetryableError(fmt.Errorf("failed to publish media asset event: %w", err))
+		}
 	}
 	return nil
 }

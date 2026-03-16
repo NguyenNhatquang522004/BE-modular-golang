@@ -9,6 +9,7 @@ import (
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/errors/mongodbErrors"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/IRepositoryShare"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/dto"
+	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/sharedEnums"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/utils"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/content/domain/entity"
 	"go.mongodb.org/mongo-driver/bson"
@@ -362,4 +363,80 @@ func (r *PostRepository) PanigationPostsByUserID(ctx context.Context, userID str
 		HasNext:    hasNext,    // True nếu còn trang sau
 		Limit:      limit,
 	}, nil
+}
+
+func (r *PostRepository) GetAllPostByGroupID(ctx context.Context, groupID string) ([]*entity.Post, error) {
+	// Implement the logic to get all posts by group ID from MongoDB
+	collection := r.client.Collection(entity.Post{}.CollectionNamePost())
+	filter := bson.M{
+		"context.type":      sharedEnums.ContextTypeGroup,
+		"context.target_id": groupID,
+	}
+	cursor, err := collection.Find(ctx, filter)
+	if err != nil {
+		return nil, err
+	}
+	defer cursor.Close(ctx)
+
+	var posts []*entity.Post
+	if err := cursor.All(ctx, &posts); err != nil {
+		return nil, err
+	}
+	return posts, nil
+}
+func (r *PostRepository) GetAllPostByPageID(ctx context.Context, pageID string) ([]*entity.Post, error) {
+	// Implement the logic to get all posts by page ID from MongoDB
+	collection := r.client.Collection(entity.Post{}.CollectionNamePost())
+	filter := bson.M{
+		"context.type":      sharedEnums.ContextTypePage,
+		"context.target_id": pageID,
+	}
+	cursor, err := collection.Find(ctx, filter)
+	if err != nil {
+		return nil, err
+	}
+	defer cursor.Close(ctx)
+
+	var posts []*entity.Post
+	if err := cursor.All(ctx, &posts); err != nil {
+		return nil, err
+	}
+	return posts, nil
+
+}
+func (r *PostRepository) GetAllPostByReelID(ctx context.Context, reelID string) ([]*entity.Post, error) {
+	// Implement the logic to get all posts by reel ID from MongoDB
+	collection := r.client.Collection(entity.Post{}.CollectionNamePost())
+	filter := bson.M{
+		"context.type":      sharedEnums.ContextTypeReel,
+		"context.target_id": reelID,
+	}
+	cursor, err := collection.Find(ctx, filter)
+	if err != nil {
+		return nil, err
+	}
+	defer cursor.Close(ctx)
+
+	var posts []*entity.Post
+	if err := cursor.All(ctx, &posts); err != nil {
+		return nil, err
+	}
+	return posts, nil
+}
+
+func (r *PostRepository) GetAllPostByUserID(ctx context.Context, userID string) ([]*entity.Post, error) {
+	// Implement the logic to get all posts by user ID from MongoDB
+	collection := r.client.Collection(entity.Post{}.CollectionNamePost())
+	filter := bson.M{"user_id": userID}
+	cursor, err := collection.Find(ctx, filter)
+	if err != nil {
+		return nil, err
+	}
+	defer cursor.Close(ctx)
+
+	var posts []*entity.Post
+	if err := cursor.All(ctx, &posts); err != nil {
+		return nil, err
+	}
+	return nil, nil
 }

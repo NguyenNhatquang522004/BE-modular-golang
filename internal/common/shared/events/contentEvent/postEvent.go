@@ -9,6 +9,7 @@ import (
 type DeletePostPayload struct {
 	PostID  string `json:"post_id"`
 	Reason  string `json:"reason,omitempty"`
+	ReelID  string `json:"reel_id,omitempty"` // Nếu post này có liên kết với reel nào đó thì gửi lên để backend xoá luôn reel đó, nếu không có thì để trống
 	GroupID string `json:"group_id,omitempty"`
 	PageID  string `json:"page_id,omitempty"`
 	UserID  string `json:"user_id,omitempty"` // Ai là người xóa bài viết này, có thể là tác giả hoặc admin/mod của group/page

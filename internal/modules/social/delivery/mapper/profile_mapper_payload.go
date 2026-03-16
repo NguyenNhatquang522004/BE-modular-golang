@@ -144,6 +144,7 @@ func mapAvatarPayload(req *socialEvent.AvatarPayload) *entity.ProfileAvatar {
 		return nil
 	}
 	return &entity.ProfileAvatar{
+		ID:        primitive.NewObjectID(), // Tạo ID mới cho avatar (liên kết với GridFS)
 		URL:       req.URL,
 		UpdatedAt: time.Now(),
 	}
@@ -153,6 +154,7 @@ func mapCoverPhotoPayload(req *socialEvent.CoverPhotoPayload) *entity.ProfileCov
 		return nil
 	}
 	return &entity.ProfileCover{
+		ID:        primitive.NewObjectID(), // Tạo ID mới cho cover photo (liên kết với GridFS)
 		URL:       req.URL,
 		PositionY: req.PositionY,
 	}

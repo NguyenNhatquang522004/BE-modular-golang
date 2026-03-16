@@ -19,4 +19,8 @@ type IPostRepository interface {
 	DeletePost(ctx context.Context, postID string) error
 	DeleteBulkPosts(ctx context.Context, postIDs []string) (int64, []*mongodbErrors.BulkError, error)
 	PanigationPosts(ctx context.Context, userID string, cursor string, limit int) (*dto.PaginationRes, error)
+	GetAllPostByGroupID(ctx context.Context, groupID string) ([]*entity.Post, error)
+	GetAllPostByPageID(ctx context.Context, pageID string) ([]*entity.Post, error)
+	GetAllPostByReelID(ctx context.Context, reelID string) ([]*entity.Post, error)
+	GetAllPostByUserID(ctx context.Context, userID string) ([]*entity.Post, error)
 }
