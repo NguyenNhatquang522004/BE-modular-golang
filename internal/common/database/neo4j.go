@@ -15,22 +15,26 @@ var schemaQueries = []string{
 	// 1. UNIQUE CONSTRAINTS (Định danh - Identity)
 	// ==========================================
 	"CREATE CONSTRAINT user_id_unique IF NOT EXISTS FOR (u:User) REQUIRE u.user_id IS UNIQUE",
+	"CREATE CONSTRAINT post_id_unique IF NOT EXISTS FOR (p:Post) REQUIRE p.post_id IS UNIQUE", // [THÊM MỚI] Bắt buộc phải có cho Post
 	"CREATE CONSTRAINT topic_name_unique IF NOT EXISTS FOR (t:Topic) REQUIRE t.name IS UNIQUE",
 	"CREATE CONSTRAINT group_id_unique IF NOT EXISTS FOR (g:Group) REQUIRE g.group_id IS UNIQUE",
 	"CREATE CONSTRAINT page_id_unique IF NOT EXISTS FOR (p:Page) REQUIRE p.page_id IS UNIQUE",
 	"CREATE CONSTRAINT device_id_unique IF NOT EXISTS FOR (d:Device) REQUIRE d.device_id IS UNIQUE",
 	"CREATE CONSTRAINT phone_hash_unique IF NOT EXISTS FOR (c:PhoneContact) REQUIRE c.phone_hash IS UNIQUE",
+	"CREATE CONSTRAINT country_code_unique IF NOT EXISTS FOR (c:Country) REQUIRE c.code IS UNIQUE",
 
 	// ==========================================
-	// 2. NODE INDEXES (Hiệu năng tìm kiếm)
+	// 2. NODE INDEXES (B-Tree Index cho tìm kiếm & Sắp xếp nhanh)
 	// ==========================================
 	"CREATE INDEX user_verified_idx IF NOT EXISTS FOR (u:User) ON (u.is_verified)",
 	"CREATE INDEX user_created_at_idx IF NOT EXISTS FOR (u:User) ON (u.created_at)",
 	"CREATE INDEX user_last_active_idx IF NOT EXISTS FOR (u:User) ON (u.last_active_at)",
-	"CREATE INDEX user_risk_score_idx IF NOT EXISTS FOR (u:User) ON (u.risk_score)",
+	"CREATE INDEX user_risk_score_idx IF NOT EXISTS FOR (u:User) ON (u.risk_score)", // Bổ sung RiskScore vào struct Go nếu chưa có
 
 	"CREATE INDEX topic_trending_idx IF NOT EXISTS FOR (t:Topic) ON (t.trending_score)",
-	"CREATE INDEX topic_category_idx IF NOT EXISTS FOR (t:Topic) ON (t.category)",
+	// ĐÃ XÓA: topic_category_idx (vì đã bỏ category)
+
+	"CREATE INDEX post_ttl_idx IF NOT EXISTS FOR (p:Post) ON (p.ttl)", // [THÊM MỚI] Để Worker tự động xóa Post hết hạn cực nhanh
 
 	"CREATE INDEX group_member_count_idx IF NOT EXISTS FOR (g:Group) ON (g.member_count)",
 	"CREATE INDEX location_geohash_idx IF NOT EXISTS FOR (l:Location) ON (l.geo_hash)",
@@ -38,15 +42,21 @@ var schemaQueries = []string{
 	// ==========================================
 	// 3. RELATIONSHIP INDEXES (Ranking & Time Decay) - QUAN TRỌNG NHẤT
 	// ==========================================
+	// Nhóm AI & Graph Traversal
 	"CREATE INDEX rel_interacted_affinity_idx IF NOT EXISTS FOR ()-[r:INTERACTED_WITH]-() ON (r.affinity_score)",
-	"CREATE INDEX rel_interacted_time_idx IF NOT EXISTS FOR ()-[r:INTERACTED_WITH]-() ON (r.last_interaction_at)",
 	"CREATE INDEX rel_interested_score_idx IF NOT EXISTS FOR ()-[r:INTERESTED_IN]-() ON (r.score)",
+	"CREATE INDEX rel_topic_related_to_idx IF NOT EXISTS FOR ()-[r:RELATED_TO]-() ON (r.similarity_score)", // [MỚI CHUẨN]
+	// ĐÃ XÓA: rel_topic_child_of_idx
+
+	// Nhóm Thời gian (Time-series Indexes)
+	"CREATE INDEX rel_interacted_recent_time_idx IF NOT EXISTS FOR ()-[r:INTERACTED_RECENTLY]-() ON (r.timestamp)", // [THÊM MỚI TỐI QUAN TRỌNG CHO BẢNG TIN]
+	"CREATE INDEX rel_interacted_time_idx IF NOT EXISTS FOR ()-[r:INTERACTED_WITH]-() ON (r.last_interaction_at)",
 	"CREATE INDEX rel_friend_since_idx IF NOT EXISTS FOR ()-[r:FRIEND]-() ON (r.since)",
 	"CREATE INDEX rel_used_device_time_idx IF NOT EXISTS FOR ()-[r:USED_DEVICE]-() ON (r.last_used_at)",
+	"CREATE INDEX rel_invited_timestamp_idx IF NOT EXISTS FOR ()-[r:INVITED]-() ON (r.timestamp)",
 
 	// ==========================================
-	// 4. VECTOR INDEX (AI / Machine Learning)
-	// Lưu ý: Cú pháp này dành cho Neo4j 5.x trở lên
+	// 4. VECTOR INDEX (Hỗ trợ AI - RAG & Semantic Search)
 	// ==========================================
 	`CREATE VECTOR INDEX user_embedding_idx IF NOT EXISTS
 	FOR (u:User) ON (u.embedding)
@@ -55,15 +65,13 @@ var schemaQueries = []string{
 	 'vector.similarity_function': 'cosine'
 	}}`,
 
-	// ==========================================
-	// 5. EXISTENCE CONSTRAINTS (Enterprise Only)
-	// Bỏ comment nếu bạn dùng bản Enterprise
-	// ==========================================
-	// "CREATE CONSTRAINT user_id_exists IF NOT EXISTS FOR (u:User) REQUIRE u.user_id IS NOT NULL",
-
-	"CREATE CONSTRAINT country_code_unique IF NOT EXISTS FOR (c:Country) REQUIRE c.code IS UNIQUE;",
-	"CREATE INDEX rel_invited_timestamp_idx IF NOT EXISTS FOR ()-[r:INVITED]-() ON (r.timestamp);",
-	"CREATE INDEX rel_topic_child_of_idx IF NOT EXISTS FOR ()-[r:CHILD_OF]-() ON (r.weight);",
+	// Vector Index chuẩn cho text-embedding-3-small (Đa ngôn ngữ)
+	"CREATE VECTOR INDEX topic_embeddings IF NOT EXISTS " +
+		"FOR (t:Topic) ON (t.embedding) " +
+		"OPTIONS {indexConfig: { " +
+		"`vector.dimensions`: 1536, " +
+		"`vector.similarity_function`: 'cosine' " +
+		"}}",
 }
 
 // 1. Wrapper Struct

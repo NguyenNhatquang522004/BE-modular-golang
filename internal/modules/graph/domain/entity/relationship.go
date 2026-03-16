@@ -3,16 +3,28 @@ package entity
 // ==========================================
 // 2. RELATIONSHIP ENTITIES (Thực thể Cạnh)
 // ==========================================
+// AuthoredRel (User -> Post)
 type AuthoredRel struct {
 	PostID    string `json:"post_id"`
 	CreatedAt int64  `json:"created_at"`
 }
-type HasTopicRel struct {
-	TopicName string `json:"topic_name"`
+
+// PublishedRel (Page -> Post) - [BỔ SUNG ĐỂ PAGE ĐĂNG BÀI]
+type PublishedRel struct {
+	CreatedAt int64 `json:"created_at"`
 }
+
+// HasTopicRel (Post -> Topic) - [ĐÃ SỬA LỖI]
+type HasTopicRel struct {
+	ConfidenceScore float64 `json:"confidence_score"` // Model AI tự tin bao nhiêu %
+}
+
 type PostedInRel struct {
 	GroupID string `json:"group_id"`
 	Privacy string `json:"privacy"` // public, closed, secret
+}
+type LocatedInRel struct {
+	UpdatedAt int64 `json:"updated_at"`
 }
 
 // --- NHÓM XÃ HỘI & TĂNG TRƯỞNG ---
@@ -22,6 +34,9 @@ type FriendRel struct {
 	Since                int64   `json:"since"`
 	Type                 string  `json:"type"` // normal, close_friend, family
 	InteractionFrequency float64 `json:"interaction_frequency"`
+}
+type BlockRel struct {
+	Since int64 `json:"since"`
 }
 
 // FollowRel (Social)
@@ -64,12 +79,9 @@ type InterestedInRel struct {
 	LastEngagedAt int64   `json:"last_engaged_at"`
 }
 
-// ChildOfRel (Topic Hierarchy) - [MỚI]
-// VD: (Golang)-[:CHILD_OF {weight: 0.9}]->(Backend)
-type ChildOfRel struct {
-	Weight float64 `json:"weight"`
+type RelatedToRel struct {
+    SimilarityScore float64 `json:"similarity_score"` // Cosine Similarity (VD: 0.85)
 }
-
 // MemberOfRel (User -> Group)
 type MemberOfRel struct {
 	Role     string `json:"role"` // admin, member
@@ -83,33 +95,7 @@ type LikesPageRel struct {
 
 // --- NHÓM ĐỊNH DANH & BẢO MẬT ---
 
-// UsedDeviceRel (User -> Device)
-type UsedDeviceRel struct {
-	LastUsedAt int64 `json:"last_used_at"`
-	LoginCount int   `json:"login_count"`
-}
-
 // HasContactRel (User -> PhoneContact) - [MỚI]
 type HasContactRel struct {
 	UploadedAt int64 `json:"uploaded_at"`
-}
-
-// --- NHÓM TÍN HIỆU TIÊU CỰC ---
-
-type BlockRel struct {
-	Since int64 `json:"since"`
-}
-
-type MuteRel struct {
-	Since int64 `json:"since"`
-}
-
-type HiddenPostRel struct {
-	Count        int   `json:"count"`
-	LastHiddenAt int64 `json:"last_hidden_at"`
-}
-
-type ReportedRel struct {
-	Reason    string `json:"reason"`
-	Timestamp int64  `json:"timestamp"`
 }

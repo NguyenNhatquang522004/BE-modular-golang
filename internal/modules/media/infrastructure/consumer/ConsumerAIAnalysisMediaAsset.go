@@ -1,18 +1,15 @@
 package consumer
 
 import (
-	"bytes"
 	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io"
 	"net/http"
 	"strings"
 	"sync"
 	"time"
 
-	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/configs"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/IRepositoryShare"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/constants"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/events"
@@ -30,25 +27,20 @@ type ConsumerAIAnalysisMediaAsset struct {
 	redisRepo     IRepositoryShare.IRedis
 	mediaRepo     IRepositoryMongodb.IMediaAssetsRepository
 	httpClient    *http.Client
-	ollamaURL     string
-	modelName     string
-	cfg           configs.Config
 	seaweedfsRepo IRepositoryShare.ISeaweedfs
+	aiRepo        IRepositoryShare.IAI
 }
 
-func NewConsumerAIAnalysisMediaAsset(events events.EventBus, pool IRepositoryShare.IWorkerPool, redisRepo IRepositoryShare.IRedis, mediaRepo IRepositoryMongodb.IMediaAssetsRepository, seaweedfsRepo IRepositoryShare.ISeaweedfs, cfg configs.Config) *ConsumerAIAnalysisMediaAsset {
-	ollamaURL := cfg.AIAnalysisMediaAsset.OllamaURL
-	modelName := cfg.AIAnalysisMediaAsset.ModelName
+func NewConsumerAIAnalysisMediaAsset(events events.EventBus, pool IRepositoryShare.IWorkerPool, redisRepo IRepositoryShare.IRedis, mediaRepo IRepositoryMongodb.IMediaAssetsRepository, seaweedfsRepo IRepositoryShare.ISeaweedfs, aiRepo IRepositoryShare.IAI) *ConsumerAIAnalysisMediaAsset {
+
 	return &ConsumerAIAnalysisMediaAsset{
 		events:        events,
 		pool:          pool,
 		redisRepo:     redisRepo,
 		mediaRepo:     mediaRepo,
 		httpClient:    &http.Client{Timeout: 30 * time.Second},
-		ollamaURL:     ollamaURL,
-		modelName:     modelName,
-		cfg:           cfg,
 		seaweedfsRepo: seaweedfsRepo,
+		aiRepo:        aiRepo,
 	}
 }
 func (c *ConsumerAIAnalysisMediaAsset) ConsumerAIAnalysisMediaAsset(ctx context.Context) error {
@@ -77,9 +69,9 @@ func (c *ConsumerAIAnalysisMediaAsset) ConsumerAIAnalysisMediaAsset(ctx context.
 				case constants.Created.String():
 					processErr = c.handlecreatedAIAnalysisMediaAsset(ctx, event)
 				case constants.Updated.String():
-					processErr = c.handleupdatedAIAnalysisMediaAsset(ctx, event)
+					processErr = c.handlecreatedAIAnalysisMediaAsset(ctx, event)
 				case constants.Deleted.String():
-					processErr = c.handledeletedAIAnalysisMediaAsset(ctx, event)
+					processErr = c.handlecreatedAIAnalysisMediaAsset(ctx, event)
 				default:
 					errchan <- errors.New("event " + event.ID + " has an unknown type " + event.Type + ". Skipping.")
 					return
@@ -116,11 +108,12 @@ func (c *ConsumerAIAnalysisMediaAsset) ConsumerAIAnalysisMediaAsset(ctx context.
 func (c *ConsumerAIAnalysisMediaAsset) handlecreatedAIAnalysisMediaAsset(ctx context.Context, event events.IntegrationEvent) error {
 	data, err := utils.ParsePayload[mediaEvent.AIAnalysisMediaAssetPayload](event.Payload)
 	if err != nil {
-		return kafka.NewNonRetryableError(fmt.Errorf(" failed to parse event payload: %w", err))
+		return kafka.NewNonRetryableError(fmt.Errorf("failed to parse event payload: %w", err))
 	}
 	if data == nil {
 		return kafka.NewNonRetryableError(fmt.Errorf("payload is nil"))
 	}
+
 	var filenames []string
 	for _, media := range data.MediaID {
 		datamedia, err := c.mediaRepo.GetMediaAssetByID(ctx, media)
@@ -132,140 +125,105 @@ func (c *ConsumerAIAnalysisMediaAsset) handlecreatedAIAnalysisMediaAsset(ctx con
 		}
 		filenames = append(filenames, datamedia.StorageFileID)
 	}
+
 	imagesBase64, err := c.seaweedfsRepo.DownloadMultipleImagesAsBase64(ctx, filenames)
 	if err != nil {
 		return fmt.Errorf("failed to download images from SeaweedFS: %w", err)
 	}
-	// --- Gọi Ollama Model ---
+
+	// --- 1. Gọi Ollama Model VỚI PROMPT MỚI ---
 	systemPrompt := fmt.Sprintf(`
-		Bạn là một hệ thống AI phân tích nội dung mạng xã hội (bao gồm Text và Hình ảnh) để trích xuất các Topic (chủ đề) cho cơ sở dữ liệu đồ thị.
+Bạn là một hệ thống AI phân tích nội dung mạng xã hội (bao gồm Text và Hình ảnh) để trích xuất các Topic (chủ đề) cho cơ sở dữ liệu đồ thị.
 
 Nội dung bài viết:
 """%s"""
 
-Hướng dẫn phân loại và trích xuất:
-1. ĐÁNH GIÁ TỔNG THỂ: Kết hợp ý nghĩa của cả đoạn text và(các) hình ảnh đính kèm.
-2. LỌC RÁC (SPAM/PERSONAL): Nếu tổng thể bài viết chỉ mang tính chất cá nhân, cảm xúc nhất thời, vô thưởng vô phạt (ví dụ: ảnh selfie, check-in đi cafe, than thở, cap thả thính) và KHÔNG mang giá trị thông tin, chuyên môn hay sở thích chung -> BẮT BUỘC trả về duy nhất mảng: ["BỎ_QUA"].
-3. TRÍCH XUẤT TOPIC (INTEREST GRAPH): Nếu bài viết chứa thông tin, kiến thức, sở thích rõ ràng (ví dụ: lập trình, xe cộ, thể thao, ẩm thực, review sản phẩm), hãy trích xuất 1 đến 5 từ khóa chủ đề cốt lõi nhất.
-
-Quy định format Topic:
-- Là danh từ hoặc cụm từ ngắn.
-- Chuyển thành chữ thường, không dấu tiếng Việt, thay dấu cách bằng gạch dưới (ví dụ: "cong_nghe", "golang", "review_sach", "bong_da").
+Hướng dẫn phân loại:
+1. ĐÁNH GIÁ TỔNG THỂ: Kết hợp ý nghĩa của cả text và ảnh.
+2. LỌC RÁC: Nếu chỉ là cảm xúc cá nhân, selfie, check-in vô thưởng vô phạt -> BẮT BUỘC trả về Topic là "BỎ_QUA".
+3. TRÍCH XUẤT: Nếu có kiến thức/sở thích rõ ràng, trích xuất 1 đến 5 từ khóa (dạng snake_case, tiếng Việt không dấu).
 
 RÀNG BUỘC ĐẦU RA (QUAN TRỌNG NHẤT):
-- BẠN CHỈ ĐƯỢC PHÉP TRẢ VỀ 1 MẢNG JSON HỢP LỆ.
-- KHÔNG giải thích. KHÔNG thêm bất kỳ từ ngữ nào khác. KHÔNG bọc trong markdown (không dùng `+"```json"+`).
+- BẠN CHỈ ĐƯỢC PHÉP TRẢ VỀ 1 MẢNG JSON OBJECT HỢP LỆ.
+- Mỗi object phải chứa đúng 2 trường: "topic" (string) và "confidence_score" (float, từ 0.0 đến 1.0 thể hiện độ chắc chắn của bạn).
+- KHÔNG giải thích. KHÔNG dùng markdown (không dùng `+"```json"+`).
 
-Ví dụ 1:
-Input text: "Cuối tuần lười biếng ra góc quán quen ngồi chill chill một chút" + Ảnh ly cafe
-Output: ["BỎ_QUA"]
+Ví dụ 1 (Bài rác):
+Input: "Cuối tuần lười biếng ra quán quen chill" + Ảnh ly cafe
+Output: [{"topic": "BỎ_QUA", "confidence_score": 1.0}]
 
-Ví dụ 2:
-Input text: "Vừa setup xong con server test thử Kafka với Golang, chạy mượt phết anh em ạ." + Ảnh màn hình code.
-Output: ["golang", "kafka", "backend", "devops"].
-	`, data.Content)
+Ví dụ 2 (Bài hợp lệ):
+Input: "Vừa setup xong server test thử Kafka với Golang, chạy mượt phết." + Ảnh code.
+Output: [{"topic": "golang", "confidence_score": 0.95}, {"topic": "kafka", "confidence_score": 0.90}, {"topic": "backend", "confidence_score": 0.85}]
+`, data.Content)
 
-	result, err := c.callOllamaModel(ctx, systemPrompt, imagesBase64) // Tạm thời chỉ gửi ảnh đầu tiên để phân tích
+	result, err := c.aiRepo.CallOllamaModel(ctx, systemPrompt, imagesBase64, c.httpClient)
 	if err != nil {
 		return fmt.Errorf("failed to call Ollama model: %w", err)
 	}
+
+	// Dọn dẹp chuỗi trả về
 	cleanResult := strings.TrimSpace(result)
 	cleanResult = strings.TrimPrefix(cleanResult, "```json")
 	cleanResult = strings.TrimPrefix(cleanResult, "```")
 	cleanResult = strings.TrimSuffix(cleanResult, "```")
 	cleanResult = strings.TrimSpace(cleanResult)
 
-	// 2. Ép kiểu (Unmarshal) từ chuỗi JSON sang mảng Go (Slice)
-	var topics []string
-	if err := json.Unmarshal([]byte(cleanResult), &topics); err != nil {
-		// Log lại giá trị gốc để bạn dễ debug xem con AI đã "nói bậy" cái gì
-		return fmt.Errorf("không thể parse kết quả từ AI thành mảng JSON. Raw response: %s, err: %w", result, err)
+	// --- 2. STRUCT ĐỂ HỨNG DATA CÓ ĐIỂM SỐ ---
+	type AITopicResult struct {
+		Topic           string  `json:"topic"`
+		ConfidenceScore float64 `json:"confidence_score"`
 	}
 
-	// 3. Xử lý logic nghiệp vụ với data lấy được
-	if len(topics) == 1 && topics[0] == "BỎ_QUA" {
+	var aiResults []AITopicResult
+	if err := json.Unmarshal([]byte(cleanResult), &aiResults); err != nil {
+		return fmt.Errorf("không thể parse kết quả từ AI thành mảng JSON Object. Raw: %s, err: %w", result, err)
+	}
+
+	// --- 3. Xử lý logic BỎ_QUA ---
+	if len(aiResults) == 1 && aiResults[0].Topic == "BỎ_QUA" {
 		fmt.Println("Hệ thống xác nhận đây là bài post rác/cá nhân. Không trích xuất Topic.")
-		return nil // Hoặc cập nhật status bài viết rồi return
+		return nil
 	}
 
-	// Tới đây data của bạn đã là mảng []string chuẩn, bạn có thể loop qua nó
-	fmt.Printf("Trích xuất thành công %d topics:\n", len(topics))
+	// --- 4. Tách mảng tên Topic (dành cho Payload cũ) và In ra kết quả ---
+	var topicNames []string
+	fmt.Printf("Trích xuất thành công %d topics:\n", len(aiResults))
+	for i, item := range aiResults {
+		topicNames = append(topicNames, item.Topic)
+		fmt.Printf("%d. %s (Độ tự tin: %.2f)\n", i+1, item.Topic, item.ConfidenceScore)
 
-	for _, data := range data.MediaID {
+		// GỢI Ý CHO BẠN: Nếu ở đây bạn gọi thẳng GraphRepository thì sẽ như thế này:
+		// c.graphRepo.UpsertTopicNode(ctx, &entity.TopicNode{Name: item.Topic})
+		// c.graphRepo.LinkPostToTopic(ctx, data.PostID, item.Topic, item.ConfidenceScore)
+	}
+
+	// --- 5. Publish Event ---
+	// Lưu ý: Hiện tại Payload của bạn (`Hashtags: &topics`) đang nhận mảng []string.
+	// Tôi trích xuất mảng `topicNames` đưa vào đây để code của bạn không bị lỗi.
+	for _, mediaID := range data.MediaID {
 		payload := &mediaEvent.UpdateMediaAssetsPayload{
-			MediaID:  data,
-			Hashtags: &topics,
+			MediaID:  mediaID,
+			Hashtags: &topicNames,
 		}
 		err = c.events.Publish(ctx, constants.TopicMeiaAssetHandleMetadata.String(), payload.MediaID, constants.Updated.String(), payload)
 		if err != nil {
-			return fmt.Errorf("failed to publish media asset update event for media ID %s: %w", data, err)
+			return fmt.Errorf("failed to publish media asset update: %w", err)
 		}
 	}
+
 	payloadpost := &contentEvent.UpdatePostPayload{
 		PostID:   data.PostID,
-		Hashtags: &topics,
+		Hashtags: &topicNames,
 	}
 	err = c.events.Publish(ctx, constants.TopicPost.String(), payloadpost.PostID, constants.Updated.String(), payloadpost)
 	if err != nil {
-		return fmt.Errorf("failed to publish post update event for post ID %s: %w", data.PostID, err)
+		return fmt.Errorf("failed to publish post update: %w", err)
 	}
-
-	for i, topic := range topics {
-		fmt.Printf("%d. %s\n", i+1, topic)
-	}
-	fmt.Printf("Ollama Model Response: %s\n", result)
-	return nil
-}
-func (c *ConsumerAIAnalysisMediaAsset) callOllamaModel(ctx context.Context, prompt string, imageBase64 []string) (string, error) {
-
-	jsonValue, err := json.Marshal(mediaEvent.OllamaRequest{
-		Model:  c.modelName,
-		Prompt: prompt,
-		Images: imageBase64,
-		Stream: false,
-	})
-	if err != nil {
-		return "", fmt.Errorf("lỗi marshal JSON: %w", err)
-	}
-
-	// Tạo request có kèm Context (để dễ dàng cancel/timeout từ phía trên)
-	req, err := http.NewRequestWithContext(ctx, http.MethodPost, c.ollamaURL, bytes.NewBuffer(jsonValue))
-	if err != nil {
-		return "", fmt.Errorf("lỗi tạo HTTP request: %w", err)
-	}
-	req.Header.Set("Content-Type", "application/json")
-
-	// Gửi request
-	resp, err := c.httpClient.Do(req)
-	if err != nil {
-		return "", fmt.Errorf("lỗi kết nối HTTP: %w", err)
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		return "", fmt.Errorf("ollama trả về status code lỗi: %d", resp.StatusCode)
-	}
-
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return "", fmt.Errorf("lỗi đọc response body: %w", err)
-	}
-
-	var responseData mediaEvent.OllamaResponse
-	if err := json.Unmarshal(body, &responseData); err != nil {
-		return "", fmt.Errorf("lỗi unmarshal response: %w", err)
-	}
-
-	return responseData.Response, nil
-}
-func (c *ConsumerAIAnalysisMediaAsset) handleupdatedAIAnalysisMediaAsset(ctx context.Context, event events.IntegrationEvent) error {
 
 	return nil
 }
-func (c *ConsumerAIAnalysisMediaAsset) handledeletedAIAnalysisMediaAsset(ctx context.Context, event events.IntegrationEvent) error {
 
-	return nil
-}
 func (c *ConsumerAIAnalysisMediaAsset) ConsumerFailedAIAnalysisMediaAsset(ctx context.Context) error {
 
 	return nil

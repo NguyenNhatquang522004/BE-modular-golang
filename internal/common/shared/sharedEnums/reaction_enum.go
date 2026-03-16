@@ -28,6 +28,10 @@ const (
 	ReactionTargetSharePost                          // 'share_post'
 	ReactionTargetViewPost                           // 'view_post'
 	ReactionTargetReplyComment                       // 'reply_comment'
+	ReactionTargetView
+	ReactionTargetLike
+	ReactionTargetMessage
+	ReactionTargetShare
 )
 
 // =============================================================================

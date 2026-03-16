@@ -21,7 +21,7 @@ var ProviderDatabase = wire.NewSet(
 	database.NewRedisClient,
 	database.NewPostgresDB,
 	database.NewElasticClient,
-	// database.NewCassandraSession,
+	database.NewCassandraSession,
 	database.NewNeo4jDriver,
 	database.NewSeaweedFSClient,
 )

@@ -29,8 +29,10 @@ type Config struct {
 	VNPay                VNPayConfig
 }
 type AIAnalysisMediaAssetConfig struct {
-	OllamaURL string
-	ModelName string
+	OllamaURL          string
+	ModelName          string
+	ModelEmbeddingName string
+	TopKNeighbors      int
 }
 type liveStreamConfig struct {
 	SECRET_KEY string
@@ -163,8 +165,10 @@ func LoadConfig() (*Config, error) {
 	cfg := &Config{
 		// --- AI Analysis Media Asset Config ---
 		AIAnalysisMediaAsset: AIAnalysisMediaAssetConfig{
-			OllamaURL: viper.GetString("OLLAMA_API_URL"),
-			ModelName: viper.GetString("OLLAMA_MODEL_NAME"),
+			OllamaURL:          viper.GetString("OLLAMA_API_URL"),
+			ModelName:          viper.GetString("OLLAMA_MODEL_NAME"),
+			ModelEmbeddingName: viper.GetString("OLLAMA_MODEL_EMBEDDING_NAME"),
+			TopKNeighbors:      viper.GetInt("TOP_K_NEIGHBORS"),
 		},
 		// --- Live Stream Config ---
 		LiveStream: liveStreamConfig{
