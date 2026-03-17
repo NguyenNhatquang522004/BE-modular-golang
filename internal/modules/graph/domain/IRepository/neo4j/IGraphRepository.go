@@ -88,7 +88,14 @@ type IGraphRepository interface {
 	GetPersonalizedNewsFeed(ctx context.Context, userID string, limit int, offset int) ([]string, error)
 
 	// Gợi ý bạn bè dựa trên "Bạn chung" (Triadic Closure) và Danh bạ
-	GetSuggestedFriends(ctx context.Context, userID string, limit int) ([]string, error)
+	GetPymkFromFOAF(ctx context.Context, userID string, limit int) ([]graphEvent.SuggestedUser, error)
+	GetPymkFromInterestHomophily(ctx context.Context, userID string, limit int) ([]graphEvent.SuggestedUser, error)
+	GetPymkFromGroupAffiliation(ctx context.Context, userID string, limit int) ([]graphEvent.SuggestedUser, error)
+	GetPymkFromImplicitInteraction(ctx context.Context, userID string, limit int) ([]graphEvent.SuggestedUser, error)
+	GetPymkFromLocation(ctx context.Context, userID string, limit int) ([]graphEvent.SuggestedUser, error)
+	GetPymkFromRealLifeContacts(ctx context.Context, userID string, limit int) ([]graphEvent.SuggestedUser, error)
+	GetPymkFromGlobalGraph(ctx context.Context, userID string, limit int) ([]graphEvent.SuggestedUser, error)
+	GetBlendedPeopleYouMayKnow(ctx context.Context, userID string, limit int) ([]graphEvent.SuggestedUser, error)
 
 	// 4.3. Real-time Discovery
 	// Lấy danh sách Post đang hot nhất dựa trên InteractedRecentlyRel

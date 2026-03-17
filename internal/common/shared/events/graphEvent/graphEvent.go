@@ -24,3 +24,19 @@ type PostMeta struct {
 	RiskScore float64
 	CreatedAt int64
 }
+type CandidateSignals struct {
+	S1_Score float64
+	S2_Score float64
+	S3_Score float64
+	S4_Score float64
+	S5_Score float64
+	S6_Score float64
+	S7_Score float64
+	
+	// Số lượng bạn chung thực tế (Lấy từ S1 để ưu tiên hiển thị UI)
+	RealMutualFriends int 
+	
+	// Số lượng chiến lược (Strategies) mà ứng viên này xuất hiện
+	// Dùng để buff điểm chéo (Cross-Signal Boost)
+	HitCount int 
+}
