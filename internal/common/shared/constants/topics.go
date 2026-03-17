@@ -99,6 +99,13 @@ const (
 	TopicFollowerPage     TopicName = "business.follower_page.events"
 	TopicStatsPage        TopicName = "business.stats_page.events"
 	TopicDailyMetricsPage TopicName = "business.daily_metrics_page.events"
+
+	// graph
+	TopicGraphUser  TopicName = "graph.user.events"
+	TopicGraphPost  TopicName = "graph.post.events"
+	TopicGraphTopic TopicName = "graph.topic.events"
+	TopicGraphGroup TopicName = "graph.group.events"
+	TopicGraphPage  TopicName = "graph.page.events"
 )
 
 type TopicConfig struct {

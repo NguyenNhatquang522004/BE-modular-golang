@@ -12,6 +12,7 @@ import (
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/events/graphEvent"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/sharedEnums"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/graph/domain/entity"
+	"github.com/google/uuid"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"golang.org/x/sync/errgroup"
 )
@@ -43,15 +44,22 @@ func (r *GraphRepository) UpsertUserNode(ctx context.Context, user *entity.UserN
 		ON CREATE SET 
 			u.created_at = $created_at,
 			u.last_active_at = $last_active_at,
-			u.is_verified = $is_verified
+			u.is_verified = $is_verified,
+			u.bio = $bio,	 // Mặc định bio rỗng, có thể cập nhật sau
+			u.embedding = $embedding
 		ON MATCH SET 
+	u.bio = $bio ,
+	u.embedding = $embedding ,
 			u.last_active_at = $last_active_at
+
 	`
 	params := map[string]any{
 		"user_id":        user.UserID,
 		"created_at":     user.CreatedAt,
 		"last_active_at": user.LastActiveAt,
 		"is_verified":    user.IsVerified,
+		"bio":            user.Bio,
+		"embedding":      user.Embedding,
 	}
 
 	_, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
@@ -120,13 +128,16 @@ func (r *GraphRepository) UpsertTopicNode(ctx context.Context, topic *entity.Top
 // Ví dụ: Nhập "Trí tuệ nhân tạo", phát hiện giống 99% với "AI", nó sẽ không tạo mới mà trả về chữ "AI".
 // UpsertTopicAndConnectNeighbors nhận vào một chuỗi topicName thô, tự động gọi AI lấy Vector,
 // khử trùng lặp và vẽ mạng lưới ngữ nghĩa. Trả về Canonical Name.
-func (r *GraphRepository) UpsertTopicAndConnectNeighbors(ctx context.Context, topicName string) (string, error) {
+// UpsertTopicAndConnectNeighbors xử lý tạo Topic, tự động gắn TopicID (UUID), khử trùng lặp qua Vector AI,
+// và vẽ mạng lưới ngữ nghĩa.
+// Trả về: (TopicID, CanonicalTopicName, error)
+func (r *GraphRepository) UpsertTopicAndConnectNeighbors(ctx context.Context, topicName string) (string, string, error) {
 	// ==========================================
-	// BƯỚC 1: GỌI AI LLM ĐỂ LẤY VECTOR (Nằm ngoài DB Transaction)
+	// BƯỚC 1: GỌI AI LLM ĐỂ LẤY VECTOR
 	// ==========================================
 	embedding, err := r.aiRepo.GenerateBgeM3Embedding(topicName)
 	if err != nil {
-		return "", fmt.Errorf("failed to generate embedding for topic '%s': %w", topicName, err)
+		return "", "", fmt.Errorf("failed to generate embedding for topic '%s': %w", topicName, err)
 	}
 
 	// ==========================================
@@ -134,14 +145,15 @@ func (r *GraphRepository) UpsertTopicAndConnectNeighbors(ctx context.Context, to
 	// ==========================================
 	session := r.driver.NewSession(ctx, neo4j.SessionConfig{AccessMode: neo4j.AccessModeWrite})
 	defer session.Close(ctx)
+
 	topKNeighbors := r.cfg.AIAnalysisMediaAsset.TopKNeighbors
-	// Các cấu hình ngưỡng (Thresholds)
 	exactMatchThreshold := 0.99
 	similarityThreshold := 0.85
 
-	canonicalTopicName := topicName // Mặc định là tên gốc nếu không bị trùng
+	var finalTopicID string
+	var finalTopicName string = topicName // Mặc định là tên gốc nếu không bị trùng
 
-	// Bắt đầu Transaction (Càng nhanh càng tốt)
+	// Bắt đầu Transaction
 	_, err = session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
 
 		// ------------------------------------------
@@ -151,7 +163,7 @@ func (r *GraphRepository) UpsertTopicAndConnectNeighbors(ctx context.Context, to
 			CALL db.index.vector.queryNodes('topic_embeddings', 1, $embedding)
 			YIELD node AS existingTopic, score
 			WHERE score >= $exactMatchThreshold
-			RETURN existingTopic.name AS matchedName
+			RETURN existingTopic.topic_id AS matchedID, existingTopic.name AS matchedName
 		`
 
 		searchResult, err := tx.Run(ctx, searchCypher, map[string]any{
@@ -162,20 +174,37 @@ func (r *GraphRepository) UpsertTopicAndConnectNeighbors(ctx context.Context, to
 			return nil, err
 		}
 
-		// Nếu tìm thấy Topic giống 99% -> Ghi nhận tên của nó và ABORT việc tạo mới
+		// Nếu tìm thấy Topic giống 99% -> Lấy ID & Tên của nó, ABORT việc tạo mới
 		if searchResult.Next(ctx) {
-			canonicalTopicName = searchResult.Record().Values[0].(string)
-			// Phát hiện trùng lặp, bỏ qua Phase 2 và kết thúc Transaction an toàn.
+			record := searchResult.Record()
+			// coalesce() trong Go: Lấy giá trị an toàn
+			if idVal, ok := record.Values[0].(string); ok {
+				finalTopicID = idVal
+			}
+			if nameVal, ok := record.Values[1].(string); ok {
+				finalTopicName = nameVal
+			}
+			// Bỏ qua Phase 2 và kết thúc Transaction
 			return nil, nil
 		}
 
 		// ------------------------------------------
 		// PHASE 2: TẠO MỚI & VẼ MẠNG LƯỚI TƯƠNG ĐỒNG
 		// ------------------------------------------
+		// Sinh ID mới tại tầng Go
+		newGeneratedID := uuid.New().String()
+
 		upsertCypher := `
-			// 1. Tạo Topic Mới
+			// 1. Tạo Topic Mới (Chỉ set ID và Vector khi thực sự tạo mới)
 			MERGE (newTopic:Topic {name: $topicName})
-			SET newTopic.embedding = $embedding
+			ON CREATE SET 
+				newTopic.topic_id = $newGeneratedID,
+				newTopic.embedding = $embedding
+			
+			// TUYỆT CHIÊU BACKWARD COMPATIBILITY: 
+			// Trám ID cho các Topic cũ chưa có UUID (nếu có)
+			SET newTopic.topic_id = coalesce(newTopic.topic_id, $newGeneratedID)
+			
 			WITH newTopic
 
 			// 2. Quét hàng xóm để vẽ lưới
@@ -189,24 +218,37 @@ func (r *GraphRepository) UpsertTopicAndConnectNeighbors(ctx context.Context, to
 			// 4. Vẽ Cạnh Tương Đồng vô hướng (-)
 			MERGE (newTopic)-[rel:RELATED_TO]-(neighborTopic)
 			SET rel.similarity_score = similarityScore
+
+			// Trả về ID vừa tạo (hoặc ID đã có) cho biến finalTopicID ở Go
+			RETURN newTopic.topic_id AS createdTopicID
 		`
 
-		_, err = tx.Run(ctx, upsertCypher, map[string]any{
+		upsertResult, err := tx.Run(ctx, upsertCypher, map[string]any{
 			"topicName":           topicName,
+			"newGeneratedID":      newGeneratedID,
 			"embedding":           embedding,
 			"similarityThreshold": similarityThreshold,
 			"topKNeighbors":       topKNeighbors,
 		})
+		if err != nil {
+			return nil, err
+		}
 
-		return nil, err
+		// Bắt lấy ID được trả về từ Cypher
+		if upsertResult.Next(ctx) {
+			if idVal, ok := upsertResult.Record().Values[0].(string); ok {
+				finalTopicID = idVal
+			}
+		}
+
+		return nil, nil
 	})
 
 	if err != nil {
-		return "", err
+		return "", "", err
 	}
 
-	// Trả về Topic Name chuẩn (Canonical Name) cho các luồng xử lý tiếp theo
-	return canonicalTopicName, nil
+	return finalTopicID, finalTopicName, nil
 }
 func (r *GraphRepository) UpsertGroupNode(ctx context.Context, group *entity.GroupNode) error {
 	session := r.driver.NewSession(ctx, neo4j.SessionConfig{AccessMode: neo4j.AccessModeWrite})
@@ -368,6 +410,34 @@ func (r *GraphRepository) LinkPostToTopic(ctx context.Context, postID string, to
 
 	return err
 }
+func (r *GraphRepository) LinkPostToTopicByID(ctx context.Context, postID string, topicID string, confidenceScore float64) error {
+	session := r.driver.NewSession(ctx, neo4j.SessionConfig{AccessMode: neo4j.AccessModeWrite})
+	defer session.Close(ctx)
+
+	// Đã đổi t:Topic {name: $topic_name} thành t:Topic {topic_id: $topic_id}
+	cypher := `
+		MATCH (p:Post {post_id: $post_id}), (t:Topic {topic_id: $topic_id})
+		MERGE (p)-[r:HAS_TOPIC]->(t)
+		ON CREATE SET r.confidence_score = $confidence_score
+		ON MATCH SET r.confidence_score = $confidence_score
+	`
+	
+	params := map[string]any{
+		"post_id":          postID,
+		"topic_id":         topicID, // Truyền ID vào map tham số
+		"confidence_score": confidenceScore,
+	}
+
+	_, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		result, err := tx.Run(ctx, cypher, params)
+		if err != nil {
+			return nil, err
+		}
+		return result.Consume(ctx)
+	})
+
+	return err
+}
 func (r *GraphRepository) LinkPostToGroup(ctx context.Context, postID string, groupID string, createdAt int64) error {
 	session := r.driver.NewSession(ctx, neo4j.SessionConfig{AccessMode: neo4j.AccessModeWrite})
 	defer session.Close(ctx)
@@ -425,18 +495,45 @@ func (r *GraphRepository) CreateFriendship(ctx context.Context, userA string, us
 
 	return err
 }
-func (r *GraphRepository) CreateBlock(ctx context.Context, sourceUserID string, targetUserID string, since int64) error {
+
+// CreateBlock thiết lập cấm vận giữa User và một Thực thể (User/Page/Group)
+// Đồng thời cắt đứt mọi quan hệ hiện tại (Unfriend, Unfollow, Unlike, Leave Group)
+func (r *GraphRepository) CreateBlock(ctx context.Context, sourceUserID string, targetID string, targetType sharedEnums.ContextType, since int64) error {
 	session := r.driver.NewSession(ctx, neo4j.SessionConfig{AccessMode: neo4j.AccessModeWrite})
 	defer session.Close(ctx)
 
-	cypher := `
-		MATCH (source:User {user_id: $sourceUserID}), (target:User {user_id: $targetUserID})
-		MERGE (source)-[r:BLOCK]->(target)
-		ON CREATE SET r.since = $since
-	`
+	// 1. Xác định Label của Target dựa trên targetType
+	var targetMatch string
+	switch targetType {
+	case sharedEnums.ContextTypeUserWall: // Target là User B
+		targetMatch = "(target:User {user_id: $targetID})"
+	case sharedEnums.ContextTypePage: // Target là Page B
+		targetMatch = "(target:Page {page_id: $targetID})"
+	case sharedEnums.ContextTypeGroup: // Target là Group B
+		targetMatch = "(target:Group {group_id: $targetID})"
+	default:
+		return fmt.Errorf("invalid target type for block: %v", targetType)
+	}
+
+	// Câu lệnh Cypher thực hiện 2 bước: Dọn dẹp & Cắm cờ
+	cypher := fmt.Sprintf(`
+		MATCH (source:User {user_id: $sourceUserID})
+		MATCH %s
+		
+		// BƯỚC 1: Cắt đứt quan hệ (Dùng OPTIONAL MATCH và dấu '-' vô hướng để bắt cả 2 chiều)
+		// Cắt sạch Bạn bè, Đang theo dõi, Lời mời kết bạn, Lượt thích Page, Thành viên Group
+		OPTIONAL MATCH (source)-[oldRel:FRIEND|FOLLOWS|FRIEND_REQUEST|LIKES|MEMBER_OF]-(target)
+		DELETE oldRel
+		
+		// BƯỚC 2: Tạo ranh giới Block (Chỉ tạo 1 chiều từ Source trỏ tới Target)
+		WITH source, target
+		MERGE (source)-[b:BLOCK]->(target)
+		ON CREATE SET b.since = $since
+	`, targetMatch)
+
 	params := map[string]any{
 		"sourceUserID": sourceUserID,
-		"targetUserID": targetUserID,
+		"targetID":     targetID,
 		"since":        since,
 	}
 
@@ -2571,4 +2668,318 @@ func (r *GraphRepository) GetBlendedPeopleYouMayKnow(ctx context.Context, userID
 	}
 
 	return finalCandidates, nil
+}
+
+// ==========================================
+// NHÓM HÀM DELETE NODES (Sử dụng DETACH DELETE để dọn sạch Relationship)
+// ==========================================
+
+// DeleteUserNode xóa User và toàn bộ các tương tác, bạn bè, follow... liên quan
+// DeleteUserNode xóa User và toàn bộ các tương tác, bạn bè, follow, CÙNG VỚI toàn bộ bài Post do họ đăng.
+func (r *GraphRepository) DeleteUserNode(ctx context.Context, userID string) error {
+	session := r.driver.NewSession(ctx, neo4j.SessionConfig{AccessMode: neo4j.AccessModeWrite})
+	defer session.Close(ctx)
+
+	cypher := `
+		// 1. Tìm User
+		MATCH (u:User {user_id: $user_id})
+		
+		// 2. Tìm TẤT CẢ các bài Post do User này làm tác giả
+		// Dùng OPTIONAL MATCH để lỡ User chưa đăng bài nào thì lệnh vẫn chạy tiếp (p sẽ là null)
+		OPTIONAL MATCH (u)-[:AUTHORED]->(p:Post)
+		
+		// 3. Nghiền nát User và tất cả bài Post của họ. 
+		// Lệnh DETACH sẽ tự động cắt mọi cạnh cắm vào User và cắm vào các bài Post này.
+		DETACH DELETE u, p
+	`
+	params := map[string]any{
+		"user_id": userID,
+	}
+
+	_, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		result, err := tx.Run(ctx, cypher, params)
+		if err != nil {
+			return nil, err
+		}
+		return result.Consume(ctx)
+	})
+
+	return err
+}
+
+func (r *GraphRepository) DeleteAllPostsUser(ctx context.Context, userID string) error {
+	session := r.driver.NewSession(ctx, neo4j.SessionConfig{AccessMode: neo4j.AccessModeWrite})
+	defer session.Close(ctx)
+
+	cypher := `
+		// 1. Tìm User
+		MATCH (u:User {user_id: $user_id})
+		
+		// 2. Tìm TẤT CẢ các bài Post do User này làm tác giả
+		// Dùng OPTIONAL MATCH để lỡ User chưa đăng bài nào thì lệnh vẫn chạy tiếp (p sẽ là null)
+		OPTIONAL MATCH (u)-[:AUTHORED]->(p:Post)
+		
+		// 3. Nghiền nát User và tất cả bài Post của họ. 
+		// Lệnh DETACH sẽ tự động cắt mọi cạnh cắm vào User và cắm vào các bài Post này.
+		DETACH DELETE  p
+	`
+	params := map[string]any{
+		"user_id": userID,
+	}
+
+	_, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		result, err := tx.Run(ctx, cypher, params)
+		if err != nil {
+			return nil, err
+		}
+		return result.Consume(ctx)
+	})
+
+	return err
+}
+
+// DeletePostNode xóa bài Post và tất cả các cạnh AUTHORED, HAS_TOPIC, INTERACTED_WITH...
+func (r *GraphRepository) DeletePostNode(ctx context.Context, postID string) error {
+	session := r.driver.NewSession(ctx, neo4j.SessionConfig{AccessMode: neo4j.AccessModeWrite})
+	defer session.Close(ctx)
+
+	cypher := `
+		MATCH (p:Post {post_id: $post_id})
+		DETACH DELETE p
+	`
+	params := map[string]any{
+		"post_id": postID,
+	}
+
+	_, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		result, err := tx.Run(ctx, cypher, params)
+		if err != nil {
+			return nil, err
+		}
+		return result.Consume(ctx)
+	})
+
+	return err
+}
+
+// DeleteTopicNode xóa Topic và các cạnh HAS_TOPIC, INTERESTED_IN, RELATED_TO
+func (r *GraphRepository) DeleteTopicNode(ctx context.Context, topicName string) error {
+	session := r.driver.NewSession(ctx, neo4j.SessionConfig{AccessMode: neo4j.AccessModeWrite})
+	defer session.Close(ctx)
+
+	cypher := `
+		MATCH (t:Topic {name: $name})
+		DETACH DELETE t
+	`
+	params := map[string]any{
+		"name": topicName,
+	}
+
+	_, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		result, err := tx.Run(ctx, cypher, params)
+		if err != nil {
+			return nil, err
+		}
+		return result.Consume(ctx)
+	})
+
+	return err
+}
+
+// DeleteGroupNode xóa Group và các thành viên (MEMBER_OF), bài viết trong group (POSTED_IN)
+func (r *GraphRepository) DeleteGroupNode(ctx context.Context, groupID string) error {
+	session := r.driver.NewSession(ctx, neo4j.SessionConfig{AccessMode: neo4j.AccessModeWrite})
+	defer session.Close(ctx)
+
+	cypher := `
+		// 1. Tìm Group
+		MATCH (g:Group {group_id: $group_id})
+		
+		// 2. Tìm toàn bộ bài Post được đăng trong Group này
+		OPTIONAL MATCH (p:Post)-[:POSTED_IN]->(g)
+		
+		// 3. Xóa Group và toàn bộ bài Post bên trong. Các thành viên sẽ tự động bị cắt cạnh MEMBER_OF.
+		DETACH DELETE g, p
+	`
+	params := map[string]any{
+		"group_id": groupID,
+	}
+
+	_, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		result, err := tx.Run(ctx, cypher, params)
+		if err != nil {
+			return nil, err
+		}
+		return result.Consume(ctx)
+	})
+
+	return err
+}
+
+// DeletePageNode xóa Page Fanpage và các cạnh PUBLISHED, LIKES...
+func (r *GraphRepository) DeletePageNode(ctx context.Context, pageID string) error {
+	session := r.driver.NewSession(ctx, neo4j.SessionConfig{AccessMode: neo4j.AccessModeWrite})
+	defer session.Close(ctx)
+
+	cypher := `
+		// 1. Tìm Page
+		MATCH (pg:Page {page_id: $page_id})
+		
+		// 2. Tìm toàn bộ bài Post do Page này xuất bản
+		OPTIONAL MATCH (pg)-[:PUBLISHED]->(p:Post)
+		
+		// 3. Nghiền nát Page và toàn bộ bài Post. 
+		DETACH DELETE pg, p
+	`
+	params := map[string]any{
+		"page_id": pageID,
+	}
+
+	_, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		result, err := tx.Run(ctx, cypher, params)
+		if err != nil {
+			return nil, err
+		}
+		return result.Consume(ctx)
+	})
+
+	return err
+}
+
+// DeleteLocationNode xóa Node định vị. Lưu ý PK của Location gồm cả city_id và country_code (như hàm Upsert)
+func (r *GraphRepository) DeleteLocationNode(ctx context.Context, cityID string, countryCode string) error {
+	session := r.driver.NewSession(ctx, neo4j.SessionConfig{AccessMode: neo4j.AccessModeWrite})
+	defer session.Close(ctx)
+
+	cypher := `
+		MATCH (l:Location {city_id: $city_id, country_code: $country_code})
+		DETACH DELETE l
+	`
+	params := map[string]any{
+		"city_id":      cityID,
+		"country_code": countryCode,
+	}
+
+	_, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		result, err := tx.Run(ctx, cypher, params)
+		if err != nil {
+			return nil, err
+		}
+		return result.Consume(ctx)
+	})
+
+	return err
+}
+
+// DeleteFollow xóa cạnh FOLLOWS giữa User và một Thực thể (User/Page/Group)
+func (r *GraphRepository) DeleteFollow(ctx context.Context, followerID string, targetID string, targetType sharedEnums.ContextType) error {
+	session := r.driver.NewSession(ctx, neo4j.SessionConfig{AccessMode: neo4j.AccessModeWrite})
+	defer session.Close(ctx)
+
+	var targetMatch string
+	switch targetType {
+	case sharedEnums.ContextTypeUserWall:
+		targetMatch = "(target:User {user_id: $targetID})"
+	case sharedEnums.ContextTypeGroup:
+		targetMatch = "(target:Group {group_id: $targetID})"
+	case sharedEnums.ContextTypePage:
+		targetMatch = "(target:Page {page_id: $targetID})"
+	default:
+		return fmt.Errorf("invalid target type: %v", targetType)
+	}
+
+	cypher := fmt.Sprintf(`
+		MATCH (follower:User {user_id: $followerID})-[r:FOLLOWS]->%s
+		DELETE r
+	`, targetMatch)
+
+	params := map[string]any{
+		"followerID": followerID,
+		"targetID":   targetID,
+	}
+
+	_, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		result, err := tx.Run(ctx, cypher, params)
+		if err != nil {
+			return nil, err
+		}
+		return result.Consume(ctx)
+	})
+
+	return err
+}
+
+// DeleteFriendship hủy kết bạn 2 chiều
+func (r *GraphRepository) DeleteFriendship(ctx context.Context, userA string, userB string) error {
+	session := r.driver.NewSession(ctx, neo4j.SessionConfig{AccessMode: neo4j.AccessModeWrite})
+	defer session.Close(ctx)
+
+	cypher := `
+		MATCH (a:User {user_id: $userA})-[r:FRIEND]-(b:User {user_id: $userB})
+		DELETE r
+	`
+	params := map[string]any{
+		"userA": userA,
+		"userB": userB,
+	}
+
+	_, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		result, err := tx.Run(ctx, cypher, params)
+		if err != nil {
+			return nil, err
+		}
+		return result.Consume(ctx)
+	})
+
+	return err
+}
+
+// LeaveGroup xóa tư cách thành viên của User khỏi Group
+func (r *GraphRepository) LeaveGroup(ctx context.Context, userID string, groupID string) error {
+	session := r.driver.NewSession(ctx, neo4j.SessionConfig{AccessMode: neo4j.AccessModeWrite})
+	defer session.Close(ctx)
+
+	cypher := `
+		MATCH (u:User {user_id: $user_id})-[r:MEMBER_OF]->(g:Group {group_id: $group_id})
+		DELETE r
+	`
+	params := map[string]any{
+		"user_id":  userID,
+		"group_id": groupID,
+	}
+
+	_, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		result, err := tx.Run(ctx, cypher, params)
+		if err != nil {
+			return nil, err
+		}
+		return result.Consume(ctx)
+	})
+
+	return err
+}
+
+// UnlikePage xóa lượt thích của User đối với một Page
+func (r *GraphRepository) UnlikePage(ctx context.Context, userID string, pageID string) error {
+	session := r.driver.NewSession(ctx, neo4j.SessionConfig{AccessMode: neo4j.AccessModeWrite})
+	defer session.Close(ctx)
+
+	cypher := `
+		MATCH (u:User {user_id: $user_id})-[r:LIKES]->(p:Page {page_id: $page_id})
+		DELETE r
+	`
+	params := map[string]any{
+		"user_id": userID,
+		"page_id": pageID,
+	}
+
+	_, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		result, err := tx.Run(ctx, cypher, params)
+		if err != nil {
+			return nil, err
+		}
+		return result.Consume(ctx)
+	})
+
+	return err
 }

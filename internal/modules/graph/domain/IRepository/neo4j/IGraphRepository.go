@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/events/graphEvent"
+	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/sharedEnums"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/graph/domain/entity"
 )
 
@@ -18,7 +19,7 @@ type IGraphRepository interface {
 	UpsertUserNode(ctx context.Context, user *entity.UserNode) error
 	UpsertPostNode(ctx context.Context, post *entity.PostNode) error
 	UpsertTopicNode(ctx context.Context, topic *entity.TopicNode) error
-	UpsertTopicAndConnectNeighbors(ctx context.Context, topicName string, embedding []float32) error
+	UpsertTopicAndConnectNeighbors(ctx context.Context, topicName string) (string, string, error)
 	UpsertGroupNode(ctx context.Context, group *entity.GroupNode) error
 	UpsertPageNode(ctx context.Context, page *entity.PageNode) error
 	UpsertLocationNode(ctx context.Context, loc *entity.LocationNode) error
@@ -27,6 +28,7 @@ type IGraphRepository interface {
 	LinkAuthorToPost(ctx context.Context, userID string, postID string, createdAt int64) error
 	LinkPageToPost(ctx context.Context, pageID string, postID string, createdAt int64) error
 	LinkPostToTopic(ctx context.Context, postID string, topicName string, confidenceScore float64) error
+	LinkPostToTopicByID(ctx context.Context, postID string, topicID string, confidenceScore float64) error
 	LinkPostToGroup(ctx context.Context, postID string, groupID string, createdAt int64) error
 
 	// ==================================================
@@ -97,6 +99,17 @@ type IGraphRepository interface {
 	GetPymkFromGlobalGraph(ctx context.Context, userID string, limit int) ([]graphEvent.SuggestedUser, error)
 	GetBlendedPeopleYouMayKnow(ctx context.Context, userID string, limit int) ([]graphEvent.SuggestedUser, error)
 
+	DeleteUserNode(ctx context.Context, userID string) error
+	DeletePostNode(ctx context.Context, postID string) error
+	DeleteAllPostsUser(ctx context.Context, userID string) error
+	DeleteTopicNode(ctx context.Context, topicName string) error
+	DeleteGroupNode(ctx context.Context, groupID string) error
+	DeletePageNode(ctx context.Context, pageID string) error
+	DeleteLocationNode(ctx context.Context, cityID string) error
+	DeleteFollow(ctx context.Context, followerID string, targetID string, targetType sharedEnums.ContextType) error
+	DeleteFriendship(ctx context.Context, userA string, userB string) error
+	LeaveGroup(ctx context.Context, userID string, groupID string) error
+	UnlikePage(ctx context.Context, userID string, pageID string) error
 	// 4.3. Real-time Discovery
 	// Lấy danh sách Post đang hot nhất dựa trên InteractedRecentlyRel
 	GetTrendingPosts(ctx context.Context, limit int) ([]string, error)

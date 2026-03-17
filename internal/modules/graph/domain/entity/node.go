@@ -5,7 +5,8 @@ type UserNode struct {
 	CreatedAt    int64     `json:"created_at"`     // Timestamp
 	LastActiveAt int64     `json:"last_active_at"` // Timestamp
 	IsVerified   bool      `json:"is_verified"`
-	Embedding    []float32 `json:"embedding"`  // Vector 128D
+	Bio          string    `json:"bio,omitempty"` // Thông tin giới thiệu bản thân
+	Embedding    []float32 `json:"embedding"`     // Vector 128D
 	// Analytics Fields (Tính toán từ GDS)
 	PageRankScore float64 `json:"page_rank_score,omitempty"` // Độ uy tín
 	CommunityID   int64   `json:"community_id,omitempty"`    // ID cụm cộng đồng
@@ -13,6 +14,7 @@ type UserNode struct {
 
 // TopicNode (Interest Graph)
 type TopicNode struct {
+	TopicID       string  `json:"topic_id"`
 	Name          string  `json:"name"`           // Unique (Hashtag)
 	TrendingScore float64 `json:"trending_score"` // Độ hot hiện tại
 	// Note: Category cũ đã bỏ, thay bằng quan hệ CHILD_OF bên dưới
@@ -27,7 +29,7 @@ type PostNode struct {
 }
 
 // GroupNode (Community)
-type GroupNode struct {	
+type GroupNode struct {
 	GroupID     string `json:"group_id"`
 	Privacy     string `json:"privacy"` // public, closed, secret
 	MemberCount int    `json:"member_count"`

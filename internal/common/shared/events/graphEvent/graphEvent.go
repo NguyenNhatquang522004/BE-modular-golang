@@ -1,5 +1,10 @@
 package graphEvent
 
+import (
+	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/constants"
+	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/sharedEnums"
+)
+
 type ScoredPost struct {
 	PostID string  `json:"post_id"`
 	Score  float64 `json:"score"`
@@ -32,11 +37,54 @@ type CandidateSignals struct {
 	S5_Score float64
 	S6_Score float64
 	S7_Score float64
-	
+
 	// Số lượng bạn chung thực tế (Lấy từ S1 để ưu tiên hiển thị UI)
-	RealMutualFriends int 
-	
+	RealMutualFriends int
+
 	// Số lượng chiến lược (Strategies) mà ứng viên này xuất hiện
 	// Dùng để buff điểm chéo (Cross-Signal Boost)
-	HitCount int 
+	HitCount int
+}
+type TopicLinkInput struct {
+	Name            string  `json:"name"`             // Tên Topic đã được chuẩn hóa (Canonical Name)
+	ConfidenceScore float64 `json:"confidence_score"` // Độ tự tin AI
+}
+type PostNodePayload struct {
+	UserID     string
+	PostID     string                  `json:"post_id"`
+	TargetType sharedEnums.ContextType `json:"target_type"`
+	CreatedAt  int64                   `json:"created_at"`
+	TTL        int64                   `json:"ttl"` // Thời điểm tự hủy (Time-To-Live)
+	Topic      []TopicLinkInput        `json:"topic,omitempty"`
+	EventType  constants.EventType     `json:"event_type"`
+}
+
+type DeletePostNodePayload struct {
+	PostID   string `json:"post_id"`
+	DeleteAt int64  `json:"delete_at"`
+}
+
+type UserNodePayload struct {
+	UserID       string    `json:"user_id"`        // UUID
+	CreatedAt    int64     `json:"created_at"`     // Timestamp
+	LastActiveAt int64     `json:"last_active_at"` // Timestamp
+	IsVerified   bool      `json:"is_verified"`
+	Bio          string    `json:"bio,omitempty"` // Thông tin giới thiệu bản thân
+	Embedding    []float32 `json:"embedding"`     // Vector 128D
+}
+
+type DeleteUserNodePayload struct {
+	UserID   string `json:"user_id"`
+	DeleteAt int64  `json:"delete_at"`
+}
+
+type GroupNodePayload struct {
+	GroupID     string `json:"group_id"`
+	Privacy     string `json:"privacy"` // public, closed, secret
+	MemberCount int    `json:"member_count"`
+}
+
+type DeleteGroupNodePayload struct {
+	GroupID  string `json:"group_id"`
+	DeleteAt int64  `json:"delete_at"`
 }
