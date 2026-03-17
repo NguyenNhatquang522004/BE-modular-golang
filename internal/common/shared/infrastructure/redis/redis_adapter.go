@@ -476,3 +476,59 @@ func (r *RedisAdapter) Unlock(ctx context.Context, eventID string) error {
 	key := fmt.Sprintf("idempotency:event:%s", eventID)
 	return r.client.Del(ctx, key).Err()
 }
+func (r *RedisAdapter) GetViewedPosts(ctx context.Context, userID string) (map[string]bool, error) {
+	// Quy ước đặt tên Key chuẩn mực cho Cache
+	key := fmt.Sprintf("user:%s:viewed_posts", userID)
+
+	// Lấy toàn bộ danh sách PostID từ Redis Set
+	viewedList, err := r.client.SMembers(ctx, key).Result()
+	if err != nil {
+		if err == redis.Nil {
+			// Không có lỗi, chỉ là User này mới tạo, chưa xem bài nào
+			return make(map[string]bool), nil 
+		}
+		return nil, fmt.Errorf("failed to get viewed posts from redis: %w", err)
+	}
+
+	// Chuyển mảng []string thành map[string]bool để Go tra cứu O(1)
+	viewedMap := make(map[string]bool, len(viewedList))
+	for _, postID := range viewedList {
+		viewedMap[postID] = true
+	}
+
+	return viewedMap, nil
+}
+
+// MarkPostAsViewed lưu danh sách các bài viết User vừa xem vào Redis.
+// Hàm này thường được gọi ngầm (Goroutine/Background Job) khi Mobile App báo cáo User vừa lướt qua bài nào.
+func (r *RedisAdapter) MarkPostsAsViewed(ctx context.Context, userID string, postIDs ...string) error {
+	if len(postIDs) == 0 {
+		return nil
+	}
+
+	key := fmt.Sprintf("user:%s:viewed_posts", userID)
+
+	// Ép kiểu mảng string sang mảng interface{} (any) để truyền vào SAdd
+	members := make([]any, len(postIDs))
+	for i, id := range postIDs {
+		members[i] = id
+	}
+
+	// [100% BEST PRACTICE]: Sử dụng Pipeline để gộp lệnh SADD và EXPIRE vào chung 1 Request
+	// Giúp giảm RTT (Round Trip Time) đi 50%.
+	pipe := r.client.Pipeline()
+	
+	// Thêm các ID bài viết vào Set
+	pipe.SAdd(ctx, key, members...)
+	
+	// Cập nhật lại thời gian sống (TTL) của Key này. 
+	// Thường News Feed chỉ cần nhớ lịch sử trong 3-7 ngày để tiết kiệm RAM cho Redis.
+	pipe.Expire(ctx, key, 7*24*time.Hour) 
+	
+	_, err := pipe.Exec(ctx)
+	if err != nil {
+		return fmt.Errorf("failed to mark posts as viewed in redis: %w", err)
+	}
+
+	return nil
+}

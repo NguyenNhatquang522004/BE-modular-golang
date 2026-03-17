@@ -3,6 +3,7 @@ package neo4j
 import (
 	"context"
 
+	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/events/graphEvent"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/graph/domain/entity"
 )
 
@@ -70,16 +71,22 @@ type IGraphRepository interface {
 	// Tích lũy sở thích
 
 	IncrementTopicInterest(ctx context.Context, userID string, limitK int) error
-
+	CreateSharePost(ctx context.Context, userID string, newSharePostID string, originalPostID string, createdAt int64) error
 	// ==================================================
 	// NHÓM 4: TRUY VẤN DỮ LIỆU (READ - Dành cho REST/gRPC API)
 	// ==================================================
 
 	// 4.1. News Feed & Recommendation
 	// Lấy Bảng tin cá nhân hóa (Mix giữa bạn bè, group, page và sở thích)
+	GetSocialFeed(ctx context.Context, userID string, limit int) ([]graphEvent.ScoredPost, error)
+	GetInterestFeed(ctx context.Context, userID string, limit int) ([]graphEvent.ScoredPost, error)
+	GetSemanticDiscoveryFeed(ctx context.Context, userID string, limit int) ([]graphEvent.ScoredPost, error)
+	GetGlobalTrendingFeed(ctx context.Context, userID string, limit int) ([]graphEvent.ScoredPost, error) // 4.2. People You May Know (PYMK)
+	GetLocationFeed(ctx context.Context, userID string, limit int) ([]graphEvent.ScoredPost, error)
+	GetContactSyncFeed(ctx context.Context, userID string, limit int) ([]graphEvent.ScoredPost, error)
+	GetPeopleYouMayKnow(ctx context.Context, userID string, limit int) ([]graphEvent.SuggestedUser, error)
 	GetPersonalizedNewsFeed(ctx context.Context, userID string, limit int, offset int) ([]string, error)
 
-	// 4.2. People You May Know (PYMK)
 	// Gợi ý bạn bè dựa trên "Bạn chung" (Triadic Closure) và Danh bạ
 	GetSuggestedFriends(ctx context.Context, userID string, limit int) ([]string, error)
 

@@ -91,6 +91,8 @@ type IRedis interface {
 	Lock(ctx context.Context, eventID string) (constants.ProcessStatus, bool, error) // Hàm khóa để đảm bảo chỉ 1 worker xử lý 1 eventID nhất định (Distributed Lock)
 	Unlock(ctx context.Context, eventID string) error                                // Hàm mở khóa sau khi xử lý xong
 	MarkCompleted(ctx context.Context, eventID string) error                         // Hàm đánh dấu event đã xử lý xong (để các worker khác biết mà không xử lý lại)
+	GetViewedPosts(ctx context.Context, userID string) (map[string]bool, error)
+	MarkPostsAsViewed(ctx context.Context, userID string, postIDs ...string) error
 }
 type Z struct {
 	Score  float64

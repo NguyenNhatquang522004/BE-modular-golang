@@ -71,17 +71,31 @@ type InteractedRecentlyRel struct {
 	Weight    float64 `json:"weight"` // Trọng số tức thời
 }
 
+// RepostsRel (Post -> Post)
+// Dùng khi User A share bài của User B, Page, hoặc Group
+type RepostsRel struct {
+	CreatedAt int64 `json:"created_at"`
+}
+
+// SharedViaRel (Post -> Post) - [MỚI BỔ SUNG]
+// Mũi tên trỏ về Bài trung gian (Parent Post) mà User đã bấm nút Share từ đó.
+// Dùng để ghi công lan truyền (Spreader) và vẽ cây Viral (Viral Tree).
+type SharedViaRel struct {
+	CreatedAt int64 `json:"created_at"`
+}
+
 // --- NHÓM SỞ THÍCH & NỘI DUNG ---
 
 // InterestedInRel (User -> Topic)
 type InterestedInRel struct {
-	Score         float64 `json:"score"` // 0.0 - 1.0
-	LastEngagedAt int64   `json:"last_engaged_at"`
+	Score          float64 `json:"score"`            // Long-term Interest (0.0 - 1.0, tính bằng EMA)
+	ShortTermScore float64 `json:"short_term_score"` // Short-term / Trending Interest (Tính bằng Sliding Window)
+	LastEngagedAt  int64   `json:"last_engaged_at"`
+}
+type RelatedToRel struct {
+	SimilarityScore float64 `json:"similarity_score"` // Cosine Similarity (VD: 0.85)
 }
 
-type RelatedToRel struct {
-    SimilarityScore float64 `json:"similarity_score"` // Cosine Similarity (VD: 0.85)
-}
 // MemberOfRel (User -> Group)
 type MemberOfRel struct {
 	Role     string `json:"role"` // admin, member
