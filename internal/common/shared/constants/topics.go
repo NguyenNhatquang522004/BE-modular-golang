@@ -101,11 +101,15 @@ const (
 	TopicDailyMetricsPage TopicName = "business.daily_metrics_page.events"
 
 	// graph
-	TopicGraphUser  TopicName = "graph.user.events"
-	TopicGraphPost  TopicName = "graph.post.events"
-	TopicGraphTopic TopicName = "graph.topic.events"
-	TopicGraphGroup TopicName = "graph.group.events"
-	TopicGraphPage  TopicName = "graph.page.events"
+	TopicGraphUser               TopicName = "graph.user.events"
+	TopicGraphPost               TopicName = "graph.post.events"
+	TopicGraphTopic              TopicName = "graph.topic.events"
+	TopicGraphGroup              TopicName = "graph.group.events"
+	TopicGraphPage               TopicName = "graph.page.events"
+	TopicGraphLocation           TopicName = "graph.location.events"
+	TopicGraphInteractions       TopicName = "graph.interactions.events"
+	TopicGraphInteractionsRecent TopicName = "graph.interactions_recent.events"
+	TopicGraphSharedPost         TopicName = "graph.shared_post.events"
 )
 
 type TopicConfig struct {

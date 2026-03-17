@@ -88,3 +88,43 @@ type DeleteGroupNodePayload struct {
 	GroupID  string `json:"group_id"`
 	DeleteAt int64  `json:"delete_at"`
 }
+
+type PageNodePayload struct {
+	PageID     string  `json:"page_id"`
+	CategoryID string  `json:"category_id"`
+	Rating     float64 `json:"rating"`
+}
+
+type DeletePageNodePayload struct {
+	PageID   string `json:"page_id"`
+	DeleteAt int64  `json:"delete_at"`
+}
+type LocationNodePayload struct {
+	CityID      string `json:"city_id"`
+	CountryCode string `json:"country_code"`
+	GeoHash     string `json:"geo_hash"`
+}
+type DeleteLocationNodePayload struct {
+	CityID   string `json:"city_id"`
+	DeleteAt int64  `json:"delete_at"`
+}
+type InteractionRecentPayload struct {
+	UserID     string                     `json:"user_id"`
+	PostID     string                     `json:"post_id"`
+	TargetType sharedEnums.ContextType    `json:"target_type"`
+	Timestamp  int64                      `json:"timestamp"`
+	Type       sharedEnums.ReactionTarget `json:"type"`   // view, like, share
+	Weight     float64                    `json:"weight"` // Trọng số tức thời
+}
+type InteractionPayload struct {
+	UserID     string                  `json:"user_id"`
+	TargetID   string                  `json:"target_id"`
+	TargetType sharedEnums.ContextType `json:"target_type"`
+	Like       int                     `json:"like"`
+	Comment    int                     `json:"comment"`
+	Share      int                     `json:"share"`
+	Message    int                     `json:"message"`
+	View       int                     `json:"view"`
+	CreatedAt  int64                   `json:"created_at"`
+	Flag       bool                    `json:"flag"` // true = cộng, false = trừ
+}

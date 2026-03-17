@@ -421,7 +421,7 @@ func (r *GraphRepository) LinkPostToTopicByID(ctx context.Context, postID string
 		ON CREATE SET r.confidence_score = $confidence_score
 		ON MATCH SET r.confidence_score = $confidence_score
 	`
-	
+
 	params := map[string]any{
 		"post_id":          postID,
 		"topic_id":         topicID, // Truyền ID vào map tham số
@@ -664,21 +664,40 @@ func (r *GraphRepository) SyncPhoneContact(ctx context.Context, userID string, p
 }
 
 // Tương tác ngắn hạn (Dành cho Trending)
+// RecordRecentInteraction ghi nhận tương tác ngắn hạn phục vụ thuật toán Trending.
+// Đạt chuẩn 100%: Hỗ trợ cộng dồn tương tác (View + Like + Comment) và tự động dọn rác khi rớt điểm.
 func (r *GraphRepository) RecordRecentInteraction(ctx context.Context, userID string, postID string, interactionType string, weight float64, timestamp int64) error {
 	session := r.driver.NewSession(ctx, neo4j.SessionConfig{AccessMode: neo4j.AccessModeWrite})
 	defer session.Close(ctx)
 
+	// LOGIC ĐỈNH CAO CỦA NEO4J:
+	// 1. Nếu chưa có tương tác -> TẠO MỚI (ON CREATE)
+	// 2. Nếu đã có tương tác (VD: Đã View, giờ bấm Like) -> CỘNG DỒN TRỌNG SỐ (ON MATCH)
+	// 3. Nếu gỡ tương tác (VD: Bỏ Like, truyền weight = -3.0) -> TRỪ TRỌNG SỐ
+	// 4. Nếu tổng weight <= 0 (User bỏ hết Like, xóa hết Comment) -> TỰ ĐỘNG XÓA CẠNH (DELETE r)
 	cypher := `
 		MATCH (u:User {user_id: $user_id}), (p:Post {post_id: $post_id})
 		MERGE (u)-[r:INTERACTED_RECENTLY]->(p)
-		ON CREATE SET r.type = $interaction_type, r.weight = $weight, r.timestamp = $timestamp
-		ON MATCH SET r.type = $interaction_type, r.weight = $weight, r.timestamp = $timestamp
+		
+		ON CREATE SET 
+			r.type = $interaction_type, 
+			r.weight = $weight, 
+			r.timestamp = $timestamp
+			
+		ON MATCH SET 
+			r.type = $interaction_type, 
+			r.weight = r.weight + $weight, 
+			r.timestamp = $timestamp
+		
+		WITH r
+		WHERE r.weight <= 0
+		DELETE r
 	`
 	params := map[string]any{
 		"user_id":          userID,
 		"post_id":          postID,
-		"interaction_type": interactionType,
-		"weight":           weight,
+		"interaction_type": interactionType, // Chỉ lưu lại type của hành động cuối cùng để dễ debug
+		"weight":           weight,          // Truyền SỐ DƯƠNG nếu tương tác, SỐ ÂM nếu gỡ tương tác
 		"timestamp":        timestamp,
 	}
 
@@ -725,7 +744,6 @@ func (r *GraphRepository) IncrementInteraction(
 	targetID string,
 	targetType sharedEnums.ContextType,
 	like, comment, share, message, view int,
-	weight float64, // Bạn có thể bỏ qua nếu muốn dùng weight cố định bên dưới
 	flag bool,
 ) (float64, error) { // Trả về AffinityScore mới sau khi cập nhật
 	session := r.driver.NewSession(ctx, neo4j.SessionConfig{AccessMode: neo4j.AccessModeWrite})
@@ -982,39 +1000,73 @@ func (r *GraphRepository) UpdateInterestGraph(ctx context.Context, userID string
 }
 
 // Tích lũy sở thích
+// IncrementTopicInterest tích lũy điểm sở thích ngắn hạn của User.
+// Đạt chuẩn 100%: Gom chung cả Tương tác (Like/View), Đăng bài (Post), và Chia sẻ (Share).
+// Tự động xuyên thấu bài Share để tìm Topic gốc, áp dụng Time Decay.
 func (r *GraphRepository) IncrementTopicInterest(ctx context.Context, userID string, limitK int) error {
 	session := r.driver.NewSession(ctx, neo4j.SessionConfig{AccessMode: neo4j.AccessModeWrite})
 	defer session.Close(ctx)
 
 	// lambda: Hệ số suy giảm thời gian.
-	// Ví dụ: 0.000008 làm cho bài viết cách đây 1 ngày bị giảm khoảng 50% giá trị.
 	lambda := 0.000008
 
+	// Trọng số khổng lồ dành cho việc tự Đăng bài hoặc Share bài (Ví dụ: 15.0 điểm)
+	// Bạn có thể chỉnh sửa tùy theo logic nghiệp vụ.
+	authoredWeight := 15.0
+
 	cypher := `
-		MATCH (u:User {user_id: $userID})-[r_recent:INTERACTED_RECENTLY]->(p:Post)
+		MATCH (u:User {user_id: $userID})
 		
-		// 1. CẮT KHUNG CỬA SỔ (SLIDING WINDOW)
-		// Lấy Top K bài viết tương tác gần nhất của User này
-		WITH u, r_recent, p
-		ORDER BY r_recent.timestamp DESC
+		// ==========================================
+		// 1. GOM CHUNG HOẠT ĐỘNG (INTERACTION + CREATION/SHARE)
+		// ==========================================
+		// Dùng CALL { UNION ALL } để gom 2 luồng sự kiện lại thành 1 dòng thời gian (Timeline)
+		CALL {
+			WITH u
+			// Luồng 1: Tương tác ngắn hạn (View, Like, Comment...)
+			MATCH (u)-[r:INTERACTED_RECENTLY]->(p:Post)
+			RETURN p, r.weight AS weight, r.timestamp AS activity_time
+			
+			UNION ALL
+			
+			WITH u
+			// Luồng 2: Đăng bài hoặc Share bài (Đều dùng cạnh AUTHORED)
+			MATCH (u)-[auth:AUTHORED]->(p:Post)
+			RETURN p, $authoredWeight AS weight, auth.created_at AS activity_time
+		}
+		
+		// ==========================================
+		// 2. CẮT KHUNG CỬA SỔ (SLIDING WINDOW)
+		// ==========================================
+		// Lấy Top K hoạt động mới nhất của User này
+		WITH u, p, weight, activity_time
+		ORDER BY activity_time DESC
 		LIMIT $limitK
+
+		// ==========================================
+		// 3. XUYÊN THẤU SHARE & TÌM TOPIC
+		// ==========================================
+		// Dùng *0..1 để bao phủ 2 trường hợp:
+		// - Bài đăng gốc (0 bước): p chính là basePost -> Tìm Topic
+		// - Bài Share (1 bước): p nối với basePost qua REPOSTS -> Tìm Topic từ basePost
 		MATCH (p)-[:REPOSTS*0..1]->(basePost:Post)-[ht:HAS_TOPIC]->(t:Topic)
 
-		// 2. LẤY TOPIC TỪ CÁC BÀI VIẾT NÀY
-		MATCH (p)-[ht:HAS_TOPIC]->(t:Topic)
-
-		// 3. TÍNH TOÁN ĐIỂM SỐ BẰNG TOÁN HỌC (TIME DECAY)
-		// Tính khoảng cách thời gian (Delta T) tính bằng giây
-		WITH u, t, r_recent, ht, ($now - r_recent.timestamp) AS deltaT
+		// ==========================================
+		// 4. TÍNH TOÁN TIME DECAY (PHÂN RÃ THỜI GIAN)
+		// ==========================================
+		WITH u, t, weight, coalesce(ht.confidence_score, 0.5) AS confScore, ($now - activity_time) AS deltaT
 		
-		// Áp dụng công thức: Trọng số hành động * Độ tự tin AI * Phân rã thời gian
-		WITH u, t, (r_recent.weight * ht.confidence_score * exp(-$lambda * deltaT)) AS interactionScore
+		// Bọc lớp khiên an toàn: Đảm bảo deltaT không bao giờ âm do lệch múi giờ server
+		WITH u, t, weight, confScore, CASE WHEN deltaT < 0 THEN 0 ELSE deltaT END AS deltaT
 		
-		// 4. GOM NHÓM (AGGREGATION) VÀ TÍNH TỔNG ĐIỂM CHO TỪNG TOPIC
+		// Công thức: Trọng số * Độ tự tin AI * Lực hấp dẫn thời gian
+		WITH u, t, (weight * confScore * exp(-$lambda * deltaT)) AS interactionScore
+		
+		// ==========================================
+		// 5. GOM NHÓM (AGGREGATION) VÀ CHUẨN HÓA
+		// ==========================================
 		WITH u, t, SUM(interactionScore) AS totalTopicScore
 		
-		// 5. CHUẨN HÓA VÀ LƯU TRỮ (Ghi đè hoặc tạo mới cạnh INTERESTED_IN)
-		// Điểm này thể hiện độ "cuồng" của user với topic đó trong thời gian gần đây
 		MERGE (u)-[rel:INTERESTED_IN]->(t)
 		ON CREATE SET rel.score = 0.0
 		SET rel.short_term_score = totalTopicScore,
@@ -1022,10 +1074,11 @@ func (r *GraphRepository) IncrementTopicInterest(ctx context.Context, userID str
 	`
 
 	params := map[string]any{
-		"userID": userID,
-		"limitK": limitK, // Ví dụ: 50
-		"lambda": lambda,
-		"now":    time.Now().Unix(),
+		"userID":         userID,
+		"limitK":         limitK, // Ví dụ: 50
+		"lambda":         lambda,
+		"authoredWeight": authoredWeight, // Truyền trọng số Đăng/Share từ Go
+		"now":            time.Now().Unix(),
 	}
 
 	_, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {

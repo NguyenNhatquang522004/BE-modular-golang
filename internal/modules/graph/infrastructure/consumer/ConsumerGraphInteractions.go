@@ -14,27 +14,25 @@ import (
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/infrastructure/kafka"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/utils"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/graph/domain/IRepository/neo4j"
-	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/graph/domain/entity"
 )
 
-type ConsumerGraphPage struct {
+type ConsumerGraphInteractions struct {
 	events    events.EventBus
 	pool      IRepositoryShare.IWorkerPool
 	redisRepo IRepositoryShare.IRedis
 	graphRepo neo4j.IGraphRepository
 }
 
-func NewConsumerGraphPage(events events.EventBus, pool IRepositoryShare.IWorkerPool, redisRepo IRepositoryShare.IRedis, graphRepo neo4j.IGraphRepository) *ConsumerGraphPage {
-	return &ConsumerGraphPage{
+func NewConsumerGraphInteractions(events events.EventBus, pool IRepositoryShare.IWorkerPool, redisRepo IRepositoryShare.IRedis, graphRepo neo4j.IGraphRepository) *ConsumerGraphInteractions {
+	return &ConsumerGraphInteractions{
 		events:    events,
 		pool:      pool,
 		redisRepo: redisRepo,
 		graphRepo: graphRepo,
 	}
 }
-
-func (c *ConsumerGraphPage) ConsumerGraphPage(ctx context.Context) error {
-	err := c.events.SubscribeBatch(ctx, constants.TopicGraphPage.String(), 100, time.Duration(5)*time.Minute, func(ctx context.Context, events []events.IntegrationEvent) error {
+func (c *ConsumerGraphInteractions) ConsumerGraphInteractions(ctx context.Context) error {
+	err := c.events.SubscribeBatch(ctx, constants.TopicGraphInteractions.String(), 100, time.Duration(5)*time.Minute, func(ctx context.Context, events []events.IntegrationEvent) error {
 		var wg sync.WaitGroup
 		errchan := make(chan error, len(events))
 		for _, event := range events {
@@ -95,56 +93,48 @@ func (c *ConsumerGraphPage) ConsumerGraphPage(ctx context.Context) error {
 	}
 	return nil
 }
-func (c *ConsumerGraphPage) handleCreatedEvent(ctx context.Context, event events.IntegrationEvent) error {
-	data, err := utils.ParsePayload[graphEvent.PageNodePayload](event.Payload)
+func (c *ConsumerGraphInteractions) handleCreatedEvent(ctx context.Context, event events.IntegrationEvent) error {
+	data, err := utils.ParsePayload[graphEvent.InteractionPayload](event.Payload)
 	if err != nil {
-		return kafka.NewNonRetryableError(fmt.Errorf(" failed to parse event payload: %w", err))
+		return kafka.NewNonRetryableError(fmt.Errorf("failed to parse payload for event %s: %w", event.ID, err))
 	}
 	if data == nil {
-		return kafka.NewNonRetryableError(fmt.Errorf("payload is nil"))
+		return kafka.NewNonRetryableError(fmt.Errorf("payload is nil for event %s", event.ID))
 	}
-	err = c.graphRepo.UpsertPageNode(ctx, &entity.PageNode{
-		PageID:     data.PageID,
-		CategoryID: data.CategoryID,
-		Rating:     data.Rating,
-	})
+	err = c.graphRepo.IncrementInteraction(ctx, data.UserID, data.TargetID, data.TargetType, data.Like, data.Comment, data.Share, data.Message, data.View, data.Flag)
 	if err != nil {
-		return fmt.Errorf("failed to upsert page node: %w", err)
+		return fmt.Errorf("failed to increment interaction for event %s: %w", event.ID, err)
 	}
 	return nil
 }
-func (c *ConsumerGraphPage) handleUpdatedEvent(ctx context.Context, event events.IntegrationEvent) error {
-	data, err := utils.ParsePayload[graphEvent.PageNodePayload](event.Payload)
+func (c *ConsumerGraphInteractions) handleUpdatedEvent(ctx context.Context, event events.IntegrationEvent) error {
+	data, err := utils.ParsePayload[graphEvent.InteractionPayload](event.Payload)
 	if err != nil {
-		return kafka.NewNonRetryableError(fmt.Errorf(" failed to parse event payload: %w", err))
+		return kafka.NewNonRetryableError(fmt.Errorf("failed to parse payload for event %s: %w", event.ID, err))
 	}
 	if data == nil {
-		return kafka.NewNonRetryableError(fmt.Errorf("payload is nil"))
+		return kafka.NewNonRetryableError(fmt.Errorf("payload is nil for event %s", event.ID))
 	}
-	err = c.graphRepo.UpsertPageNode(ctx, &entity.PageNode{
-		PageID:     data.PageID,
-		CategoryID: data.CategoryID,
-		Rating:     data.Rating,
-	})
+	err = c.graphRepo.IncrementInteraction(ctx, data.UserID, data.TargetID, data.TargetType, data.Like, data.Comment, data.Share, data.Message, data.View, data.Flag)
 	if err != nil {
-		return fmt.Errorf("failed to upsert page node: %w", err)
+		return fmt.Errorf("failed to increment interaction for event %s: %w", event.ID, err)
 	}
 	return nil
 }
-func (c *ConsumerGraphPage) handleDeletedEvent(ctx context.Context, event events.IntegrationEvent) error {
-	data, err := utils.ParsePayload[graphEvent.DeletePageNodePayload](event.Payload)
+func (c *ConsumerGraphInteractions) handleDeletedEvent(ctx context.Context, event events.IntegrationEvent) error {
+	data, err := utils.ParsePayload[graphEvent.InteractionPayload](event.Payload)
 	if err != nil {
-		return kafka.NewNonRetryableError(fmt.Errorf("failed to parse event payload: %w", err))
+		return kafka.NewNonRetryableError(fmt.Errorf("failed to parse payload for event %s: %w", event.ID, err))
 	}
 	if data == nil {
-		return kafka.NewNonRetryableError(fmt.Errorf("payload is nil"))
+		return kafka.NewNonRetryableError(fmt.Errorf("payload is nil for event %s", event.ID))
 	}
-	err = c.graphRepo.DeletePageNode(ctx, data.PageID)
+	err = c.graphRepo.IncrementInteraction(ctx, data.UserID, data.TargetID, data.TargetType, data.Like, data.Comment, data.Share, data.Message, data.View, data.Flag)
 	if err != nil {
-		return fmt.Errorf("failed to delete page node: %w", err)
+		return fmt.Errorf("failed to increment interaction for event %s: %w", event.ID, err)
 	}
 	return nil
 }
-func (c *ConsumerGraphPage) ConsumerFailedGraphPage(ctx context.Context) error {
+func (c *ConsumerGraphInteractions) ConsumerFailedGraphInteractions(ctx context.Context) error {
 	return nil
 }

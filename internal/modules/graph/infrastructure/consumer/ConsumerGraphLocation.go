@@ -17,24 +17,19 @@ import (
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/graph/domain/entity"
 )
 
-type ConsumerGraphPage struct {
+type GraphLocationConsumer struct {
 	events    events.EventBus
 	pool      IRepositoryShare.IWorkerPool
 	redisRepo IRepositoryShare.IRedis
 	graphRepo neo4j.IGraphRepository
 }
 
-func NewConsumerGraphPage(events events.EventBus, pool IRepositoryShare.IWorkerPool, redisRepo IRepositoryShare.IRedis, graphRepo neo4j.IGraphRepository) *ConsumerGraphPage {
-	return &ConsumerGraphPage{
-		events:    events,
-		pool:      pool,
-		redisRepo: redisRepo,
-		graphRepo: graphRepo,
-	}
+func NewGraphLocationConsumer() *GraphLocationConsumer {
+	return &GraphLocationConsumer{}
 }
 
-func (c *ConsumerGraphPage) ConsumerGraphPage(ctx context.Context) error {
-	err := c.events.SubscribeBatch(ctx, constants.TopicGraphPage.String(), 100, time.Duration(5)*time.Minute, func(ctx context.Context, events []events.IntegrationEvent) error {
+func (c *GraphLocationConsumer) ConsumerGraphLocation(ctx context.Context) error {
+	err := c.events.SubscribeBatch(ctx, constants.TopicGraphLocation.String(), 100, time.Duration(5)*time.Minute, func(ctx context.Context, events []events.IntegrationEvent) error {
 		var wg sync.WaitGroup
 		errchan := make(chan error, len(events))
 		for _, event := range events {
@@ -95,56 +90,50 @@ func (c *ConsumerGraphPage) ConsumerGraphPage(ctx context.Context) error {
 	}
 	return nil
 }
-func (c *ConsumerGraphPage) handleCreatedEvent(ctx context.Context, event events.IntegrationEvent) error {
-	data, err := utils.ParsePayload[graphEvent.PageNodePayload](event.Payload)
+func (c *GraphLocationConsumer) handleCreatedEvent(ctx context.Context, event events.IntegrationEvent) error {
+	data, err := utils.ParsePayload[graphEvent.LocationNodePayload](event.Payload)
 	if err != nil {
-		return kafka.NewNonRetryableError(fmt.Errorf(" failed to parse event payload: %w", err))
+		return kafka.NewNonRetryableError(fmt.Errorf("failed to parse payload: %w", err))
 	}
 	if data == nil {
 		return kafka.NewNonRetryableError(fmt.Errorf("payload is nil"))
 	}
-	err = c.graphRepo.UpsertPageNode(ctx, &entity.PageNode{
-		PageID:     data.PageID,
-		CategoryID: data.CategoryID,
-		Rating:     data.Rating,
+	err = c.graphRepo.UpsertLocationNode(ctx, &entity.LocationNode{
+		CityID:      data.CityID,
+		CountryCode: data.CountryCode,
+		GeoHash:     data.GeoHash,
 	})
-	if err != nil {
-		return fmt.Errorf("failed to upsert page node: %w", err)
-	}
 	return nil
 }
-func (c *ConsumerGraphPage) handleUpdatedEvent(ctx context.Context, event events.IntegrationEvent) error {
-	data, err := utils.ParsePayload[graphEvent.PageNodePayload](event.Payload)
+func (c *GraphLocationConsumer) handleUpdatedEvent(ctx context.Context, event events.IntegrationEvent) error {
+	data, err := utils.ParsePayload[graphEvent.LocationNodePayload](event.Payload)
 	if err != nil {
-		return kafka.NewNonRetryableError(fmt.Errorf(" failed to parse event payload: %w", err))
+		return kafka.NewNonRetryableError(fmt.Errorf("failed to parse payload: %w", err))
 	}
 	if data == nil {
 		return kafka.NewNonRetryableError(fmt.Errorf("payload is nil"))
 	}
-	err = c.graphRepo.UpsertPageNode(ctx, &entity.PageNode{
-		PageID:     data.PageID,
-		CategoryID: data.CategoryID,
-		Rating:     data.Rating,
+	err = c.graphRepo.UpsertLocationNode(ctx, &entity.LocationNode{
+		CityID:      data.CityID,
+		CountryCode: data.CountryCode,
+		GeoHash:     data.GeoHash,
 	})
-	if err != nil {
-		return fmt.Errorf("failed to upsert page node: %w", err)
-	}
 	return nil
 }
-func (c *ConsumerGraphPage) handleDeletedEvent(ctx context.Context, event events.IntegrationEvent) error {
-	data, err := utils.ParsePayload[graphEvent.DeletePageNodePayload](event.Payload)
+func (c *GraphLocationConsumer) handleDeletedEvent(ctx context.Context, event events.IntegrationEvent) error {
+	data, err := utils.ParsePayload[graphEvent.DeleteLocationNodePayload](event.Payload)
 	if err != nil {
-		return kafka.NewNonRetryableError(fmt.Errorf("failed to parse event payload: %w", err))
+		return kafka.NewNonRetryableError(fmt.Errorf("failed to parse payload: %w", err))
 	}
 	if data == nil {
 		return kafka.NewNonRetryableError(fmt.Errorf("payload is nil"))
 	}
-	err = c.graphRepo.DeletePageNode(ctx, data.PageID)
+	err = c.graphRepo.DeleteLocationNode(ctx, data.CityID)
 	if err != nil {
-		return fmt.Errorf("failed to delete page node: %w", err)
+		return fmt.Errorf("failed to delete location node: %w", err)
 	}
 	return nil
 }
-func (c *ConsumerGraphPage) ConsumerFailedGraphPage(ctx context.Context) error {
+func (c *GraphLocationConsumer) ConsumerFailedGraphLocation(ctx context.Context) error {
 	return nil
 }

@@ -58,9 +58,8 @@ type IGraphRepository interface {
 		ctx context.Context,
 		userID string,
 		targetID string,
-		targetType string,
+		targetType sharedEnums.ContextType,
 		like, comment, share, message, view int, // Số lượng thay đổi (thường là 1)
-		weight float64, // Trọng số thay đổi (có thể dương hoặc âm)
 		flag bool, // true = cộng, false = trừ
 	) error
 	IncrementInteractionByPost(

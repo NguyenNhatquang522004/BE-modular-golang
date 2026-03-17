@@ -140,6 +140,10 @@ func (c *ConsumerGraphPost) handleCreatedEvent(ctx context.Context, event events
 			return fmt.Errorf("failed to link page to post: %w", err)
 		}
 	case sharedEnums.ContextTypeUserWall:
+		err = c.graphRepo.IncrementTopicInterest(ctx, data.UserID, 50) // Cập nhật sở thích của người dùng dựa trên tương tác gần đây
+		if err != nil {
+			return fmt.Errorf("failed to increment topic interest for event %s: %w", event.ID, err)
+		}
 	default:
 		return fmt.Errorf("unknown target type: %s", data.TargetType.String())
 	}
@@ -189,6 +193,10 @@ func (c *ConsumerGraphPost) handleUpdatedEvent(ctx context.Context, event events
 			return fmt.Errorf("failed to link page to post: %w", err)
 		}
 	case sharedEnums.ContextTypeUserWall:
+		err = c.graphRepo.IncrementTopicInterest(ctx, data.UserID, 50) // Cập nhật sở thích của người dùng dựa trên tương tác gần đây
+		if err != nil {
+			return fmt.Errorf("failed to increment topic interest for event %s: %w", event.ID, err)
+		}
 	default:
 		return fmt.Errorf("unknown target type: %s", data.TargetType.String())
 	}
