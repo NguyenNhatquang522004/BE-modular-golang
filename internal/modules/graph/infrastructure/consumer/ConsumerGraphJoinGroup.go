@@ -14,22 +14,25 @@ import (
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/infrastructure/kafka"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/utils"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/graph/domain/IRepository/neo4j"
-	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/graph/domain/entity"
 )
 
-type GraphLocationConsumer struct {
+type ConsumerGraphJoinGroup struct {
 	events    events.EventBus
 	pool      IRepositoryShare.IWorkerPool
 	redisRepo IRepositoryShare.IRedis
 	graphRepo neo4j.IGraphRepository
 }
 
-func NewGraphLocationConsumer() *GraphLocationConsumer {
-	return &GraphLocationConsumer{}
+func NewConsumerGraphJoinGroup(events events.EventBus, pool IRepositoryShare.IWorkerPool, redisRepo IRepositoryShare.IRedis, graphRepo neo4j.IGraphRepository) *ConsumerGraphJoinGroup {
+	return &ConsumerGraphJoinGroup{
+		events:    events,
+		pool:      pool,
+		redisRepo: redisRepo,
+		graphRepo: graphRepo,
+	}
 }
-
-func (c *GraphLocationConsumer) ConsumerGraphLocation(ctx context.Context) error {
-	err := c.events.SubscribeBatch(ctx, constants.TopicGraphLocation.String(), 100, time.Duration(5)*time.Minute, func(ctx context.Context, events []events.IntegrationEvent) error {
+func (c *ConsumerGraphJoinGroup) ConsumerGraphJoinGroup(ctx context.Context) error {
+	err := c.events.SubscribeBatch(ctx, constants.TopicGraphJoinGroup.String(), 100, time.Duration(5)*time.Minute, func(ctx context.Context, events []events.IntegrationEvent) error {
 		var wg sync.WaitGroup
 		errchan := make(chan error, len(events))
 		for _, event := range events {
@@ -90,50 +93,48 @@ func (c *GraphLocationConsumer) ConsumerGraphLocation(ctx context.Context) error
 	}
 	return nil
 }
-func (c *GraphLocationConsumer) handleCreatedEvent(ctx context.Context, event events.IntegrationEvent) error {
-	data, err := utils.ParsePayload[graphEvent.LocationNodePayload](event.Payload)
+func (c *ConsumerGraphJoinGroup) handleCreatedEvent(ctx context.Context, event events.IntegrationEvent) error {
+	data, err := utils.ParsePayload[graphEvent.JoinGroupPayload](event.Payload)
 	if err != nil {
-		return kafka.NewNonRetryableError(fmt.Errorf("failed to parse payload: %w", err))
+		return kafka.NewNonRetryableError(fmt.Errorf(" failed to parse payload for event %s: %w", event.ID, err))
 	}
 	if data == nil {
-		return kafka.NewNonRetryableError(fmt.Errorf("payload is nil"))
+		return kafka.NewNonRetryableError(fmt.Errorf(" payload is nil for event %s", event.ID))
 	}
-	_, _, err = c.graphRepo.UpsertLocationNode(ctx, &entity.LocationNode{
-		CityID:      data.CityID,
-		CountryCode: data.CountryCode,
-		GeoHash:     data.GeoHash,
-	})
-	return nil
-}
-func (c *GraphLocationConsumer) handleUpdatedEvent(ctx context.Context, event events.IntegrationEvent) error {
-	data, err := utils.ParsePayload[graphEvent.LocationNodePayload](event.Payload)
+	err = c.graphRepo.JoinGroup(ctx, data.UserID, data.GroupID, data.Role, data.JoinedAt)
 	if err != nil {
-		return kafka.NewNonRetryableError(fmt.Errorf("failed to parse payload: %w", err))
-	}
-	if data == nil {
-		return kafka.NewNonRetryableError(fmt.Errorf("payload is nil"))
-	}
-	_, _, err = c.graphRepo.UpsertLocationNode(ctx, &entity.LocationNode{
-		CityID:      data.CityID,
-		CountryCode: data.CountryCode,
-		GeoHash:     data.GeoHash,
-	})
-	return nil
-}
-func (c *GraphLocationConsumer) handleDeletedEvent(ctx context.Context, event events.IntegrationEvent) error {
-	data, err := utils.ParsePayload[graphEvent.DeleteLocationNodePayload](event.Payload)
-	if err != nil {
-		return kafka.NewNonRetryableError(fmt.Errorf("failed to parse payload: %w", err))
-	}
-	if data == nil {
-		return kafka.NewNonRetryableError(fmt.Errorf("payload is nil"))
-	}
-	err = c.graphRepo.DeleteLocationNode(ctx, data.CityID)
-	if err != nil {
-		return fmt.Errorf("failed to delete location node: %w", err)
+		return fmt.Errorf("failed to process JoinGroup event %s: %w", event.ID, err)
 	}
 	return nil
 }
-func (c *GraphLocationConsumer) ConsumerFailedGraphLocation(ctx context.Context) error {
+func (c *ConsumerGraphJoinGroup) handleUpdatedEvent(ctx context.Context, event events.IntegrationEvent) error {
+	data, err := utils.ParsePayload[graphEvent.JoinGroupPayload](event.Payload)
+	if err != nil {
+		return kafka.NewNonRetryableError(fmt.Errorf(" failed to parse payload for event %s: %w", event.ID, err))
+	}
+	if data == nil {
+		return kafka.NewNonRetryableError(fmt.Errorf(" payload is nil for event %s", event.ID))
+	}
+	err = c.graphRepo.JoinGroup(ctx, data.UserID, data.GroupID, data.Role, data.JoinedAt)
+	if err != nil {
+		return fmt.Errorf("failed to process JoinGroup event %s: %w", event.ID, err)
+	}
+	return nil
+}
+func (c *ConsumerGraphJoinGroup) handleDeletedEvent(ctx context.Context, event events.IntegrationEvent) error {
+	data, err := utils.ParsePayload[graphEvent.DeleteJoinGroupPayload](event.Payload)
+	if err != nil {
+		return kafka.NewNonRetryableError(fmt.Errorf(" failed to parse payload for event %s: %w", event.ID, err))
+	}
+	if data == nil {
+		return kafka.NewNonRetryableError(fmt.Errorf(" payload is nil for event %s", event.ID))
+	}
+	err = c.graphRepo.LeaveGroup(ctx, data.UserID, data.GroupID)
+	if err != nil {
+		return fmt.Errorf("failed to process JoinGroup event %s: %w", event.ID, err)
+	}
+	return nil
+}
+func (c *ConsumerGraphJoinGroup) ConsumerFailedGraphJoinGroup(ctx context.Context) error {
 	return nil
 }

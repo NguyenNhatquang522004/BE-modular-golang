@@ -14,22 +14,25 @@ import (
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/infrastructure/kafka"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/utils"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/graph/domain/IRepository/neo4j"
-	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/graph/domain/entity"
 )
 
-type GraphLocationConsumer struct {
+type ConsumerGraphFollow struct {
 	events    events.EventBus
 	pool      IRepositoryShare.IWorkerPool
 	redisRepo IRepositoryShare.IRedis
 	graphRepo neo4j.IGraphRepository
 }
 
-func NewGraphLocationConsumer() *GraphLocationConsumer {
-	return &GraphLocationConsumer{}
+func NewConsumerGraphFollow(events events.EventBus, pool IRepositoryShare.IWorkerPool, redisRepo IRepositoryShare.IRedis, graphRepo neo4j.IGraphRepository) *ConsumerGraphFollow {
+	return &ConsumerGraphFollow{
+		events:    events,
+		pool:      pool,
+		redisRepo: redisRepo,
+		graphRepo: graphRepo,
+	}
 }
-
-func (c *GraphLocationConsumer) ConsumerGraphLocation(ctx context.Context) error {
-	err := c.events.SubscribeBatch(ctx, constants.TopicGraphLocation.String(), 100, time.Duration(5)*time.Minute, func(ctx context.Context, events []events.IntegrationEvent) error {
+func (c *ConsumerGraphFollow) ConsumerGraphFollow(ctx context.Context) error {
+	err := c.events.SubscribeBatch(ctx, constants.TopicGraphFollow.String(), 100, time.Duration(5)*time.Minute, func(ctx context.Context, events []events.IntegrationEvent) error {
 		var wg sync.WaitGroup
 		errchan := make(chan error, len(events))
 		for _, event := range events {
@@ -90,50 +93,48 @@ func (c *GraphLocationConsumer) ConsumerGraphLocation(ctx context.Context) error
 	}
 	return nil
 }
-func (c *GraphLocationConsumer) handleCreatedEvent(ctx context.Context, event events.IntegrationEvent) error {
-	data, err := utils.ParsePayload[graphEvent.LocationNodePayload](event.Payload)
+func (c *ConsumerGraphFollow) handleCreatedEvent(ctx context.Context, event events.IntegrationEvent) error {
+	data, err := utils.ParsePayload[graphEvent.FollowPayload](event.Payload)
 	if err != nil {
-		return kafka.NewNonRetryableError(fmt.Errorf("failed to parse payload: %w", err))
+		return kafka.NewNonRetryableError(fmt.Errorf("failed to parse event payload: %w", err))
 	}
 	if data == nil {
 		return kafka.NewNonRetryableError(fmt.Errorf("payload is nil"))
 	}
-	_, _, err = c.graphRepo.UpsertLocationNode(ctx, &entity.LocationNode{
-		CityID:      data.CityID,
-		CountryCode: data.CountryCode,
-		GeoHash:     data.GeoHash,
-	})
+	err = c.graphRepo.CreateFollow(ctx, data.FollowerID, data.TargetID, data.TargetType, data.Since)
+	if err != nil {
+		return fmt.Errorf("failed to create follow in graph database: %w", err)
+	}
 	return nil
 }
-func (c *GraphLocationConsumer) handleUpdatedEvent(ctx context.Context, event events.IntegrationEvent) error {
-	data, err := utils.ParsePayload[graphEvent.LocationNodePayload](event.Payload)
+func (c *ConsumerGraphFollow) handleUpdatedEvent(ctx context.Context, event events.IntegrationEvent) error {
+	data, err := utils.ParsePayload[graphEvent.FollowPayload](event.Payload)
 	if err != nil {
-		return kafka.NewNonRetryableError(fmt.Errorf("failed to parse payload: %w", err))
+		return kafka.NewNonRetryableError(fmt.Errorf("failed to parse event payload: %w", err))
 	}
 	if data == nil {
 		return kafka.NewNonRetryableError(fmt.Errorf("payload is nil"))
 	}
-	_, _, err = c.graphRepo.UpsertLocationNode(ctx, &entity.LocationNode{
-		CityID:      data.CityID,
-		CountryCode: data.CountryCode,
-		GeoHash:     data.GeoHash,
-	})
+	err = c.graphRepo.CreateFollow(ctx, data.FollowerID, data.TargetID, data.TargetType, data.Since)
+	if err != nil {
+		return fmt.Errorf("failed to create follow in graph database: %w", err)
+	}
 	return nil
 }
-func (c *GraphLocationConsumer) handleDeletedEvent(ctx context.Context, event events.IntegrationEvent) error {
-	data, err := utils.ParsePayload[graphEvent.DeleteLocationNodePayload](event.Payload)
+func (c *ConsumerGraphFollow) handleDeletedEvent(ctx context.Context, event events.IntegrationEvent) error {
+	data, err := utils.ParsePayload[graphEvent.FollowPayload](event.Payload)
 	if err != nil {
-		return kafka.NewNonRetryableError(fmt.Errorf("failed to parse payload: %w", err))
+		return kafka.NewNonRetryableError(fmt.Errorf("failed to parse event payload: %w", err))
 	}
 	if data == nil {
 		return kafka.NewNonRetryableError(fmt.Errorf("payload is nil"))
 	}
-	err = c.graphRepo.DeleteLocationNode(ctx, data.CityID)
+	err = c.graphRepo.DeleteFollow(ctx, data.FollowerID, data.TargetID, data.TargetType)
 	if err != nil {
-		return fmt.Errorf("failed to delete location node: %w", err)
+		return fmt.Errorf("failed to delete follow in graph database: %w", err)
 	}
 	return nil
 }
-func (c *GraphLocationConsumer) ConsumerFailedGraphLocation(ctx context.Context) error {
+func (c *ConsumerGraphFollow) ConsumerFailedGraphFollow(ctx context.Context) error {
 	return nil
 }

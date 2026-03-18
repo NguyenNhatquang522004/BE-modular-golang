@@ -14,22 +14,25 @@ import (
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/infrastructure/kafka"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/utils"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/graph/domain/IRepository/neo4j"
-	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/graph/domain/entity"
 )
 
-type GraphLocationConsumer struct {
+type ConsumerGraphFriendShip struct {
 	events    events.EventBus
 	pool      IRepositoryShare.IWorkerPool
 	redisRepo IRepositoryShare.IRedis
 	graphRepo neo4j.IGraphRepository
 }
 
-func NewGraphLocationConsumer() *GraphLocationConsumer {
-	return &GraphLocationConsumer{}
+func NewConsumerGraphFriendShip(events events.EventBus, pool IRepositoryShare.IWorkerPool, redisRepo IRepositoryShare.IRedis, graphRepo neo4j.IGraphRepository) *ConsumerGraphFriendShip {
+	return &ConsumerGraphFriendShip{
+		events:    events,
+		pool:      pool,
+		redisRepo: redisRepo,
+		graphRepo: graphRepo,
+	}
 }
-
-func (c *GraphLocationConsumer) ConsumerGraphLocation(ctx context.Context) error {
-	err := c.events.SubscribeBatch(ctx, constants.TopicGraphLocation.String(), 100, time.Duration(5)*time.Minute, func(ctx context.Context, events []events.IntegrationEvent) error {
+func (c *ConsumerGraphFriendShip) ConsumerGraphFriendShip(ctx context.Context) error {
+	err := c.events.SubscribeBatch(ctx, constants.TopicGraphFriendShip.String(), 100, time.Duration(5)*time.Minute, func(ctx context.Context, events []events.IntegrationEvent) error {
 		var wg sync.WaitGroup
 		errchan := make(chan error, len(events))
 		for _, event := range events {
@@ -90,50 +93,49 @@ func (c *GraphLocationConsumer) ConsumerGraphLocation(ctx context.Context) error
 	}
 	return nil
 }
-func (c *GraphLocationConsumer) handleCreatedEvent(ctx context.Context, event events.IntegrationEvent) error {
-	data, err := utils.ParsePayload[graphEvent.LocationNodePayload](event.Payload)
+func (c *ConsumerGraphFriendShip) handleCreatedEvent(ctx context.Context, event events.IntegrationEvent) error {
+	data, err := utils.ParsePayload[graphEvent.FriendshipPayload](event.Payload)
 	if err != nil {
-		return kafka.NewNonRetryableError(fmt.Errorf("failed to parse payload: %w", err))
+		return kafka.NewNonRetryableError(fmt.Errorf(" failed to parse event payload: %w", err))
 	}
 	if data == nil {
 		return kafka.NewNonRetryableError(fmt.Errorf("payload is nil"))
 	}
-	_, _, err = c.graphRepo.UpsertLocationNode(ctx, &entity.LocationNode{
-		CityID:      data.CityID,
-		CountryCode: data.CountryCode,
-		GeoHash:     data.GeoHash,
-	})
+	err = c.graphRepo.CreateFriendship(ctx, data.UserA, data.UserB, data.FriendshipType, 0, data.Since)
+	if err != nil {
+		return fmt.Errorf("failed to create friendship in graph database: %w", err)
+	}
 	return nil
 }
-func (c *GraphLocationConsumer) handleUpdatedEvent(ctx context.Context, event events.IntegrationEvent) error {
-	data, err := utils.ParsePayload[graphEvent.LocationNodePayload](event.Payload)
+func (c *ConsumerGraphFriendShip) handleUpdatedEvent(ctx context.Context, event events.IntegrationEvent) error {
+	data, err := utils.ParsePayload[graphEvent.FriendshipPayload](event.Payload)
 	if err != nil {
-		return kafka.NewNonRetryableError(fmt.Errorf("failed to parse payload: %w", err))
+		return kafka.NewNonRetryableError(fmt.Errorf(" failed to parse event payload: %w", err))
 	}
 	if data == nil {
 		return kafka.NewNonRetryableError(fmt.Errorf("payload is nil"))
 	}
-	_, _, err = c.graphRepo.UpsertLocationNode(ctx, &entity.LocationNode{
-		CityID:      data.CityID,
-		CountryCode: data.CountryCode,
-		GeoHash:     data.GeoHash,
-	})
+	err = c.graphRepo.CreateFriendship(ctx, data.UserA, data.UserB, data.FriendshipType, 0, data.Since)
+	if err != nil {
+		return fmt.Errorf("failed to create friendship in graph database: %w", err)
+	}
 	return nil
 }
-func (c *GraphLocationConsumer) handleDeletedEvent(ctx context.Context, event events.IntegrationEvent) error {
-	data, err := utils.ParsePayload[graphEvent.DeleteLocationNodePayload](event.Payload)
+func (c *ConsumerGraphFriendShip) handleDeletedEvent(ctx context.Context, event events.IntegrationEvent) error {
+	data, err := utils.ParsePayload[graphEvent.DeleteFriendshipPayload](event.Payload)
 	if err != nil {
-		return kafka.NewNonRetryableError(fmt.Errorf("failed to parse payload: %w", err))
+		return kafka.NewNonRetryableError(fmt.Errorf(" failed to parse event payload: %w", err))
 	}
 	if data == nil {
 		return kafka.NewNonRetryableError(fmt.Errorf("payload is nil"))
 	}
-	err = c.graphRepo.DeleteLocationNode(ctx, data.CityID)
+	err = c.graphRepo.DeleteFriendship(ctx, data.UserA, data.UserB)
 	if err != nil {
-		return fmt.Errorf("failed to delete location node: %w", err)
+		return fmt.Errorf("failed to delete friendship in graph database: %w", err)
 	}
 	return nil
 }
-func (c *GraphLocationConsumer) ConsumerFailedGraphLocation(ctx context.Context) error {
+func (c *ConsumerGraphFriendShip) ConsumerFailedGraphFriendShip(ctx context.Context) error {
+
 	return nil
 }

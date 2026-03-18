@@ -71,6 +71,10 @@ type UserNodePayload struct {
 	IsVerified   bool      `json:"is_verified"`
 	Bio          string    `json:"bio,omitempty"` // Thông tin giới thiệu bản thân
 	Embedding    []float32 `json:"embedding"`     // Vector 128D
+	PhoneContact string    `json:"phone_contact,omitempty"`
+	City         string    `json:"city,omitempty"`
+	Country      string    `json:"country,omitempty"`
+	GeoHash      string    `json:"geo_hash,omitempty"`
 }
 
 type DeleteUserNodePayload struct {
@@ -127,4 +131,70 @@ type InteractionPayload struct {
 	View       int                     `json:"view"`
 	CreatedAt  int64                   `json:"created_at"`
 	Flag       bool                    `json:"flag"` // true = cộng, false = trừ
+}
+
+type SharedPostPayload struct {
+	UserID         string                  `json:"user_id"`
+	NewSharePostID string                  `json:"new_share_post_id"`
+	OriginalPostID string                  `json:"original_post_id"`
+	ParentPostID   string                  `json:"parent_post_id"` // Có thể là post gốc hoặc post đã share trước đó
+	CreatedAt      int64                   `json:"created_at"`
+	TargetID       string                  `json:"target_id"`
+	TargetType     sharedEnums.ContextType `json:"target_type"`
+}
+type DeleteSharedPostPayload struct {
+	SharedPostID string `json:"shared_post_id"`
+	DeleteAt     int64  `json:"delete_at"`
+}
+
+type FriendshipPayload struct {
+	UserA          string              `json:"user_a"`
+	UserB          string              `json:"user_b"`
+	FriendshipType string              `json:"friendship_type"`
+	Since          int64               `json:"since"`
+	EventType      constants.EventType `json:"event_type"`
+}
+
+type DeleteFriendshipPayload struct {
+	UserA    string `json:"user_a"`
+	UserB    string `json:"user_b"`
+	DeleteAt int64  `json:"delete_at"`
+}
+
+type BlockPayload struct {
+	SourceUserID string                  `json:"source_user_id"`
+	TargetUserID string                  `json:"target_user_id"`
+	TargetType   sharedEnums.ContextType `json:"target_type"`
+	Since        int64                   `json:"since"`
+}
+
+type FollowPayload struct {
+	FollowerID string                  `json:"follower_id"`
+	TargetID   string                  `json:"target_id"`
+	TargetType sharedEnums.ContextType `json:"target_type"`
+	Since      int64                   `json:"since"`
+}
+type JoinGroupPayload struct {
+	UserID    string              `json:"user_id"`
+	GroupID   string              `json:"group_id"`
+	Role      string              `json:"role"` // member, admin
+	JoinedAt  int64               `json:"joined_at"`
+	EventType constants.EventType `json:"event_type"`
+}
+
+type DeleteJoinGroupPayload struct {
+	UserID   string `json:"user_id"`
+	GroupID  string `json:"group_id"`
+	DeleteAt int64  `json:"delete_at"`
+}
+type LikePagePayload struct {
+	UserID    string              `json:"user_id"`
+	PageID    string              `json:"page_id"`
+	Since     int64               `json:"since"`
+	EventType constants.EventType `json:"event_type"`
+}
+type DeleteLikePagePayload struct {
+	UserID   string `json:"user_id"`
+	PageID   string `json:"page_id"`
+	DeleteAt int64  `json:"delete_at"`
 }

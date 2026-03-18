@@ -3,12 +3,17 @@ package consumer
 import (
 	"context"
 	"errors"
+	"fmt"
 	"sync"
 	"time"
 
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/IRepositoryShare"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/constants"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/events"
+	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/events/graphEvent"
+	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/infrastructure/kafka"
+	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/sharedEnums"
+	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/common/shared/utils"
 	"github.com/NguyenNhatquang522004/BE-modular-golang/internal/modules/graph/domain/IRepository/neo4j"
 )
 
@@ -90,13 +95,98 @@ func (c *ConsumerGraphSharedPost) ConsumerGraphSharedPost(ctx context.Context) e
 	return nil
 }
 func (c *ConsumerGraphSharedPost) handleCreatedEvent(ctx context.Context, event events.IntegrationEvent) error {
+	data, err := utils.ParsePayload[graphEvent.SharedPostPayload](event.Payload)
+	if err != nil {
+		return kafka.NewNonRetryableError(fmt.Errorf("failed to parse payload for event %s: %w", event.ID, err))
+	}
+	if data == nil {
+		return kafka.NewNonRetryableError(fmt.Errorf("payload is nil for event %s", event.ID))
+	}
+	err = c.graphRepo.CreateSharePost(ctx, data.UserID, data.NewSharePostID, data.OriginalPostID, data.ParentPostID, data.CreatedAt)
+	if err != nil {
+		return kafka.NewNonRetryableError(fmt.Errorf("failed to create share post for event %s: %w", event.ID, err))
+	}
+	payloadInteractionRecentOriginalPostID := &graphEvent.InteractionRecentPayload{
+		UserID:     data.UserID,
+		PostID:     data.OriginalPostID,
+		TargetType: data.TargetType,
+		Timestamp:  data.CreatedAt,
+		Type:       sharedEnums.ReactionTargetShare,
+		Weight:     1.0,
+	}
+	err = c.events.Publish(ctx, constants.TopicGraphInteractionsRecent.String(), data.UserID, constants.Created.String(), payloadInteractionRecentOriginalPostID)
+	if err != nil {
+		return fmt.Errorf("failed to publish interaction recent event for shared post for event %s: %w", event.ID, err)
+	}
+	payloadInteractionRecentParentPostID := &graphEvent.InteractionRecentPayload{
+		UserID:     data.UserID,
+		PostID:     data.ParentPostID,
+		TargetType: data.TargetType,
+		Timestamp:  data.CreatedAt,
+		Type:       sharedEnums.ReactionTargetShare,
+		Weight:     1.0,
+	}
+	err = c.events.Publish(ctx, constants.TopicGraphInteractionsRecent.String(), data.UserID, constants.Created.String(), payloadInteractionRecentParentPostID)
+	if err != nil {
+		return fmt.Errorf("failed to publish interaction recent event for shared post for event %s: %w", event.ID, err)
+	}
 
 	return nil
 }
 func (c *ConsumerGraphSharedPost) handleUpdatedEvent(ctx context.Context, event events.IntegrationEvent) error {
+	data, err := utils.ParsePayload[graphEvent.SharedPostPayload](event.Payload)
+	if err != nil {
+		return kafka.NewNonRetryableError(fmt.Errorf("failed to parse payload for event %s: %w", event.ID, err))
+	}
+	if data == nil {
+		return kafka.NewNonRetryableError(fmt.Errorf("payload is nil for event %s", event.ID))
+	}
+	err = c.graphRepo.CreateSharePost(ctx, data.UserID, data.NewSharePostID, data.OriginalPostID, data.ParentPostID, data.CreatedAt)
+	if err != nil {
+		return kafka.NewNonRetryableError(fmt.Errorf("failed to create share post for event %s: %w", event.ID, err))
+	}
+	payloadInteractionRecentOriginalPostID := &graphEvent.InteractionRecentPayload{
+		UserID:     data.UserID,
+		PostID:     data.OriginalPostID,
+		TargetType: data.TargetType,
+		Timestamp:  data.CreatedAt,
+		Type:       sharedEnums.ReactionTargetShare,
+		Weight:     1.0,
+	}
+	err = c.events.Publish(ctx, constants.TopicGraphInteractionsRecent.String(), data.UserID, constants.Created.String(), payloadInteractionRecentOriginalPostID)
+	if err != nil {
+		return fmt.Errorf("failed to publish interaction recent event for shared post for event %s: %w", event.ID, err)
+	}
+	payloadInteractionRecentParentPostID := &graphEvent.InteractionRecentPayload{
+		UserID:     data.UserID,
+		PostID:     data.ParentPostID,
+		TargetType: data.TargetType,
+		Timestamp:  data.CreatedAt,
+		Type:       sharedEnums.ReactionTargetShare,
+		Weight:     1.0,
+	}
+	err = c.events.Publish(ctx, constants.TopicGraphInteractionsRecent.String(), data.UserID, constants.Created.String(), payloadInteractionRecentParentPostID)
+	if err != nil {
+		return fmt.Errorf("failed to publish interaction recent event for shared post for event %s: %w", event.ID, err)
+	}
 	return nil
 }
 func (c *ConsumerGraphSharedPost) handleDeletedEvent(ctx context.Context, event events.IntegrationEvent) error {
+	data, err := utils.ParsePayload[graphEvent.DeleteSharedPostPayload](event.Payload)
+	if err != nil {
+		return kafka.NewNonRetryableError(fmt.Errorf("failed to parse payload for event %s: %w", event.ID, err))
+	}
+	if data == nil {
+		return kafka.NewNonRetryableError(fmt.Errorf("payload is nil for event %s", event.ID))
+	}
+	payload := &graphEvent.DeletePostNodePayload{
+		PostID:   data.SharedPostID,
+		DeleteAt: data.DeleteAt,
+	}
+	err = c.events.Publish(ctx, string(constants.TopicGraphPost), data.SharedPostID, constants.Deleted.String(), payload)
+	if err != nil {
+		return fmt.Errorf("failed to publish delete post node event for shared post for event %s: %w", event.ID, err)
+	}
 	return nil
 }
 func (c *ConsumerGraphSharedPost) ConsumerFailedGraphSharedPost(ctx context.Context) error {

@@ -34,6 +34,7 @@ type FriendRel struct {
 	Since                int64   `json:"since"`
 	Type                 string  `json:"type"` // normal, close_friend, family
 	InteractionFrequency float64 `json:"interaction_frequency"`
+	
 }
 type BlockRel struct {
 	Since int64 `json:"since"`

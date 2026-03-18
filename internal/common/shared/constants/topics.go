@@ -101,15 +101,21 @@ const (
 	TopicDailyMetricsPage TopicName = "business.daily_metrics_page.events"
 
 	// graph
-	TopicGraphUser               TopicName = "graph.user.events"
-	TopicGraphPost               TopicName = "graph.post.events"
-	TopicGraphTopic              TopicName = "graph.topic.events"
-	TopicGraphGroup              TopicName = "graph.group.events"
-	TopicGraphPage               TopicName = "graph.page.events"
-	TopicGraphLocation           TopicName = "graph.location.events"
-	TopicGraphInteractions       TopicName = "graph.interactions.events"
-	TopicGraphInteractionsRecent TopicName = "graph.interactions_recent.events"
-	TopicGraphSharedPost         TopicName = "graph.shared_post.events"
+	TopicGraphUser                  TopicName = "graph.user.events"
+	TopicGraphPost                  TopicName = "graph.post.events"
+	TopicGraphTopic                 TopicName = "graph.topic.events"
+	TopicGraphGroup                 TopicName = "graph.group.events"
+	TopicGraphPage                  TopicName = "graph.page.events"
+	TopicGraphLocation              TopicName = "graph.location.events"
+	TopicGraphInteractions          TopicName = "graph.interactions.events"
+	TopicGraphInteractionsRecent    TopicName = "graph.interactions_recent.events"
+	TopicGraphSharedPost            TopicName = "graph.shared_post.events"
+	TopicGraphFriendShip            TopicName = "graph.friendship.events"
+	TopicGraphBlock                 TopicName = "graph.block_user.events"
+	TopicGraphFollow                TopicName = "graph.follow_user.events"
+	TopicGraphJoinGroup             TopicName = "graph.join_group.events"
+	TopicGraphLikePage              TopicName = "graph.like_page.events"
+	TopicGraphFriendshipFrequencies TopicName = "graph.friendship_frequencies.events"
 )
 
 type TopicConfig struct {
@@ -136,4 +142,5 @@ var SocialTopics = []TopicConfig{
 	{Name: TopicSendNotificationType, Partitions: 3},
 	{Name: TopicDeleteRelationTarget, Partitions: 3},
 	{Name: TopicDailyMetricsPage, Partitions: 3},
+	{Name: TopicGraphFriendshipFrequencies, Partitions: 3},
 }

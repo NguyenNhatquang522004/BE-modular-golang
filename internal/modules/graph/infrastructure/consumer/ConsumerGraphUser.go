@@ -102,15 +102,40 @@ func (c *ConsumerGraphUser) handleCreatedEvent(ctx context.Context, event events
 	if data == nil {
 		return kafka.NewNonRetryableError(fmt.Errorf("event payload is nil"))
 	}
-	entity := &entity.UserNode{
+	entitya := &entity.UserNode{
 		UserID:       data.UserID,
 		CreatedAt:    data.CreatedAt,
 		LastActiveAt: data.LastActiveAt,
 		IsVerified:   false, // Mặc định khi tạo mới sẽ là false, có thể cập nhật sau nếu cần
 	}
-	err = c.graphRepo.UpsertUserNode(ctx, entity)
+	err = c.graphRepo.UpsertUserNode(ctx, entitya)
 	if err != nil {
 		return fmt.Errorf("failed to upsert user node: %w", err)
+	}
+	if data.City != "" && data.Country != "" && data.GeoHash != "" {
+		cityId, countryid, err := c.graphRepo.UpsertLocationNode(ctx, &entity.LocationNode{
+			CityID:      data.City,
+			CountryCode: data.Country,
+			GeoHash:     data.GeoHash,
+		})
+		if err != nil {
+			return fmt.Errorf("failed to upsert location node: %w", err)
+		}
+
+		err = c.graphRepo.LinkUserToLocation(ctx, data.UserID, cityId, countryid, data.GeoHash)
+		if err != nil {
+			return fmt.Errorf("failed to link user to location: %w", err)
+		}
+	}
+	if data.PhoneContact != "" {
+		phoneHash, err := utils.Hash(data.PhoneContact)
+		if err != nil {
+			return fmt.Errorf("failed to hash phone contact: %w", err)
+		}
+		err = c.graphRepo.SyncPhoneContact(ctx, data.UserID, phoneHash, time.Now().Unix())
+		if err != nil {
+			return fmt.Errorf("failed to syncs phone contact: %w", err)
+		}
 	}
 	return nil
 }
@@ -122,7 +147,7 @@ func (c *ConsumerGraphUser) handleUpdatedEvent(ctx context.Context, event events
 	if data == nil {
 		return kafka.NewNonRetryableError(fmt.Errorf("event payload is nil"))
 	}
-	entity := &entity.UserNode{
+	entitya := &entity.UserNode{
 		UserID:       data.UserID,
 		CreatedAt:    data.CreatedAt,
 		LastActiveAt: data.LastActiveAt,
@@ -130,9 +155,34 @@ func (c *ConsumerGraphUser) handleUpdatedEvent(ctx context.Context, event events
 		Bio:          data.Bio,       // Mặc định bio rỗng, có thể cập nhật sau
 		Embedding:    data.Embedding, // Mặc định embedding nil, có thể cập nhật sau
 	}
-	err = c.graphRepo.UpsertUserNode(ctx, entity)
+	err = c.graphRepo.UpsertUserNode(ctx, entitya)
 	if err != nil {
 		return fmt.Errorf("failed to upsert user node: %w", err)
+	}
+	if data.City != "" && data.Country != "" && data.GeoHash != "" {
+		cityId, countryid, err := c.graphRepo.UpsertLocationNode(ctx, &entity.LocationNode{
+			CityID:      data.City,
+			CountryCode: data.Country,
+			GeoHash:     data.GeoHash,
+		})
+		if err != nil {
+			return fmt.Errorf("failed to upsert location node: %w", err)
+		}
+
+		err = c.graphRepo.LinkUserToLocation(ctx, data.UserID, cityId, countryid, data.GeoHash)
+		if err != nil {
+			return fmt.Errorf("failed to link user to location: %w", err)
+		}
+	}
+	if data.PhoneContact != "" {
+		phoneHash, err := utils.Hash(data.PhoneContact)
+		if err != nil {
+			return fmt.Errorf("failed to hash phone contact: %w", err)
+		}
+		err = c.graphRepo.SyncPhoneContact(ctx, data.UserID, phoneHash, time.Now().Unix())
+		if err != nil {
+			return fmt.Errorf("failed to sync phone contact: %w", err)
+		}
 	}
 	return nil
 }

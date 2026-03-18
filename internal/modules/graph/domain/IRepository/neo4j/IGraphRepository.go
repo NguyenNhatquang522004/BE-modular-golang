@@ -22,7 +22,8 @@ type IGraphRepository interface {
 	UpsertTopicAndConnectNeighbors(ctx context.Context, topicName string) (string, string, error)
 	UpsertGroupNode(ctx context.Context, group *entity.GroupNode) error
 	UpsertPageNode(ctx context.Context, page *entity.PageNode) error
-	UpsertLocationNode(ctx context.Context, loc *entity.LocationNode) error
+	// return string đầu là cityID, string thứ 2 là countryCode, error là lỗi nếu có. Nếu không có lỗi, cityID và countryCode sẽ được trả về dựa trên geoHash đã cho.
+	UpsertLocationNode(ctx context.Context, loc *entity.LocationNode) (string, string, error)
 
 	// Tạo Cạnh Tạo Nội Dung (Content Creation Edges)
 	LinkAuthorToPost(ctx context.Context, userID string, postID string, createdAt int64) error
@@ -30,18 +31,19 @@ type IGraphRepository interface {
 	LinkPostToTopic(ctx context.Context, postID string, topicName string, confidenceScore float64) error
 	LinkPostToTopicByID(ctx context.Context, postID string, topicID string, confidenceScore float64) error
 	LinkPostToGroup(ctx context.Context, postID string, groupID string, createdAt int64) error
-
+	LinkUserToLocation(ctx context.Context, userID string, cityID string, countryCode string, geoHash string) error
+	LinkUserToPhoneContact(ctx context.Context, userID string, phoneHash string, uploadedAt int64) error
 	// ==================================================
 	// NHÓM 2: MẠNG LƯỚI XÃ HỘI & TĂNG TRƯỞNG (SOCIAL GRAPHS)
 	// ==================================================
 
 	// User kết nối User/Page/Group
-	CreateFriendship(ctx context.Context, userA string, userB string, since int64) error
+	CreateFriendship(ctx context.Context, userA string, userB string, friendshipType string, interactionType int, since int64) error
 	CreateBlock(ctx context.Context, sourceUserID string, targetUserID string, since int64) error
-	CreateFollow(ctx context.Context, followerID string, targetID string, since int64) error
+	CreateFollow(ctx context.Context, followerID string, targetID string, targetType sharedEnums.ContextType, since int64) error
 	JoinGroup(ctx context.Context, userID string, groupID string, role string, joinedAt int64) error
 	LikePage(ctx context.Context, userID string, pageID string, since int64) error
-
+	SyncAllFriendshipFrequencies(ctx context.Context, batchSize int) error
 	// Đồng bộ danh bạ (Cho tính năng PYMK)
 	SyncPhoneContact(ctx context.Context, userID string, phoneHash string, uploadedAt int64) error
 
@@ -72,7 +74,7 @@ type IGraphRepository interface {
 	// Tích lũy sở thích
 
 	IncrementTopicInterest(ctx context.Context, userID string, limitK int) error
-	CreateSharePost(ctx context.Context, userID string, newSharePostID string, originalPostID string, createdAt int64) error
+	CreateSharePost(ctx context.Context, userID string, newSharePostID string, originalPostID string, parentPostID string, createdAt int64) error
 	// ==================================================
 	// NHÓM 4: TRUY VẤN DỮ LIỆU (READ - Dành cho REST/gRPC API)
 	// ==================================================
@@ -109,6 +111,7 @@ type IGraphRepository interface {
 	DeleteFriendship(ctx context.Context, userA string, userB string) error
 	LeaveGroup(ctx context.Context, userID string, groupID string) error
 	UnlikePage(ctx context.Context, userID string, pageID string) error
+	DeleteBlock(ctx context.Context, sourceUserID string, targetID string, targetType sharedEnums.ContextType) error
 	// 4.3. Real-time Discovery
 	// Lấy danh sách Post đang hot nhất dựa trên InteractedRecentlyRel
 	GetTrendingPosts(ctx context.Context, limit int) ([]string, error)

@@ -308,7 +308,7 @@ func (r *GraphRepository) UpsertPageNode(ctx context.Context, page *entity.PageN
 
 	return err
 }
-func (r *GraphRepository) UpsertLocationNode(ctx context.Context, loc *entity.LocationNode) error {
+func (r *GraphRepository) UpsertLocationNode(ctx context.Context, loc *entity.LocationNode) (string, string, error) {
 	session := r.driver.NewSession(ctx, neo4j.SessionConfig{AccessMode: neo4j.AccessModeWrite})
 	defer session.Close(ctx)
 
@@ -333,7 +333,7 @@ func (r *GraphRepository) UpsertLocationNode(ctx context.Context, loc *entity.Lo
 		return result.Consume(ctx)
 	})
 
-	return err
+	return loc.CityID, loc.CountryCode, err
 }
 func (r *GraphRepository) LinkAuthorToPost(ctx context.Context, userID string, postID string, createdAt int64) error {
 	session := r.driver.NewSession(ctx, neo4j.SessionConfig{AccessMode: neo4j.AccessModeWrite})
@@ -522,7 +522,7 @@ func (r *GraphRepository) CreateBlock(ctx context.Context, sourceUserID string, 
 		
 		// BƯỚC 1: Cắt đứt quan hệ (Dùng OPTIONAL MATCH và dấu '-' vô hướng để bắt cả 2 chiều)
 		// Cắt sạch Bạn bè, Đang theo dõi, Lời mời kết bạn, Lượt thích Page, Thành viên Group
-		OPTIONAL MATCH (source)-[oldRel:FRIEND|FOLLOWS|FRIEND_REQUEST|LIKES|MEMBER_OF]-(target)
+		OPTIONAL MATCH (source)-[oldRel:FRIEND|FOLLOWS|FRIEND_REQUEST|LIKES|MEMBER_OF|INTERACTED_WITH]-(target)
 		DELETE oldRel
 		
 		// BƯỚC 2: Tạo ranh giới Block (Chỉ tạo 1 chiều từ Source trỏ tới Target)
@@ -3035,4 +3035,188 @@ func (r *GraphRepository) UnlikePage(ctx context.Context, userID string, pageID 
 	})
 
 	return err
+}
+func (r *GraphRepository) LinkUserToLocation(ctx context.Context, userID string, cityID string, countryCode string, geoHash string) error {
+	session := r.driver.NewSession(ctx, neo4j.SessionConfig{AccessMode: neo4j.AccessModeWrite})
+	defer session.Close(ctx)
+
+	cypher := `
+		// 1. Tìm hoặc tạo Node Location dựa trên cityID và countryCode
+		MERGE (loc:Location {city_id: $cityID, country_code: $countryCode})
+		ON CREATE SET loc.geohash = $geoHash
+		
+		// 2. Tạo cạnh LOCATED_IN giữa User và Location
+		MATCH (u:User {user_id: $userID}), (loc)
+		MERGE (u)-[:LOCATED_IN]->(loc)
+	`
+	params := map[string]any{
+		"userID":      userID,
+		"cityID":      cityID,
+		"countryCode": countryCode,
+		"geoHash":     geoHash,
+	}
+
+	_, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		result, err := tx.Run(ctx, cypher, params)
+		if err != nil {
+			return nil, err
+		}
+		return result.Consume(ctx)
+	})
+	return err
+}
+func (r *GraphRepository) LinkUserToPhoneContact(ctx context.Context, userID string, phoneHash string, uploadedAt int64) error {
+	session := r.driver.NewSession(ctx, neo4j.SessionConfig{AccessMode: neo4j.AccessModeWrite})
+	defer session.Close(ctx)
+	cypher := `
+		// 1. Tìm hoặc tạo Node PhoneContact dựa trên phoneHash
+		MERGE (c:PhoneContact {phone_hash: $phoneHash})
+		
+		// 2. Tạo cạnh HAS_CONTACT giữa User và PhoneContact, lưu trữ thời điểm upload để tính toán độ "tươi" sau này
+		MATCH (u:User {user_id: $userID}), (c)
+		MERGE (u)-[r:HAS_CONTACT]->(c)
+		ON CREATE SET r.uploaded_at = $uploadedAt
+		ON MATCH SET r.uploaded_at = $uploadedAt // Cập nhật lại timestamp nếu đã tồn tại (User cập nhật danh bạ nhiều lần)
+	`
+	params := map[string]any{
+		"userID":     userID,
+		"phoneHash":  phoneHash,
+		"uploadedAt": uploadedAt,
+	}
+
+	_, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		result, err := tx.Run(ctx, cypher, params)
+		if err != nil {
+			return nil, err
+		}
+		return result.Consume(ctx)
+	})
+	return err
+}
+
+// DeleteBlock gỡ bỏ cấm vận (Unblock) giữa User và một Thực thể (User/Page/Group).
+// Đạt chuẩn 100%: Quét chính xác Label mục tiêu và chỉ xóa đúng sợi dây BLOCK
+// theo hướng từ Source (Người chủ động bỏ chặn) trỏ tới Target.
+func (r *GraphRepository) DeleteBlock(ctx context.Context, sourceUserID string, targetID string, targetType sharedEnums.ContextType) error {
+	session := r.driver.NewSession(ctx, neo4j.SessionConfig{AccessMode: neo4j.AccessModeWrite})
+	defer session.Close(ctx)
+
+	// 1. Xác định Label của Target dựa trên targetType (Dùng Whitelist an toàn)
+	var targetMatch string
+	switch targetType {
+	case sharedEnums.ContextTypeUserWall: // Target là User
+		targetMatch = "(target:User {user_id: $targetID})"
+	case sharedEnums.ContextTypePage: // Target là Page
+		targetMatch = "(target:Page {page_id: $targetID})"
+	case sharedEnums.ContextTypeGroup: // Target là Group
+		targetMatch = "(target:Group {group_id: $targetID})"
+	default:
+		return fmt.Errorf("invalid target type for unblock: %v", targetType)
+	}
+
+	// 2. Câu lệnh Cypher: Tìm và Xóa cạnh BLOCK
+	// LƯU Ý QUAN TRỌNG: Bắt buộc phải có mũi tên (->) để đảm bảo tính 1 chiều.
+	cypher := fmt.Sprintf(`
+		MATCH (source:User {user_id: $sourceUserID})-[b:BLOCK]->%s
+		DELETE b
+	`, targetMatch)
+
+	params := map[string]any{
+		"sourceUserID": sourceUserID,
+		"targetID":     targetID,
+	}
+
+	_, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		result, err := tx.Run(ctx, cypher, params)
+		if err != nil {
+			return nil, err
+		}
+		return result.Consume(ctx)
+	})
+
+	return err
+}
+
+// SyncAllFriendshipFrequencies đồng bộ điểm Affinity sang InteractionFrequency cho toàn bộ hệ thống.
+// Hàm này được thiết kế ĐẶC BIỆT cho Cronjob ban đêm, sử dụng Native Batching để chống sập RAM.
+func (r *GraphRepository) SyncAllFriendshipFrequencies(ctx context.Context, batchSize int) error {
+	// LƯU Ý QUAN TRỌNG:
+	// Với cú pháp "IN TRANSACTIONS" của Neo4j, ta KHÔNG DÙNG ExecuteWrite (Managed Transaction),
+	// mà phải dùng Auto-Commit Transaction (session.Run) thẳng ở cấp độ Session.
+	session := r.driver.NewSession(ctx, neo4j.SessionConfig{AccessMode: neo4j.AccessModeWrite})
+	defer session.Close(ctx)
+
+	// Các mốc điểm (Threshold) để thăng cấp tình bạn (Bạn có thể đưa vào file Config)
+	// Dưới 10 -> 0 (Rarely)
+	// 10 đến 49.9 -> 1 (Occasionally)
+	// 50 đến 99.9 -> 2 (Frequently)
+	// Từ 100 trở lên -> 3 (Close Friend)
+	thresholdOccasional := 10.0
+	thresholdFrequent := 50.0
+	thresholdClose := 100.0
+
+	// Nếu không truyền batchSize, mặc định an toàn là 10.000
+	if batchSize <= 0 {
+		batchSize = 10000
+	}
+
+	cypher := `
+		// 1. Quét toàn bộ các sợi dây Tình bạn trong hệ thống
+		// Nhờ bài học trước, ta biết FRIEND chỉ có 1 chiều từ ID nhỏ -> ID lớn, nên lệnh MATCH này sẽ không bị trùng lặp.
+		MATCH (a:User)-[f:FRIEND]->(b:User)
+		
+		// 2. Mở khối xử lý lô (Batching)
+		CALL {
+			WITH a, b, f
+			
+			// 3. Tính điểm Affinity chiều từ A -> B
+			OPTIONAL MATCH (a)-[r1:INTERACTED_WITH]->(b)
+			WITH a, b, f, coalesce(r1.affinity_score, 0.0) AS scoreAB
+			
+			// 4. Tính điểm Affinity chiều ngược lại từ B -> A
+			OPTIONAL MATCH (b)-[r2:INTERACTED_WITH]->(a)
+			
+			// TỔNG ĐIỂM TÌNH BẠN (Cộng dồn tương tác 2 chiều)
+			WITH f, (scoreAB + coalesce(r2.affinity_score, 0.0)) AS totalAffinity
+			
+			// 5. Xếp loại (Bucketing) dựa trên mốc điểm
+			WITH f, totalAffinity,
+				CASE 
+					WHEN totalAffinity >= $thresholdClose THEN 3
+					WHEN totalAffinity >= $thresholdFrequent THEN 2
+					WHEN totalAffinity >= $thresholdOccasional THEN 1
+					ELSE 0
+				END AS newFrequency
+				
+			// 6. [TUYỆT CHIÊU TỐI ƯU 100%]: CHỐNG GHI THỪA (Zero Write-Amplification)
+			// Chỉ thực hiện lệnh SET nếu cấp độ tình bạn THỰC SỰ THAY ĐỔI. 
+			// Nếu họ vẫn ở mức 3 như hôm qua, ta bỏ qua để không làm hao mòn ổ cứng (SSD).
+			WITH f, newFrequency
+			WHERE f.interaction_frequency IS NULL OR f.interaction_frequency <> newFrequency
+			
+			// 7. Cập nhật trạng thái
+			SET f.interaction_frequency = newFrequency
+		} IN TRANSACTIONS OF $batchSize ROWS
+	`
+
+	params := map[string]any{
+		"thresholdOccasional": thresholdOccasional,
+		"thresholdFrequent":   thresholdFrequent,
+		"thresholdClose":      thresholdClose,
+		"batchSize":           batchSize,
+	}
+
+	// Gọi thẳng session.Run (Auto-Commit) thay vì session.ExecuteWrite
+	result, err := session.Run(ctx, cypher, params)
+	if err != nil {
+		return fmt.Errorf("failed to run batch sync for friendship frequencies: %w", err)
+	}
+
+	// Đảm bảo truy vấn chạy xong và thu thập thống kê
+	_, err = result.Consume(ctx)
+	if err != nil {
+		return fmt.Errorf("failed to consume batch sync result: %w", err)
+	}
+
+	return nil
 }

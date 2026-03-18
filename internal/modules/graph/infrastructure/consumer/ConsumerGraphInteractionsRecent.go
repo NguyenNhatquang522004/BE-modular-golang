@@ -102,35 +102,23 @@ func (c *ConsumerGraphInteractionsRecentConsumer) handleCreatedEvent(ctx context
 	if data == nil {
 		return kafka.NewNonRetryableError(fmt.Errorf("payload is nil for event %s", event.ID))
 	}
-	payloadInteraction := &graphEvent.InteractionPayload{
-		UserID:     data.UserID,
-		TargetID:   data.PostID,
-		TargetType: data.TargetType,
-		Like:       0,
-		Comment:    0,
-		Share:      0,
-		Message:    0,
-		View:       0,
-		CreatedAt:  data.Timestamp,
-		Flag:       true,
-	}
+	like, comment, share, message, view := 0, 0, 0, 0, 0
 	switch data.Type {
 	case sharedEnums.ReactionTargetView:
 		data.Weight = 1.0
-		payloadInteraction.View += 1
+		view = 1
 	case sharedEnums.ReactionTargetLike:
 		data.Weight = 3.0
-		payloadInteraction.Like += 1
+		like = 1
 	case sharedEnums.ReactionTargetShare:
 		data.Weight = 10.0
-		payloadInteraction.Share += 1
+		share = 1
 	case sharedEnums.ReactionTargetComment:
 		data.Weight = 5.0
-		payloadInteraction.Comment += 1
+		comment = 1
 	default:
 		return kafka.NewNonRetryableError(fmt.Errorf("unknown interaction type %s for event %s", data.Type.String(), event.ID))
 	}
-
 	err = c.graphRepo.RecordRecentInteraction(ctx, data.UserID, data.PostID, data.Type.String(), data.Weight, data.Timestamp)
 	if err != nil {
 		return fmt.Errorf("failed to record recent interaction for event %s: %w", event.ID, err)
@@ -139,9 +127,9 @@ func (c *ConsumerGraphInteractionsRecentConsumer) handleCreatedEvent(ctx context
 	if err != nil {
 		return fmt.Errorf("failed to increment topic interest for event %s: %w", event.ID, err)
 	}
-	err = c.events.Publish(ctx, constants.TopicGraphInteractions.String(), data.UserID, constants.Created.String(), payloadInteraction)
+	_, err = c.graphRepo.IncrementInteractionByPost(ctx, data.UserID, data.PostID, like, comment, share, message, view, true)
 	if err != nil {
-		return fmt.Errorf("failed to publish event %s: %w", event.ID, err)
+		return fmt.Errorf("failed to increment interaction by post for event %s: %w", event.ID, err)
 	}
 	return nil
 }
@@ -153,31 +141,20 @@ func (c *ConsumerGraphInteractionsRecentConsumer) handleUpdatedEvent(ctx context
 	if data == nil {
 		return kafka.NewNonRetryableError(fmt.Errorf("payload is nil for event %s", event.ID))
 	}
-	payloadInteraction := &graphEvent.InteractionPayload{
-		UserID:     data.UserID,
-		TargetID:   data.PostID,
-		TargetType: data.TargetType,
-		Like:       0,
-		Comment:    0,
-		Share:      0,
-		Message:    0,
-		View:       0,
-		CreatedAt:  data.Timestamp,
-		Flag:       true,
-	}
+	like, comment, share, message, view := 0, 0, 0, 0, 0
 	switch data.Type {
 	case sharedEnums.ReactionTargetView:
 		data.Weight = 1.0
-		payloadInteraction.View += 1
+
 	case sharedEnums.ReactionTargetLike:
 		data.Weight = 3.0
-		payloadInteraction.Like += 1
+
 	case sharedEnums.ReactionTargetShare:
 		data.Weight = 10.0
-		payloadInteraction.Share += 1
+
 	case sharedEnums.ReactionTargetComment:
 		data.Weight = 5.0
-		payloadInteraction.Comment += 1
+
 	default:
 		return kafka.NewNonRetryableError(fmt.Errorf("unknown interaction type %s for event %s", data.Type.String(), event.ID))
 	}
@@ -190,9 +167,9 @@ func (c *ConsumerGraphInteractionsRecentConsumer) handleUpdatedEvent(ctx context
 	if err != nil {
 		return fmt.Errorf("failed to increment topic interest for event %s: %w", event.ID, err)
 	}
-	err = c.events.Publish(ctx, constants.TopicGraphInteractions.String(), data.UserID, constants.Created.String(), payloadInteraction)
+	_, err = c.graphRepo.IncrementInteractionByPost(ctx, data.UserID, data.PostID, like, comment, share, message, view, true)
 	if err != nil {
-		return fmt.Errorf("failed to publish event %s: %w", event.ID, err)
+		return fmt.Errorf("failed to increment interaction by post for event %s: %w", event.ID, err)
 	}
 	return nil
 }
@@ -204,31 +181,20 @@ func (c *ConsumerGraphInteractionsRecentConsumer) handleDeletedEvent(ctx context
 	if data == nil {
 		return kafka.NewNonRetryableError(fmt.Errorf("payload is nil for event %s", event.ID))
 	}
-	payloadInteraction := &graphEvent.InteractionPayload{
-		UserID:     data.UserID,
-		TargetID:   data.PostID,
-		TargetType: data.TargetType,
-		Like:       0,
-		Comment:    0,
-		Share:      0,
-		Message:    0,
-		View:       0,
-		CreatedAt:  data.Timestamp,
-		Flag:       false,
-	}
+	like, comment, share, message, view := 0, 0, 0, 0, 0
 	switch data.Type {
 	case sharedEnums.ReactionTargetView:
 		data.Weight = -1.0
-		payloadInteraction.View -= 1
+		view = -1
 	case sharedEnums.ReactionTargetLike:
 		data.Weight = -3.0
-		payloadInteraction.Like -= 1
+		like = -1
 	case sharedEnums.ReactionTargetShare:
 		data.Weight = -10.0
-		payloadInteraction.Share -= 1
+		share = -1
 	case sharedEnums.ReactionTargetComment:
 		data.Weight = -5.0
-		payloadInteraction.Comment -= 1
+		comment = -1
 	default:
 		return kafka.NewNonRetryableError(fmt.Errorf("unknown interaction type %s for event %s", data.Type.String(), event.ID))
 	}
@@ -240,9 +206,9 @@ func (c *ConsumerGraphInteractionsRecentConsumer) handleDeletedEvent(ctx context
 	if err != nil {
 		return fmt.Errorf("failed to increment topic interest for event %s: %w", event.ID, err)
 	}
-	err = c.events.Publish(ctx, constants.TopicGraphInteractions.String(), data.UserID, constants.Deleted.String(), payloadInteraction)
+	_, err = c.graphRepo.IncrementInteractionByPost(ctx, data.UserID, data.PostID, like, comment, share, message, view, false)
 	if err != nil {
-		return fmt.Errorf("failed to publish event %s: %w", event.ID, err)
+		return fmt.Errorf("failed to increment interaction by post for event %s: %w", event.ID, err)
 	}
 	return nil
 }
